@@ -62,10 +62,13 @@ $ source util/setchplenv.bash # for bash users
 $ chpl -o output [options] source.chpl # compile your program
 $ ./outout [args] # run
 
-[4]Contact
+[4] Contact
 If you have any question, please ask the following address.
 
 Mail address : nakashima@logos.ic.i.u-tokyo.ac.jp
+
+[5] License
+Currently MassiveThreads source code is released under GNU Lesser General Public License version 2.1 . See lgpl-2.1.txt for details.
 
 # "myth" is the initial codename of MassiveThreads and no more special meaning than it.
 
