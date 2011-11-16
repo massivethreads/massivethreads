@@ -1,0 +1,71 @@
+MassiveThreads - a Lightweight Thread Library for High Productivity Languages
+
+Sorry, this document is just a draft and likely to lack many fundamental information. If you have any question, please ask the address in the last of this text.
+
+[1] How to compile
+
+To compile MassiveThreads, gcc(>=4.4.1) is required.
+Please move to MassiveThreads directory and run make.
+
+$ cd MassiveThreads
+$ make
+
+In success, libmyth.so libmyth-native.so(native interface only) libmyth-compat.so(pthread-compatible interface only) are generated.
+
+[2] Using MassiveThreads
+
+(1) native interface
+
+1.Include myth.h form the source file and write program as using MassiveThreads
+
+2.At compile time, specify MassiveThreads directory as include(-I...) and library(-L...), and specify shared library (-lmyth or -lmyth-native)
+
+Using libmyth.so, all the function calls using pthread(pthread_xxx) are also replaced by calls to MassiveThreads. If you want to use OS-level pthreads, please use libmyth-native.so, which never replace pthread function calls.
+
+(2) ptrhread-compatible interface
+
+1.Write and compile application as using pthreads
+
+2.At execution time, specify using MassiveThreads in place of pthreads by environmental variable LD_PRELOAD.
+
+$ LD_PRELOAD=(Location of libmyth-compat.so) ./a.out [arguments...]
+
+Caution: Executing programs that depend on unsupported pthreads feature (preemption, signal, thread-local storage[__thread], etc...) is not guaranteed. It may lead to unexpected behavior.
+
+[3] Execution time configuration
+The number of worker threads (= # of CPU cores used) can be changed by setting environment variable MYTH_WORKER_NUM.
+
+[4] Compiling and using MassiveThreads tasking layer on Chapel
+
+Note: Now MassiveThreads tasking layer is unofficial. DO NOT ask a question about MassiveThreads tasking layer to official Chapel community. If you have any question, please ask the address in the last of this text.
+
+1.Compile MassiveThreads (see [1])
+
+2.Copy(merge) the contents in chapel-if/1.4.0/ to the Chapel installation directory
+
+3.Compile Chapel compiler and runtime
+
+$ cd $(CHPL_HOME) # move to the directory Chapel installed
+$ export CHPL_TASKS=myth
+$ export MYTH_INCLUDE_DIR=(MassiveThreads installed directory)
+$ export MYTH_LIB_DIR=(MassiveThreads installed directory)
+$ make # compile Chapel compiler and runtime
+
+4.Compile and run application
+
+$ cd $(CHPL_HOME)
+$ export MYTH_INCLUDE_DIR=(MassiveThreads installed directory)
+$ export MYTH_LIB_DIR=(MassiveThreads installed directory)
+$ export LD_LIBRARY_PATH=(MassiveThreads installed directory)
+$ source util/setchplenv.bash # for bash users
+
+$ chpl -o output [options] source.chpl # compile your program
+$ ./outout [args] # run
+
+[4]Contact
+If you have any question, please ask the following address.
+
+Mail address : nakashima@logos.ic.i.u-tokyo.ac.jp
+
+# "myth" is the initial codename of MassiveThreads and no more special meaning than it.
+
