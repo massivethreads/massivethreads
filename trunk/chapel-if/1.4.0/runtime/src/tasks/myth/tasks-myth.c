@@ -160,7 +160,7 @@ chpl_taskID_t chpl_task_getId(void)
 void chpl_task_yield(void)
 {
 	//yield execution to other tasks
-	sched_yield();
+	myth_yield();
 }
 
 void chpl_task_sleep(int secs) {
