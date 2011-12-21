@@ -10,7 +10,7 @@ Please move to MassiveThreads directory and run make.
 $ cd MassiveThreads
 $ make
 
-In success, libmyth.so libmyth-native.so(native interface only) libmyth-compat.so(pthread-compatible interface only) are generated.
+In success, libmyth.so(both native and pthread-compatible interface, NO explicit initialization required), libmyth-native.so(native interface only, explicit initialization required) libmyth-compat.so(pthread-compatible interface only, NO explicit initialization required) are generated.
 
 [2] Using MassiveThreads
 
