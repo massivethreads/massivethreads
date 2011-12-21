@@ -138,8 +138,9 @@ int pthread_barrier_wait (pthread_barrier_t *__barrier)
 static inline void handle_mutex_initializer(pthread_mutex_t *mtx)
 {
 #ifdef MYTH_SUPPORT_MUTEX_INITIALIZER
-#ifdef MYTH_UNSAFE_MUTEX_INITIALIZER
+  //#ifdef MYTH_UNSAFE_MUTEX_INITIALIZER
 	myth_mutex_t *m=(myth_mutex_t*)&(mtx->__size[0]);
+#ifdef MYTH_UNSAFE_MUTEX_INITIALIZER
 	if (*m)return;
 #else
 	static const pthread_mutex_t s_mtx_init=PTHREAD_MUTEX_INITIALIZER;
@@ -152,7 +153,8 @@ static inline void handle_mutex_initializer(pthread_mutex_t *mtx)
 	if (mtx->__data.__list.__next!=s_mtx_init.__data.__list.__next)return;
 	if (mtx->__data.__list.__prev!=s_mtx_init.__data.__list.__prev)return;
 #endif
-	real_pthread_mutex_init(mtx,NULL);
+	//real_pthread_mutex_init(mtx,NULL);
+	*m=myth_mutex_create_body();
 #endif
 }
 

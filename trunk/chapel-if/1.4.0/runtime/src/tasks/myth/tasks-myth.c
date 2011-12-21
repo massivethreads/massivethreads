@@ -91,7 +91,7 @@ void chpl_task_init(int32_t numThreadsPerLocale, int32_t maxThreadsPerLocale,
 {
 	//Initialize tasking layer
 	//numThreadsPerLocale and callStackSize is specified or 0(default)
-	myth_init();
+	//TODO:change the number of workers and stacksize
 }
 
 int chpl_task_createCommTask(chpl_fn_p fn, void* arg) {
@@ -105,7 +105,6 @@ void chpl_task_perPthreadInit(void)
 void chpl_task_exit(void)
 {
 	//Cleanup tasking layer
-	myth_fini();
 }
 
 void chpl_task_callMain(void (*chpl_main)(void))

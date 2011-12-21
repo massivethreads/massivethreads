@@ -45,7 +45,7 @@ myth_malloc_wrapper.o myth_sync.o myth_init.o \
 myth_misc.o myth_io.o myth_original_lib.o myth_tls.o
 
 # Targets
-libmyth.so: $(MAIN_OBJS) myth_if_native.o myth_if_pthread.o 
+libmyth.so: $(MAIN_OBJS) myth_if_native.o myth_if_pthread.o myth_constructor.o
 	$(CC) $(CFLAGS) -o $@ $^ -ldl
 libmyth-native.so: $(MAIN_OBJS) myth_if_native.o
 	$(CC) $(CFLAGS) -o $@ $^ -ldl
