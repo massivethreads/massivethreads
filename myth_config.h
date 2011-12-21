@@ -72,6 +72,9 @@
 //This option makes mutex operation faster but may be unsafe in some platform
 #define MYTH_UNSAFE_MUTEX_INITIALIZER
 
+//Use spinlock as mutex, faster but higher risk of deadlock
+#define MYTH_MUTEX_BY_SPIN
+
 //Debug log setting
 //#define FREE_MYTH_THREAD_STRUCT_DEBUG
 //#define MYTH_INIT_DEBUG
