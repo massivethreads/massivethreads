@@ -215,11 +215,22 @@ static inline void myth_jc_dec_body(myth_jc_t jc)
 
 static inline void myth_mutex_init(myth_mutex_t mtx)
 {
+#ifndef MYTH_MUTEX_BY_SPIN
+	mtx->wsize=DEFAULT_FESIZE;
+	mtx->nw=0;
+	mtx->wl=mtx->def_wl;
+	mtx->locked=0;
+#endif
 	myth_internal_lock_init(&mtx->lock);
 }
 
-static inline void myth_mutex_fini(myth_mutex_t mtx)
+static inline void myth_mutex_fini(myth_running_env_t env,myth_mutex_t mtx)
 {
+#ifndef MYTH_MUTEX_BY_SPIN
+	if (mtx->wl!=mtx->def_wl){
+		myth_flfree(env->rank,sizeof(myth_thread_t)*mtx->wsize,mtx->wl);
+	}
+#endif
 	myth_internal_lock_destroy(&mtx->lock);
 }
 
@@ -228,18 +239,7 @@ static inline myth_mutex_t myth_mutex_create_body()
 	myth_mutex_t ret;
 	myth_running_env_t env;
 	env=myth_get_current_env();
-#ifdef ALIGN_MUTEX
-	//align to cache line
-	intptr_t p,p1;
-	p=(intptr_t)myth_flmalloc(env->rank,sizeof(myth_mutex)+CACHE_LINE_SIZE);
-	int cl_offset;
-	p1=p+CACHE_LINE_SIZE-1;p1/=CACHE_LINE_SIZE;p1*=CACHE_LINE_SIZE;
-	cl_offset=p1-p;
-	ret=(myth_mutex_t)p1;
-	ret->cl_offset=cl_offset;
-#else
 	ret=myth_flmalloc(env->rank,sizeof(myth_mutex));
-#endif
 	myth_mutex_init(ret);
 	return ret;
 }
@@ -248,45 +248,126 @@ static inline int myth_mutex_destroy_body(myth_mutex_t mtx)
 {
 	myth_running_env_t env;
 	env=myth_get_current_env();
-	myth_mutex_fini(mtx);
-#ifdef ALIGN_MUTEX
-	intptr_t p;
-	p=(intptr_t)mtx;
-	p-=mtx->cl_offset;
-	myth_flfree(env->rank,sizeof(myth_mutex)+CACHE_LINE_SIZE,(void*)p);
-#else
+	myth_mutex_fini(env,mtx);
 	myth_flfree(env->rank,sizeof(myth_mutex),mtx);
-#endif
 	return 0;
 }
 
+#ifndef MYTH_MUTEX_BY_SPIN
+MYTH_CTX_CALLBACK void myth_mutex_lock_1(void *arg1,void *arg2,void *arg3)
+{
+	myth_running_env_t env;
+	myth_thread_t next;
+	myth_internal_lock_t *lock;
+	env=(myth_running_env_t)arg1;
+	next=(myth_thread_t)arg2;
+	lock=(myth_internal_lock_t*)arg3;
+	env->this_thread=next;
+	if (next){
+		next->env=env;
+	}
+	myth_internal_lock_unlock(lock);
+}
+
+#endif
+
 static inline int myth_mutex_lock_body(myth_mutex_t mtx)
 {
-#if 1
-	//FIXME:Yield is an ad-hoc solution. Adding to waiter list is better.
+#ifdef MYTH_MUTEX_BY_SPIN
+	const int loop_count_start=100;
+	int loop_count=loop_count_start;
 	while (!myth_internal_lock_trylock(&mtx->lock)){
-		myth_yield_body();
+		loop_count--;
+		if (!loop_count){
+			loop_count=loop_count_start;
+			//yield execution
+			myth_yield_body();
+		}
 	}
+	return 0;
 #else
-	//Obtain a lock
+	int prev;
 	myth_internal_lock_lock(&mtx->lock);
+	prev=mtx->locked;
+	mtx->locked=1;
+	if (prev){
+		//switch context
+		myth_running_env_t env=myth_get_current_env();
+		myth_thread_t this_thread=env->this_thread;
+		//Re-allocate if waiting list is full
+		if (mtx->wsize<=mtx->nw){
+			if (mtx->wsize==DEFAULT_FESIZE){
+				mtx->wl=myth_flmalloc(env->rank,sizeof(myth_thread_t)*mtx->wsize*2);
+				memcpy(mtx->wl,mtx->def_wl,sizeof(myth_thread_t)*mtx->wsize);
+			}
+			else{
+				mtx->wl=myth_flrealloc(env->rank,
+						sizeof(myth_thread_t)*mtx->wsize,
+						mtx->wl,
+						sizeof(myth_thread_t)*mtx->wsize*2);
+			}
+			mtx->wsize*=2;
+		}
+		//add
+		mtx->wl[mtx->nw]=this_thread;
+		mtx->nw++;
+		myth_thread_t next;
+		myth_context_t next_ctx;
+		next=myth_queue_pop(&env->runnable_q);
+		if (next){
+			next->env=env;
+			next_ctx=&next->context;
+		}
+		else{
+			next_ctx=&env->sched.context;
+		}
+		//Switch context
+		myth_swap_context_withcall(&this_thread->context,next_ctx,myth_mutex_lock_1,(void*)env,(void*)next,(void*)&mtx->lock);
+	}
+	else{
+		myth_internal_lock_unlock(&mtx->lock);
+	}
 #endif
-	/*if (!myth_internal_lock_trylock(&mtx->lock)){
-		//Add to the waiters if failed
-	}*/
 	return 0;
 }
 
 static inline int myth_mutex_trylock_body(myth_mutex_t mtx)
 {
+#ifdef MYTH_MUTEX_BY_SPIN
 	//Try to obtain a lock
 	return myth_internal_lock_trylock(&mtx->lock);
+#else
+	int prev;
+	myth_internal_lock_lock(&mtx->lock);
+	prev=mtx->locked;
+	mtx->locked=1;
+	myth_internal_lock_unlock(&mtx->lock);
+	return prev==0;
+#endif
 }
 
 static inline int myth_mutex_unlock_body(myth_mutex_t mtx)
 {
+#ifdef MYTH_MUTEX_BY_SPIN
 	myth_internal_lock_unlock(&mtx->lock);
 	return 0;
+#else
+	myth_internal_lock_lock(&mtx->lock);
+	if (mtx->nw){
+		myth_thread_t next;
+		myth_running_env_t env=myth_get_current_env();
+		//resume one blocked thread
+		mtx->nw--;
+		next=mtx->wl[mtx->nw];
+		next->env=env;
+		myth_queue_push(&env->runnable_q,next);
+	}
+	else{
+		mtx->locked=0;
+	}
+	myth_internal_lock_unlock(&mtx->lock);
+	return 0;
+#endif
 }
 
 static inline myth_felock_t myth_felock_create_body(void)
@@ -308,7 +389,7 @@ static inline int myth_felock_destroy_body(myth_felock_t fe)
 {
 	myth_running_env_t env;
 	env=myth_get_current_env();
-	myth_mutex_fini(&fe->lock);
+	myth_mutex_fini(env,&fe->lock);
 	if (fe->el!=fe->def_el){
 		assert(fe->esize>DEFAULT_FESIZE);
 		myth_flfree(env->rank,sizeof(myth_thread_t)*fe->esize,fe->el);

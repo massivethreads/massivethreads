@@ -23,14 +23,20 @@ typedef struct myth_jc
 	int initial;
 }myth_jc,*myth_jc_t;
 
+#define DEFAULT_FESIZE 10
+
 //Mutex data structure
 typedef struct myth_mutex
 {
 	myth_internal_lock_t lock;
-	int cl_offset;
+#ifndef MYTH_MUTEX_BY_SPIN
+	struct myth_thread **wl;
+	int wsize;
+	int nw;
+	int locked;
+	struct myth_thread *def_wl[DEFAULT_FESIZE];
+#endif
 }__attribute__((aligned(CACHE_LINE_SIZE))) myth_mutex,*myth_mutex_t;
-
-#define DEFAULT_FESIZE 10
 
 //Full/empty lock data structure
 typedef struct myth_felock
