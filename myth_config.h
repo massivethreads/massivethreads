@@ -106,14 +106,16 @@
 //Profile myth_flmalloc
 //#define MYTH_FLMALLOC_PROF
 
-//Collect log
+//Collect and emit sslog
 //#define MYTH_COLLECT_LOG
 //Log buffer size
 #define MYTH_LOG_INITIAL_BUFFER_SIZE 1024
-
-//#define MYTH_LOG_EMIT_TEXTLOG
-#define MYTH_LOG_EMIT_STAT_ALL
-//#define MYTH_LOG_EMIT_STAT_WORKER
+//Collect context switching events
+#define MYTH_COLLECT_CONTEXT_SWITCH
+//Enable thread annotation
+#define MYTH_ENABLE_THREAD_ANNOTATION
+//Maximum length for thread annotation
+#define MYTH_THREAD_ANNOTATION_MAXLEN 100
 
 //Internal lock implementation
 //#define MYTH_INTERNAL_LOCK_MUTEX

@@ -41,16 +41,28 @@ void myth_get_context_s(myth_context_t ctx);
 void myth_set_context_s(myth_context_t ctx);
 void myth_set_context_withcall_s(myth_context_t switch_to,void(*func)(void*,void*,void*),void *arg1,void *arg2,void *arg3);
 
-#if defined MYTH_INLINE_CONTEXT
-#define myth_set_context myth_set_context_i
-#define myth_swap_context myth_swap_context_i
-#define myth_swap_context_withcall myth_swap_context_withcall_i
-#define myth_set_context_withcall myth_set_context_withcall_i
+#if defined MYTH_COLLECT_LOG && defined MYTH_COLLECT_CONTEXT_SWITCH
+//static inline void myth_log_add_context_switch(struct myth_running_env *env,struct myth_thread *th);
+#define  myth_context_switch_hook(ctx) \
+{ \
+	struct myth_running_env* env=myth_get_current_env(); \
+	myth_thread_t th=myth_context_to_thread(env,ctx); \
+	myth_log_add_context_switch(env,th);\
+}
 #else
-#define myth_set_context myth_set_context_s
-#define myth_swap_context myth_swap_context_s
-#define myth_swap_context_withcall myth_swap_context_withcall_s
-#define myth_set_context_withcall myth_set_context_withcall_s
+#define myth_context_switch_hook(ctx)
+#endif
+
+#if defined MYTH_INLINE_CONTEXT
+#define myth_set_context(ctx) {myth_context_switch_hook(ctx);myth_set_context_i(ctx);}
+#define myth_swap_context(from,to) {myth_context_switch_hook(to);myth_swap_context_i(from,to);}
+#define myth_swap_context_withcall(from,to,fn,a1,a2,a3) {myth_context_switch_hook(to);myth_swap_context_withcall_i(from,to,fn,a1,a2,a3);}
+#define myth_set_context_withcall(ctx,fn,a1,a2,a3) {myth_context_switch_hook(ctx);myth_set_context_withcall_i(ctx,fn,a1,a2,a3);}
+#else
+#define myth_set_context(ctx) {myth_context_switch_hook(ctx);myth_set_context_s(ctx);}
+#define myth_swap_context(from,to) {myth_context_switch_hook(to);myth_swap_context_s(from,to);}
+#define myth_swap_context_withcall(from,to,fn,a1,a2,a3) {myth_context_switch_hook(to);myth_swap_context_withcall_s(from,to,fn,a1,a2,a3);}
+#define myth_set_context_withcall(ctx,fn,a1,a2,a3) {myth_context_switch_hook(ctx);myth_set_context_withcall_s(ctx,fn,a1,a2,a3);}
 #endif
 
 //Suffix for PLT

@@ -19,6 +19,9 @@
 #include "myth_worker.h"
 #include "myth_worker_func.h"
 
+#include "myth_log.h"
+#include "myth_log_func.h"
+
 #include "myth_io.h"
 #include "myth_io_proto.h"
 
@@ -237,6 +240,10 @@ static inline void init_myth_thread_struct(myth_running_env_t env,myth_thread_t 
 	th->cancelled=0;
 	//th->pickle_ptr=NULL;
 	th->env=env;
+#if defined MYTH_ENABLE_THREAD_ANNOTATION && defined MYTH_COLLECT_LOG
+	sprintf(th->annotation_str,"%p@%d",(void*)th,th->recycle_count);
+	th->recycle_count++;
+#endif
 	myth_queue_init_thread_data(&th->queue_data);
 }
 

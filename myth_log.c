@@ -1,5 +1,6 @@
 #include "myth_log.h"
 
+/*
 int myth_textlog_entry_compare(const void *pa,const void *pb)
 {
 	myth_textlog_entry_t a,b;
@@ -10,3 +11,6 @@ int myth_textlog_entry_compare(const void *pa,const void *pb)
 	if (a->ts < b->ts)return -1;
 	return 0;
 }
+*/
+
+uint64_t g_tsc_base=0;
