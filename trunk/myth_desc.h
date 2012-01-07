@@ -2,6 +2,7 @@
 #define MYTH_DESC_H_
 
 #include <stdio.h>
+#include <stddef.h>
 #include <sys/mman.h>
 
 #include "myth_context.h"
@@ -40,7 +41,18 @@ typedef struct myth_thread
 	uint8_t detached;//57
 	uint8_t cancelled;//58
 	uint8_t cancel_enabled;//59
+#if defined MYTH_ENABLE_THREAD_ANNOTATION && defined MYTH_COLLECT_LOG
+	char annotation_str[MYTH_THREAD_ANNOTATION_MAXLEN];
+	int recycle_count;
+#endif
 }__attribute__((aligned(CACHE_LINE_SIZE))) myth_thread,*myth_thread_t;
+
+static inline myth_thread_t myth_context_to_thread(myth_running_env_t env,myth_context_t ctx)
+{
+	if (ctx==&env->sched.context){return NULL;}//scheduler
+	char *ctx_ptr=(char*)ctx;
+	return (myth_thread_t)(&ctx_ptr[-offsetof(struct myth_thread,context)]);
+}
 
 static inline void myth_desc_join_set(myth_thread_t thread,myth_thread_t wait_thread)
 {

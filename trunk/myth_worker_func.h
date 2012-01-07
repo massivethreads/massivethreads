@@ -103,10 +103,11 @@ static inline void myth_setup_worker(int rank)
 	env->exit_flag=0;
 	env->tid=tid;
 	memset(&env->prof_data,0,sizeof(myth_prof_data));
-	myth_log_worker_init(env);
 	//Initialize allocators
 	myth_flmalloc_init_worker(rank);
 	myth_malloc_wrapper_init_worker(rank);
+	//Initialize logger
+	myth_log_worker_init(env);
 	myth_set_current_env(env);
 	//Initialize random seed
 	myth_random_init(((unsigned)time(NULL))+rank);
@@ -214,7 +215,6 @@ static inline void myth_cleanup_worker(int rank)
 	env=myth_get_current_env();
 	//cleanup timer
 	if (rank==0){
-		myth_log_add(env,MYTH_LOG_QUIT);
 		//Stop interval timer
 		struct itimerval tv;
 		memset(&tv,0,sizeof(struct itimerval));
@@ -284,6 +284,9 @@ static inline void myth_startpoint_init_ex_body(int rank)
 	this_th->stack=NULL;
 #else
 	this_th=get_new_myth_thread_struct_desc(env);
+#endif
+#if defined MYTH_ENABLE_THREAD_ANNOTATION && defined MYTH_COLLECT_LOG
+	sprintf(this_th->annotation_str,"%p(main)",this_th);
 #endif
 	//Set worker thread descrptor
 	this_th->env=env;
@@ -413,7 +416,6 @@ static void myth_sched_loop(void)
 		for (i=0;i<g_worker_thread_num;i++){env->prof_data.ws_attempt_count[i]=0;}
 	}
 #endif
-	myth_log_add(env,MYTH_LOG_WS);
 	while (1){
 		//sched_yield();
 		myth_thread_t next_run;
@@ -439,7 +441,6 @@ static void myth_sched_loop(void)
 #endif
 			myth_assert(next_run->status==MYTH_STATUS_READY);
 			myth_swap_context(&env->sched.context,&next_run->context);
-			myth_log_add(env,MYTH_LOG_WS);
 #ifdef MYTH_SCHED_LOOP_DEBUG
 			myth_dprintf("myth_sched_loop:returned from thread:%p\n",(void*)next_run);
 #endif
@@ -447,7 +448,6 @@ static void myth_sched_loop(void)
 		}
 		//Check exit flag
 		if (env->exit_flag==1){
-			myth_log_add(env,MYTH_LOG_QUIT);
 			env->this_thread=NULL;
 #ifdef MYTH_SCHED_LOOP_DEBUG
 			myth_dprintf("env %p received exit signal,exiting\n",env);
