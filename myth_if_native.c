@@ -157,6 +157,11 @@ void myth_log_reset(void)
 	myth_log_reset_body();
 }
 
+void myth_log_annotate_thread(myth_thread_t th,char *name)
+{
+	myth_log_annotate_thread_body(th,name);
+}
+
 void myth_sched_prof_start(void)
 {
 	myth_sched_prof_start_body();
