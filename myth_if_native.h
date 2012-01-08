@@ -63,6 +63,7 @@ void myth_log_pause(void);
 void myth_log_flush(void);
 void myth_log_reset(void);
 void myth_log_annotate_thread(myth_thread_t th,char *name);
+void myth_log_get_thread_annotation(myth_thread_t th,char *name);
 void myth_sched_prof_start(void);
 void myth_sched_prof_pause(void);
 
