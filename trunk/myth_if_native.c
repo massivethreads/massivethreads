@@ -146,6 +146,17 @@ void myth_log_pause(void)
 {
 	myth_log_pause_body();
 }
+
+void myth_log_flush(void)
+{
+	myth_log_flush_body();
+}
+
+void myth_log_reset(void)
+{
+	myth_log_reset_body();
+}
+
 void myth_sched_prof_start(void)
 {
 	myth_sched_prof_start_body();

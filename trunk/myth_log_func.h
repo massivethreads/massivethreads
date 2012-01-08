@@ -33,8 +33,9 @@ static inline void myth_log_add(myth_running_env_t env,myth_log_type_t type)
 static inline void myth_log_add_context_switch(myth_running_env_t env,myth_thread_t th)
 {
 	//fprintf(stderr,"%lld:%d:%s\n",(long long int)myth_get_rdtsc(),env->rank,(th)?th->annotation_str:"Scheduler");
-	myth_log_entry_t e;
 	if (!g_log_worker_stat)return;
+	myth_internal_lock_lock(&env->log_lock);
+	myth_log_entry_t e;
 	e=&(env->log_data[env->log_count]);
 	//store state and tsc to log
 	e->tsc=myth_get_rdtsc();
@@ -48,6 +49,7 @@ static inline void myth_log_add_context_switch(myth_running_env_t env,myth_threa
 		env->log_data=myth_flrealloc(env->rank,sizeof(myth_log_entry)*env->log_buf_size,env->log_data,sizeof(myth_log_entry)*new_log_buf_size);
 		env->log_buf_size=new_log_buf_size;
 	}
+	myth_internal_lock_unlock(&env->log_lock);
 }
 
 static inline void myth_log_init(void)
@@ -57,13 +59,67 @@ static inline void myth_log_init(void)
 	g_log_fp=fopen(fname,"w");
 	g_tsc_base=myth_get_rdtsc();
 }
+
+static inline void myth_log_flush_body(void);
+
 static inline void myth_log_fini(void)
+{
+	myth_log_flush_body();
+	int i;
+	for (i=0;i<g_worker_thread_num;i++){
+		myth_internal_lock_destroy(&g_envs[i].log_lock);
+	}
+}
+static inline void myth_log_worker_init(myth_running_env_t env)
+{
+	env->log_buf_size=MYTH_LOG_INITIAL_BUFFER_SIZE;
+	env->log_data=myth_flmalloc(env->rank,sizeof(myth_log_entry)*env->log_buf_size);
+	env->log_count=0;
+	myth_internal_lock_init(&env->log_lock);
+}
+static inline void myth_log_worker_fini(myth_running_env_t env)
+{
+	//Add dummy context switch event
+	myth_log_add_context_switch(env,NULL);
+}
+static inline void myth_annotate_thread_body(myth_thread_t th,char *name)
+{
+#ifdef MYTH_ENABLE_THREAD_ANNOTATION
+	myth_internal_lock_lock(&th->lock);
+	strncpy(th->annotation_str,name,MYTH_THREAD_ANNOTATION_MAXLEN-1);
+	myth_internal_lock_unlock(&th->lock);
+#endif
+}
+
+static inline void myth_log_start_body(void)
+{
+	g_log_worker_stat=1;
+}
+
+static inline void myth_log_pause_body(void)
+{
+	g_log_worker_stat=0;
+}
+
+static inline void myth_log_reset_body(void)
+{
+	int i;
+	for (i=0;i<g_worker_thread_num;i++){
+		myth_running_env_t e=&g_envs[i];
+		myth_internal_lock_lock(&e->log_lock);
+		e->log_count=0;
+		myth_internal_lock_unlock(&e->log_lock);
+	}
+}
+
+static inline void myth_log_flush_body(void)
 {
 	//TODO:emit category
 	//TODO:emit data
 	int i;
 	for (i=0;i<g_worker_thread_num;i++){
 		myth_running_env_t e=&g_envs[i];
+		myth_internal_lock_lock(&e->log_lock);
 		int j;
 		//TODO:support other log types
 		for (j=0;j<e->log_count-1;j++){
@@ -75,7 +131,10 @@ static inline void myth_log_fini(void)
 				break;
 			}
 		}
+		myth_internal_lock_unlock(&e->log_lock);
 	}
+	//clear log buffer
+	myth_log_reset_body();
 #if 0
 	int i,j;
 	myth_textlog_entry_t tx_logs;
@@ -195,25 +254,7 @@ static inline void myth_log_fini(void)
 	}*/
 #endif
 }
-static inline void myth_log_worker_init(myth_running_env_t env)
-{
-	env->log_buf_size=MYTH_LOG_INITIAL_BUFFER_SIZE;
-	env->log_data=myth_flmalloc(env->rank,sizeof(myth_log_entry)*env->log_buf_size);
-	env->log_count=0;
-}
-static inline void myth_log_worker_fini(myth_running_env_t env)
-{
-	//Add dummy context switch event
-	myth_log_add_context_switch(env,NULL);
-}
-static inline void myth_annotate_thread_body(myth_thread_t th,char *name)
-{
-#ifdef MYTH_ENABLE_THREAD_ANNOTATION
-	myth_internal_lock_lock(&th->lock);
-	strncpy(th->annotation_str,name,MYTH_THREAD_ANNOTATION_MAXLEN-1);
-	myth_internal_lock_unlock(&th->lock);
-#endif
-}
+
 #else
 static inline void myth_log_add_ws(myth_running_env_t env,myth_log_type_t type,int ws_victim)
 {

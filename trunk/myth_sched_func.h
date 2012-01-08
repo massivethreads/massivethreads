@@ -670,16 +670,6 @@ static inline void myth_detach_body(myth_thread_t th)
 	}
 }
 
-static inline void myth_log_start_body(void)
-{
-	g_log_worker_stat=1;
-}
-
-static inline void myth_log_pause_body(void)
-{
-	g_log_worker_stat=0;
-}
-
 #ifndef SWITCH_AFTER_CREATE
 //Entry point of threads
 static void myth_entry_point(void)
