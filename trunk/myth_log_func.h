@@ -143,6 +143,7 @@ static inline void myth_log_flush_body(void)
 		}
 		myth_internal_lock_unlock(&e->log_lock);
 	}
+	fflush(g_log_fp);
 	//clear log buffer
 	myth_log_reset_body();
 #if 0
