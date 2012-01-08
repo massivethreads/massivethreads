@@ -90,6 +90,16 @@ static inline void myth_log_annotate_thread_body(myth_thread_t th,char *name)
 	myth_internal_lock_unlock(&th->lock);
 #endif
 }
+static inline void myth_log_get_thread_annotation_body(myth_thread_t th,char *name)
+{
+#ifdef MYTH_ENABLE_THREAD_ANNOTATION
+	myth_internal_lock_lock(&th->lock);
+	strcpy(name,th->annotation_str);
+	myth_internal_lock_unlock(&th->lock);
+#else
+	strcpy(name,"");
+#endif
+}
 
 static inline void myth_log_start_body(void)
 {
@@ -275,6 +285,9 @@ static inline void myth_log_worker_fini(myth_running_env_t env)
 {
 }
 static inline void myth_log_annotate_thread_body(myth_thread_t th,char *name)
+{
+}
+static inline void myth_log_get_thread_annotation_body(myth_thread_t th,char *name)
 {
 }
 static inline void myth_log_start_body(void)
