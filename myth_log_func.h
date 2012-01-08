@@ -88,7 +88,7 @@ static inline void myth_log_worker_init(myth_running_env_t env)
 static inline void myth_log_worker_fini(myth_running_env_t env)
 {
 	//Add dummy context switch event
-	myth_log_add_context_switch(env,NULL);
+	//myth_log_add_context_switch(env,NULL);
 }
 static inline void myth_log_annotate_thread_body(myth_thread_t th,char *name)
 {
@@ -167,6 +167,7 @@ static inline void myth_log_flush_body(void)
 	int i;
 	int total_log_entry_count=0;
 	for (i=0;i<g_worker_thread_num;i++){
+		myth_log_add_context_switch(&g_envs[i],NULL);
 		myth_internal_lock_lock(&g_envs[i].log_lock);
 		total_log_entry_count+=g_envs[i].log_count;
 	}
