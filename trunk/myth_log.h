@@ -6,7 +6,8 @@
 
 typedef enum
 {
-	MYTH_LOG_SWITCH=0,	//Start user application routine
+	MYTH_LOG_THREAD_ANNOTATION=0,//thread annotation
+	MYTH_LOG_SWITCH,//context switch
 }myth_log_type_t;
 
 //ログをとるための構造体
@@ -14,8 +15,17 @@ typedef struct myth_log_entry
 {
 	uint64_t tsc;			//Time stamp counter from rdtsc
 	myth_log_type_t type;
+	int rank;
 	union{
-		char str[MYTH_THREAD_ANNOTATION_MAXLEN];
+		struct{
+			struct myth_thread *th;
+			int recycle_count;
+		}ctx_switch;
+		struct{
+			struct myth_thread *th;
+			int recycle_count;
+			char str[MYTH_THREAD_ANNOTATION_MAXLEN];
+		}annotation;
 	}u;
 }myth_log_entry,*myth_log_entry_t;
 
