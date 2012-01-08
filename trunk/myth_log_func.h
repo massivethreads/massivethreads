@@ -146,18 +146,26 @@ static inline void myth_log_pause_body(void)
 	g_log_worker_stat=0;
 }
 
+int myth_log_entry_compare(const void *pa,const void *pb);
+
 static inline void myth_log_reset_body(void)
 {
-	int i;
+	int i,j;
 	for (i=0;i<g_worker_thread_num;i++){
 		myth_running_env_t e=&g_envs[i];
 		myth_internal_lock_lock(&e->log_lock);
-		e->log_count=0;
+		qsort(e->log_data,e->log_count,sizeof(myth_log_entry),myth_log_entry_compare);
+		int n_annotation=0;
+		for (j=0;j<e->log_count;j++){
+			if (e->log_data[j].type!=MYTH_LOG_THREAD_ANNOTATION){
+				break;
+			}
+		}
+		n_annotation=j;
+		e->log_count=n_annotation;
 		myth_internal_lock_unlock(&e->log_lock);
 	}
 }
-
-int myth_log_entry_compare(const void *pa,const void *pb);
 
 static inline void myth_log_flush_body(void)
 {
