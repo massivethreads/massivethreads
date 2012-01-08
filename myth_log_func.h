@@ -30,17 +30,13 @@ static inline void myth_log_add(myth_running_env_t env,myth_log_type_t type)
 }
 */
 
-static inline void myth_log_add_context_switch(myth_running_env_t env,myth_thread_t th)
+static inline void myth_log_add(myth_running_env_t env,myth_log_entry_t e)
 {
-	//fprintf(stderr,"%lld:%d:%s\n",(long long int)myth_get_rdtsc(),env->rank,(th)?th->annotation_str:"Scheduler");
 	if (!g_log_worker_stat)return;
 	myth_internal_lock_lock(&env->log_lock);
-	myth_log_entry_t e;
-	e=&(env->log_data[env->log_count]);
-	//store state and tsc to log
-	e->tsc=myth_get_rdtsc();
-	e->type=MYTH_LOG_SWITCH;
-	strcpy(e->u.str,(th)?th->annotation_str:"Scheduler");
+	env->log_data[env->log_count]=*e;
+	env->log_data[env->log_count].rank=env->rank;
+	env->log_data[env->log_count].tsc=myth_get_rdtsc();
 	env->log_count++;
 	//Reallocate buffer if buffer is full
 	if (env->log_count==env->log_buf_size){
@@ -50,6 +46,18 @@ static inline void myth_log_add_context_switch(myth_running_env_t env,myth_threa
 		env->log_buf_size=new_log_buf_size;
 	}
 	myth_internal_lock_unlock(&env->log_lock);
+}
+
+static inline void myth_log_add_context_switch(myth_running_env_t env,myth_thread_t th)
+{
+	//fprintf(stderr,"%lld:%d:%s\n",(long long int)myth_get_rdtsc(),env->rank,(th)?th->annotation_str:"Scheduler");
+	myth_log_entry e;
+	//store state to log_entry
+	e.type=MYTH_LOG_SWITCH;
+	e.u.ctx_switch.th=th;
+	e.u.ctx_switch.recycle_count=(th)?th->recycle_count:0;
+	//strcpy(e->u.str,(th)?th->annotation_str:"Scheduler");
+	myth_log_add(env,&e);
 }
 
 static inline void myth_log_init(void)
@@ -85,11 +93,37 @@ static inline void myth_log_worker_fini(myth_running_env_t env)
 static inline void myth_log_annotate_thread_body(myth_thread_t th,char *name)
 {
 #ifdef MYTH_ENABLE_THREAD_ANNOTATION
-	myth_internal_lock_lock(&th->lock);
-	strncpy(th->annotation_str,name,MYTH_THREAD_ANNOTATION_MAXLEN-1);
-	myth_internal_lock_unlock(&th->lock);
+	myth_log_entry e;
+	e.type=MYTH_LOG_THREAD_ANNOTATION;
+	e.u.annotation.th=th;
+	e.u.annotation.recycle_count=(th)?th->recycle_count:0;
+	strncpy(e.u.annotation.str,name,MYTH_THREAD_ANNOTATION_MAXLEN-1);
+	myth_log_add(myth_get_current_env(),&e);
 #endif
 }
+
+static inline void myth_log_get_thread_annotation(myth_log_entry_t logs,int logcount,myth_thread_t th,int recycle_count,char *ret)
+{
+#ifdef MYTH_ENABLE_THREAD_ANNOTATION
+	if (!th){
+		sprintf(ret,"Scheduler");
+		return;
+	}
+	int i;
+	for (i=logcount-1;i>=0;i--){
+		assert(logs[i].type==MYTH_LOG_THREAD_ANNOTATION);
+		if (logs[i].u.annotation.th==th && logs[i].u.annotation.recycle_count==recycle_count){
+			strcpy(ret,logs[i].u.annotation.str);
+			return;
+		}
+	}
+	sprintf(ret,"%p@%d",th,recycle_count);
+#else
+	strcpy(name,"");
+#endif
+}
+
+/*
 static inline void myth_log_get_thread_annotation_body(myth_thread_t th,char *name)
 {
 #ifdef MYTH_ENABLE_THREAD_ANNOTATION
@@ -100,6 +134,7 @@ static inline void myth_log_get_thread_annotation_body(myth_thread_t th,char *na
 	strcpy(name,"");
 #endif
 }
+*/
 
 static inline void myth_log_start_body(void)
 {
@@ -122,26 +157,52 @@ static inline void myth_log_reset_body(void)
 	}
 }
 
+int myth_log_entry_compare(const void *pa,const void *pb);
+
 static inline void myth_log_flush_body(void)
 {
 	//TODO:emit category
 	//TODO:emit data
+	//merge all the logs
 	int i;
+	int total_log_entry_count=0;
 	for (i=0;i<g_worker_thread_num;i++){
-		myth_running_env_t e=&g_envs[i];
-		myth_internal_lock_lock(&e->log_lock);
-		int j;
-		//TODO:support other log types
-		for (j=0;j<e->log_count-1;j++){
-			myth_log_entry_t le=&e->log_data[j],le2=&e->log_data[j+1];
-			switch(le->type){
-			case MYTH_LOG_SWITCH:
-				//fprintf(stderr,"[%lld-%lld] %d:%s\n",(long long int)le->tsc,(long long int)le2->tsc-1,i,le->u.str);
-				fprintf(g_log_fp,"%s,%lld,%lld,%d,%s\n",le->u.str,(long long int)(le->tsc-g_tsc_base),(long long int)(le2->tsc-1-g_tsc_base),i,le->u.str);
-				break;
-			}
+		myth_internal_lock_lock(&g_envs[i].log_lock);
+		total_log_entry_count+=g_envs[i].log_count;
+	}
+	myth_log_entry_t all_logs=real_malloc(sizeof(myth_log_entry)*total_log_entry_count);
+	int pos=0;
+	for (i=0;i<g_worker_thread_num;i++){
+		memcpy(&all_logs[pos],g_envs[i].log_data,sizeof(myth_log_entry)*g_envs[i].log_count);
+		pos+=g_envs[i].log_count;
+		myth_internal_lock_unlock(&g_envs[i].log_lock);
+	}
+	//sort by type and timestamp
+	qsort(all_logs,total_log_entry_count,sizeof(myth_log_entry),myth_log_entry_compare);
+	int n_annotation=0;
+	int n_switch=0;
+	//fprintf(stderr,"total=%d,annotation=%d,switch=%d\n",total_log_entry_count,n_annotation,n_switch);
+	for (i=0;i<total_log_entry_count;i++){
+		if (all_logs[i].type!=MYTH_LOG_THREAD_ANNOTATION){
+			break;
 		}
-		myth_internal_lock_unlock(&e->log_lock);
+	}
+	n_annotation=i;
+	for (;i<total_log_entry_count;i++){
+		if (all_logs[i].type!=MYTH_LOG_SWITCH){
+			break;
+		}
+	}
+	n_switch=i-n_annotation;
+	for (i=n_annotation;i<n_switch+n_annotation-1;i++){
+		myth_log_entry_t le=&all_logs[i],le2=&all_logs[i+1];
+		assert(le->type==MYTH_LOG_SWITCH && le2->type==MYTH_LOG_SWITCH);
+		if (le->rank==le2->rank){
+			//fprintf(stderr,"[%lld-%lld] %d:%s\n",(long long int)le->tsc,(long long int)le2->tsc-1,i,le->u.str);
+			char th_name[100];
+			myth_log_get_thread_annotation(all_logs,n_annotation,le->u.ctx_switch.th,le->u.ctx_switch.recycle_count,th_name);
+			fprintf(g_log_fp,"%s,%lld,%lld,%d,%s\n",th_name,(long long int)(le->tsc-g_tsc_base),(long long int)(le2->tsc-1-g_tsc_base),le->rank,th_name);
+		}
 	}
 	fflush(g_log_fp);
 	//clear log buffer

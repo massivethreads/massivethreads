@@ -161,12 +161,12 @@ void myth_log_annotate_thread(myth_thread_t th,char *name)
 {
 	myth_log_annotate_thread_body(th,name);
 }
-
+/*
 void myth_log_get_thread_annotation(myth_thread_t th,char *name)
 {
 	myth_log_get_thread_annotation_body(th,name);
 }
-
+*/
 void myth_sched_prof_start(void)
 {
 	myth_sched_prof_start_body();
