@@ -67,14 +67,14 @@ static inline void myth_internal_lock_lock(myth_internal_lock_t *ptr)
 	}
 #endif
 	asm volatile(
-			"1:cmp $0,%0\n"
+			"1:cmp $0,(%0)\n"
 			"je 2f\n"
 			"rep;nop\n"
 			"jmp 1b\n"
 			"2:xor %%eax,%%eax\n"//eax=0
-			"lock cmpxchg %2,%0\n"//if (*ptr==0)*ptr=1
+			"lock cmpxchg %1,(%0)\n"//if (*ptr==0)*ptr=1
 			"jne 1b\n"
-			:"=m"(*ptr):"m"(*ptr),"r"(1):"%eax","cc","memory");
+			::"r"(ptr),"r"(1):"%eax","cc","memory");
 }
 static inline void myth_internal_lock_unlock(myth_internal_lock_t *ptr)
 {
@@ -87,8 +87,9 @@ static inline int myth_internal_lock_trylock(myth_internal_lock_t *ptr)
 {
 	int ret;
 	asm volatile(
-			"lock cmpxchg %4,%0\n"//if (*ptr==0)*ptr=1
-			:"=m"(*ptr),"=a"(ret):"1"(0),"m"(*ptr),"r"(1):"cc","memory");
+			"xor %%eax,%%eax\n"
+			"lock cmpxchg %2,(%1)\n"//if (*ptr==0)*ptr=1
+			:"=&a"(ret):"r"(ptr),"r"(1):"cc","memory");
 	return ret==0;
 }
 #else
