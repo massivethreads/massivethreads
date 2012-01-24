@@ -82,6 +82,7 @@ static inline myth_thread_t get_new_myth_thread_struct_desc(myth_running_env_t e
 #endif
 		for (i=0;i<STACK_ALLOC_UNIT;i++){
 			ret=(myth_thread_t)th_ptr;
+			myth_internal_lock_init(&ret->lock);
 			if (i<STACK_ALLOC_UNIT-1){
 				myth_freelist_push(env->freelist_desc,ret);
 				th_ptr+=th_size;
