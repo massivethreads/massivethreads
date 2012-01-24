@@ -138,6 +138,13 @@ myth_set_context_withcall_s:
 #define MY_RET_B ret
 #endif
 
+#ifdef COMPILED_AS_PIC
+#define PUSH_1F_USING_RAX lea 1f(%rip),%rax
+//#define PUSH_1F_USING_RAX lea lea 1f@GOTPCREL(%rip),%rax
+#else
+#define PUSH_1F_USING_RAX pushq $1f
+#endif
+
 /*
 	uint64_t rsp;
 */
@@ -163,12 +170,7 @@ myth_swap_context_s:
 	push %r13
 	push %r14
 	push %r15
-#ifdef COMPILED_AS_PIC
-	lea 1f@GOTPCREL(%rip),%rax
-	push %rax
-#else
-	pushq $1f
-#endif
+	PUSH_1F_USING_RAX
 	//Switch stack and return
 	mov %rsp,(%rdi)
 	mov (%rsi),%rsp
@@ -194,12 +196,7 @@ myth_swap_context_withcall_s:
 	push %r13
 	push %r14
 	push %r15
-#ifdef COMPILED_AS_PIC
-	lea 1f@GOTPCREL(%rip),%rax
-	push %rax
-#else
-	pushq $1f
-#endif
+	PUSH_1F_USING_RAX
 	//Switch stack and return
 	mov %rsp,(%rdi)
 	mov (%rsi),%rsp
