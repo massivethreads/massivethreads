@@ -139,7 +139,7 @@ myth_set_context_withcall_s:
 #endif
 
 #ifdef COMPILED_AS_PIC
-#define PUSH_1F_USING_RAX lea 1f(%rip),%rax
+#define PUSH_1F_USING_RAX lea 1f(%rip),%rax;push %rax
 //#define PUSH_1F_USING_RAX lea lea 1f@GOTPCREL(%rip),%rax
 #else
 #define PUSH_1F_USING_RAX pushq $1f
