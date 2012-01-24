@@ -16,6 +16,7 @@ typedef void (*void_func_t)(void);
 #elif __x86_64__
 #define MYTH_CTX_CALLBACK static __attribute__((used,noinline,sysv_abi))
 #define USE_AVOID_OPTIMIZE
+//#define MYTH_CTX_CALLBACK static __attribute((used,noinline))
 #else
 #error
 #endif
@@ -58,6 +59,10 @@ void myth_set_context_withcall_s(myth_context_t switch_to,void(*func)(void*,void
 #define myth_swap_context(from,to) {myth_context_switch_hook(to);myth_swap_context_i(from,to);}
 #define myth_swap_context_withcall(from,to,fn,a1,a2,a3) {myth_context_switch_hook(to);myth_swap_context_withcall_i(from,to,fn,a1,a2,a3);}
 #define myth_set_context_withcall(ctx,fn,a1,a2,a3) {myth_context_switch_hook(ctx);myth_set_context_withcall_i(ctx,fn,a1,a2,a3);}
+
+//#define myth_swap_context(from,to) {myth_context_switch_hook(to);myth_swap_context_s(from,to);}
+//#define myth_swap_context_withcall(from,to,fn,a1,a2,a3) {myth_context_switch_hook(to);myth_swap_context_withcall_s(from,to,fn,a1,a2,a3);}
+//#define myth_set_context_withcall(ctx,fn,a1,a2,a3) {myth_context_switch_hook(ctx);myth_set_context_withcall_s(ctx,fn,a1,a2,a3);}
 #else
 #define myth_set_context(ctx) {myth_context_switch_hook(ctx);myth_set_context_s(ctx);}
 #define myth_swap_context(from,to) {myth_context_switch_hook(to);myth_swap_context_s(from,to);}
@@ -219,14 +224,14 @@ static inline void myth_make_context_voidcall(myth_context_t ctx,void_func_t fun
 #define PUSH_LABEL(label,reg) \
 	"leaq "label"(%%rip)," reg "\n"\
 	"push " reg "\n"
-#define DUMMYREG_ARG ,"r"(0LL)
+#define DUMMYREG_ARG ,R_DUMMY(0LL)
 #else
 #define PUSH_LABEL(label,reg) \
 	"pushq $" label "\n"
 #define DUMMYREG_ARG
 #endif
 
-#ifdef MYTH_INLINE_PUSH_CALLEE_SAVED
+#if 0 && defined MYTH_INLINE_PUSH_CALLEE_SAVED
 #define PUSH_CALLEE_SAVED() \
 	"push %%rbp\n" \
 	"push %%rbx\n" \
@@ -241,17 +246,70 @@ static inline void myth_make_context_voidcall(myth_context_t ctx,void_func_t fun
 	"pop %%r12\n" \
 	"pop %%rbx\n" \
 	"pop %%rbp\n"
-#define REG_BARRIER() \
-	asm volatile("":::"%rax","%rcx","%rdx","%rsi","%rdi",\
-		"%r8","%r9","%r10","%r11",\
-		"memory")
+#define DECLARE_DUMMY_VARIABLES int d0,d1,d2,d3,\
+	d4,d5,d6,d7,\
+	d8;
+#define DUMMY_VARIABLE_CONSTRAINTS "=r"(d0),"=r"(d1),"=r"(d2),"=r"(d3),\
+		"=r"(d4),"=r"(d5),"=r"(d6),"=r"(d7),\
+		"=r"(d8)
+#define C0 "%9"
+#define C1 "%10"
+#define C2 "%11"
+#define C3 "%12"
+#define C4 "%13"
+#define C5 "%14"
+#else
+#if 0
+#define PUSH_CALLEE_SAVED() "push %%rbp\n"
+#define POP_CALLEE_SAVED() "pop %%rbp\n"
+#define DECLARE_DUMMY_VARIABLES int d0,d1,d2,d3,\
+	d4,d5,d6,d7,\
+	d8,d9,dA,dB,\
+	dC,dD;
+#define DUMMY_VARIABLE_CONSTRAINTS "=&r"(d0),"=&r"(d1),"=&r"(d2),"=&r"(d3),\
+		"=&r"(d4),"=&r"(d5),"=&r"(d6),"=&r"(d7),\
+		"=&r"(d8),"=&a"(d9),"=&d"(dA),"=&D"(dB),\
+		"=&S"(dC),"=&r"(dD)
+#define C0 "%14"
+#define C1 "%15"
+#define C2 "%16"
+#define C3 "%17"
+#define C4 "%18"
+#define C5 "%19"
+#define R_ARG0 "0"
+#define R_ARG1 "1"
+#define R_ARG2 "2"
+#define R_A "9"
+#define R_D "10"
+#define R_DI "11"
+#define R_SI "12"
+#define R_DUMMY "13"
 #else
 #define PUSH_CALLEE_SAVED()
 #define POP_CALLEE_SAVED()
-#define REG_BARRIER() \
-	asm volatile("":::"%rax","%rbx","%rcx","%rdx","%rsi","%rdi","%rbp",\
-		"%r8","%r9","%r10","%r11","%r12","%r13","%r14","%r15",\
-		"memory")
+#define DECLARE_DUMMY_VARIABLES int d0,d1,d2,d3,\
+	d4,d5,d6,d7,\
+	d8,d9,dA,dB,\
+	dC,dD,dE;
+#define DUMMY_VARIABLE_CONSTRAINTS "=&r"(d0),"=&r"(d1),"=&r"(d2),"=&r"(d3),\
+		"=&r"(d4),"=&r"(d5),"=&r"(d6),"=&r"(d7),\
+		"=&r"(d8),"=&a"(d9),"=&d"(dA),"=&D"(dB),\
+		"=&S"(dC),"=&r"(dD),"=&r"(dE)
+#define C0 "%15"
+#define C1 "%16"
+#define C2 "%17"
+#define C3 "%18"
+#define C4 "%19"
+#define C5 "%20"
+#define R_ARG0 "0"
+#define R_ARG1 "1"
+#define R_ARG2 "2"
+#define R_A "9"
+#define R_D "10"
+#define R_DI "11"
+#define R_SI "12"
+#define R_DUMMY "13"
+#endif
 #endif
 
 #ifdef USE_JUMP_INSN_A
@@ -267,44 +325,56 @@ static inline void myth_make_context_voidcall(myth_context_t ctx,void_func_t fun
 
 //Context switching functions (inlined)
 #define myth_swap_context_i(switch_from,switch_to) \
-	{asm volatile(\
+	{DECLARE_DUMMY_VARIABLES\
+	asm volatile(\
 		PUSH_CALLEE_SAVED() \
-		PUSH_LABEL("1f","%2") \
-		"mov %%rsp,%0\n"\
-		"mov %1,%%rsp\n"\
+		PUSH_LABEL("1f",C2) \
+		"mov %%rsp,("C0")\n"\
+		"mov ("C1"),%%rsp\n"\
 		MY_RET_A \
 		"1:\n"\
 		POP_CALLEE_SAVED() \
-		:"=m"(*(switch_from)):"g"(*(switch_to)) DUMMYREG_ARG);\
-	REG_BARRIER();}
+		:DUMMY_VARIABLE_CONSTRAINTS\
+		:R_ARG0((void*)(switch_from)),R_ARG1((void*)(switch_to)) DUMMYREG_ARG\
+		:"cc","memory");\
+	/*REG_BARRIER();*/}
 
 #define myth_swap_context_withcall_i(switch_from,switch_to,f,arg1,arg2,arg3) \
-	{asm volatile(\
+	{DECLARE_DUMMY_VARIABLES\
+	asm volatile(\
 		PUSH_CALLEE_SAVED() \
-		PUSH_LABEL("1f","%5") \
-		"mov %%rsp,(%0)\n"\
-		"mov (%1),%%rsp\n"\
+		PUSH_LABEL("1f",C5) \
+		"mov %%rsp,("C0")\n"\
+		"mov ("C1"),%%rsp\n"\
 		"call " #f FUNC_SUFFIX "\n"\
 		MY_RET_A \
 		"1:\n"\
 		POP_CALLEE_SAVED() \
-		::"r"((void*)(switch_from)),"r"((void*)(switch_to)),"D"((void*)arg1),"S"((void*)arg2),"d"((void*)arg3) DUMMYREG_ARG);\
-	REG_BARRIER();}
+		:DUMMY_VARIABLE_CONSTRAINTS\
+		:R_ARG0((void*)(switch_from)),R_ARG1((void*)(switch_to)),R_DI((void*)arg1),R_SI((void*)arg2),R_D((void*)arg3) DUMMYREG_ARG\
+		:"cc","memory");\
+	/*REG_BARRIER();*/}
 
 #define myth_set_context_i(switch_to) \
-	{asm volatile(\
-		"mov %0,%%rsp\n"\
+	{DECLARE_DUMMY_VARIABLES\
+	asm volatile(\
+		"mov ("C0"),%%rsp\n"\
 		MY_RET_B \
-		::"g"(*(switch_to)));\
+		:DUMMY_VARIABLE_CONSTRAINTS\
+		:R_ARG0((void*)(switch_to))\
+		:"cc","memory");\
 	myth_unreachable();\
 	}
 
 #define myth_set_context_withcall_i(switch_to,f,arg1,arg2,arg3) \
-	{asm volatile(\
-		"mov %0,%%rsp\n"\
+	{DECLARE_DUMMY_VARIABLES\
+	asm volatile(\
+		"mov ("C0"),%%rsp\n"\
 		"call " #f FUNC_SUFFIX "\n"\
 		MY_RET_B \
-		::"g"(*(switch_to)),"D"(arg1),"S"(arg2),"d"(arg3));\
+		:DUMMY_VARIABLE_CONSTRAINTS\
+		:R_ARG0((void*)(switch_to)),R_DI(arg1),R_SI(arg2),R_D(arg3)\
+		:"cc","memory");\
 	myth_unreachable();\
 	}
 
