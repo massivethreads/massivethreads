@@ -54,17 +54,18 @@ static inline void myth_internal_lock_init(myth_internal_lock_t *ptr)
 static inline void myth_internal_lock_destroy(myth_internal_lock_t *ptr){}
 static inline void myth_internal_lock_lock(myth_internal_lock_t *ptr)
 {
+#if 0
 	//error check
 	volatile int k=*ptr;
 	if (k!=0 && k!=1){
 		myth_rwbarrier();
 		k=*ptr;
 		if (k!=0 && k!=1){
-			//fprintf(stderr,"*ptr=%d\n",k);
+			fprintf(stderr,"*ptr=%d\n",k);
 			assert(k==0 ||k==1);
-			//asm volatile ("":::"memory");
 		}
 	}
+#endif
 	asm volatile(
 			"1:cmp $0,%0\n"
 			"je 2f\n"
