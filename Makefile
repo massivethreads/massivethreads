@@ -26,6 +26,10 @@ prepare: myth.d
 .c.o:
 	$(CC) $(CFLAGS) -c $<
 
+.SUFFIXES: .o .S
+.S.o:
+	$(CC) $(CFLAGS) -c $<
+
 myth.d: pthread_so_path.def
 	gcc -MM -w *.c > myth.d
 
@@ -42,7 +46,7 @@ pthread_so_path.def:
 #Object files
 MAIN_OBJS = myth_log.o myth_sched.o myth_worker.o \
 myth_malloc_wrapper.o myth_sync.o myth_init.o \
-myth_misc.o myth_io.o myth_original_lib.o myth_tls.o
+myth_misc.o myth_io.o myth_original_lib.o myth_tls.o myth_context.o
 
 # Targets
 libmyth.so: $(MAIN_OBJS) myth_if_native.o myth_if_pthread.o myth_constructor.o
