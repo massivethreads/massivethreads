@@ -59,10 +59,6 @@ void myth_set_context_withcall_s(myth_context_t switch_to,void(*func)(void*,void
 #define myth_swap_context(from,to) {myth_context_switch_hook(to);myth_swap_context_i(from,to);}
 #define myth_swap_context_withcall(from,to,fn,a1,a2,a3) {myth_context_switch_hook(to);myth_swap_context_withcall_i(from,to,fn,a1,a2,a3);}
 #define myth_set_context_withcall(ctx,fn,a1,a2,a3) {myth_context_switch_hook(ctx);myth_set_context_withcall_i(ctx,fn,a1,a2,a3);}
-
-//#define myth_swap_context(from,to) {myth_context_switch_hook(to);myth_swap_context_s(from,to);}
-//#define myth_swap_context_withcall(from,to,fn,a1,a2,a3) {myth_context_switch_hook(to);myth_swap_context_withcall_s(from,to,fn,a1,a2,a3);}
-//#define myth_set_context_withcall(ctx,fn,a1,a2,a3) {myth_context_switch_hook(ctx);myth_set_context_withcall_s(ctx,fn,a1,a2,a3);}
 #else
 #define myth_set_context(ctx) {myth_context_switch_hook(ctx);myth_set_context_s(ctx);}
 #define myth_swap_context(from,to) {myth_context_switch_hook(to);myth_swap_context_s(from,to);}
