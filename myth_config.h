@@ -148,6 +148,9 @@
 //FIFO
 //#define MYTH_QUEUE_FIFO
 
+//Confirm if a thread descriptor is used in two threads at the same time.
+//#define MYTH_DESC_REUSE_CHECK
+
 //Check the number of threads in runqueue before work stealing
 #define CHECK_NUM_BEFORE_STEAL
 
