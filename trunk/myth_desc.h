@@ -45,6 +45,9 @@ typedef struct myth_thread
 	char annotation_str[MYTH_THREAD_ANNOTATION_MAXLEN];
 	int recycle_count;
 #endif
+#ifdef MYTH_DESC_REUSE_CHECK
+	myth_internal_lock_t sanity_check;
+#endif
 }__attribute__((aligned(CACHE_LINE_SIZE))) myth_thread,*myth_thread_t;
 
 static inline myth_thread_t myth_context_to_thread(myth_running_env_t env,myth_context_t ctx)

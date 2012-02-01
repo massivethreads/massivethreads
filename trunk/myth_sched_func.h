@@ -82,6 +82,9 @@ static inline myth_thread_t get_new_myth_thread_struct_desc(myth_running_env_t e
 #endif
 		for (i=0;i<STACK_ALLOC_UNIT;i++){
 			ret=(myth_thread_t)th_ptr;
+#ifdef MYTH_DESC_REUSE_CHECK
+			myth_internal_lock_init(&ret->sanity_check);
+#endif
 			myth_internal_lock_init(&ret->lock);
 			if (i<STACK_ALLOC_UNIT-1){
 				myth_freelist_push(env->freelist_desc,ret);
@@ -245,6 +248,9 @@ static inline void init_myth_thread_struct(myth_running_env_t env,myth_thread_t 
 	sprintf(th->annotation_str,"%p@%d",(void*)th,th->recycle_count);
 	th->recycle_count++;
 #endif
+#ifdef MYTH_DESC_REUSE_CHECK
+	assert(myth_internal_lock_trylock(&th->sanity_check));
+#endif
 	myth_queue_init_thread_data(&th->queue_data);
 }
 
@@ -260,6 +266,9 @@ static inline void free_myth_thread_struct_desc(myth_running_env_t e,myth_thread
 	myth_queue_fini_thread_data(&th->queue_data);
 #ifdef FREE_MYTH_THREAD_STRUCT_DEBUG
 	myth_dprintf("thread descriptor %p is freed\n",th);
+#endif
+#ifdef MYTH_DESC_REUSE_CHECK
+	myth_internal_lock_unlock(&th->sanity_check);
 #endif
 	//Add to a freelist
 	myth_freelist_push(e->freelist_desc,(void*)th);
