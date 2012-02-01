@@ -51,7 +51,17 @@ static inline void myth_internal_lock_init(myth_internal_lock_t *ptr)
 {
 	*ptr=0;
 }
-static inline void myth_internal_lock_destroy(myth_internal_lock_t *ptr){}
+static inline void myth_internal_lock_destroy(myth_internal_lock_t *ptr){*ptr=0;}
+static inline int myth_internal_lock_trylock(myth_internal_lock_t *ptr)
+{
+	int ret;
+	asm volatile(
+			"xor %%eax,%%eax\n"
+			"mov $1,%%edx\n"
+			"lock cmpxchg %%edx,(%1)\n"//if (*ptr==0)*ptr=1
+			:"=&a"(ret):"r"(ptr):"cc","%rdx","memory");
+	return ret==0;
+}
 static inline void myth_internal_lock_lock(myth_internal_lock_t *ptr)
 {
 #if 0
@@ -82,15 +92,6 @@ static inline void myth_internal_lock_unlock(myth_internal_lock_t *ptr)
 	myth_wbarrier();
 	//Reset value
 	*ptr=0;
-}
-static inline int myth_internal_lock_trylock(myth_internal_lock_t *ptr)
-{
-	int ret;
-	asm volatile(
-			"xor %%eax,%%eax\n"
-			"lock cmpxchg %2,(%1)\n"//if (*ptr==0)*ptr=1
-			:"=&a"(ret):"r"(ptr),"r"(1):"cc","memory");
-	return ret==0;
 }
 #else
 #error "Please choose internal locking method"
