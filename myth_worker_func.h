@@ -292,7 +292,7 @@ static inline void myth_startpoint_init_ex_body(int rank)
 	this_th->env=env;
 	//Initialize context for scheduler
 	env->sched.stack=myth_malloc(SCHED_STACK_SIZE);
-	myth_make_context_voidcall(&env->sched.context,myth_sched_loop,env->sched.stack,SCHED_STACK_SIZE);
+	myth_make_context_voidcall(&env->sched.context,myth_sched_loop,(void*)(((char*)env->sched.stack)+SCHED_STACK_SIZE),SCHED_STACK_SIZE);
 	//Switch to scheduler
 	myth_swap_context_withcall(&this_th->context,&env->sched.context,myth_startpoint_init_ex_1,env,this_th,NULL);
 }
