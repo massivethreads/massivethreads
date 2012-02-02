@@ -101,7 +101,7 @@ static inline void myth_make_context_voidcall(myth_context_t ctx,void_func_t fun
 {
 #if defined(__i386__)
 	//Get stack tail
-	uint32_t stack_tail=((uint32_t)stack)+stacksize;
+	uint32_t stack_tail=((uint32_t)stack);
 	stack_tail-=4;
 	uint32_t *dest_addr;
 	//Align
@@ -113,7 +113,7 @@ static inline void myth_make_context_voidcall(myth_context_t ctx,void_func_t fun
 	*dest_addr=(uint32_t)func;
 #elif defined(__x86_64__)
 	//Get stack tail
-	uint64_t stack_tail=((uint64_t)stack)+stacksize;
+	uint64_t stack_tail=((uint64_t)stack);
 	stack_tail-=8;
 	uint64_t *dest_addr;
 	//Align
