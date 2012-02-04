@@ -645,12 +645,14 @@ static inline void myth_join_body(myth_thread_t th,void **result)
 #ifdef MYTH_JOIN_DEBUG
 	myth_dprintf("myth_join:%p is resumed\n",this_thread);
 #endif
+#if 0
 	myth_internal_lock_lock(&th->lock);
 	//In this position, target is guaranteed to be finished
 	myth_assert(myth_desc_is_runnable(this_thread));
 	myth_assert(myth_desc_is_finished(th));
 	//Get return value
 	myth_internal_lock_unlock(&th->lock);
+#endif
 	myth_join_1(myth_get_current_env(),th,result);
 #ifdef MYTH_JOIN_PROF
 	t3=get_rdtsc();

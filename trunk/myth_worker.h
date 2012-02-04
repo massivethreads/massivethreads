@@ -56,10 +56,6 @@ extern int g_thread_index;
 extern myth_running_env_t g_envs;
 //Number of worker threads
 extern int g_worker_thread_num;
-//Offset of worker threads
-extern int g_worker_thread_offset;
-//Step of worker threads
-extern int g_worker_thread_step;
 //Barrier for worker threads
 extern pthread_barrier_t g_worker_barrier;
 
