@@ -339,10 +339,7 @@ static inline void *myth_worker_thread_fn(void *args)
 #ifdef WORKER_SET_AFFINITY
 	//Set affinity
 	cpu_set_t cs;
-	int cpu_rank;
-	cpu_rank=(rank*g_worker_thread_step+g_worker_thread_offset)%myth_get_cpu_num();
-	CPU_ZERO(&cs);
-	CPU_SET(cpu_rank,&cs);
+	cs=myth_get_worker_cpuset(rank);
 	real_pthread_setaffinity_np(real_pthread_self(),sizeof(cpu_set_t),&cs);
 #endif
 	if (rank==0){
@@ -435,6 +432,7 @@ static void myth_sched_loop(void)
 			//sanity check
 			myth_assert(next_run->status==MYTH_STATUS_READY);
 			env->this_thread=next_run;
+			next_run->env=env;
 			//Switch to runnable thread
 #ifdef MYTH_SCHED_LOOP_DEBUG
 			myth_dprintf("myth_sched_loop:switching to thread:%p\n",next_run);

@@ -22,10 +22,6 @@ int g_thread_index=0;
 myth_running_env_t g_envs=NULL;
 //The number of worker threads
 int g_worker_thread_num=0;
-//Offset of worker threads
-int g_worker_thread_offset;
-//Step of worker threads
-int g_worker_thread_step;
 //A barrier for worker thread to synchronize
 pthread_barrier_t g_worker_barrier;
 

@@ -15,6 +15,7 @@
 int myth_init_ex_body(int worker_num)
 {
 	intptr_t nthreads;
+	myth_init_process_affinity_info();
 	//Load original functions
 	//myth_get_original_funcs();
 	//Decide the number of worker threads.
@@ -46,23 +47,7 @@ int myth_init_ex_body(int worker_num)
 //Initialize
 void myth_init_body(void)
 {
-	intptr_t w_offset,w_step;
 	myth_init_ex_body(0);
-	//Decide the worker thread offset
-	//If environment variable is set, use it. Otherwise use 0.
-	char *env;
-	env=getenv(ENV_MYTH_WORKER_OFFSET);
-	w_offset=0;
-	if (env){w_offset=atoi(env);}
-	w_offset=w_offset % myth_get_cpu_num();
-	g_worker_thread_offset=w_offset;
-	//Decide the worker thread step
-	//If environment variable is set, use it. Otherwise use 1.
-	env=getenv(ENV_MYTH_WORKER_STEP);
-	w_step=1;
-	if (env){w_step=atoi(env);}
-	w_step=w_step % myth_get_cpu_num();
-	g_worker_thread_step=w_step;
 	//Create worker threads
 	intptr_t i;
 	for (i=1;i<g_worker_thread_num;i++){

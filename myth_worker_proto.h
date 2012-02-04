@@ -4,7 +4,6 @@
 #include "myth_desc.h"
 
 static void myth_sched_loop(void);
-static inline int myth_get_cpu_num(void);
 
 static inline void myth_env_init(void);
 static inline void myth_env_fini(void);

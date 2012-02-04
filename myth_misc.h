@@ -44,13 +44,9 @@ static inline uint64_t myth_get_rdtsc()
   return ((uint64_t)hi)<<32 | lo;
 }
 
-//Return the number of CPU cores
-static inline int myth_get_cpu_num(void)
-{
-	static int ret=-1;
-	if (ret==-1){ret=sysconf(_SC_NPROCESSORS_CONF);};
-	return ret;
-}
+void myth_init_process_affinity_info(void);
+int myth_get_cpu_num(void);
+cpu_set_t myth_get_worker_cpuset(int rank);
 
 //Worker-thread-safe RNG for randomized work-stealing
 extern __thread unsigned int g_myth_random_temp;
