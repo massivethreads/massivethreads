@@ -2,7 +2,7 @@
 
 USAGE="usage: $0 N STEPS WORKERS"
 
-if [ "$#" == 0 ]; then
+if [ "$#" != 3 ]; then
 	echo ${USAGE}
 	exit 1
 fi
