@@ -13,7 +13,7 @@ WORKERS=$3
 EXE=./nbody
 
 if [ ! -f ${EXE} ]; then
-	echo "Executable does not exist, build..."
+	echo "Executable does not exist, building..."
 	make -f Makefile
 	if [ "$?" -eq 0 ]; then
 		make clean
@@ -27,5 +27,5 @@ fi
 
 export LD_LIBRARY_PATH=../../ 
 export MYTH_WORKER_NUM=${WORKERS}
-echo "Executing ${EXE} ${N} ${STEPS} with ${WORKERS} workers.."
+echo "Executing ${EXE} ${N} ${STEPS} with ${WORKERS} workers..."
 ${EXE} ${N} ${STEPS}
