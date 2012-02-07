@@ -161,16 +161,24 @@ void * build_tree_rec(void * args)
   } else if (np->subset_size > 1) {
     np->tree->divide();
     bt_thread_dat * parr = new bt_thread_dat[N_CHILDREN];
+    int n_threads = N_CHILDREN - 1;
+    pthread_t * ths = new pthread_t[n_threads];
     for (int i = 0; i < N_CHILDREN; i++) {
       parr[i].tree = np->tree->subspaces[i];
       parr[i].particles = np->particles;
       parr[i].subset_arr = np->subset_arr;
       parr[i].subset_size = np->subset_size;
-      build_tree_rec(&parr[i]);
+      if (i == n_threads) {
+        build_tree_rec(&parr[i]);
+      } else {
+        pthread_create(&ths[i], NULL, build_tree_rec, (void *) &parr[i]);
+      }
     }
+    void * ret;
+    for (int i = 0; i < n_threads; i++) 
+      pthread_join(ths[i], (void **) ret);
     delete [] parr;
   }
-  return NULL;
 }
 
 space * build_tree(particle ** particles, int n_particles)
