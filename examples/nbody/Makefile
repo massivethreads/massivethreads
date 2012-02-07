@@ -1,7 +1,7 @@
 APP = nbody
 
 # add C flags and C++ flags
-CC_CXX_FLAGS = -g -O3
+CC_CXX_FLAGS = -O3 
 CFLAGS = $(CC_CXX_FLAGS)
 CXXFLAGS = $(CC_CXX_FLAGS)
 
@@ -10,7 +10,7 @@ BASES = $(APP) def force genpar gentree
 OBJS = $(addsuffix .o, $(BASES))
 
 $(APP): $(OBJS)
-	$(CXX) -o $(APP) $(OBJS)
+	$(CXX) -o $(APP) $(OBJS) $(CC_CXX_FLAGS) -L../../ -lmyth-compat
 
 clean: 
 	rm -f $(OBJS) 

@@ -24,7 +24,7 @@ void simulate_a_step(particle ** particles, int n_particles,  t_real dt)
   printf("  Tree nodes: %d\n" \
   	     "  Gen tree:   %d msec\n" \
          "  Set mass:   %d msec\n" \
-         "  Set Accels: %d msec\n" \
+         "  Set accels: %d msec\n" \
          "  Leapfrog:   %d msec\n" \
          "  Sum:        %d msec\n",
 		 mm.n_nodes, t1 - t0, t2 - t1, t3 - t2, t4 - t3, t4 - t0);
