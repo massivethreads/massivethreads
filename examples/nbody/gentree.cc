@@ -11,9 +11,7 @@ int select_covering_rectangle(vect_t pos, rectangle * rec)
     t_real x = VX(pos), y = VY(pos), z = VZ(pos);
     t_real lx = VX(ll), ly = VY(ll), lz = VZ(ll);
     t_real rx = VX(ur), ry = VY(ur), rz = VZ(ur);
-    t_real cx = (lx + rx) * 0.5, 
-      cy = (ly + ry) * 0.5, 
-      cz = (lz + rz) * 0.5;
+    t_real cx = (lx + rx) * 0.5, cy = (ly + ry) * 0.5, cz = (lz + rz) * 0.5;
     int r = 0;
     if (x >= cx) r += 4;
     if (y >= cy) r += 2;
@@ -25,7 +23,6 @@ int select_covering_rectangle(vect_t pos, rectangle * rec)
     printf("\nPOS: ");
     print_vect(pos);
     printf("\n");
-	exit(1); // FIXME
     return 0;
   }
 }
@@ -51,9 +48,8 @@ space ** make_new_spaces(rectangle * area)
   // FIXME: Zero memory
   //MM_ZERO_CLEAR((void *)s, sizeof(space*) * N_CHILDREN);
 #if 1/*endo debug*/
-    if (VX(area->ll) == 0.0 && VX(area->ur) == 0.0) {
+  if (VX(area->ll) == 0.0 && VX(area->ur) == 0.0)
 		fprintf(stderr,"[make_new_spaces] AREA EMPTY??\n");
-    }
 #endif
   for (int i = 0; i < N_CHILDREN; i++) 
     s[i] = make_empty_space(make_sub_rectangle(area, i));
@@ -67,7 +63,7 @@ void space::add_particle(t_real m, vect_t p)
       state = ONE_PARTICLE;
       mass = m; cg = p;
       return;
-    }
+    } /* NO_PARTICLE */
     case ONE_PARTICLE: {
       subspaces = make_new_spaces(area);
       int idx0 = select_covering_rectangle(cg, area);
@@ -76,15 +72,15 @@ void space::add_particle(t_real m, vect_t p)
       subspaces[idx]->add_particle(m, p);
       state = MULTIPLE_PARTICLES;
       return;
-    }
+    } /* ONE_PARTICLE */
     case MULTIPLE_PARTICLES: {
       int idx = select_covering_rectangle(p, area);
       subspaces[idx]->add_particle(m, p);
       return;
-    }
-    default:
+    } /* MULTIPLE_PARTICLES */
+    default: {
       printf("ERROR: add_particle\n");
-      exit(1); //FIXME
+    } /* default */
   }
 }
 
@@ -100,23 +96,20 @@ t_real particle::calc_limit()
 
 t_real calc_limit(particle ** particles, int n_particles)
 {
-  int i;
   t_real r = 0.0;
-  for (i = 0; i < n_particles; i++) {
+  for (int i = 0; i < n_particles; i++) {
     t_real s = particles[i]->calc_limit();
     if (r < s) r = s;
   }
   return 1.01 * r;
 }
 
-space * 
-generate_tree(particle ** particles, int n_particles)
+space * generate_tree(particle ** particles, int n_particles)
 {
-	int i;
 	t_real limit = calc_limit(particles, n_particles);
 	rectangle * rec = make_entire_rectangle(limit);
 	space * tree = make_empty_space(rec);
-	for (i = 0; i < n_particles; i++)
+	for (int i = 0; i < n_particles; i++)
 		tree->add_particle(particles[i]->mass, particles[i]->pos);
 	return tree;
 }
@@ -124,36 +117,35 @@ generate_tree(particle ** particles, int n_particles)
 mass_momentum space::set_mass_and_cg()
 {
   switch (state) {
-  case NO_PARTICLE:
-    mass = 0.0;
-    return mass_momentum(0.0, make_vect(0.0, 0.0, 0.0), 0);
-  case ONE_PARTICLE:
-    return mass_momentum(mass, k_times_v(mass, cg), 1);
-  case MULTIPLE_PARTICLES:
-    {
-      int i;
+    case NO_PARTICLE: {
+      mass = 0.0;
+      return mass_momentum(0.0, make_vect(0.0, 0.0, 0.0), 0);
+    } /* NO_PARTICL */
+    case ONE_PARTICLE: {
+      return mass_momentum(mass, k_times_v(mass, cg), 1);
+    } /* ONE_PARTICLE */
+    case MULTIPLE_PARTICLES: {
       vect_t total_momentum = make_vect(0.0, 0.0, 0.0);
       t_real total_mass = 0.0;
       int total_n_nodes = 1;
-      for (i = 0; i < N_CHILDREN; i++) {
-	space * subspace = subspaces[i];
-	mass_momentum mm = subspace->set_mass_and_cg();
-	if (mm.n_nodes == 0) {
-	  subspaces[i] = 0;
-	} else {
-	  total_mass += mm.mass;
-	  total_momentum = v_plus_v(total_momentum, mm.momentum);
-	  total_n_nodes += mm.n_nodes;
-	}
+      for (int i = 0; i < N_CHILDREN; i++) {
+	      space * subspace = subspaces[i];
+	      mass_momentum mm = subspace->set_mass_and_cg();
+	      if (mm.n_nodes == 0) {
+	        subspaces[i] = 0;
+        } else {
+          total_mass += mm.mass;
+          total_momentum = v_plus_v(total_momentum, mm.momentum);
+          total_n_nodes += mm.n_nodes;
+        }
       }
       mass = total_mass; 
       cg = v_div_k(total_mass, total_momentum);
       return mass_momentum(total_mass, total_momentum, total_n_nodes);
-    }
-  default:
-    printf("invalid state tag = %d\n", state);
-    exit(1); // FIXME
-    return mass_momentum(0.0, make_vect(0.0, 0.0, 0.0), 0);
+    } /* MULTIPLE_PARTICLES */
+    default: {
+      printf("invalid state tag = %d\n", state);
+      return mass_momentum(0.0, make_vect(0.0, 0.0, 0.0), 0);
+    } /* default */
   } 
 }
-
