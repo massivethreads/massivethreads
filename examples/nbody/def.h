@@ -15,6 +15,10 @@ typedef REAL_TYPE t_real;
 #define UNBOX_VECT 1
 #endif
 
+#ifndef BUILD_TREE_PARALLEL 
+#define BUILD_TREE_PARALLEL 1
+#endif
+
 struct vect
 {
 #if UNBOX_VECT
@@ -178,6 +182,7 @@ particle ** generate_particles(int);
 space * make_empty_space(rectangle *);
 rectangle * make_entire_rectangle(t_real);
 space * generate_tree(particle **, int);
+space * build_tree(particle **, int);
 void set_accels(particle **, int, space *);
 void move_particles(particle **, int, t_real);
 

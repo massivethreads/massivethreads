@@ -45,12 +45,6 @@ rectangle * make_sub_rectangle(rectangle * parent, int idx)
 space ** make_new_spaces(rectangle * area)
 {
 	space ** s = new space* [N_CHILDREN];
-  // FIXME: Zero memory
-  //MM_ZERO_CLEAR((void *)s, sizeof(space*) * N_CHILDREN);
-#if 1/*endo debug*/
-  if (VX(area->ll) == 0.0 && VX(area->ur) == 0.0)
-		fprintf(stderr,"[make_new_spaces] AREA EMPTY??\n");
-#endif
   for (int i = 0; i < N_CHILDREN; i++) 
     s[i] = make_empty_space(make_sub_rectangle(area, i));
   return s;
@@ -104,6 +98,93 @@ t_real calc_limit(particle ** particles, int n_particles)
   return 1.01 * r;
 }
 
+/* Parallel version of tree build */
+struct bt_thread_dat {
+  space * tree;
+  particle ** particles;
+  int * subset_arr;
+  int subset_size;
+};
+
+bt_thread_dat * particles_in_tree(bt_thread_dat * orig)
+{
+  bt_thread_dat * p = new bt_thread_dat;
+  
+  p->tree = orig->tree;
+  p->particles = orig->particles;
+  if (orig->subset_arr == NULL && orig->subset_size > 0) {
+    p->subset_size = orig->subset_size;
+    p->subset_arr = new int[p->subset_size];
+    for (int i = 0; i < orig->subset_size; i++) p->subset_arr[i] = i;
+  } else {
+    p->subset_size = 0;
+    int * arr = new int[orig->subset_size];
+    for (int i = 0; i < orig->subset_size; i++) {
+      if (cover_p(p->tree->area, p->particles[orig->subset_arr[i]]->pos)) {
+        arr[i] = orig->subset_arr[i]; 
+        p->subset_size++; 
+      } else {
+        arr[i] = -1;
+      }
+    }
+    if (p->subset_size > 0) {
+      p->subset_arr = new int [p->subset_size];
+      int j = 0;
+      for (int i = 0; i < orig->subset_size; i++) {
+        if (arr[i] != -1) {
+          p->subset_arr[j] = arr[i];
+          j++;
+        }
+      }
+    } else {
+      p->subset_arr = NULL;
+      p->subset_size = 0;
+    }
+    delete [] arr;
+  }
+  return p;
+}
+
+void * build_tree_rec(void * args)
+{
+  bt_thread_dat * p = (bt_thread_dat *) args;
+  bt_thread_dat * np = particles_in_tree(p);
+  space * t = np->tree;
+  if (np->subset_size == 1) {
+    particle * par = np->particles[np->subset_arr[0]];
+    t->state = ONE_PARTICLE;
+    t->mass = par->mass;
+    t->cg = par->pos;
+  } else if (np->subset_size > 1) {
+    t->state = MULTIPLE_PARTICLES;
+    t->subspaces = make_new_spaces(t->area);
+    bt_thread_dat * parr = new bt_thread_dat[N_CHILDREN];
+    for (int i = 0; i < N_CHILDREN; i++) {
+      parr[i].tree = t->subspaces[i];
+      parr[i].particles = np->particles;
+      parr[i].subset_arr = np->subset_arr;
+      parr[i].subset_size = np->subset_size;
+      build_tree_rec(&parr[i]);
+    }
+  }
+  return NULL;
+}
+
+space * build_tree(particle ** particles, int n_particles)
+{
+  bt_thread_dat dat;
+  t_real limit = calc_limit(particles, n_particles);
+  rectangle * rec = make_entire_rectangle(limit);
+  space * tree = make_empty_space(rec);
+  dat.tree = tree;
+  dat.particles = particles;
+  dat.subset_arr = NULL;
+  dat.subset_size = n_particles;
+  build_tree_rec(&dat);
+  return tree;
+}
+
+/* Serial version of tree generation */
 space * generate_tree(particle ** particles, int n_particles)
 {
 	t_real limit = calc_limit(particles, n_particles);

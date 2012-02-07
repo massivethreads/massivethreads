@@ -50,11 +50,6 @@ rectangle * make_entire_rectangle(t_real a)
 
 space * make_empty_space(rectangle * area)
 {
-#if 0 /* debug*/
-    if (VX(area->ll) == 0.0 && VX(area->ur) == 0.0) {
-	fprintf(stderr,"[make_empty_space] AREA EMPTY??\n");
-    }
-#endif
   return new space(NO_PARTICLE, 0.0, make_vect(0.0, 0.0, 0.0), 
 			area, diameter2(area));
 }
