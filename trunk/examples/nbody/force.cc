@@ -42,7 +42,6 @@ vect_t space::calc_accel(vect_t pos)
     } /* MULTIPLE_PARTICLES */
     default: {
       printf("NO_PARTICLES!\n"); 
-      exit(1); // FIXME: pthread_exit
       return make_vect(0.0, 0.0, 0.0); /* never reach */
     } /* default */
   }
@@ -84,7 +83,6 @@ vect_t space::calc_accel1(vect_t pos)
   } /* MULTIPLE_PARTICLES */
   default: {
       printf("NO_PARTICLES!\n"); 
-      exit(1); // FIXME
       return make_vect(0.0, 0.0, 0.0); /* never reach */
     }
   } /* default */
@@ -99,9 +97,8 @@ void particle::set_accel(space * sp)
 void set_accels_dac(particle ** particles, int begin, int end, space * sp)
 {
   if (end - begin < 5) {
-    for (int i = begin; i <= end; i++) {
+    for (int i = begin; i <= end; i++)
       particles[i]->set_accel(sp);
-    }
   } else {
     int c = (begin + end - 1) / 2;
 	  /* SEQUENTIAL */
@@ -124,7 +121,6 @@ void particle::move(t_real dt)
 
 void move_particles(particle ** particles, int n_particles, t_real dt)
 {
-  for (int i = 0; i < n_particles; i++) {
+  for (int i = 0; i < n_particles; i++)
     particles[i]->move(dt);
-  }
 }

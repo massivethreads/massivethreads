@@ -85,9 +85,8 @@ void centralize_particles(particle ** a, int n,
 			  t_real px, t_real py, t_real pz,
 			  t_real vx, t_real vy, t_real vz)
 {
-  for (int i = 0; i < n; i++) {
+  for (int i = 0; i < n; i++)
     a[i]->centralize(px, py, pz, vx, vy, vz);
-  }
 }
 			   
 
@@ -106,8 +105,7 @@ particle ** generate_particles(int n)
 	int h = (n + 1) / 2;
 	t_real mass = 1.0 / (t_real)n;
 	t_real offs = 4.0;
-	int i;
-	for (i = 0; i < h; i++) {
+	for (int i = 0; i < h; i++) {
 		int j = h + i; t_real r = 0.0;
 		do {
 	  		t_real xr = xrand(0.0, mfrac);
@@ -150,7 +148,6 @@ void particle::dump()
 
 void dump_particles(particle ** particles, int n)
 {
-  int i;
-  for (i = 0; i < n; i++)
+  for (int i = 0; i < n; i++)
     particles[i]->dump();
 }
