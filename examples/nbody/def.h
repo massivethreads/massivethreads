@@ -144,10 +144,9 @@ struct particle
   void dump();		/* dump content of the particle */
   void set_accel(space *);
   void move(t_real);
-  void centerlize(t_real, t_real, t_real, t_real, t_real, t_real);
+  void centralize(t_real, t_real, t_real, t_real, t_real, t_real);
   t_real calc_limit();
 };
-
 
 void print_rectangle(rectangle *);
 
@@ -164,37 +163,14 @@ static inline t_real distance2(vect_t p0, vect_t p1)
   return dx * dx + dy * dy + dz * dz;
 }
 
-static inline float rsqrt(float x)
-{
-  float y;
-#if defined(sparc) && defined(__GNUC__)
-  asm("fsqrts %1,%0" : "=f"(y) : "f"(x));
-#else
-  y = (float) sqrt((double)x);
-#endif
-  return y;
-}
-
-static inline double rsqrt(double x)
-{
-  double y;
-#if defined(sparc) && defined(__GNUC__)
-  asm("fsqrtd %1,%0" : "=f"(y) : "f"(x));
-#else
-  y = sqrt (x);
-#endif
-  return y;
-}
-
 static inline t_real rabs(t_real x)
 {
-  if (x < 0.0) return -x;
-  else return x;
+  return x < 0.0 ? -x : x;
 }
 
 static inline t_real distance(vect_t p0, vect_t p1)
 {
-  return rsqrt(distance2(p0, p1));
+  return sqrt(distance2(p0, p1));
 }
 
 particle ** generate_particles(int);

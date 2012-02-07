@@ -9,7 +9,7 @@ inline vect_t newton_acceleration (t_real mass, vect_t cg, vect_t pos)
   t_real x1 = VX(cg), y1 = VY(cg), z1 = VZ(cg);
   t_real dx = x1 - x0, dy = y1 - y0, dz = z1 - z0;
   t_real l2 = dx * dx + dy * dy + dz * dz;
-  t_real k = mass / (l2 * rsqrt (l2));
+  t_real k = mass / (l2 * sqrt (l2));
   return make_vect(k * dx, k * dy, k * dz);
 }    
 
@@ -66,7 +66,7 @@ vect_t space::calc_accel1(vect_t pos)
     t_real dx = x1 - x0, dy = y1 - y0, dz = z1 - z0;
     t_real l2 = dx * dx + dy * dy + dz * dz;
     if (diameter2 < l2 * approx_theta) {
-	    t_real k = mass / (l2 * rsqrt (l2));
+	    t_real k = mass / (l2 * sqrt (l2));
 	    return make_vect(k * dx, k * dy, k * dz);
     } else {
 	    t_real resultx = 0.0, resulty = 0.0, resultz = 0.0;

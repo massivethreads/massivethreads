@@ -70,28 +70,24 @@ vect_t pick_shell(t_real r)
     z = xrand(-1.0, 1.0);
     rsq = x * x + y * y + z * z;
   } while (rsq <= 1.0);
-  t_real rsc = r / rsqrt(rsq);
+  t_real rsc = r / sqrt(rsq);
   return make_vect(x / rsc, y / rsc, z / rsc);
 }
 
-void particle::centerlize(t_real px, t_real py, t_real pz, 
+void particle::centralize(t_real px, t_real py, t_real pz, 
 			  t_real vx, t_real vy, t_real vz)
 {
   VX(pos) += px; VY(pos) += py; VZ(pos) += pz;
   VX(vel) += vx; VY(vel) += vy; VZ(vel) += vz;
 }
 
-void centerlize_particles(particle ** a, int n,
+void centralize_particles(particle ** a, int n,
 			  t_real px, t_real py, t_real pz,
 			  t_real vx, t_real vy, t_real vz)
 {
-  int i;
-  printf("centerlize_particles %p %d\n", a, n);
-  for (i = 0; i < n; i++) {
-    // printf("a[%d] = %p\n", i, a[i]);
-    a[i]->centerlize(px, py, pz, vx, vy, vz);
+  for (int i = 0; i < n; i++) {
+    a[i]->centralize(px, py, pz, vx, vy, vz);
   }
-  printf("centerlize_particles %p %d end\n", a, n);
 }
 			   
 
@@ -101,12 +97,10 @@ const t_real xxPI = 3.14159265358979323846;
 
 particle ** generate_particles(int n)
 {
-	printf("generate_particles\n");
 	particle ** a = new particle* [n];
-	//MM_ZERO_CLEAR((void *)a, sizeof(particle*) * n);
 	// FIXME: Zero memory
 	t_real rsc = 9.0 * xxPI / 16.0;
-	t_real vsc = rsqrt(rsc);
+	t_real vsc = sqrt(rsc);
 	t_real cmrx = 0.0, cmry = 0.0, cmrz = 0.0;
 	t_real cmvx = 0.0, cmvy = 0.0, cmvz = 0.0;
 	int h = (n + 1) / 2;
@@ -118,7 +112,7 @@ particle ** generate_particles(int n)
 		do {
 	  		t_real xr = xrand(0.0, mfrac);
 			t_real po = pow(xr, -2.0/3.0);
-			t_real rs = rsqrt(po - 1.0);
+			t_real rs = sqrt(po - 1.0);
 			r = 1.0 / rs;
 		} while (r > 9.0);
 		vect_t pos = pick_shell(r);
@@ -129,7 +123,7 @@ particle ** generate_particles(int n)
 		do {
 		    x = xrand (0.0, 1.0); y = xrand(0.0, 0.1);
 		} while (y > x * x * pow(1.0 - x * x, 3.5));
-		t_real v = rsqrt(2.0) * x / pow(1.0 + r * r, 0.25);
+		t_real v = sqrt(2.0) * x / pow(1.0 + r * r, 0.25);
 		vect_t vel = pick_shell(vsc * v);
 		cmvx += (VX(vel) + VX(vel));
 		cmvy += (VY(vel) + VY(vel));
@@ -142,9 +136,8 @@ particle ** generate_particles(int n)
 			   VX(vel), VY(vel), VZ(vel));
 		}
 	}
-	centerlize_particles(a, n, cmrx / n, cmry / n, cmrz / n, 
+	centralize_particles(a, n, cmrx / n, cmry / n, cmrz / n, 
 			cmvx / n, cmvy / n, cmvz / n);
-	printf("generate_particles end\n");
 	return a;
 }
 
