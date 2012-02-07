@@ -110,7 +110,7 @@ void * set_accels_dac(void *args)
   } else {
     int c = (p->begin + p->end - 1) / 2;
     thread_dat left, right;
-    void* ret;
+    void * ret;
     pthread_t th;
     left.particles = p->particles;
     left.begin = p->begin;
