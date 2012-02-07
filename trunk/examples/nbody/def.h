@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <pthread.h>
 
 #ifndef REAL_TYPE
 #define REAL_TYPE float

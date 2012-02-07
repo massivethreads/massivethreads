@@ -94,22 +94,46 @@ void particle::set_accel(space * sp)
   accel = a;
 }
 
-void set_accels_dac(particle ** particles, int begin, int end, space * sp)
+struct thread_dat {
+  particle ** particles;
+  int begin;
+  int end;
+  space * sp;
+};
+
+void * set_accels_dac(void *args)
 {
-  if (end - begin < 5) {
-    for (int i = begin; i <= end; i++)
-      particles[i]->set_accel(sp);
+  struct thread_dat * p = (struct thread_dat *) args; 
+  if (p->end - p->begin < 5) {
+    for (int i = p->begin; i <= p->end; i++)
+      p->particles[i]->set_accel(p->sp);
   } else {
-    int c = (begin + end - 1) / 2;
-	  /* SEQUENTIAL */
-    set_accels_dac(particles, begin, c, sp);
-    set_accels_dac(particles, c + 1, end, sp);
+    int c = (p->begin + p->end - 1) / 2;
+    struct thread_dat left, right;
+    void* ret;
+    pthread_t th;
+    left.particles = p->particles;
+    left.begin = p->begin;
+    left.end = c;
+    left.sp = p->sp;
+    right.particles = p->particles;
+    right.begin = c + 1;
+    right.end = p->end;
+    right.sp = p->sp;
+    pthread_create(&th, NULL, set_accels_dac, (void *) &left);
+    set_accels_dac(&right);
+    pthread_join(th, (void **) ret);
   }
 }
 
 void set_accels(particle ** particles, int n_particles, space * sp)
 {
-  set_accels_dac(particles, 0, n_particles - 1, sp);
+  struct thread_dat data;
+  data.particles = particles;
+  data.begin = 0;
+  data.end = n_particles - 1;
+  data.sp = sp;
+  set_accels_dac(&data);
 }
 
 void particle::move(t_real dt)
