@@ -12,7 +12,11 @@ void simulate_a_step(particle ** particles, int n_particles,  t_real dt)
   space * tree;
   
   t0 = current_real_time_milli();
+#if BUILD_TREE_PARALLEL
+  tree = build_tree(particles, n_particles);
+#else
   tree = generate_tree(particles, n_particles);
+#endif
   t1 = current_real_time_milli();
   mass_momentum mm = tree->set_mass_and_cg();
   t2 = current_real_time_milli();
@@ -21,12 +25,16 @@ void simulate_a_step(particle ** particles, int n_particles,  t_real dt)
   move_particles(particles, n_particles, dt);
   t4 = current_real_time_milli();
   
-  printf("  Tree nodes: %d\n" \
-  	     "  Gen tree:   %d msec\n" \
-         "  Set mass:   %d msec\n" \
-         "  Set accels: %d msec\n" \
-         "  Leapfrog:   %d msec\n" \
-         "  Sum:        %d msec\n",
+  printf("  Tree nodes:    %d\n"
+#if BUILD_TREE_PARALLEL
+  	     "  GenTree (pll): %d msec\n"
+#else
+  	     "  GenTree (seq): %d msec\n"
+#endif /* BUILD_TREE_PARALLEL */
+         "  SetMass:       %d msec\n" \
+         "  CompForces:    %d msec\n" \
+         "  Leapfrog:      %d msec\n" \
+         "  TotalElapsed:  %d msec\n",
 		 mm.n_nodes, t1 - t0, t2 - t1, t3 - t2, t4 - t3, t4 - t0);
 }
 

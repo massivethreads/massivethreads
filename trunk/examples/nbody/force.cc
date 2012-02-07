@@ -103,13 +103,13 @@ struct thread_dat {
 
 void * set_accels_dac(void *args)
 {
-  struct thread_dat * p = (struct thread_dat *) args; 
+  thread_dat * p = (thread_dat *) args; 
   if (p->end - p->begin < 5) {
     for (int i = p->begin; i <= p->end; i++)
       p->particles[i]->set_accel(p->sp);
   } else {
     int c = (p->begin + p->end - 1) / 2;
-    struct thread_dat left, right;
+    thread_dat left, right;
     void* ret;
     pthread_t th;
     left.particles = p->particles;
@@ -128,7 +128,7 @@ void * set_accels_dac(void *args)
 
 void set_accels(particle ** particles, int n_particles, space * sp)
 {
-  struct thread_dat data;
+  thread_dat data;
   data.particles = particles;
   data.begin = 0;
   data.end = n_particles - 1;

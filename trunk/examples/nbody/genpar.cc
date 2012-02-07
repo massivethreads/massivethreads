@@ -97,7 +97,6 @@ const t_real xxPI = 3.14159265358979323846;
 particle ** generate_particles(int n)
 {
 	particle ** a = new particle* [n];
-	// FIXME: Zero memory
 	t_real rsc = 9.0 * xxPI / 16.0;
 	t_real vsc = sqrt(rsc);
 	t_real cmrx = 0.0, cmry = 0.0, cmrz = 0.0;
