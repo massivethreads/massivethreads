@@ -78,6 +78,12 @@ void space::add_particle(t_real m, vect_t p)
   }
 }
 
+void space::divide()
+{
+  state = MULTIPLE_PARTICLES;
+  subspaces = make_new_spaces(area);
+}
+
 t_real particle::calc_limit()
 {
   t_real x = VX(pos), y = VY(pos), z = VZ(pos);
@@ -149,23 +155,20 @@ void * build_tree_rec(void * args)
 {
   bt_thread_dat * p = (bt_thread_dat *) args;
   bt_thread_dat * np = particles_in_tree(p);
-  space * t = np->tree;
   if (np->subset_size == 1) {
     particle * par = np->particles[np->subset_arr[0]];
-    t->state = ONE_PARTICLE;
-    t->mass = par->mass;
-    t->cg = par->pos;
+    np->tree->add_particle(par->mass, par->pos);
   } else if (np->subset_size > 1) {
-    t->state = MULTIPLE_PARTICLES;
-    t->subspaces = make_new_spaces(t->area);
+    np->tree->divide();
     bt_thread_dat * parr = new bt_thread_dat[N_CHILDREN];
     for (int i = 0; i < N_CHILDREN; i++) {
-      parr[i].tree = t->subspaces[i];
+      parr[i].tree = np->tree->subspaces[i];
       parr[i].particles = np->particles;
       parr[i].subset_arr = np->subset_arr;
       parr[i].subset_size = np->subset_size;
       build_tree_rec(&parr[i]);
     }
+    delete [] parr;
   }
   return NULL;
 }

@@ -117,6 +117,7 @@ struct space
     cached = 0;
   }
   void add_particle(t_real, vect_t);
+  void divide();
   mass_momentum set_mass_and_cg();
   vect_t calc_accel(vect_t);
   vect_t calc_accel1(vect_t);
