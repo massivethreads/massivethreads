@@ -11,12 +11,17 @@
 #endif
 typedef REAL_TYPE t_real;
 
+/* Use malloc does not have much performance gain? */
+#ifndef USE_MALLOC
+#define USE_MALLOC 0
+#endif
+
 #ifndef UNBOX_VECT 
 #define UNBOX_VECT 1
 #endif
 
 #ifndef BUILD_TREE_PARALLEL 
-#define BUILD_TREE_PARALLEL 1
+#define BUILD_TREE_PARALLEL 0
 #endif
 
 struct vect
@@ -86,7 +91,6 @@ struct mass_momentum
 {
   void * operator new(size_t sz) {
     printf("do not call mass_momentum::new\n");
-    //st_wg_die((void *)1);
   }
   mass_momentum (t_real ma, vect_t mo, int nn) { 
     mass = ma; momentum = mo; n_nodes = nn; 

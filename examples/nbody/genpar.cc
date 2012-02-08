@@ -38,10 +38,10 @@ void pranset(int seed)
   B = (MULT*B + ADD) & MASK;
 }
 
-t_real prand()
 /*
 	Return a random t_real in [0, 1.0)
 */
+t_real prand()
 {
   if (rand_inited == 0) {
     rand_inited = 1;
@@ -58,7 +58,17 @@ particle * make_particle(int id, t_real mass, t_real px, t_real py, t_real pz,
   vect_t p = make_vect(px, py, pz);
   vect_t v = make_vect(vx, vy, vz);
   vect_t a = make_vect(0.0, 0.0, 0.0);
+#if USE_MALLOC
+  particle * pt = (particle *) malloc(sizeof(particle));
+  pt->id = id;
+  pt->mass = mass;
+  pt->accel = a;
+  pt->pos = p;
+  pt->vel = v;
+  return pt;
+#else
   return new particle(id, mass, a, p, v);
+#endif
 }
 
 vect_t pick_shell(t_real r)
@@ -96,7 +106,11 @@ const t_real xxPI = 3.14159265358979323846;
 
 particle ** generate_particles(int n)
 {
+#if USE_MALLOC
+  particle ** a = (particle **) malloc(sizeof(particle *) * n);
+#else
 	particle ** a = new particle* [n];
+#endif
 	t_real rsc = 9.0 * xxPI / 16.0;
 	t_real vsc = sqrt(rsc);
 	t_real cmrx = 0.0, cmry = 0.0, cmrz = 0.0;
@@ -147,6 +161,5 @@ void particle::dump()
 
 void dump_particles(particle ** particles, int n)
 {
-  for (int i = 0; i < n; i++)
-    particles[i]->dump();
+  for (int i = 0; i < n; i++) particles[i]->dump();
 }

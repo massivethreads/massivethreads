@@ -38,13 +38,23 @@ rectangle * make_sub_rectangle(rectangle * parent, int idx)
   if ((idx >> 2) % 2 == 1) { px = cx; qx = rx; }
   if ((idx >> 1) % 2 == 1) { py = cy; qy = ry; }
   if ((idx >> 0) % 2 == 1) { pz = cz; qz = rz; }
-  return new rectangle(make_vect(px, py, pz), 
-			    make_vect(qx, qy, qz));
+#if USE_MALLOC
+  rectangle * r = (rectangle *) malloc(sizeof(rectangle));
+  r->ll = make_vect(px, py, pz);
+  r->ur = make_vect(qx, qy, qz);
+  return r;
+#else
+  return new rectangle(make_vect(px, py, pz), make_vect(qx, qy, qz));
+#endif
 }
 
 space ** make_new_spaces(rectangle * area)
 {
-	space ** s = new space* [N_CHILDREN];
+#if USE_MALLOC
+  space ** s = (space **) malloc(N_CHILDREN * sizeof(space*));
+#else
+  space ** s = new space* [N_CHILDREN];
+#endif
   for (int i = 0; i < N_CHILDREN; i++) 
     s[i] = make_empty_space(make_sub_rectangle(area, i));
   return s;
@@ -114,7 +124,11 @@ struct bt_thread_dat {
 
 bt_thread_dat * particles_in_tree(bt_thread_dat * orig)
 {
+#if USE_MALLOC
+  bt_thread_dat * p = (bt_thread_dat *) malloc(sizeof(bt_thread_dat));
+#else
   bt_thread_dat * p = new bt_thread_dat;
+#endif
   
   p->tree = orig->tree;
   p->particles = orig->particles;
@@ -123,8 +137,12 @@ bt_thread_dat * particles_in_tree(bt_thread_dat * orig)
     p->subset_arr = new int[p->subset_size];
     for (int i = 0; i < orig->subset_size; i++) p->subset_arr[i] = i;
   } else {
-    p->subset_size = 0;
+#if USE_MALLOC
+    int * arr = (int *) malloc(sizeof(int) * orig->subset_size);
+#else
     int * arr = new int[orig->subset_size];
+#endif
+    p->subset_size = 0;
     for (int i = 0; i < orig->subset_size; i++) {
       if (cover_p(p->tree->area, p->particles[orig->subset_arr[i]]->pos)) {
         arr[i] = orig->subset_arr[i]; 
@@ -134,7 +152,11 @@ bt_thread_dat * particles_in_tree(bt_thread_dat * orig)
       }
     }
     if (p->subset_size > 0) {
+#if USE_MALLOC
+      p->subset_arr = (int *) malloc(sizeof(int) * p->subset_size);
+#else
       p->subset_arr = new int [p->subset_size];
+#endif
       int j = 0;
       for (int i = 0; i < orig->subset_size; i++) {
         if (arr[i] != -1) {
@@ -146,13 +168,16 @@ bt_thread_dat * particles_in_tree(bt_thread_dat * orig)
       p->subset_arr = NULL;
       p->subset_size = 0;
     }
-    delete [] arr;
   }
   return p;
 }
 
 void * build_tree_rec(void * args)
 {
+#if USE_MALLOC
+  pthread_t ths[N_CHILDREN];
+  bt_thread_dat parr[N_CHILDREN];
+#endif
   bt_thread_dat * p = (bt_thread_dat *) args;
   bt_thread_dat * np = particles_in_tree(p);
   if (np->subset_size == 1) {
@@ -160,9 +185,11 @@ void * build_tree_rec(void * args)
     np->tree->add_particle(par->mass, par->pos);
   } else if (np->subset_size > 1) {
     np->tree->divide();
-    bt_thread_dat * parr = new bt_thread_dat[N_CHILDREN];
     int n_threads = N_CHILDREN - 1;
+#if !USE_MALLOC
+    bt_thread_dat * parr = new bt_thread_dat[N_CHILDREN];
     pthread_t * ths = new pthread_t[n_threads];
+#endif
     for (int i = 0; i < N_CHILDREN; i++) {
       parr[i].tree = np->tree->subspaces[i];
       parr[i].particles = np->particles;
@@ -177,8 +204,11 @@ void * build_tree_rec(void * args)
     void * ret;
     for (int i = 0; i < n_threads; i++) 
       pthread_join(ths[i], (void **) ret);
-    delete [] parr;
   }
+}
+
+void * build_tree_bottomup(void *args)
+{
 }
 
 space * build_tree(particle ** particles, int n_particles)

@@ -45,16 +45,33 @@ rectangle * make_entire_rectangle(t_real a)
 {
   vect_t l = make_vect(-a, -a, -a);
   vect_t r = make_vect(a, a, a);
+#if USE_MALLOC
+  rectangle * rc = (rectangle *) malloc(sizeof(rectangle));
+  rc->ll = l;
+  rc->ur = r;
+  return rc;
+#else
   return new rectangle(l, r);
+#endif
 }
 
 space * make_empty_space(rectangle * area)
 {
-  return new space(NO_PARTICLE, 0.0, make_vect(0.0, 0.0, 0.0), 
+#if USE_MALLOC
+  space * sp = (space *) malloc(sizeof(space));
+  sp->state = NO_PARTICLE;
+  sp->mass = 0.0;
+  sp->cg = make_vect(0.0, 0.0, 0.0);
+  sp->area = area;
+  sp->diameter2 = diameter2(area);
+  return sp;
+#else
+ return new space(NO_PARTICLE, 0.0, make_vect(0.0, 0.0, 0.0), 
 			area, diameter2(area));
+#endif
 }
 
-int current_real_time_micro()
+int inline current_real_time_micro()
 {
   struct timeval tp[1];
   struct timezone tzp[1];

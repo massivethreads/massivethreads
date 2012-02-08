@@ -12,6 +12,9 @@ OBJS = $(addsuffix .o, $(BASES))
 $(APP): $(OBJS)
 	$(CXX) -o $(APP) $(OBJS) $(CC_CXX_FLAGS) -L../../ -lmyth-compat
 
+debug:
+	$(CXX) -o $(APP) $(OBJS) -pthread
+
 clean: 
 	rm -f $(OBJS) 
 
