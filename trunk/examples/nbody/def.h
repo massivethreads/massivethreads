@@ -188,6 +188,7 @@ space * make_empty_space(rectangle *);
 rectangle * make_entire_rectangle(t_real);
 space * generate_tree(particle **, int);
 space * build_tree(particle **, int);
+space * build_tree_bottomup(particle **, int);
 void set_accels(particle **, int, space *);
 void move_particles(particle **, int, t_real);
 

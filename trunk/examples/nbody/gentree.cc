@@ -195,7 +195,7 @@ void * build_tree_rec(void * args)
       parr[i].particles = np->particles;
       parr[i].subset_arr = np->subset_arr;
       parr[i].subset_size = np->subset_size;
-      if (i == n_threads) {
+      if (i >= n_threads) {
         build_tree_rec(&parr[i]);
       } else {
         pthread_create(&ths[i], NULL, build_tree_rec, (void *) &parr[i]);
@@ -205,10 +205,6 @@ void * build_tree_rec(void * args)
     for (int i = 0; i < n_threads; i++) 
       pthread_join(ths[i], (void **) ret);
   }
-}
-
-void * build_tree_bottomup(void *args)
-{
 }
 
 space * build_tree(particle ** particles, int n_particles)
@@ -223,6 +219,118 @@ space * build_tree(particle ** particles, int n_particles)
   dat.subset_size = n_particles;
   build_tree_rec(&dat);
   return tree;
+}
+
+struct btup_thd_dat {
+  space * tree;
+  rectangle * area;
+  particle ** particles;
+  int * subset_arr;
+  int subset_size;
+};
+
+btup_thd_dat * particles_in_tree(btup_thd_dat * orig)
+{
+#if USE_MALLOC
+  btup_thd_dat * p = (btup_thd_dat *) malloc(sizeof(btup_thd_dat));
+#else
+  btup_thd_dat * p = new btup_thd_dat;
+#endif
+  p->tree = orig->tree; 
+  p->area = orig->area;
+  p->particles = orig->particles;
+  if (orig->subset_arr == NULL && orig->subset_size > 0) {
+    p->subset_size = orig->subset_size;
+    p->subset_arr = new int[p->subset_size];
+    for (int i = 0; i < orig->subset_size; i++) p->subset_arr[i] = i;
+  } else {
+#if USE_MALLOC
+    int * arr = (int *) malloc(sizeof(int) * orig->subset_size);
+#else
+    int * arr = new int[orig->subset_size];
+#endif
+    p->subset_size = 0;
+    for (int i = 0; i < orig->subset_size; i++) {
+      if (cover_p(p->area, p->particles[orig->subset_arr[i]]->pos)) {
+        arr[i] = orig->subset_arr[i]; 
+        p->subset_size++; 
+      } else {
+        arr[i] = -1;
+      }
+    }
+    if (p->subset_size > 0) {
+#if USE_MALLOC
+      p->subset_arr = (int *) malloc(sizeof(int) * p->subset_size);
+#else
+      p->subset_arr = new int [p->subset_size];
+#endif
+      int j = 0;
+      for (int i = 0; i < orig->subset_size; i++) {
+        if (arr[i] != -1) {
+          p->subset_arr[j] = arr[i];
+          j++;
+        }
+      }
+    } else {
+      p->subset_arr = NULL;
+      p->subset_size = 0;
+    }
+  }
+  return p;
+}
+
+void * build_tree_bottomup_rec(void *args)
+{
+#if USE_MALLOC
+  btup_thd_dat parr[N_CHILDREN];
+  pthread_t ths[N_CHILDREN];
+#endif
+  btup_thd_dat * p = (btup_thd_dat *) args;
+  btup_thd_dat * np = particles_in_tree(p);
+  if (np->subset_size == 1) {
+    particle * par = np->particles[np->subset_arr[0]];
+    np->tree = make_empty_space(np->area);
+    np->tree->add_particle(par->mass, par->pos);
+  } else if (np->subset_size > 1) {
+    int n_threads = N_CHILDREN - 1;
+    void * ret;
+#if !USE_MALLOC
+    btup_thd_dat * parr = new btup_thd_dat[N_CHILDREN];
+    pthread_t * ths = new pthread_t[n_threads];
+#endif
+    for (int i = 0; i < N_CHILDREN; i++) {
+      parr[i].tree = NULL;
+      parr[i].area = make_sub_rectangle(np->area, i);
+      parr[i].particles = np->particles;
+      parr[i].subset_arr = np->subset_arr;
+      parr[i].subset_size = np->subset_size;
+    //  if (i >= n_threads) {
+        build_tree_bottomup_rec(&parr[i]);
+    //  } else {
+    //   pthread_create(&ths[i], NULL, build_tree_bottomup_rec, (void *) &parr[i]);
+    // }
+    }
+    np->tree = make_empty_space(np->area);
+    np->tree->state = MULTIPLE_PARTICLES;
+    np->tree->subspaces = new space * [N_CHILDREN];
+    for (int i = 0; i < N_CHILDREN; i++) {
+    //  pthread_join(ths[i], (void **) ret);
+      np->tree->subspaces[i] = parr[i].tree;
+    }
+  }
+}
+
+space * build_tree_bottomup(particle ** particles, int n_particles)
+{
+  btup_thd_dat dat;
+	t_real limit = calc_limit(particles, n_particles);
+  dat.tree = NULL;
+  dat.area = make_entire_rectangle(limit);
+  dat.particles = particles;
+  dat.subset_arr = NULL;
+  dat.subset_size = n_particles;
+  build_tree_bottomup_rec(&dat);
+  return dat.tree;
 }
 
 /* Serial version of tree generation */
