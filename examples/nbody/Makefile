@@ -13,7 +13,7 @@ $(APP): $(OBJS)
 	$(CXX) -o $(APP) $(OBJS) $(CC_CXX_FLAGS) -L../../ -lmyth-compat
 
 debug:
-	$(CXX) -o $(APP) $(OBJS) -pthread
+	$(CXX) -o $(APP) $(OBJS) -pthread -ggdb
 
 clean: 
 	rm -f $(OBJS) 
