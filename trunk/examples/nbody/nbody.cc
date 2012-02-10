@@ -13,8 +13,8 @@ void simulate_a_step(particle ** particles, int n_particles,  t_real dt)
   
   t0 = current_real_time_milli();
 #if BUILD_TREE_PARALLEL
-//  tree = build_tree(particles, n_particles);
-  tree = build_tree_bottomup(particles, n_particles);
+  tree = build_tree(particles, n_particles);
+//  tree = build_tree_bottomup(particles, n_particles);
 #else
   tree = generate_tree(particles, n_particles);
 #endif
