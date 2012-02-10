@@ -5,18 +5,14 @@ CC_CXX_FLAGS = -O3
 CFLAGS = $(CC_CXX_FLAGS)
 CXXFLAGS = $(CC_CXX_FLAGS)
 
-# add basename of object files
-BASES = $(APP) def force genpar gentree
-OBJS = $(addsuffix .o, $(BASES))
+SRCS = $(APP).cc def.cc force.cc genpar.cc gentree.cc def.h
+.PHONY: debug clean
 
-$(APP): $(OBJS)
-	$(CXX) -o $(APP) $(OBJS) $(CC_CXX_FLAGS) -L../../ -lmyth-compat
+$(APP): $(SRCS)
+	$(CXX) -o $(APP) $(SRCS) $(CC_CXX_FLAGS) -L../../ -lmyth-compat
 
 debug:
-	$(CXX) -o $(APP) $(OBJS) -pthread -ggdb
+	$(CXX) -o $(APP) $(SRCS) -pthread -ggdb
 
 clean: 
-	rm -f $(OBJS) 
-
-all_clean: clean
-	rm -f $(APP)
+	rm -f $(APP) 

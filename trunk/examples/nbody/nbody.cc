@@ -13,17 +13,17 @@ void simulate_a_step(particle ** particles, int n_particles,  t_real dt)
   
   t0 = current_real_time_milli();
 #if BUILD_TREE_PARALLEL
-//  tree = build_tree(particles, n_particles);
-  tree = build_tree_bottomup(particles, n_particles);
+  tree = build_tree(particles, n_particles);
+//  tree = build_tree_bottomup(particles, n_particles);
 #else
   tree = generate_tree(particles, n_particles);
 #endif
   t1 = current_real_time_milli();
   mass_momentum mm = tree->set_mass_and_cg();
   t2 = current_real_time_milli();
-  set_accels(particles, n_particles, tree);
+  //set_accels(particles, n_particles, tree);
   t3 = current_real_time_milli();
-  move_particles(particles, n_particles, dt);
+  //move_particles(particles, n_particles, dt);
   t4 = current_real_time_milli();
   
   printf("  Tree nodes:    %d\n"

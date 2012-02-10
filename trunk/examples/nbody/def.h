@@ -21,7 +21,7 @@ typedef REAL_TYPE t_real;
 #endif
 
 #ifndef BUILD_TREE_PARALLEL 
-#define BUILD_TREE_PARALLEL 0
+#define BUILD_TREE_PARALLEL 1
 #endif
 
 struct vect

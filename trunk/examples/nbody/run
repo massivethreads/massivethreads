@@ -16,7 +16,6 @@ if [ ! -f ${EXE} ]; then
 	echo "Executable does not exist, building..."
 	make -f Makefile
 	if [ "$?" -eq 0 ]; then
-		make clean
 		echo "Done."
 	else
 		echo "Build failed"
