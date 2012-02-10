@@ -12,7 +12,7 @@ $(APP): $(SRCS)
 	$(CXX) -o $(APP) $(SRCS) $(CC_CXX_FLAGS) -L../../ -lmyth-compat
 
 debug:
-	$(CXX) -o $(APP) $(SRCS) -pthread -ggdb
+	$(CXX) -o $(APP) $(SRCS) -pthread -ggdb $(CC_CXX_FLAGS)
 
 clean: 
 	rm -f $(APP) 
