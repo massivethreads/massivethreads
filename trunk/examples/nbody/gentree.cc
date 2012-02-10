@@ -132,42 +132,36 @@ bt_thread_dat * particles_in_tree(bt_thread_dat * orig)
   
   p->tree = orig->tree;
   p->particles = orig->particles;
-  if (orig->subset_arr == NULL && orig->subset_size > 0) {
-    p->subset_size = orig->subset_size;
-    p->subset_arr = new int[p->subset_size];
-    for (int i = 0; i < orig->subset_size; i++) p->subset_arr[i] = i;
-  } else {
 #if USE_MALLOC
-    int * arr = (int *) malloc(sizeof(int) * orig->subset_size);
+  int * arr = (int *) malloc(sizeof(int) * orig->subset_size);
 #else
-    int * arr = new int[orig->subset_size];
+  int * arr = new int[orig->subset_size];
 #endif
-    p->subset_size = 0;
-    for (int i = 0; i < orig->subset_size; i++) {
-      if (cover_p(p->tree->area, p->particles[orig->subset_arr[i]]->pos)) {
-        arr[i] = orig->subset_arr[i]; 
-        p->subset_size++; 
-      } else {
-        arr[i] = -1;
-      }
-    }
-    if (p->subset_size > 0) {
-#if USE_MALLOC
-      p->subset_arr = (int *) malloc(sizeof(int) * p->subset_size);
-#else
-      p->subset_arr = new int [p->subset_size];
-#endif
-      int j = 0;
-      for (int i = 0; i < orig->subset_size; i++) {
-        if (arr[i] != -1) {
-          p->subset_arr[j] = arr[i];
-          j++;
-        }
-      }
+  p->subset_size = 0;
+  for (int i = 0; i < orig->subset_size; i++) {
+    if (cover_p(p->tree->area, p->particles[orig->subset_arr[i]]->pos)) {
+      arr[i] = orig->subset_arr[i]; 
+      p->subset_size++; 
     } else {
-      p->subset_arr = NULL;
-      p->subset_size = 0;
+      arr[i] = -1;
     }
+  }
+  if (p->subset_size > 0) {
+#if USE_MALLOC
+    p->subset_arr = (int *) malloc(sizeof(int) * p->subset_size);
+#else
+    p->subset_arr = new int [p->subset_size];
+#endif
+    int j = 0;
+    for (int i = 0; i < orig->subset_size; i++) {
+      if (arr[i] != -1) {
+        p->subset_arr[j] = arr[i];
+        j++;
+      }
+    }
+  } else {
+    p->subset_arr = NULL;
+    p->subset_size = 0;
   }
   return p;
 }
@@ -184,8 +178,9 @@ void * build_tree_rec(void * args)
     particle * par = np->particles[np->subset_arr[0]];
     np->tree->add_particle(par->mass, par->pos);
   } else if (np->subset_size > 1) {
-    np->tree->divide();
+    void * ret;
     int n_threads = N_CHILDREN - 1;
+    np->tree->divide();
 #if !USE_MALLOC
     bt_thread_dat * parr = new bt_thread_dat[N_CHILDREN];
     pthread_t * ths = new pthread_t[n_threads];
@@ -195,13 +190,12 @@ void * build_tree_rec(void * args)
       parr[i].particles = np->particles;
       parr[i].subset_arr = np->subset_arr;
       parr[i].subset_size = np->subset_size;
-      if (i >= n_threads) {
-        build_tree_rec(&parr[i]);
-      } else {
+      if (i < n_threads) {
         pthread_create(&ths[i], NULL, build_tree_rec, (void *) &parr[i]);
+      } else {
+        build_tree_rec(&parr[i]);
       }
     }
-    void * ret;
     for (int i = 0; i < n_threads; i++) 
       pthread_join(ths[i], (void **) ret);
   }
@@ -215,8 +209,13 @@ space * build_tree(particle ** particles, int n_particles)
   space * tree = make_empty_space(rec);
   dat.tree = tree;
   dat.particles = particles;
-  dat.subset_arr = NULL;
   dat.subset_size = n_particles;
+#if USE_MALLOC
+  dat.subset_arr = (int *) malloc(sizeof(int) * dat.subset_size);
+#else
+  dat.subset_arr = new int[dat.subset_size];
+#endif
+  for (int i = 0; i < dat.subset_size; i++) dat.subset_arr[i] = i;
   build_tree_rec(&dat);
   return tree;
 }
@@ -281,9 +280,9 @@ void * build_tree_bottomup_rec(void *args)
 #endif
   btup_thd_dat * p = (btup_thd_dat *) args;
   btup_thd_dat * np = particles_in_tree(p);
+  p->tree = make_empty_space(np->area);
   if (np->subset_size == 1) {
     particle * par = p->particles[np->subset_arr[0]];
-    p->tree = make_empty_space(np->area);
     p->tree->add_particle(par->mass, par->pos);
   } else if (np->subset_size > 1) {
     int n_threads = N_CHILDREN - 1;
@@ -305,17 +304,16 @@ void * build_tree_bottomup_rec(void *args)
         build_tree_bottomup_rec(&parr[i]);
      }
     }
-    p->tree = make_empty_space(p->area);
     p->tree->state = MULTIPLE_PARTICLES;
+#if USE_MALLOC
+    p->tree->subspaces = (space **) malloc(sizeof(space *) * N_CHILDREN);
+#else
     p->tree->subspaces = new space * [N_CHILDREN];
+#endif
     for (int i = 0; i < N_CHILDREN; i++) {
-      if (i < n_threads)
-        pthread_join(ths[i], (void **) ret);
+      if (i < n_threads) pthread_join(ths[i], (void **) ret);
       p->tree->subspaces[i] = parr[i].tree;
     }
-  } else {
-    p->tree = make_empty_space(p->area);
-    p->tree->state = NO_PARTICLE;
   }
 }
 
