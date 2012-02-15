@@ -3,7 +3,7 @@
 #ifndef MOL_H
 #define MOL_H
 
-#include "typedefs.h"
+#include "defs.h"
 #include "vector.h"
 
 struct mol {

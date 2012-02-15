@@ -3,7 +3,7 @@
 #ifndef VECTOR_H
 #define VECTOR_H
 
-#include "typedefs.h"
+#include "defs.h"
 
 struct vector {
   real x;
