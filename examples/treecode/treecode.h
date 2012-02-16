@@ -7,5 +7,6 @@
 #include "vector.h"
 #include "mol.h"
 #include "tree.h"
+#include "opts.h"
 
 #endif /* TREECODE_H */

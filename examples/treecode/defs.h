@@ -3,6 +3,9 @@
 #ifndef DEFS_H
 #define DEFS_H
 
+#define PROG_NAME "treecode"
+#define PROG_VERSION 0.1
+
 // Types
 #ifndef NULL
 #ifdef __cplusplus
