@@ -16,26 +16,26 @@ int g_n_recvfrom_cnt,g_n_sendto_cnt;
 
 #ifdef MYTH_WRAP_IO
 
-int socket (int __domain, int __type, int __protocol)
+int socket (int domain, int type, int protocol)
 {
-	return myth_socket_body(__domain,__type,__protocol);
+	return myth_socket_body(domain,type,protocol);
 }
-int connect (int __fd, __CONST_SOCKADDR_ARG __addr, socklen_t __len)
+int connect (int fd, const struct sockaddr *addr, socklen_t len)
 {
-	return myth_connect_body(__fd,__addr,__len);
+	return myth_connect_body(fd,addr,len);
 }
-int accept (int __fd, __SOCKADDR_ARG __addr,
-		   socklen_t *__restrict __addr_len)
+int accept (int fd, struct sockaddr* addr,
+		   socklen_t * addr_len)
 {
-	return myth_accept_body(__fd,__addr,__addr_len);
+	return myth_accept_body(fd,addr,addr_len);
 }
-int listen (int __fd, int __n)
+int listen (int fd, int n)
 {
-	return myth_listen_body(__fd,__n);
+	return myth_listen_body(fd,n);
 }
-int bind(int __fd, __CONST_SOCKADDR_ARG __addr, socklen_t __len)
+int bind(int fd, const struct sockaddr* addr, socklen_t len)
 {
-	return myth_bind_body(__fd,__addr,__len);
+	return myth_bind_body(fd,addr,len);
 }
 int select(int nfds, fd_set *readfds, fd_set *writefds,
            fd_set *exceptfds, struct timeval *timeout)
@@ -52,24 +52,24 @@ ssize_t recvfrom(int sockfd, void *buf, size_t len, int flags,
 {
 	return myth_recvfrom_body(sockfd,buf,len,flags,src_addr,addrlen);
 }
-ssize_t send (int __fd, __const void *__buf, size_t __n, int __flags)
+ssize_t send (int fd, const void *buf, size_t n, int flags)
 {
-	return myth_send_body(__fd,__buf,__n,__flags);
+	return myth_send_body(fd,buf,n,flags);
 }
-ssize_t recv (int __fd, void *__buf, size_t __n, int __flags)
+ssize_t recv (int fd, void *buf, size_t n, int flags)
 {
-	return myth_recv_body(__fd,__buf,__n,__flags);
+	return myth_recv_body(fd,buf,n,flags);
 }
-int close (int __fd)
+int close (int fd)
 {
-	return myth_close_body(__fd);
+	return myth_close_body(fd);
 }
-int fcntl (int __fd, int __cmd, ...)
+int fcntl (int fd, int cmd, ...)
 {
 	int ret;
 	va_list vl;
-	va_start(vl,__cmd);
-	ret=myth_fcntl_body(__fd,__cmd,vl);
+	va_start(vl,cmd);
+	ret=myth_fcntl_body(fd,cmd,vl);
 	va_end(vl);
 	return ret;
 }

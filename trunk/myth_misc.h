@@ -31,9 +31,6 @@ static inline void myth_assert(expr){assert(expr);}
 #define myth_unreachable()
 #endif
 
-//restrict pointer declaration
-#define MYTH_RESTRICT restrict
-
 //Access to time stamp counter
 //lfence inserted to serialize instructions
 static inline uint64_t myth_get_rdtsc()
