@@ -51,7 +51,7 @@ typedef struct myth_io_op
 	union{
 		struct{
 			int fd;
-			__SOCKADDR_ARG addr;
+			struct sockaddr *addr;
 			socklen_t *len;
 		}a;//accept
 		struct{

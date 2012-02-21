@@ -8,41 +8,29 @@
 #define LOAD_PTHREAD_FN(fn) {real_pthread_##fn=dlsym(s_pthread_handle,"pthread_"#fn);assert(real_pthread_##fn);}
 
 //pthread function pointers
-int (*real_pthread_key_create) (pthread_key_t *__key,void (*__destr_function) (void *));
-int (*real_pthread_key_delete) (pthread_key_t __key);
-void *(*real_pthread_getspecific)(pthread_key_t __key);
-int (*real_pthread_setspecific) (pthread_key_t __key,__const void *__pointer);
-int (*real_pthread_create) (pthread_t *__restrict __newthread,__const pthread_attr_t *__restrict __attr,void *(*__start_routine) (void *),void *__restrict __arg);
-int (*real_pthread_join) (pthread_t __th, void **__thread_return);
-int (*real_pthread_kill)(pthread_t __threadid, int __signo);
-int (*real_pthread_sigmask)(int __how,__const __sigset_t *__restrict __newmask,__sigset_t *__restrict __oldmask);
-int (*real_pthread_barrier_init) (pthread_barrier_t *__restrict __barrier,__const pthread_barrierattr_t *__restrict __attr, unsigned int __count);
-int (*real_pthread_barrier_destroy) (pthread_barrier_t *__barrier);
-int (*real_pthread_barrier_wait) (pthread_barrier_t *__barrier);
-int (*real_pthread_mutexattr_init)(pthread_mutexattr_t *__attr);
-int (*real_pthread_mutexattr_destroy)(pthread_mutexattr_t *__attr);
-int (*real_pthread_mutexattr_settype)(pthread_mutexattr_t *__attr, int __kind);
-#ifdef MUTEX_ERROR_CHECK
-int (*real_pthread_mutex_init_org) (pthread_mutex_t *__mutex,__const pthread_mutexattr_t *__mutexattr);
-int (*real_pthread_mutex_destroy_org) (pthread_mutex_t *__mutex);
-int (*real_pthread_mutex_lock_org) (pthread_mutex_t *__mutex);
-int (*real_pthread_mutex_trylock_org) (pthread_mutex_t *__mutex);
-int (*real_pthread_mutex_unlock_org) (pthread_mutex_t *__mutex);
-#elif defined MUTEX_DISABLE
-#else
-int (*real_pthread_mutex_init) (pthread_mutex_t *__mutex,__const pthread_mutexattr_t *__mutexattr);
-int (*real_pthread_mutex_destroy) (pthread_mutex_t *__mutex);
-int (*real_pthread_mutex_lock) (pthread_mutex_t *__mutex);
-int (*real_pthread_mutex_trylock) (pthread_mutex_t *__mutex);
-int (*real_pthread_mutex_unlock) (pthread_mutex_t *__mutex);
-#endif
-int (*real_pthread_setaffinity_np) (pthread_t __th, size_t __cpusetsize,__const cpu_set_t *__cpuset);
+int (*real_pthread_key_create) (pthread_key_t *,void (*)(void *));
+int (*real_pthread_key_delete) (pthread_key_t);
+void *(*real_pthread_getspecific)(pthread_key_t);
+int (*real_pthread_setspecific) (pthread_key_t,const void *);
+int (*real_pthread_create) (pthread_t *,const pthread_attr_t *,void *(*)(void *),void *);
+int (*real_pthread_join) (pthread_t, void **);
+int (*real_pthread_kill)(pthread_t, int);
+int (*real_pthread_sigmask)(int,const sigset_t *,sigset_t *);
+int (*real_pthread_mutex_init) (pthread_mutex_t *,const pthread_mutexattr_t *);
+int (*real_pthread_mutex_destroy) (pthread_mutex_t *);
+int (*real_pthread_mutex_lock) (pthread_mutex_t *);
+int (*real_pthread_mutex_trylock) (pthread_mutex_t *);
+int (*real_pthread_mutex_unlock) (pthread_mutex_t *);
+int (*real_pthread_barrier_init) (pthread_barrier_t *,const pthread_barrierattr_t *, unsigned int);
+int (*real_pthread_barrier_destroy) (pthread_barrier_t *);
+int (*real_pthread_barrier_wait) (pthread_barrier_t *);
+int (*real_pthread_setaffinity_np) (pthread_t, size_t,cpu_set_t *);
 pthread_t (*real_pthread_self) (void);
-int (*real_pthread_spin_init) (pthread_spinlock_t *__lock, int __pshared);
-int (*real_pthread_spin_destroy) (pthread_spinlock_t *__lock);
-int (*real_pthread_spin_lock) (pthread_spinlock_t *__lock);
-int (*real_pthread_spin_trylock) (pthread_spinlock_t *__lock);
-int (*real_pthread_spin_unlock) (pthread_spinlock_t *__lock);
+int (*real_pthread_spin_init) (pthread_spinlock_t *, int);
+int (*real_pthread_spin_destroy) (pthread_spinlock_t *);
+int (*real_pthread_spin_lock) (pthread_spinlock_t *);
+int (*real_pthread_spin_trylock) (pthread_spinlock_t *);
+int (*real_pthread_spin_unlock) (pthread_spinlock_t *);
 
 int (*real_sched_yield)(void);
 
@@ -88,7 +76,7 @@ static void myth_get_pthread_funcs(void)
 	LOAD_PTHREAD_FN(mutex_init);LOAD_PTHREAD_FN(mutex_destroy);
 	LOAD_PTHREAD_FN(mutex_lock);LOAD_PTHREAD_FN(mutex_trylock);LOAD_PTHREAD_FN(mutex_unlock);
 	//Mutex attributes
-	LOAD_PTHREAD_FN(mutexattr_init);LOAD_PTHREAD_FN(mutexattr_destroy);LOAD_PTHREAD_FN(mutexattr_settype);
+	//LOAD_PTHREAD_FN(mutexattr_init);LOAD_PTHREAD_FN(mutexattr_destroy);LOAD_PTHREAD_FN(mutexattr_settype);
 	//Barrier
 	LOAD_PTHREAD_FN(barrier_init);LOAD_PTHREAD_FN(barrier_destroy);LOAD_PTHREAD_FN(barrier_wait);
 	//Spinlock
@@ -110,19 +98,18 @@ static void myth_free_pthread_funcs(void)
 }
 
 //I/O function pointers
-int (*real_socket)(int __domain, int __type, int __protocol);
-int (*real_connect)(int __fd, __CONST_SOCKADDR_ARG __addr, socklen_t __len);
-int (*real_accept)(int __fd, __SOCKADDR_ARG __addr,socklen_t *__restrict __addr_len);
-int (*real_listen)(int __fd, int __n);
-ssize_t (*real_send)(int __fd, __const void *__buf, size_t __n, int __flags);
-ssize_t (*real_recv)(int __fd, void *__buf, size_t __n, int __flags);
-int (*real_close)(int __fd);
-int (*real_fcntl)(int __fd, int __cmd, ...);
-int (*real_bind)(int __fd, __CONST_SOCKADDR_ARG __addr, socklen_t __len);
+int (*real_socket)(int, int, int);
+int (*real_connect)(int, const struct sockaddr *, socklen_t);
+int (*real_accept)(int , struct sockaddr *,socklen_t *);
+int (*real_bind)(int , const struct sockaddr *, socklen_t);
+int (*real_listen)(int , int);
+ssize_t (*real_send)(int , const void *, size_t , int );
+ssize_t (*real_recv)(int , void *, size_t , int );
+int (*real_close)(int );
+int (*real_fcntl)(int , int , ...);
 int (*real_select)(int, fd_set*, fd_set*,fd_set *, struct timeval *);
 ssize_t (*real_sendto)(int, const void *, size_t, int,const struct sockaddr *, socklen_t);
 ssize_t (*real_recvfrom)(int , void *, size_t , int ,struct sockaddr *, socklen_t *);
-
 
 static void myth_get_io_funcs(void)
 {
