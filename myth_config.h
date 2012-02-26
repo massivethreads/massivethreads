@@ -14,7 +14,7 @@
 #define MYTH_TLS_KEY_SIZE 256
 
 //Stack size
-#define STACK_SIZE (16*1024)
+#define DEF_STACK_SIZE (16*1024)
 //Scheduler stack size
 #define SCHED_STACK_SIZE (1024*1024)
 

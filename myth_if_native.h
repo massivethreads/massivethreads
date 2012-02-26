@@ -8,6 +8,10 @@
 #ifndef MYTH_IF_NATIVE_H_
 #define MYTH_IF_NATIVE_H_
 
+typedef struct myth_thread_option{
+	size_t stack_size;
+}myth_thread_option,*myth_thread_option_t;
+
 void myth_init(void);
 void myth_fini(void);
 
@@ -20,6 +24,7 @@ void myth_startpoint_init_ex(int rank);
 void myth_startpoint_exit_ex(int rank);
 
 myth_thread_t myth_create(myth_func_t func,void *arg);
+myth_thread_t myth_create_ex(myth_func_t func,void *arg,myth_thread_option_t opt);
 void myth_yield(void);
 void myth_yield2(void);
 void myth_join(myth_thread_t th,void **result);
@@ -30,6 +35,8 @@ int myth_setcancelstate(int state, int *oldstate);
 int myth_setcanceltype(int type, int *oldtype);
 int myth_cancel(myth_thread_t th);
 void myth_testcancel(void);
+
+void myth_set_def_stack_size(size_t newsize);
 
 myth_barrier_t myth_barrier_create(int nthreads);
 int myth_barrier_wait(myth_barrier_t bar);

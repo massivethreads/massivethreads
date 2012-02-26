@@ -34,7 +34,7 @@ pthread_t pthread_self(void)
 int pthread_create(pthread_t *pth,const pthread_attr_t * attr,void *(*func)(void*),void *args)
 {
 	myth_thread_t mt;
-	mt=myth_create_body(func,args);
+	mt=myth_create_body(func,args,0);
 	*pth=(pthread_t)mt;
 	return 0;
 }

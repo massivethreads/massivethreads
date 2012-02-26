@@ -25,12 +25,22 @@
 #include "myth_io.h"
 #include "myth_io_proto.h"
 
+extern size_t g_default_stack_size;
+
+#ifndef PAGE_ALIGN
+#define PAGE_ALIGN(n) ((((n)+(PAGE_SIZE)-1)/(PAGE_SIZE))*PAGE_SIZE)
+#endif
+
+static inline void myth_set_def_stack_size_body(size_t newsize){
+	g_default_stack_size=PAGE_ALIGN(newsize);
+}
+
 #define myth_dprintf(...) myth_dprintf_1((char*)__func__,__VA_ARGS__)
 void myth_dprintf_1(char *func,char *fmt,...);
 
 static inline void myth_entry_point_cleanup(myth_thread_t this_thread);
 
-static inline myth_thread_t myth_create_body(myth_func_t func,void *arg);
+static inline myth_thread_t myth_create_body(myth_func_t func,void *arg,size_t stack_size);
 static inline void myth_yield_body(void);
 static inline void myth_join_body(myth_thread_t th,void **result);
 
@@ -159,7 +169,7 @@ static inline myth_thread_t get_new_myth_thread_struct_desc(myth_running_env_t e
 }
 
 //Return a new thread descriptor
-static inline void *get_new_myth_thread_struct_stack(myth_running_env_t env)
+static inline void *get_new_myth_thread_struct_stack(myth_running_env_t env,size_t size_in_bytes)
 {
 	//TODO:Guarantee stack 4KB alignment
 	//TODO:Add random offset
@@ -173,6 +183,17 @@ static inline void *get_new_myth_thread_struct_stack(myth_running_env_t env)
 #ifdef MYTH_ALLOC_PROF
 	env->prof_data.salloc_cnt++;
 #endif
+	if (size_in_bytes){
+		//Round up to 4KB
+		size_in_bytes+=(1024*4-1);
+		size_in_bytes&=0xFFFFF000;
+		char *th_ptr=myth_flmalloc(env->rank,size_in_bytes);
+		th_ptr+=size_in_bytes-(sizeof(void*)*2);
+		ret=(void**)th_ptr;
+		uintptr_t *blk_size=(uintptr_t*)(th_ptr+sizeof(void*));
+		*blk_size=size_in_bytes;//indicates default
+		return ret;
+	}
 	myth_freelist_pop(env->freelist_stack,ret);
 	if (ret){
 		return ret;
@@ -183,7 +204,7 @@ static inline void *get_new_myth_thread_struct_stack(myth_running_env_t env)
 		size_t th_size;
 		size_t alloc_size;
 		char *th_ptr;
-		th_size=MYTH_MALLOC_SIZE_TO_RSIZE(PAGE_ALIGNED_STACK_SIZE);
+		th_size=g_default_stack_size;
 #ifdef USE_STACK_GUARDPAGE
 		th_size+=PAGE_SIZE;
 #endif
@@ -216,9 +237,11 @@ static inline void *get_new_myth_thread_struct_stack(myth_running_env_t env)
 			pr_ptr+=th_size;
 		}
 #endif
-		th_ptr+=th_size-sizeof(void*);
+		th_ptr+=th_size-(sizeof(void*)*2);
 		for (i=0;i<STACK_ALLOC_UNIT;i++){
 			ret=(void**)th_ptr;
+			uintptr_t *blk_size=(uintptr_t*)(th_ptr+sizeof(void*));
+			*blk_size=0;//indicates default
 			if (i<STACK_ALLOC_UNIT-1){
 				myth_freelist_push(env->freelist_stack,ret);
 				th_ptr+=th_size;
@@ -298,7 +321,12 @@ static inline void free_myth_thread_struct_stack(myth_running_env_t e,myth_threa
 	if (th->stack){
 		//Add to a freelist
 		ptr=(void**)th->stack;
-		myth_freelist_push(e->freelist_stack,ptr);
+		uintptr_t *blk_size=(uintptr_t*)(((uint8_t*)ptr)+sizeof(void*));
+		if (*blk_size==0){myth_freelist_push(e->freelist_stack,ptr);}
+		else{
+			void *stack_start=(((uint8_t*)ptr)-(*blk_size)+(sizeof(void*)*2));
+			myth_flfree(e->rank,(size_t)(*blk_size),stack_start);
+		}
 	}
 #endif
 }
@@ -364,7 +392,7 @@ MYTH_CTX_CALLBACK void myth_create_1(void *arg1,void *arg2,void *arg3)
 }
 
 //Create a thread
-static inline myth_thread_t myth_create_body(myth_func_t func,void *arg)
+static inline myth_thread_t myth_create_body(myth_func_t func,void *arg,size_t stack_size)
 {
 	MAY_BE_UNUSED uint64_t t0,t1;
 	myth_thread_t new_thread;
@@ -391,12 +419,12 @@ static inline myth_thread_t myth_create_body(myth_func_t func,void *arg)
 	new_thread=get_new_myth_thread_struct_desc(env);
 #ifdef MYTH_SPLIT_STACK_DESC
 	//allocate stack and get pointer
-	stk=get_new_myth_thread_struct_stack(env);
+	stk=get_new_myth_thread_struct_stack(env,stack_size);
 	new_thread->stack=stk;
 #else
 	stk=new_thread->stack;
 #endif
-	stk_size=PAGE_ALIGNED_STACK_SIZE;
+	stk_size=g_default_stack_size;
 #endif
 	//Initialize thread descriptor
 	init_myth_thread_struct(env,new_thread);
@@ -946,6 +974,8 @@ static inline void myth_sched_prof_pause_body(void)
 	g_sched_prof=0;
 }
 
+#if 0
+
 //Release the stack of a stolen thread
 static inline void myth_release_stack_body(myth_thread_t th)
 {
@@ -1019,6 +1049,8 @@ static inline myth_thread_t myth_ext_deserialize_body(myth_pickle_t p)
 	memcpy(stack_ptr,p->stack,PAGE_ALIGNED_STACK_SIZE);
 	return ret;
 }
+
+#endif
 
 #include "myth_io_func.h"
 

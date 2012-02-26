@@ -10,6 +10,7 @@
 
 //Environment value of worker threads
 #define ENV_MYTH_WORKER_NUM "MYTH_WORKER_NUM"
+#define ENV_MYTH_DEF_STKSIZE "MYTH_DEF_STKSIZE"
 
 void myth_init_body(void);
 void myth_fini_body(void);
