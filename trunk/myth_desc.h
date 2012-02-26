@@ -82,12 +82,11 @@ static inline void myth_desc_set_detached(myth_thread_t th)
 	th->detached=1;
 }
 
-#define PAGE_ALIGNED_STACK_SIZE ((((STACK_SIZE)+(PAGE_SIZE)-1)/(PAGE_SIZE))*PAGE_SIZE)
-
 typedef struct myth_pickle
 {
 	struct myth_thread desc;
-	char stack[PAGE_ALIGNED_STACK_SIZE];
+	size_t stack_size;
+	char *stack;
 }myth_pickle,*myth_pickle_t;
 
 #endif /* MYTH_DESC_H_ */

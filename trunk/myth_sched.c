@@ -30,6 +30,10 @@ FILE *g_log_fp;
 int g_sched_prof=0;
 int g_log_worker_stat=0;
 
+#define PAGE_ALIGN(n) ((((n)+(PAGE_SIZE)-1)/(PAGE_SIZE))*PAGE_SIZE)
+
+size_t g_default_stack_size=PAGE_ALIGN(DEF_STACK_SIZE);
+
 #ifdef TLS_BY_PTHREAD
 //TLS by pthread
 pthread_key_t g_env_key;

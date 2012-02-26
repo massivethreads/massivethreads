@@ -75,7 +75,12 @@ myth_thread_t myth_self(void)
 
 myth_thread_t myth_create(myth_func_t func,void *arg)
 {
-	return myth_create_body(func,arg);
+	return myth_create_body(func,arg,0);
+}
+
+myth_thread_t myth_create_ex(myth_func_t func,void *arg,myth_thread_option_t opt)
+{
+	return myth_create_body(func,arg,opt->stack_size);
 }
 
 void myth_detach(myth_thread_t th)
@@ -135,6 +140,11 @@ void *myth_getspecific(myth_key_t __key)
 int myth_setspecific(myth_key_t __key,void *__pointer)
 {
 	return myth_setspecific_body(__key,__pointer);
+}
+
+void myth_set_def_stack_size(size_t newsize)
+{
+	myth_set_def_stack_size_body(newsize);
 }
 
 void myth_log_start(void)
@@ -262,6 +272,9 @@ int myth_felock_set_unlock(myth_felock_t fe,int val)
 	return myth_felock_set_unlock_body(fe,val);
 }
 
+//TODO: temporalily disable
+#if 0
+
 //serialize
 void myth_serialize(myth_thread_t th,myth_pickle_t p)
 {
@@ -302,3 +315,4 @@ void myth_release_desc(myth_thread_t th)
 {
 	myth_release_desc_body(th);
 }
+#endif

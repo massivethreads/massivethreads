@@ -12,7 +12,7 @@ static inline void init_myth_thread_struct(myth_running_env_t env,myth_thread_t 
 static inline myth_running_env_t myth_env_get_first_busy(myth_running_env_t e);
 static inline myth_thread_t myth_self_body(void);
 MYTH_CTX_CALLBACK void myth_create_1(void *arg1,void *arg2,void *arg3);
-static inline myth_thread_t myth_create_body(myth_func_t func,void *arg);
+static inline myth_thread_t myth_create_body(myth_func_t func,void *arg,size_t stack_size);
 MYTH_CTX_CALLBACK void myth_yield_1(void *arg1,void *arg2,void *arg3);
 static inline void myth_yield_body(void);
 static inline void myth_join_1(myth_running_env_t e,myth_thread_t th,void **result);
@@ -33,7 +33,7 @@ static inline void myth_sched_prof_start_body(void);
 static inline void myth_sched_prof_pause_body(void);
 
 static inline myth_thread_t get_new_myth_thread_struct_desc(myth_running_env_t env);
-static inline void *get_new_myth_thread_struct_stack(myth_running_env_t env);
+static inline void *get_new_myth_thread_struct_stack(myth_running_env_t env,size_t size_in_bytes);
 static inline void init_myth_thread_struct(myth_running_env_t env,myth_thread_t th);
 static inline void free_myth_thread_struct_desc(myth_running_env_t e,myth_thread_t th);
 static inline void free_myth_thread_struct_stack(myth_running_env_t e,myth_thread_t th);

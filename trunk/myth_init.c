@@ -26,6 +26,12 @@ int myth_init_ex_body(int worker_num)
 	if (nthreads<=0 && env){nthreads=atoi(env);}
 	if (nthreads<=0){nthreads=myth_get_cpu_num();}
 	g_worker_thread_num=nthreads;
+	//set default stack size
+	env=getenv(ENV_MYTH_DEF_STKSIZE);
+	if (env){
+		size_t s=atoi(env);
+		if (s>0){myth_set_def_stack_size_body(s);}
+	}
 	//Initialize logger
 	myth_log_init();
 	//Initialize memory allocators
