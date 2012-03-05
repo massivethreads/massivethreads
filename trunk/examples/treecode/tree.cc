@@ -1,18 +1,8 @@
 /* tree.cc */
 
 #include <cstdio>
-#include <cstdlib>
+#include "utils.h"
 #include "tree.h"
-
-static inline void * xmalloc(size_t size)
-{
-  void *p = malloc(size);
-  if (p == NULL) {
-    perror("memory allocation failed");
-    exit(1);
-  }
-  return p;
-}
 
 node::node(void) {
   parent = NULL;
