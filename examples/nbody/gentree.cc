@@ -168,12 +168,16 @@ bt_thread_dat * particles_in_tree(bt_thread_dat * orig)
 
 void * build_tree_rec(void * args)
 {
+  int t0, t1;
 #if USE_MALLOC
   pthread_t ths[N_CHILDREN];
   bt_thread_dat parr[N_CHILDREN];
 #endif
   bt_thread_dat * p = (bt_thread_dat *) args;
+  t0 = current_real_time_micro();
   bt_thread_dat * np = particles_in_tree(p);
+  t1 = current_real_time_micro();
+//  printf("%d %d %d\n", p->subset_size, np->subset_size, t1-t0);
   if (np->subset_size == 1) {
     particle * par = np->particles[np->subset_arr[0]];
     np->tree->add_particle(par->mass, par->pos);
@@ -201,6 +205,88 @@ void * build_tree_rec(void * args)
   }
 }
 
+void particles_in_tree2(bt_thread_dat * orig,
+  bt_thread_dat * parr)
+{
+  int t0, t1, t2, t3, t4, t5, t6;
+  
+  t0 = current_real_time_micro();
+#if USE_MALLOC
+  int * arr = (int *) malloc(sizeof(int) * orig->subset_size);
+#else
+  int * arr = new int[orig->subset_size];
+#endif
+  t1 = current_real_time_micro();
+  
+  orig->tree->divide();
+  t2 = current_real_time_micro();
+  
+  for (int i = 0; i < N_CHILDREN; i++) {
+    parr[i].tree = orig->tree->subspaces[i];
+    parr[i].particles = orig->particles;
+    parr[i].subset_size = 0;
+  }
+  
+  t3 = current_real_time_micro();
+  for (int i = 0; i < orig->subset_size; i++) {
+    int idx = select_covering_rectangle( 
+      orig->particles[orig->subset_arr[i]]->pos, orig->tree->area);
+    parr[idx].subset_size++;
+    arr[i] = idx;
+  }
+  
+  t4 = current_real_time_micro();
+  int indices[N_CHILDREN];
+  for (int i = 0; i < N_CHILDREN; i++) {
+    if (parr[i].subset_size > 0) {
+#if USE_MALLOC
+      parr[i].subset_arr = (int *) malloc(sizeof(int) * parr[i].subset_size);
+#else
+      parr[i].subset_arr = new int [parr[i].subset_size];
+#endif
+    } else {
+      parr[i].subset_arr = NULL;
+    }
+    indices[i] = 0;
+  }
+  
+  t5 = current_real_time_micro();
+  for (int i = 0; i < orig->subset_size; i++) {
+    int idx = arr[i];
+    parr[idx].subset_arr[indices[idx]] = orig->subset_arr[i];
+    indices[idx]++;
+  }
+  
+  t6 = current_real_time_micro();
+  printf("%d %d %d %d %d %d %d %d\n", orig->subset_size, t6-t0, 
+  t1-t0, t2-t1, t3-t2, t4-t3, t5-t4, t6-t5);
+}
+
+void * build_tree_rec2(void * args)
+{
+  pthread_t ths[N_CHILDREN];
+  bt_thread_dat parr[N_CHILDREN];
+  bt_thread_dat * p = (bt_thread_dat *) args;
+ 
+  if (p->subset_size == 1) {
+    particle * par = p->particles[p->subset_arr[0]];
+    p->tree->add_particle(par->mass, par->pos);
+  } else if (p->subset_size > 1) {
+    particles_in_tree2(p, parr);
+    void * ret;
+    int n_threads = N_CHILDREN - 1;
+    for (int i = 0; i < N_CHILDREN; i++) {
+      if (i < n_threads) {
+        pthread_create(&ths[i], NULL, build_tree_rec2, (void *) &parr[i]);
+      } else {
+        build_tree_rec2(&parr[i]);
+      }
+    }
+    for (int i = 0; i < n_threads; i++) 
+      pthread_join(ths[i], (void **) ret);
+  }
+}
+
 space * build_tree(particle ** particles, int n_particles)
 {
   bt_thread_dat dat;
@@ -216,7 +302,8 @@ space * build_tree(particle ** particles, int n_particles)
   dat.subset_arr = new int[dat.subset_size];
 #endif
   for (int i = 0; i < dat.subset_size; i++) dat.subset_arr[i] = i;
-  build_tree_rec(&dat);
+//  build_tree_rec(&dat);
+  build_tree_rec2(&dat);
   return tree;
 }
 

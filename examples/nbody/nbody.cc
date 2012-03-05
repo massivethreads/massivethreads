@@ -43,7 +43,7 @@ void dump_particles (particle **, int);
 
 void nbody_main (int n_particles, int n_steps, t_real dt, int dump_p)
 {
-  particle ** particles = generate_particles(n_particles);
+  particle ** particles = generate_particles_uniform(n_particles);
   if (dump_p) dump_particles(particles, n_particles);
   for (int i = 0; i < n_steps; i++)
     simulate_a_step(particles, n_particles, dt);
