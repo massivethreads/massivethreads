@@ -1,23 +1,48 @@
 /* treecode.cc */
 
 #include <cstdlib>
-#include <iostream>
+#include <cstdio>
 #include "treecode.h"
+
+simulation sim;
+int verbose;
+
+#define MFRAC  0.999  //
+
+void init(arguments *args)
+{
+  verbose = args->verbose;
+  sim.mol = args->mol;
+  sim.steps = args->steps;
+
+  if (verbose >= 1) {
+    printf("Initial with following configurations...\n"
+           "  # of molecules: %d\n"
+           "      # of steps: %d\n",
+           sim.mol, sim.steps);
+  }
+
+  if (sim.mol > 0)
+    sim.mols = (mol *) xmalloc(sizeof(mol) * sim.mol);
+
+  // Initial molecular conditions with Plummer model
+  real rsc, vsc, r, v, x, y;
+  vector rcm, vcm;
+  rsc = (3 * PI) / 16;
+  vsc = sqrt(1.0 / rsc);
+  rcm.clr(); vcm.clr();
+  for (int i = 0; i < sim.mol; i++) {
+    mol &m = sim.mols[i];
+    m.mass = 1.0 / sim.mol;
+    x = xrandom(0.0, MFRAC);
+    r = 1.0 / sqrt(pow(x, -2.0/3.0) - 1);
+  }
+}
 
 int main(int argc, char *argv[])
 {
-  parse_cmdline(argc, argv);
-  exit(0);
-  vector v1, v2, v3;
-  v1.set(1, 1, 1);
-  v2.set(2, 2, 2);
-  v3 = v2;
-  v3 += v1;
-  std::cout << v3.x << "\n";
+  arguments *args = parse_cmdline(argc, argv);
+  if (args == NULL) exit(1);
 
-  tree t;
-  t.root = newcell();
-  t.root->split();
-  t.root->subs[0] = newbody();
-  t.print();
+  init(args);
 }

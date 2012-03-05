@@ -5,7 +5,7 @@ CC_CXX_FLAGS = -O3
 CFLAGS = $(CC_CXX_FLAGS)
 CXXFLAGS = $(CC_CXX_FLAGS)
 
-SRCS = $(APP).cc vector.cc mol.cc tree.cc opts.cc
+SRCS = $(APP).cc vector.cc mol.cc tree.cc opts.cc utils.cc
 .PHONY: debug clean
 
 $(APP): $(SRCS)
