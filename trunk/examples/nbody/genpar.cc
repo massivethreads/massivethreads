@@ -121,7 +121,7 @@ particle ** generate_particles(int n)
 	for (int i = 0; i < h; i++) {
 		int j = h + i; t_real r = 0.0;
 		do {
-	  		t_real xr = xrand(0.0, mfrac);
+	  	t_real xr = xrand(0.0, mfrac);
 			t_real po = pow(xr, -2.0/3.0);
 			t_real rs = sqrt(po - 1.0);
 			r = 1.0 / rs;
@@ -149,6 +149,29 @@ particle ** generate_particles(int n)
 	}
 	centralize_particles(a, n, cmrx / n, cmry / n, cmrz / n, 
 			cmvx / n, cmvy / n, cmvz / n);
+    
+  for (int i = 0; i < n; i++)
+    printf("%f %f %f\n", a[i]->pos.x, a[i]->pos.y, a[i]->pos.z);
+	return a;
+}
+
+particle ** generate_particles_uniform(int n)
+{
+#if USE_MALLOC
+  particle ** a = (particle **) malloc(sizeof(particle *) * n);
+#else
+	particle ** a = new particle* [n];
+#endif
+	t_real rsc = 9.0 * xxPI / 16.0;
+	t_real vsc = sqrt(rsc);
+	t_real mass = 1.0 / (t_real)n;
+  for (int i = 0; i < n; i++) {
+    vect_t pos = pick_shell(rsc);
+    vect_t vel = pick_shell(vsc);
+		a[i] = make_particle(i, mass, VX(pos), VY(pos), VZ(pos), 
+			 VX(vel), VY(vel), VZ(vel));
+    //printf("%f %f %f\n", a[i]->pos.x, a[i]->pos.y, a[i]->pos.z);
+  }
 	return a;
 }
 

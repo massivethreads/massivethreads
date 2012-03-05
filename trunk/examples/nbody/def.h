@@ -184,6 +184,7 @@ static inline t_real distance(vect_t p0, vect_t p1)
 }
 
 particle ** generate_particles(int);
+particle ** generate_particles_uniform(int);
 space * make_empty_space(rectangle *);
 rectangle * make_entire_rectangle(t_real);
 space * generate_tree(particle **, int);

@@ -71,7 +71,7 @@ space * make_empty_space(rectangle * area)
 #endif
 }
 
-int inline current_real_time_micro()
+int current_real_time_micro()
 {
   struct timeval tp[1];
   struct timezone tzp[1];
