@@ -33,14 +33,14 @@ void myth_fini_ex(void)
 	myth_fini_ex_body();
 }
 
-void myth_exit_ex(void)
+void myth_exit_workers_ex(void)
 {
 	myth_notify_workers_exit();
 }
 
-void myth_ext_exit_ex(void)
+void myth_ext_exit_workers_ex(void)
 {
-	myth_exit_ex();
+	myth_exit_workers_ex();
 }
 
 void myth_worker_start_ex(int rank)
@@ -81,6 +81,11 @@ myth_thread_t myth_create(myth_func_t func,void *arg)
 myth_thread_t myth_create_ex(myth_func_t func,void *arg,myth_thread_option_t opt)
 {
 	return myth_create_body(func,arg,opt->stack_size);
+}
+
+void myth_exit(void *ret)
+{
+	myth_exit_body(ret);
 }
 
 void myth_detach(myth_thread_t th)

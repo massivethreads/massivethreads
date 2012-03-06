@@ -479,6 +479,16 @@ static inline myth_thread_t myth_create_body(myth_func_t func,void *arg,size_t s
 #endif
 }
 
+static inline void myth_exit_body(void *ret)
+{
+	myth_running_env_t env;
+	myth_thread_t th;
+	env=myth_get_current_env();
+	th=env->this_thread;
+	th->result=ret;
+	myth_entry_point_cleanup(th);
+}
+
 MYTH_CTX_CALLBACK void myth_yield_1(void *arg1,void *arg2,void *arg3)
 {
 	myth_running_env_t env=arg1;
