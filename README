@@ -48,7 +48,7 @@ By default, MassiveThreads uses all the CPU cores in the machine.
 (2) Setting the default stack size
 Setting environmental variable MYTH_DEF_STKSIZE (in bytes), you can change the default stack size. By default, MassiveThreads uses 16KB as the default stack size.
 
-[4] Compiling and using MassiveThreads tasking layer on Chapel
+[4] Compiling and using MassiveThreads as a tasking layer on Chapel
 
 Note: Now MassiveThreads tasking layer is unofficial. DO NOT ask a question about MassiveThreads tasking layer to official Chapel community. If you have any question, please ask the address on the last of this text.
 

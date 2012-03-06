@@ -180,6 +180,8 @@ int pthread_mutex_unlock (pthread_mutex_t *mutex)
 	return 0;
 }
 
+//Previously needed for Chapel Tasking Layer. No longer needed
+#if 0
 int pthread_felock_init (pthread_mutex_t *mutex,
 			       const pthread_mutexattr_t *mutexattr)
 {
@@ -228,6 +230,7 @@ int pthread_felock_status (pthread_mutex_t *mutex)
 	myth_felock_t *mtx=(myth_felock_t*)&(mutex->__size[0]);
 	return myth_felock_status_body(*mtx);
 }
+#endif
 
 int pthread_cond_init (pthread_cond_t * c,
 			      const pthread_condattr_t *cond_attr)

@@ -91,11 +91,23 @@ void chpl_task_init(int32_t numThreadsPerLocale, int32_t maxThreadsPerLocale,
 {
 	//Initialize tasking layer
 	//numThreadsPerLocale and callStackSize is specified or 0(default)
-	//TODO:change the number of workers and stacksize
+	//TODO:change the number of workers
+	//Set stacksize
+	if (callStackSize>0){
+		myth_set_def_stack_size(callStackSize);
+	}
 }
 
 int chpl_task_createCommTask(chpl_fn_p fn, void* arg) {
-	chpl_task_begin(fn, arg, false, false, NULL);
+	const size_t stacksize_for_comm_task=128*1024;
+	myth_thread_option opt;
+	myth_thread_t th;
+	//chpl_fn_p is defined as "typedef void (*chpl_fn_p)(void*);" in chpltypes.h at line 85.
+	//So this cast is legal unless the definition is changed.
+	opt.stack_size=stacksize_for_comm_task;
+	th=myth_create_ex((void*(*)(void*))fn,arg,&opt);
+	if (th)
+		myth_detach(th);
 }
 
 void chpl_task_perPthreadInit(void)
