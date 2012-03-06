@@ -17,14 +17,15 @@ void myth_fini(void);
 
 int myth_init_ex(int worker_num);
 void myth_fini_ex(void);
-void myth_exit_ex(void);
-void myth_ext_exit_ex(void);
+void myth_exit_workers_ex(void);
+void myth_ext_exit_workers_ex(void);
 void myth_worker_start_ex(int rank);
 void myth_startpoint_init_ex(int rank);
 void myth_startpoint_exit_ex(int rank);
 
 myth_thread_t myth_create(myth_func_t func,void *arg);
 myth_thread_t myth_create_ex(myth_func_t func,void *arg,myth_thread_option_t opt);
+void myth_exit(void *ret);
 void myth_yield(void);
 void myth_yield2(void);
 void myth_join(myth_thread_t th,void **result);

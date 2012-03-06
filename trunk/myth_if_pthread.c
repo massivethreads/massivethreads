@@ -45,6 +45,13 @@ int pthread_join(pthread_t th,void**ret)
 	return 0;
 }
 
+void pthread_exit(void *ret)
+{
+	myth_exit_body(ret);
+	//To avoid warning, this code is unreachable
+	while (1);
+}
+
 int pthread_detach (pthread_t th)
 {
 	myth_detach_body((myth_thread_t)th);
