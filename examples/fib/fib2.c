@@ -1,10 +1,10 @@
-#include <stdio.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <stdint.h>
 #include <sys/time.h>
 #include <pthread.h>
 
-/* Fibonacci with stack variables */
+/* Fibonacci with many concurrent malloc() */
 
 inline double curr_time(void)
 {
@@ -19,10 +19,12 @@ void *fib(void *args)
   intptr_t arg1, arg2;
   intptr_t ret1, ret2;
   intptr_t n = (intptr_t) args;
-  int status;
-  
+  intptr_t ex1, ex2;
+
   if (n == 0 || n == 1) pthread_exit((void *) n);
   
+  ex1 = (intptr_t) malloc(sizeof(intptr_t));
+  ex2 = (intptr_t) malloc(sizeof(intptr_t));
   arg1 = n - 1;
   arg2 = n - 2;
   if (pthread_create(&th1, NULL, fib, (void*) arg1) != 0) {
@@ -35,11 +37,13 @@ void *fib(void *args)
   }
   pthread_join(th1, (void**) &ret1);
   pthread_join(th2, (void**) &ret2);
-  pthread_exit((void*) (ret1 + ret2));
+  ex1 = ret1;
+  ex2 = ret2;
+  pthread_exit((void*) (ex1 + ex2));
 }
 
-int main(int argc,char **argv)
-{
+int main(int argc, char **argv)
+{ 
   double t0,t1;
   intptr_t n;
   intptr_t ret;

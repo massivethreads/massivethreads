@@ -9,7 +9,7 @@ fi
 
 N=$1
 WORKERS=$2
-EXE=./fib
+EXE=./fib2
 
 if [ ! -f ${EXE} ]; then
 	echo "Executable does not exist, building..."
