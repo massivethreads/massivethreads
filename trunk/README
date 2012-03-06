@@ -1,6 +1,6 @@
 MassiveThreads - a Lightweight Thread Library for High Productivity Languages
 
-Sorry, this document is just a draft and likely to lack many fundamental information. If you have any question, please ask the address in the last of this text.
+Sorry, this document is still a draft and may lack many fundamental information. If you have any question, please ask the address on the last of this text.
 
 [1] How to compile
 
@@ -20,24 +20,37 @@ In success, libmyth.so(both native and pthread-compatible interface, NO explicit
 
 2.At compile time, specify MassiveThreads directory as include(-I...) and library(-L...), and specify shared library (-lmyth or -lmyth-native)
 
-Using libmyth.so, all the function calls using pthread(pthread_xxx) are also replaced by calls to MassiveThreads. If you want to use OS-level pthreads, please use libmyth-native.so, which never replace pthread function calls.
+Using libmyth.so, all the function calls using pthread(pthread_xxx) are also replaced by calls to MassiveThreads. If you want to use OS-level pthreads, please use libmyth-native.so, which does not replace pthread function calls.
 
-(2) ptrhread-compatible interface
+(2) pthread-compatible interface
 
-1.Write and compile application as using pthreads
+1.Write application as using pthreads
+
+2.Compile the application and link with libmyth-compat.so
+
+(3) Execute existing binaries on MassiveThreads
+
+1.Perpare the application binary using libpthread.so
 
 2.At execution time, specify using MassiveThreads in place of pthreads by environmental variable LD_PRELOAD.
 
 $ LD_PRELOAD=(Location of libmyth-compat.so) ./a.out [arguments...]
 
-Caution: Executing programs that depend on unsupported pthreads feature (preemption, signal, thread-local storage[__thread], etc...) is not guaranteed. It may lead to unexpected behavior.
+Caution: Executing programs that depend on unsupported pthreads feature (preemption, signal, thread-local storage[__thread], etc...) is not guaranteed. Calling unimplemented functions may also lead to unexpected behavior. To confirm implemented functions, see myth_if_pthread.c .
 
-[3] Execution time configuration
-The number of worker threads (= # of CPU cores used) can be changed by setting environment variable MYTH_WORKER_NUM.
+[3] Runtime configuration
+
+(1) Setting the number of worker threads
+MassiveThreads creates worker thraeds based on the process affinity. Thus you can control the number of worker threads and CPU cores used by 'taskset' command.
+Environmental variable MYTH_WORKER_NUM can also be used to change the number of worker threads (= # of CPU cores used).
+By default, MassiveThreads uses all the CPU cores in the machine.
+
+(2) Setting the default stack size
+Setting environmental variable MYTH_DEF_STKSIZE (in bytes), you can change the default stack size. By default, MassiveThreads uses 16KB as the default stack size.
 
 [4] Compiling and using MassiveThreads tasking layer on Chapel
 
-Note: Now MassiveThreads tasking layer is unofficial. DO NOT ask a question about MassiveThreads tasking layer to official Chapel community. If you have any question, please ask the address in the last of this text.
+Note: Now MassiveThreads tasking layer is unofficial. DO NOT ask a question about MassiveThreads tasking layer to official Chapel community. If you have any question, please ask the address on the last of this text.
 
 1.Compile MassiveThreads (see [1])
 
@@ -59,8 +72,8 @@ $ export MYTH_LIB_DIR=(MassiveThreads installed directory)
 $ export LD_LIBRARY_PATH=(MassiveThreads installed directory)
 $ source util/setchplenv.bash # for bash users
 
-$ chpl -o output [options] source.chpl # compile your program
-$ ./outout [args] # run
+$ chpl -o a.out [options] source.chpl # compile your program
+$ ./a.out [args] # run
 
 [4] Contact
 If you have any question, please ask the following address.
@@ -68,7 +81,7 @@ If you have any question, please ask the following address.
 Mail address : nakashima@logos.ic.i.u-tokyo.ac.jp
 
 [5] License
-Currently MassiveThreads source code is released under GNU Lesser General Public License version 2.1 . See lgpl-2.1.txt for details.
+MassiveThreads is distributed under new BSD license. See COPYRIGHT for details.
 
 # "myth" is the initial codename of MassiveThreads and no more special meaning than it.
 
