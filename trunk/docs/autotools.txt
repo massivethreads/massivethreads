@@ -40,3 +40,10 @@ right after you check out.
 I don't know if there is a smaerter way to avoid this...
 
 
+= info about autotools.txt =
+
+As far as I could found
+http://www.lrde.epita.fr/~adl/dl/autotools-handout-4.pdf
+(available from http://www.lrde.epita.fr/~adl/autotools.html )
+is the best tutorial about GNU autotools.
+
