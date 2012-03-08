@@ -1,5 +1,6 @@
 # build this directory first and then tests
 SUBDIRS = . tests
+
 # sources (.c and .S) and flags common across the three libraries
 COMMON_SRCS = myth_log.c myth_sched.c myth_worker.c myth_malloc_wrapper.c myth_sync.c myth_init.c myth_misc.c myth_io.c myth_original_lib.c myth_tls.c myth_context.S
 # perhaps -DCOMPILED_AS_PIC should go away and rely on automatically addd -DPIC flag instead
