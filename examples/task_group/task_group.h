@@ -18,7 +18,7 @@ void * invoke_task(void * arg_) {
   return arg_;
 }
 
-enum { INIT_SZ = 8 };
+enum { INIT_SZ = 10 };
 struct task_group {
   int n;
   int capacity;
