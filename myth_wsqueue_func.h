@@ -215,7 +215,7 @@ static inline myth_thread_t myth_queue_take(myth_thread_queue_t q)
 	myth_thread_t ret;
 	int b,top;
 #ifdef CHECK_NUM_BEFORE_STEAL
-	if (q->top-q->base<0){
+	if (q->top-q->base<=0){
 		return NULL;
 	}
 #endif
