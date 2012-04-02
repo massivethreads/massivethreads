@@ -5,6 +5,7 @@ AC_CONFIG_MACRO_DIR([m4])
 AC_PROG_CC
 AC_PROG_AWK
 AM_PROG_AS
+AC_CHECK_LIB(dl, dlopen, [], [AC_MSG_ERROR(Test for dlopen failed.)])
 # initialize libtool
 LT_INIT
 AC_CONFIG_FILES([Makefile tests/Makefile tests/fib/Makefile])
