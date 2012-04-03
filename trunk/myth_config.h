@@ -177,4 +177,21 @@
 #define USE_JUMP_INSN_A
 #define USE_JUMP_INSN_B
 
+//force to use universal version
+//#define MYTH_FORCE_ARCH_UNIVERSAL
+
+//Set architecture dependent macro
+#if (!defined MYTH_FORCE_ARCH_UNIVERSAL) && (defined __i386__)
+#define MYTH_ARCH_i386
+#elif (!defined MYTH_FORCE_ARCH_UNIVERSAL) && (defined __x86_64__)
+#define MYTH_ARCH_amd64
+#else
+#define MYTH_ARCH_UNIVERSAL
+//force to use pthread_spin
+#undef MYTH_INTERNAL_LOCK_SPINLOCK2
+#define MYTH_INTERNAL_LOCK_SPINLOCK1
+//disable inlined context switch
+#undef MYTH_INLINE_CONTEXT
+#endif
+
 #endif /* MYTH_CONFIG_H_ */

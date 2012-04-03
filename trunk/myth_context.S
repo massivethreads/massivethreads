@@ -2,7 +2,7 @@
 
 .text
 
-#ifdef __i386__
+#ifdef MYTH_ARCH_i386
 
 #ifdef USE_JUMP_INSN_A
 #define MY_RET_A pop %eax;jmp *%eax
@@ -125,7 +125,7 @@ myth_set_context_withcall_s:
 
 .size myth_set_context_withcall_s,.-myth_set_context_withcall_s
 
-#elif defined __x86_64__
+#elif defined MYTH_ARCH_amd64
 
 #ifdef USE_JUMP_INSN_A
 #define MY_RET_A pop %rax;jmp *%rax
@@ -232,6 +232,6 @@ myth_set_context_withcall_s:
 .size myth_set_context_withcall_s,.-myth_set_context_withcall_s
 
 #else
-#error
+
 #endif
 

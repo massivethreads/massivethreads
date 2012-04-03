@@ -10,37 +10,35 @@
 typedef void (*void_func_t)(void);
 
 //Attributes of functions called after context switch
-#ifdef __i386__
+#ifdef MYTH_ARCH_i386
 #define MYTH_CTX_CALLBACK static __attribute__((used,noinline,regparm(0)))
 #define USE_AVOID_OPTIMIZE
-#elif __x86_64__
+#elif defined MYTH_ARCH_amd64
 #define MYTH_CTX_CALLBACK static __attribute__((used,noinline,sysv_abi))
 #define USE_AVOID_OPTIMIZE
 //#define MYTH_CTX_CALLBACK static __attribute((used,noinline))
 #else
-#error
+#include <string.h>
+#include <ucontext.h>
+#define MYTH_CTX_CALLBACK static __attribute__((used,noinline))
 #endif
 
 //Execution context
 typedef struct myth_context
 {
-#if defined (__i386__)
+#if defined (MYTH_ARCH_i386)
 	uint32_t esp;
-#elif defined(__x86_64__)
+#elif defined(MYTH_ARCH_amd64)
 	uint64_t rsp;
+#elif defined MYTH_ARCH_UNIVERSAL
+	ucontext_t uc;
 #else
-#error "This architecture is not supported"
+#error "Architecture not defined"
 #endif
 }myth_context,*myth_context_t;
 
-static inline void myth_make_context_empty(myth_context_t ctx,void *stack);
+static inline void myth_make_context_empty(myth_context_t ctx,void *stack,size_t stacksize);
 static inline void myth_make_context_voidcall(myth_context_t ctx,void_func_t func,void *stack,size_t stacksize);
-
-void myth_swap_context_s(myth_context_t switch_from,myth_context_t switch_to);
-void myth_swap_context_withcall_s(myth_context_t switch_from,myth_context_t switch_to,void(*func)(void*,void*,void*),void *arg1,void *arg2,void *arg3);
-void myth_get_context_s(myth_context_t ctx);
-void myth_set_context_s(myth_context_t ctx);
-void myth_set_context_withcall_s(myth_context_t switch_to,void(*func)(void*,void*,void*),void *arg1,void *arg2,void *arg3);
 
 #if defined MYTH_COLLECT_LOG && defined MYTH_COLLECT_CONTEXT_SWITCH
 //static inline void myth_log_add_context_switch(struct myth_running_env *env,struct myth_thread *th);
@@ -52,6 +50,90 @@ void myth_set_context_withcall_s(myth_context_t switch_to,void(*func)(void*,void
 }
 #else
 #define myth_context_switch_hook(ctx)
+#endif
+
+#ifdef MYTH_ARCH_UNIVERSAL
+
+typedef struct myth_ctx_withcall_param
+{
+	void(*fn)(void*,void*,void*);
+	void *arg1,*arg2,*arg3;
+}myth_ctx_withcall_param,*myth_ctx_withcall_param_t;
+
+extern volatile __thread myth_ctx_withcall_param g_ctx_withcall_params;
+
+static inline void myth_swap_context_s(myth_context_t switch_from,myth_context_t switch_to)
+{
+	//clear
+	g_ctx_withcall_params.fn=NULL;
+	swapcontext(&switch_from->uc,&switch_to->uc);
+	//execute
+	if (g_ctx_withcall_params.fn){
+		g_ctx_withcall_params.fn(g_ctx_withcall_params.arg1,g_ctx_withcall_params.arg2,g_ctx_withcall_params.arg3);
+	}
+}
+static inline void myth_swap_context_withcall_s(myth_context_t switch_from,myth_context_t switch_to,void(*func)(void*,void*,void*),void *arg1,void *arg2,void *arg3)
+{
+	//set
+	g_ctx_withcall_params.fn=func;g_ctx_withcall_params.arg1=arg1;g_ctx_withcall_params.arg2=arg2;g_ctx_withcall_params.arg3=arg3;
+
+	swapcontext(&switch_from->uc,&switch_to->uc);
+	//execute
+	if (g_ctx_withcall_params.fn){
+		g_ctx_withcall_params.fn(g_ctx_withcall_params.arg1,g_ctx_withcall_params.arg2,g_ctx_withcall_params.arg3);
+	}
+}
+/*static inline void myth_get_context_s(myth_context_t ctx)
+{
+}*/
+static inline void myth_set_context_s(myth_context_t ctx)
+{
+	//clear
+	g_ctx_withcall_params.fn=NULL;
+	setcontext(&ctx->uc);
+}
+static inline void myth_set_context_withcall_s(myth_context_t switch_to,void(*func)(void*,void*,void*),void *arg1,void *arg2,void *arg3)
+{
+	//set
+	g_ctx_withcall_params.fn=func;g_ctx_withcall_params.arg1=arg1;g_ctx_withcall_params.arg2=arg2;g_ctx_withcall_params.arg3=arg3;
+	setcontext(&switch_to->uc);
+}
+
+static void empty_context_ep(void){
+	if (g_ctx_withcall_params.fn){
+		g_ctx_withcall_params.fn(g_ctx_withcall_params.arg1,g_ctx_withcall_params.arg2,g_ctx_withcall_params.arg3);
+	}
+}
+
+#define NUMBER_OF_INTS_TO_PASS_PTR (__SIZEOF_POINTER__/__SIZEOF_INT__)
+#if ((__SIZEOF_POINTER__%__SIZEOF_INT__)!=0)
+#error "sizeof(void*) cannot be divided by sizeof(void*)"
+#endif
+#if NUMBER_OF_INTS_TO_PASS_PTR>2
+#error "sizeof(void*) is too relatively small with sizeof(void*)"
+#endif
+
+static void voidcall_context_ep(int pfn0,int pfn1)
+{
+	void_func_t *fn;
+	int fn_ints[2];//FIXME:shoud be aligned the same as pointer
+	fn_ints[0]=pfn0;
+	fn_ints[1]=pfn1;
+	fn=(void_func_t*)&fn_ints[0];
+	if (g_ctx_withcall_params.fn){
+		g_ctx_withcall_params.fn(g_ctx_withcall_params.arg1,g_ctx_withcall_params.arg2,g_ctx_withcall_params.arg3);
+	}
+	(*fn)();
+}
+
+#else
+
+void myth_swap_context_s(myth_context_t switch_from,myth_context_t switch_to);
+void myth_swap_context_withcall_s(myth_context_t switch_from,myth_context_t switch_to,void(*func)(void*,void*,void*),void *arg1,void *arg2,void *arg3);
+void myth_get_context_s(myth_context_t ctx);
+void myth_set_context_s(myth_context_t ctx);
+void myth_set_context_withcall_s(myth_context_t switch_to,void(*func)(void*,void*,void*),void *arg1,void *arg2,void *arg3);
+
 #endif
 
 #if defined MYTH_INLINE_CONTEXT
@@ -66,25 +148,18 @@ void myth_set_context_withcall_s(myth_context_t switch_to,void(*func)(void*,void
 #define myth_set_context_withcall(ctx,fn,a1,a2,a3) {myth_context_switch_hook(ctx);myth_set_context_withcall_s(ctx,fn,a1,a2,a3);}
 #endif
 
-//Suffix for PLT
-#ifdef PIC
-#define FUNC_SUFFIX "@PLT"
-#define GOTPCREL_SUFFIX "@GOTPCREL"
-#else
-#define FUNC_SUFFIX ""
-#define GOTPCREL_SUFFIX ""
-#endif
+static inline void myth_make_context_voidcall(myth_context_t ctx,void_func_t func,void *stack,size_t stacksize);
 
-static inline void myth_make_context_empty(myth_context_t ctx,void *stack)
+static inline void myth_make_context_empty(myth_context_t ctx,void *stack,size_t stacksize)
 {
-#if defined(__i386__)
+#if defined(MYTH_ARCH_i386)
 	//Get stack tail
 	uint32_t stack_tail=((uint32_t)stack);
 	//Align
 	stack_tail&=0xFFFFFFF0;
 	//Set stack pointer
 	ctx->esp=stack_tail;
-#elif defined(__x86_64__)
+#elif defined(MYTH_ARCH_amd64)
 	//Get stack tail
 	uint64_t stack_tail=((uint64_t)stack);
 	//Align
@@ -92,14 +167,14 @@ static inline void myth_make_context_empty(myth_context_t ctx,void *stack)
 	//Set stack pointer
 	ctx->rsp=stack_tail;
 #else
-#error "This architecture is not supported"
+	myth_make_context_voidcall(ctx,empty_context_ep,stack,stacksize);
 #endif
 }
 
 //Make a context for executing "void foo(void)"
 static inline void myth_make_context_voidcall(myth_context_t ctx,void_func_t func,void *stack,size_t stacksize)
 {
-#if defined(__i386__)
+#if defined(MYTH_ARCH_i386)
 	//Get stack tail
 	uint32_t stack_tail=((uint32_t)stack);
 	stack_tail-=4;
@@ -111,7 +186,7 @@ static inline void myth_make_context_voidcall(myth_context_t ctx,void_func_t fun
 	ctx->esp=stack_tail;
 	//Set retuen address
 	*dest_addr=(uint32_t)func;
-#elif defined(__x86_64__)
+#elif defined(MYTH_ARCH_amd64)
 	//Get stack tail
 	uint64_t stack_tail=((uint64_t)stack);
 	stack_tail-=8;
@@ -124,11 +199,30 @@ static inline void myth_make_context_voidcall(myth_context_t ctx,void_func_t fun
 	//Set retuen address
 	*dest_addr=(uint64_t)func;
 #else
-#error "This architecture is not supported"
+	uintptr_t stack_start=((uintptr_t)stack)-(stacksize-sizeof(void*));
+	getcontext(&ctx->uc);
+	ctx->uc.uc_stack.ss_sp=(void*)stack_start;
+	ctx->uc.uc_stack.ss_size=stacksize;
+	ctx->uc.uc_link=NULL;
+	//makecontext can pass only integer as arguments, so decompose the pointer into integers
+	int fn_ints[2];
+	memcpy(fn_ints,&func,sizeof(void*));
+	makecontext(&ctx->uc,(void(*)())voidcall_context_ep,2,fn_ints[0],fn_ints[1]);
 #endif
 }
 
-#if defined(__i386__)
+#ifndef MYTH_ARCH_UNIVERSAL
+
+#if defined(MYTH_ARCH_i386)
+
+//Suffix for PLT
+#ifdef PIC
+#define FUNC_SUFFIX "@PLT"
+#define GOTPCREL_SUFFIX "@GOTPCREL"
+#else
+#define FUNC_SUFFIX ""
+#define GOTPCREL_SUFFIX ""
+#endif
 
 #ifdef MYTH_INLINE_PUSH_CALLEE_SAVED
 #define PUSH_CALLEE_SAVED() \
@@ -214,7 +308,16 @@ static inline void myth_make_context_voidcall(myth_context_t ctx,void_func_t fun
 	myth_unreachable();\
 	}
 
-#elif defined(__x86_64__)
+#elif defined(MYTH_ARCH_amd64)
+
+//Suffix for PLT
+#ifdef PIC
+#define FUNC_SUFFIX "@PLT"
+#define GOTPCREL_SUFFIX "@GOTPCREL"
+#else
+#define FUNC_SUFFIX ""
+#define GOTPCREL_SUFFIX ""
+#endif
 
 #ifdef PIC
 #define PUSH_LABEL_USING_A(label) \
@@ -360,6 +463,8 @@ static inline void myth_make_context_voidcall(myth_context_t ctx,void_func_t fun
 
 #else
 #error "This architecture is not supported"
+#endif
+
 #endif
 
 #endif /* MYTH_CONTEXT_H_ */

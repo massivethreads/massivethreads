@@ -45,7 +45,8 @@ static inline int myth_internal_lock_trylock(myth_internal_lock_t *lock)
 	return real_pthread_spin_trylock(lock)==0;
 }
 #elif defined MYTH_INTERNAL_LOCK_SPINLOCK2
-//spinlock implemented by myself
+//Inlined spinlock
+#if (defined MYTH_ARCH_i386) || (defined MYTH_ARCH_amd64)
 typedef volatile int myth_internal_lock_t;
 static inline void myth_internal_lock_init(myth_internal_lock_t *ptr)
 {
@@ -64,18 +65,6 @@ static inline int myth_internal_lock_trylock(myth_internal_lock_t *ptr)
 }
 static inline void myth_internal_lock_lock(myth_internal_lock_t *ptr)
 {
-#if 0
-	//error check
-	volatile int k=*ptr;
-	if (k!=0 && k!=1){
-		myth_rwbarrier();
-		k=*ptr;
-		if (k!=0 && k!=1){
-			fprintf(stderr,"*ptr=%d\n",k);
-			assert(k==0 ||k==1);
-		}
-	}
-#endif
 	asm volatile(
 			"1:cmp $0,(%0)\n"
 			"je 2f\n"
@@ -93,6 +82,9 @@ static inline void myth_internal_lock_unlock(myth_internal_lock_t *ptr)
 	//Reset value
 	*ptr=0;
 }
+#else
+#error "Inlined spinlock is not provided in this architecture"
+#endif
 #else
 #error "Please choose internal locking method"
 #endif
