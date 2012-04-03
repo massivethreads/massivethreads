@@ -108,10 +108,10 @@ extern __thread uint64_t g_myth_flfree_cycles,g_myth_flfree_cnt;
 //All alloc/free is done with this granularity
 #define FREE_LIST_NUM 31
 
-#if __SIZEOF_INT__==4
+#if SIZEOF_INT==4
 //size_t=uin32_t
 #define MYTH_MALLOC_SIZE_TO_INDEX(s) (32-__builtin_clz((s)-1))
-#elif __SIZEOF_INT__==8
+#elif SIZEOF_INT==8
 //size_t=uint64_t
 #define MYTH_MALLOC_SIZE_TO_INDEX(s) (64-__builtin_clz((s)-1))
 #else
