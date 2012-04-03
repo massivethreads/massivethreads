@@ -256,10 +256,14 @@ void particles_in_tree2(bt_thread_dat * orig,
     parr[idx].subset_arr[indices[idx]] = orig->subset_arr[i];
     indices[idx]++;
   }
-  
   t6 = current_real_time_micro();
-  printf("%d %d %d %d %d %d %d %d\n", orig->subset_size, t6-t0, 
-  t1-t0, t2-t1, t3-t2, t4-t3, t5-t4, t6-t5);
+
+#if USE_MALLOC
+  free(arr);
+#endif
+
+//  printf("%d %d %d %d %d %d %d %d\n", orig->subset_size, t6-t0, 
+//    t1-t0, t2-t1, t3-t2, t4-t3, t5-t4, t6-t5);
 }
 
 void * build_tree_rec2(void * args)
@@ -285,6 +289,9 @@ void * build_tree_rec2(void * args)
     for (int i = 0; i < n_threads; i++) 
       pthread_join(ths[i], (void **) ret);
   }
+#if USE_MALLOC
+  free(p->subset_arr);
+#endif
 }
 
 space * build_tree(particle ** particles, int n_particles)
@@ -306,6 +313,42 @@ space * build_tree(particle ** particles, int n_particles)
   build_tree_rec2(&dat);
   return tree;
 }
+
+void* free_tree_rec(void * args)
+{
+  space * tree = (space *) args;
+  pthread_t ths[N_CHILDREN];
+
+  if (tree == NULL) return (void *) 0;
+
+  if (tree->state == MULTIPLE_PARTICLES) {
+    void * ret;
+    int n_threads = N_CHILDREN - 1;
+    for (int i = 0; i < N_CHILDREN; i++) {
+      if (i < n_threads) {
+        pthread_create(&ths[i], NULL, free_tree_rec, 
+          (void *) tree->subspaces[i]);
+      } else {
+        free_tree_rec(tree->subspaces[i]);
+      }
+    }
+    for (int i = 0; i < n_threads; i++) 
+      pthread_join(ths[i], (void **) ret);
+#if USE_MALLOC
+    free(tree->subspaces);
+    tree->state = NO_PARTICLE;
+#endif
+  }
+  //delete tree->cg;
+  free(tree->area);
+  free(tree);
+}
+
+void free_tree(space * tree)
+{
+  free_tree_rec((void *) tree);
+}
+
 
 struct btup_thd_dat {
   space * tree;
