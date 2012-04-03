@@ -1,5 +1,6 @@
 #include <pthread.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 typedef struct fib_arg {
   pthread_t tid;

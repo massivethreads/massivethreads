@@ -25,8 +25,12 @@ static inline void myth_assert(expr){assert(expr);}
 
 //Unreachable marker that causes segmentation fault
 //useful for debugging context-switching codes
-#ifdef USE_MYTH_UNREACHABLE
+#if defined USE_MYTH_UNREACHABLE
+#if (defined MYTH_ARCH_i386 || defined MYTH_ARCH_amd64)
 #define myth_unreachable() asm volatile("ud2\n")
+#else
+#define myth_unreachable() __builtin_unreachable()
+#endif
 #else
 #define myth_unreachable()
 #endif
@@ -35,10 +39,14 @@ static inline void myth_assert(expr){assert(expr);}
 //lfence inserted to serialize instructions
 static inline uint64_t myth_get_rdtsc()
 {
+#if (defined MYTH_ARCH_i386 || defined MYTH_ARCH_amd64)
   uint32_t hi,lo;
   asm volatile("lfence\nrdtsc\n"
 	       :"=a"(lo),"=d"(hi));
   return ((uint64_t)hi)<<32 | lo;
+#else
+  return 0;
+#endif
 }
 
 void myth_init_process_affinity_info(void);
@@ -100,12 +108,12 @@ extern __thread uint64_t g_myth_flfree_cycles,g_myth_flfree_cnt;
 //All alloc/free is done with this granularity
 #define FREE_LIST_NUM 31
 
-#ifdef __i386__
+#if __SIZEOF_INT__==4
 //size_t=uin32_t
-#define MYTH_MALLOC_SIZE_TO_INDEX(s) (32-__builtin_clzl((s)-1))
-#elif __x86_64__
+#define MYTH_MALLOC_SIZE_TO_INDEX(s) (32-__builtin_clz((s)-1))
+#elif __SIZEOF_INT__==8
 //size_t=uint64_t
-#define MYTH_MALLOC_SIZE_TO_INDEX(s) (64-__builtin_clzl((s)-1))
+#define MYTH_MALLOC_SIZE_TO_INDEX(s) (64-__builtin_clz((s)-1))
 #else
 #error
 #endif
