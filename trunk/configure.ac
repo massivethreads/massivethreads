@@ -22,6 +22,7 @@ fi
 AC_PROG_AWK
 AM_PROG_AS
 AC_CHECK_LIB(dl, dlopen, [], [AC_MSG_ERROR(Test for dlopen failed.)])
+AC_CHECK_LIB(pthread, pthread_create, [], [AC_MSG_ERROR(Test for libpthread failed.)])
 
 # Check size
 AC_CHECK_SIZEOF([int])
