@@ -27,6 +27,9 @@ AC_CHECK_LIB(dl, dlopen, [], [AC_MSG_ERROR(Test for dlopen failed.)])
 AC_CHECK_SIZEOF([int])
 AC_CHECK_SIZEOF([void*])
 
+# Check functions
+# AC_CHECK_FUNCS(__builtin_unreachable __builtin_clz)
+
 # initialize libtool
 LT_INIT
 AC_CONFIG_FILES([Makefile tests/Makefile tests/fib/Makefile])

@@ -1,6 +1,8 @@
 #ifndef MYTH_IO_FUNC_H_
 #define MYTH_IO_FUNC_H_
 
+#ifdef MYTH_WRAP_SOCKIO
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -704,5 +706,7 @@ static inline int myth_fcntl_body (int fd, int cmd,va_list vl)
 }
 
 #include "myth_io_poll.h"
+
+#endif //MYTH_WRAP_SOCKIO
 
 #endif /* MYTH_IO_FUNC_H_ */

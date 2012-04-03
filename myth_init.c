@@ -37,8 +37,10 @@ int myth_init_ex_body(int worker_num)
 	//Initialize memory allocators
 	myth_flmalloc_init(nthreads);
 	myth_malloc_wrapper_init(nthreads);
+#ifdef MYTH_WRAP_SOCKIO
 	//Initialize I/O
 	myth_io_init();
+#endif
 	//Initialize TLS
 	myth_tls_init(nthreads);
 	//Create barrier
@@ -314,7 +316,9 @@ void myth_fini_ex_body(void)
 	//Unload DLL and functions
 	//myth_free_original_funcs();
 	myth_tls_fini();
+#ifdef MYTH_WRAP_SOCKIO
 	myth_io_fini();
+#endif
 	//Finalize logger
 	myth_log_fini();
 	//Release worker thread descriptors

@@ -14,7 +14,7 @@ myth_fd_map_t g_fd_map;
 int g_recvfrom_cnt,g_sendto_cnt;
 int g_n_recvfrom_cnt,g_n_sendto_cnt;
 
-#ifdef MYTH_WRAP_IO
+#ifdef MYTH_WRAP_SOCKIO
 
 int socket (int domain, int type, int protocol)
 {
