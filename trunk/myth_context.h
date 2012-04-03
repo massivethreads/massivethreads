@@ -105,8 +105,8 @@ static void empty_context_ep(void){
 	}
 }
 
-#define NUMBER_OF_INTS_TO_PASS_PTR (__SIZEOF_POINTER__/__SIZEOF_INT__)
-#if ((__SIZEOF_POINTER__%__SIZEOF_INT__)!=0)
+#define NUMBER_OF_INTS_TO_PASS_PTR (SIZEOF_VOIDP/SIZEOF_INT)
+#if ((SIZEOF_VOIDP%SIZEOF_INT)!=0)
 #error "sizeof(void*) cannot be divided by sizeof(void*)"
 #endif
 #if NUMBER_OF_INTS_TO_PASS_PTR>2

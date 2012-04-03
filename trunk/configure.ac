@@ -23,7 +23,12 @@ AC_PROG_AWK
 AM_PROG_AS
 AC_CHECK_LIB(dl, dlopen, [], [AC_MSG_ERROR(Test for dlopen failed.)])
 
+# Check size
+AC_CHECK_SIZEOF([int])
+AC_CHECK_SIZEOF([void*])
+
 # initialize libtool
 LT_INIT
 AC_CONFIG_FILES([Makefile tests/Makefile tests/fib/Makefile])
+AC_CONFIG_HEADERS([config.h])
 AC_OUTPUT
