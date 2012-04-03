@@ -1,6 +1,8 @@
 #ifndef MYTH_IO_POLL_H_
 #define MYTH_IO_POLL_H_
 
+#ifdef MYTH_WRAP_SOCKIO
+
 #include "myth_config.h"
 
 //Perform I/O operation. Return 0 if the operation failed because of blocking, or 1
@@ -655,5 +657,7 @@ static inline myth_thread_t myth_io_polling_thread(struct myth_running_env *env)
 	return NULL;
 }
 #endif
+
+#endif //MYTH_WRAP_SOCKIO
 
 #endif /* MYTH_IO_POLL_H_ */

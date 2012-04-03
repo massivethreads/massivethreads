@@ -2,6 +2,7 @@
 #define MYTH_WORKER_FUNC_H
 
 #include <signal.h>
+#include <sys/time.h>
 
 #include "myth_worker.h"
 #include "myth_malloc_wrapper.h"
@@ -176,8 +177,10 @@ static inline void myth_setup_worker(int rank)
 #else
 	myth_freelist_init(env->freelist_ds);
 #endif
+#ifdef MYTH_WRAP_SOCKIO
 	//Initialize I/O
 	myth_io_worker_init(env,&env->io_struct);
+#endif //MYTH_WRAP_SOCKIO
 	env->this_thread=NULL;
 	//Wait for other worker threads
 	real_pthread_barrier_wait(&g_worker_barrier);
@@ -225,8 +228,10 @@ static inline void myth_cleanup_worker(int rank)
 	//Release scheduler's stack
 	if (env->sched.stack)
 		myth_free(env->sched.stack,0);
+#ifdef MYTH_WRAP_SOCKIO
 	//Release I/O
 	myth_io_worker_fini(env,&env->io_struct);
+#endif
 	//Release runqueue
 	myth_queue_fini(&env->runnable_q);
 	//Release thread descriptor of current thread
@@ -418,10 +423,12 @@ static void myth_sched_loop(void)
 		myth_thread_t next_run;
 		//Get runnable thread
 		next_run=myth_queue_pop(&env->runnable_q);
+#ifdef MYTH_WRAP_SOCKIO
 		//If there is no runnable thread, check I/O
 		if (!next_run){
 			next_run=myth_io_polling(env);
 		}
+#endif
 		//If there is no runnable thread after I/O checking, try work-stealing
 		if (!next_run){
 			//next_run=myth_steal_from_others(env);

@@ -23,13 +23,20 @@ static inline void myth_assert(expr){assert(expr);}
 #define myth_assert(expr)
 #endif
 
+#define GCC_VERSION (__GNUC__ * 10000 \
+                               + __GNUC_MINOR__ * 100 \
+                               + __GNUC_PATCHLEVEL__)
+
+
 //Unreachable marker that causes segmentation fault
 //useful for debugging context-switching codes
 #if defined USE_MYTH_UNREACHABLE
 #if (defined MYTH_ARCH_i386 || defined MYTH_ARCH_amd64)
 #define myth_unreachable() asm volatile("ud2\n")
-#else
+#elif GCC_VERSION >= 40400
 #define myth_unreachable() __builtin_unreachable()
+#else
+#define myth_unreachable()
 #endif
 #else
 #define myth_unreachable()

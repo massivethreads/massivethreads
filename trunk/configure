@@ -4462,6 +4462,9 @@ _ACEOF
 
 
 
+# Check functions
+# AC_CHECK_FUNCS(__builtin_unreachable __builtin_clz)
+
 # initialize libtool
 case `pwd` in
   *\ * | *\	*)

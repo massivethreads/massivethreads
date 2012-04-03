@@ -84,9 +84,11 @@ void myth_alrm_sighandler(int signum,siginfo_t *sinfo,void* ctx)
 #endif
 	if (!myth_queue_is_operating(&env->runnable_q))
 	{
+#ifdef MYTH_WRAP_SOCKIO
 		myth_thread_t ret;
 		ret=myth_io_polling_sig(env);
 		if (ret)myth_queue_push(&env->runnable_q,ret);
+#endif
 	}
 	errno=errno_bk;
 }

@@ -1,6 +1,8 @@
 #ifndef MYTH_IO_STRUCT_H_
 #define MYTH_IO_STRUCT_H_
 
+#ifdef MYTH_WRAP_SOCKIO
+
 #define MYTH_FD_MAP_SIZE 65536
 #define MYTH_FD_MAP_KEY(fd) ((fd)%65536)
 //#define MYTH_FD_MAP_KEY(fd) 0
@@ -292,5 +294,7 @@ static inline void myth_io_fd_list_destroy(myth_running_env_t env,myth_io_fd_lis
 	cl->bufsize=0;
 	myth_internal_lock_destroy(&cl->lock);
 }
+
+#endif //MYTH_WRAP_SOCKIO
 
 #endif /* MYTH_IO_STRUCT_H_ */
