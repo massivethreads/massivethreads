@@ -206,6 +206,7 @@ static inline void myth_make_context_voidcall(myth_context_t ctx,void_func_t fun
 	ctx->uc.uc_link=NULL;
 	//makecontext can pass only integer as arguments, so decompose the pointer into integers
 	int fn_ints[2];
+	memset(fn_ints,0,sizeof(fn_ints));
 	memcpy(fn_ints,&func,sizeof(void*));
 	makecontext(&ctx->uc,(void(*)())voidcall_context_ep,2,fn_ints[0],fn_ints[1]);
 #endif
