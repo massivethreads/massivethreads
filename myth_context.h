@@ -67,7 +67,7 @@ void myth_set_context_withcall_s(myth_context_t switch_to,void(*func)(void*,void
 #endif
 
 //Suffix for PLT
-#ifdef COMPILED_AS_PIC
+#ifdef PIC
 #define FUNC_SUFFIX "@PLT"
 #define GOTPCREL_SUFFIX "@GOTPCREL"
 #else
@@ -216,7 +216,7 @@ static inline void myth_make_context_voidcall(myth_context_t ctx,void_func_t fun
 
 #elif defined(__x86_64__)
 
-#ifdef COMPILED_AS_PIC
+#ifdef PIC
 #define PUSH_LABEL_USING_A(label) \
 	"leaq "label"(%%rip),%%rax\n"\
 	"push %%rax\n"
@@ -226,6 +226,8 @@ static inline void myth_make_context_voidcall(myth_context_t ctx,void_func_t fun
 #else
 #define PUSH_LABEL(label) \
 	"pushq $" label "\n"
+#define PUSH_LABEL_USING_A(label) PUSH_LABEL(label)
+#define PUSH_LABEL_USING_BP(label) PUSH_LABEL(label)
 #endif
 
 #if defined MYTH_INLINE_PUSH_CALLEE_SAVED

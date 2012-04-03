@@ -138,7 +138,7 @@ myth_set_context_withcall_s:
 #define MY_RET_B ret
 #endif
 
-#ifdef COMPILED_AS_PIC
+#ifdef PIC
 #define PUSH_1F_USING_RAX lea 1f(%rip),%rax;push %rax
 //#define PUSH_1F_USING_RAX lea lea 1f@GOTPCREL(%rip),%rax
 #else

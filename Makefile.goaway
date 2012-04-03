@@ -15,7 +15,7 @@ TARGET_LIB = libmyth.so libmyth-compat.so libmyth-native.so
 TARGET_TEST = 
 TARGET = $(TARGET_LIB) $(TARGET_TEST)
 
-CFLAGS += -fPIC -DCOMPILED_AS_PIC
+CFLAGS += -fPIC -DPIC
 
 all: prepare $(TARGET)
 
