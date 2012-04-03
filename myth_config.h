@@ -39,7 +39,7 @@
 #define MYTH_WRAP_MALLOC
 
 //Wrap and multipelx I/O functions
-#define MYTH_WRAP_IO
+#define MYTH_WRAP_SOCKIO
 
 //Wrapped select() return immediately regardless of I/O readiness
 #define SELECT_ALWAYS_RETURN_IMMEDIATELY
