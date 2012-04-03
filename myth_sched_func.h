@@ -646,6 +646,7 @@ static inline void myth_join_body(myth_thread_t th,void **result)
 		myth_dprintf("myth_join:join thread (%p) is already finished. Return immediately\n",th);
 #endif
 		myth_internal_lock_unlock(&th->lock);
+		while (th->status!=MYTH_STATUS_FREE_READY2);
 		myth_join_1(env,th,result);
 #ifdef MYTH_JOIN_PROF
 		t1=get_rdtsc();
@@ -691,6 +692,7 @@ static inline void myth_join_body(myth_thread_t th,void **result)
 	//Get return value
 	myth_internal_lock_unlock(&th->lock);
 #endif
+	while (th->status!=MYTH_STATUS_FREE_READY2);
 	myth_join_1(myth_get_current_env(),th,result);
 #ifdef MYTH_JOIN_PROF
 	t3=get_rdtsc();
