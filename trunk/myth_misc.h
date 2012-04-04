@@ -202,7 +202,7 @@ static inline void *myth_flmalloc(int rank,size_t size)
 	void **ptr;
 #ifdef MYTH_FLMALLOC_PROF
 	uint64_t t0,t1;
-	t0=get_rdtsc();
+	t0=myth_get_rdtsc();
 #endif
 	if (size<8)size=8;
 	idx=MYTH_MALLOC_SIZE_TO_INDEX(size);
@@ -248,7 +248,7 @@ static inline void *myth_flmalloc(int rank,size_t size)
 	else{
 	}
 #ifdef MYTH_FLMALLOC_PROF
-	t1=get_rdtsc();
+	t1=myth_get_rdtsc();
 	g_myth_flmalloc_cycles+=t1-t0;g_myth_flmalloc_cnt++;
 #endif
 	return ptr;
@@ -259,7 +259,7 @@ static inline void myth_flfree(int rank,size_t size,void *ptr)
 	int idx;
 #ifdef MYTH_FLMALLOC_PROF
 	uint64_t t0,t1;
-	t0=get_rdtsc();
+	t0=myth_get_rdtsc();
 #endif
 	if (size<8)size=8;
 	idx=MYTH_MALLOC_SIZE_TO_INDEX(size);
@@ -269,7 +269,7 @@ static inline void myth_flfree(int rank,size_t size,void *ptr)
 	myth_freelist_push(g_myth_freelist[rank][idx],ptr)
 #endif
 #ifdef MYTH_FLMALLOC_PROF
-	t1=get_rdtsc();
+	t1=myth_get_rdtsc();
 	g_myth_flfree_cycles+=t1-t0;g_myth_flfree_cnt++;
 #endif
 }
@@ -311,11 +311,11 @@ static inline void* myth_flmalloc(int rank,size_t s)
 	void *ret;
 #ifdef MYTH_FLMALLOC_PROF
 	uint64_t t0,t1;
-	t0=get_rdtsc();
+	t0=myth_get_rdtsc();
 #endif
 	ret=myth_malloc(s);
 #ifdef MYTH_FLMALLOC_PROF
-	t1=get_rdtsc();
+	t1=myth_get_rdtsc();
 	g_myth_flmalloc_cycles+=t1-t0;g_myth_flmalloc_cnt++;
 #endif
 	return ret;
@@ -324,11 +324,11 @@ static inline void myth_flfree(int rank,size_t size,void *ptr)
 {
 #ifdef MYTH_FLMALLOC_PROF
 	uint64_t t0,t1;
-	t0=get_rdtsc();
+	t0=myth_get_rdtsc();
 #endif
 	myth_free(ptr,size);
 #ifdef MYTH_FLMALLOC_PROF
-	t1=get_rdtsc();
+	t1=myth_get_rdtsc();
 	g_myth_flfree_cycles+=t1-t0;g_myth_flfree_cnt++;
 #endif
 }

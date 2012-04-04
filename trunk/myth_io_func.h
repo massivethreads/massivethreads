@@ -431,14 +431,14 @@ static inline ssize_t myth_sendto_body(int sockfd, const void *buf, size_t len, 
 	t0=0;t1=0;t2=0;t3=0;
 	myth_running_env_t env;
 #ifdef MYTH_IO_PROF_DETAIL
-	t0=get_rdtsc();
+	t0=myth_get_rdtsc();
 #endif
 	env=myth_get_current_env();
 	myth_io_cs_enter(env);
 	//Perform non-blocking send
 	ret=real_sendto(sockfd,buf,len,flags,dest_addr,addrlen);
 #ifdef MYTH_IO_PROF_DETAIL
-	t1=get_rdtsc();
+	t1=myth_get_rdtsc();
 #endif
 	if (ret==-1){
 		myth_io_op op;
@@ -449,7 +449,7 @@ static inline ssize_t myth_sendto_body(int sockfd, const void *buf, size_t len, 
 		}
 		//Wait for I/O ready
 #ifdef MYTH_IO_PROF_DETAIL
-		t2=get_rdtsc();
+		t2=myth_get_rdtsc();
 #endif
 		op.type=MYTH_IO_SENDTO;
 		op.u.st.fd=sockfd;
@@ -459,7 +459,7 @@ static inline ssize_t myth_sendto_body(int sockfd, const void *buf, size_t len, 
 		op.u.st.addr=dest_addr;
 		op.u.st.addr_len=addrlen;
 #ifdef MYTH_IO_PROF_DETAIL
-		t3=get_rdtsc();
+		t3=myth_get_rdtsc();
 		env->prof_data.io_block_send_cycles+=t1-t0;
 		env->prof_data.io_block_send_cnt++;
 #endif
@@ -485,7 +485,7 @@ static inline ssize_t myth_recvfrom_body(int sockfd, void *buf, size_t len, int 
 	ssize_t ret;
 	t0=0;t1=0;t2=0;t3=0;
 #ifdef MYTH_IO_PROF_DETAIL
-	t0=get_rdtsc();
+	t0=myth_get_rdtsc();
 #endif
 	myth_running_env_t env;
 	env=myth_get_current_env();
@@ -493,7 +493,7 @@ static inline ssize_t myth_recvfrom_body(int sockfd, void *buf, size_t len, int 
 	//Perform non-blocking recv
 	ret=real_recvfrom(sockfd,buf,len,flags,src_addr,addrlen);
 #ifdef MYTH_IO_PROF_DETAIL
-	t1=get_rdtsc();
+	t1=myth_get_rdtsc();
 #endif
 	if (ret==-1){
 		myth_io_op op;
@@ -503,7 +503,7 @@ static inline ssize_t myth_recvfrom_body(int sockfd, void *buf, size_t len, int 
 			return -1;
 		}
 #ifdef MYTH_IO_PROF_DETAIL
-		t2=get_rdtsc();
+		t2=myth_get_rdtsc();
 #endif
 		//Wait for I/O ready
 		op.type=MYTH_IO_RECVFROM;
@@ -514,7 +514,7 @@ static inline ssize_t myth_recvfrom_body(int sockfd, void *buf, size_t len, int 
 		op.u.rf.addr=src_addr;
 		op.u.rf.addr_len=addrlen;
 #ifdef MYTH_IO_PROF_DETAIL
-		t3=get_rdtsc();
+		t3=myth_get_rdtsc();
 		env->prof_data.io_block_recv_cycles+=t1-t0;
 		env->prof_data.io_block_recv_cnt++;
 #endif
@@ -540,14 +540,14 @@ static inline ssize_t myth_send_body (int fd, const void *buf, size_t n, int fla
 	t0=0;t1=0;t2=0;t3=0;
 	myth_running_env_t env;
 #ifdef MYTH_IO_PROF_DETAIL
-	t0=get_rdtsc();
+	t0=myth_get_rdtsc();
 #endif
 	env=myth_get_current_env();
 	myth_io_cs_enter(env);
 	//Perform non-blocking send
 	ret=real_send(fd,buf,n,flags);
 #ifdef MYTH_IO_PROF_DETAIL
-	t1=get_rdtsc();
+	t1=myth_get_rdtsc();
 #endif
 	if (ret==-1){
 		myth_io_op op;
@@ -558,7 +558,7 @@ static inline ssize_t myth_send_body (int fd, const void *buf, size_t n, int fla
 		}
 		//Wait for I/O ready
 #ifdef MYTH_IO_PROF_DETAIL
-		t2=get_rdtsc();
+		t2=myth_get_rdtsc();
 #endif
 		op.type=MYTH_IO_SEND;
 		op.u.s.fd=fd;
@@ -566,7 +566,7 @@ static inline ssize_t myth_send_body (int fd, const void *buf, size_t n, int fla
 		op.u.s.n=n;
 		op.u.s.flags=flags;
 #ifdef MYTH_IO_PROF_DETAIL
-		t3=get_rdtsc();
+		t3=myth_get_rdtsc();
 		env->prof_data.io_block_send_cycles+=t1-t0;
 		env->prof_data.io_block_send_cnt++;
 #endif
@@ -591,7 +591,7 @@ static inline ssize_t myth_recv_body (int fd, void *buf, size_t n, int flags)
 	ssize_t ret;
 	t0=0;t1=0;t2=0;t3=0;
 #ifdef MYTH_IO_PROF_DETAIL
-	t0=get_rdtsc();
+	t0=myth_get_rdtsc();
 #endif
 	myth_running_env_t env;
 	env=myth_get_current_env();
@@ -599,7 +599,7 @@ static inline ssize_t myth_recv_body (int fd, void *buf, size_t n, int flags)
 	//Perform non-blocking recv
 	ret=real_recv(fd,buf,n,flags);
 #ifdef MYTH_IO_PROF_DETAIL
-	t1=get_rdtsc();
+	t1=myth_get_rdtsc();
 #endif
 	if (ret==-1){
 		myth_io_op op;
@@ -609,7 +609,7 @@ static inline ssize_t myth_recv_body (int fd, void *buf, size_t n, int flags)
 			return -1;
 		}
 #ifdef MYTH_IO_PROF_DETAIL
-		t2=get_rdtsc();
+		t2=myth_get_rdtsc();
 #endif
 		//Wait for I/O ready
 		op.type=MYTH_IO_RECV;
@@ -618,7 +618,7 @@ static inline ssize_t myth_recv_body (int fd, void *buf, size_t n, int flags)
 		op.u.r.n=n;
 		op.u.r.flags=flags;
 #ifdef MYTH_IO_PROF_DETAIL
-		t3=get_rdtsc();
+		t3=myth_get_rdtsc();
 		env->prof_data.io_block_recv_cycles+=t1-t0;
 		env->prof_data.io_block_recv_cnt++;
 #endif
