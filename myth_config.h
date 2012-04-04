@@ -157,7 +157,7 @@
 #define DOUBLECHECK_ON_STEAL
 
 //Check whether the thread is sure to be ready for release before acquiring the lock
-//#define DOUBLECHECK_ON_JOIN
+#define DOUBLECHECK_ON_JOIN
 
 //Do trylock before work stealing
 //#define TRY_LOCK_BEFORE_STEAL
