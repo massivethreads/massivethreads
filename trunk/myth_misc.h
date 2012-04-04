@@ -33,7 +33,7 @@ static inline void myth_assert(expr){assert(expr);}
 #if defined USE_MYTH_UNREACHABLE
 #if (defined MYTH_ARCH_i386 || defined MYTH_ARCH_amd64)
 #define myth_unreachable() asm volatile("ud2\n")
-#elif GCC_VERSION >= 40400
+#elif GCC_VERSION >= 40500
 #define myth_unreachable() __builtin_unreachable()
 #else
 #define myth_unreachable()
