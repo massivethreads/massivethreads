@@ -9,11 +9,22 @@
 
 typedef void (*void_func_t)(void);
 
+#if defined MYTH_ARCH_i386 && !defined MYTH_FORCE_UCONTEXT
+#define MYTH_CONTEXT_ARCH_i386
+#elif defined MYTH_ARCH_amd64 && !defined MYTH_FORCE_UCONTEXT
+#define MYTH_CONTEXT_ARCH_amd64
+#elif defined MYTH_FORCE_UCONTEXT
+#define MYTH_CONTEXT_ARCH_UNIVERSAL
+#undef MYTH_INLINE_CONTEXT
+#else
+#error "Specify architecture"
+#endif
+
 //Attributes of functions called after context switch
-#ifdef MYTH_ARCH_i386
+#ifdef MYTH_CONTEXT_ARCH_i386
 #define MYTH_CTX_CALLBACK static __attribute__((used,noinline,regparm(0)))
 #define USE_AVOID_OPTIMIZE
-#elif defined MYTH_ARCH_amd64
+#elif defined MYTH_CONTEXT_ARCH_amd64
 #define MYTH_CTX_CALLBACK static __attribute__((used,noinline,sysv_abi))
 #define USE_AVOID_OPTIMIZE
 //#define MYTH_CTX_CALLBACK static __attribute((used,noinline))
@@ -26,11 +37,11 @@ typedef void (*void_func_t)(void);
 //Execution context
 typedef struct myth_context
 {
-#if defined (MYTH_ARCH_i386)
+#if defined (MYTH_CONTEXT_ARCH_i386)
 	uint32_t esp;
-#elif defined(MYTH_ARCH_amd64)
+#elif defined(MYTH_CONTEXT_ARCH_amd64)
 	uint64_t rsp;
-#elif defined MYTH_ARCH_UNIVERSAL
+#elif defined MYTH_CONTEXT_ARCH_UNIVERSAL
 	ucontext_t uc;
 #else
 #error "Architecture not defined"
@@ -52,7 +63,7 @@ static inline void myth_make_context_voidcall(myth_context_t ctx,void_func_t fun
 #define myth_context_switch_hook(ctx)
 #endif
 
-#ifdef MYTH_ARCH_UNIVERSAL
+#ifdef MYTH_CONTEXT_ARCH_UNIVERSAL
 
 typedef struct myth_ctx_withcall_param
 {
@@ -152,14 +163,14 @@ static inline void myth_make_context_voidcall(myth_context_t ctx,void_func_t fun
 
 static inline void myth_make_context_empty(myth_context_t ctx,void *stack,size_t stacksize)
 {
-#if defined(MYTH_ARCH_i386)
+#if defined(MYTH_CONTEXT_ARCH_i386)
 	//Get stack tail
 	uint32_t stack_tail=((uint32_t)stack);
 	//Align
 	stack_tail&=0xFFFFFFF0;
 	//Set stack pointer
 	ctx->esp=stack_tail;
-#elif defined(MYTH_ARCH_amd64)
+#elif defined(MYTH_CONTEXT_ARCH_amd64)
 	//Get stack tail
 	uint64_t stack_tail=((uint64_t)stack);
 	//Align
@@ -174,7 +185,7 @@ static inline void myth_make_context_empty(myth_context_t ctx,void *stack,size_t
 //Make a context for executing "void foo(void)"
 static inline void myth_make_context_voidcall(myth_context_t ctx,void_func_t func,void *stack,size_t stacksize)
 {
-#if defined(MYTH_ARCH_i386)
+#if defined(MYTH_CONTEXT_ARCH_i386)
 	//Get stack tail
 	uint32_t stack_tail=((uint32_t)stack);
 	stack_tail-=4;
@@ -186,7 +197,7 @@ static inline void myth_make_context_voidcall(myth_context_t ctx,void_func_t fun
 	ctx->esp=stack_tail;
 	//Set retuen address
 	*dest_addr=(uint32_t)func;
-#elif defined(MYTH_ARCH_amd64)
+#elif defined(MYTH_CONTEXT_ARCH_amd64)
 	//Get stack tail
 	uint64_t stack_tail=((uint64_t)stack);
 	stack_tail-=8;
@@ -212,9 +223,9 @@ static inline void myth_make_context_voidcall(myth_context_t ctx,void_func_t fun
 #endif
 }
 
-#ifndef MYTH_ARCH_UNIVERSAL
+#ifndef MYTH_CONTEXT_ARCH_UNIVERSAL
 
-#if defined(MYTH_ARCH_i386)
+#if defined(MYTH_CONTEXT_ARCH_i386)
 
 //Suffix for PLT
 #ifdef PIC
@@ -309,7 +320,7 @@ static inline void myth_make_context_voidcall(myth_context_t ctx,void_func_t fun
 	myth_unreachable();\
 	}
 
-#elif defined(MYTH_ARCH_amd64)
+#elif defined(MYTH_CONTEXT_ARCH_amd64)
 
 //Suffix for PLT
 #ifdef PIC
