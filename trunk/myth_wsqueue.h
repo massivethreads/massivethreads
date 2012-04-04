@@ -43,8 +43,11 @@
 //Runqueue data structure
 typedef struct myth_thread_queue
 {
-	volatile int top;
-	volatile int base;
+       /* FIXME: align top/base and allocate only CACHE_LINE_SIZE for them */
+       char pad0[CACHE_LINE_SIZE];
+       volatile int top;
+       volatile int base;
+       char pad1[CACHE_LINE_SIZE];
 	struct myth_thread** ptr;
 	int size;
 	myth_internal_lock_t lock;
