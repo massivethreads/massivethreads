@@ -153,6 +153,8 @@
 //Confirm if a thread descriptor is used in two threads at the same time.
 //#define MYTH_DESC_REUSE_CHECK
 
+#define PAD_MYTH_THREAD_QUEUE_TOP_BASE
+
 //Check the number of threads in runqueue before work stealing
 #define DOUBLECHECK_ON_STEAL
 
