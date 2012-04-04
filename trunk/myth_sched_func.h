@@ -611,6 +611,7 @@ static inline void myth_join_body(myth_thread_t th,void **result)
 #ifdef MYTH_JOIN_DEBUG
 	myth_dprintf("myth_join:join started\n");
 #endif
+#ifdef DOUBLECHECK_ON_JOIN
 	//If target is finished, return immediately
 	if (th->status==MYTH_STATUS_FREE_READY2){
 #ifdef MYTH_JOIN_DEBUG
@@ -638,6 +639,7 @@ static inline void myth_join_body(myth_thread_t th,void **result)
 		//myth_log_add(env,MYTH_LOG_USER);
 		return;
 	}
+#endif
 	//Obtain lock and check again
 	myth_internal_lock_lock(&th->lock);
 	//If target is finished, return
@@ -769,9 +771,14 @@ MYTH_CTX_CALLBACK void myth_entry_point_1(void *arg1,void *arg2,void *arg3)
 		free_myth_thread_struct_desc(env,this_thread);
 	}
 	else{
+#ifdef DOUBLECHECK_ON_JOIN
 		this_thread->status=MYTH_STATUS_FREE_READY;
 		myth_internal_lock_unlock(&this_thread->lock);
 		this_thread->status=MYTH_STATUS_FREE_READY2;
+#else
+		this_thread->status=MYTH_STATUS_FREE_READY2;
+		myth_internal_lock_unlock(&this_thread->lock);
+#endif
 	}
 	env->this_thread=next_thread;
 #ifdef MYTH_EP_PROF_DETAIL
@@ -812,9 +819,14 @@ MYTH_CTX_CALLBACK void myth_entry_point_2(void *arg1,void *arg2,void *arg3)
 		free_myth_thread_struct_desc(env,this_thread);
 	}
 	else{
+#ifdef DOUBLECHECK_ON_JOIN
 		this_thread->status=MYTH_STATUS_FREE_READY;
 		myth_internal_lock_unlock(&this_thread->lock);
 		this_thread->status=MYTH_STATUS_FREE_READY2;
+#else
+		this_thread->status=MYTH_STATUS_FREE_READY2;
+		myth_internal_lock_unlock(&this_thread->lock);
+#endif
 	}
 #ifdef MYTH_EP_PROF_DETAIL
 	t1=get_rdtsc();
