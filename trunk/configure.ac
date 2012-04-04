@@ -8,13 +8,13 @@ if test "$ac_test_CFLAGS" = set; then
   CFLAGS=$ac_save_CFLAGS
 elif test $ac_cv_prog_cc_g = yes; then
   if test "$GCC" = yes; then
-    CFLAGS="-g -O3 -Wall"
+    CFLAGS="-g -O3 -Wall -ftls-model=initial-exec"
   else
     CFLAGS="-g"
   fi
 else
   if test "$GCC" = yes; then
-    CFLAGS="-O3 -Wall"
+    CFLAGS="-O3 -Wall -ftls-model=initial-exec"
   else
     CFLAGS=
   fi
