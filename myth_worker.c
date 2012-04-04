@@ -20,7 +20,7 @@ myth_thread_t myth_default_steal_func(int rank)
 	myth_running_env_t env,busy_env;
 	myth_thread_t next_run=NULL;
 #ifdef MYTH_WS_PROF_DETAIL
-	t0=get_rdtsc();
+	t0=myth_get_rdtsc();
 #endif
 	//Choose a worker thread that seems to be busy
 	env=&g_envs[rank];
@@ -45,7 +45,7 @@ myth_thread_t myth_default_steal_func(int rank)
 		}
 	}
 #ifdef MYTH_WS_PROF_DETAIL
-	t1=get_rdtsc();
+	t1=myth_get_rdtsc();
 	if (g_sched_prof){
 		env->prof_data.ws_attempt_count[busy_env->rank]++;
 		if (next_run){

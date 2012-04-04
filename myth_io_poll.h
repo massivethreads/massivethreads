@@ -30,12 +30,12 @@ static inline int myth_io_execute(myth_io_op_t op)
 	}
 	case MYTH_IO_SEND:
 #ifdef MYTH_IO_PROF_DETAIL
-		t0=get_rdtsc();
+		t0=myth_get_rdtsc();
 #endif
 		ret=real_send(op->u.s.fd,op->u.s.buf,op->u.s.n,op->u.s.flags);
 		//assert(myth_fd_map_lookup(op->th->env->io_struct.fd_map,op->u.s.fd));
 #ifdef MYTH_IO_PROF_DETAIL
-		t1=get_rdtsc();
+		t1=myth_get_rdtsc();
 		env=myth_get_current_env();
 		if (ret==-1 && (errno==EAGAIN || errno==EWOULDBLOCK)){
 			env->prof_data.io_block_send_cnt++;
@@ -49,12 +49,12 @@ static inline int myth_io_execute(myth_io_op_t op)
 		break;
 	case MYTH_IO_RECV:
 #ifdef MYTH_IO_PROF_DETAIL
-		t0=get_rdtsc();
+		t0=myth_get_rdtsc();
 #endif
 		ret=real_recv(op->u.r.fd,op->u.r.buf,op->u.r.n,op->u.r.flags);
 		//assert(myth_fd_map_lookup(op->th->env->io_struct.fd_map,op->u.r.fd));
 #ifdef MYTH_IO_PROF_DETAIL
-		t1=get_rdtsc();
+		t1=myth_get_rdtsc();
 		env=myth_get_current_env();
 		if (ret==-1 && (errno==EAGAIN || errno==EWOULDBLOCK)){
 			env->prof_data.io_block_recv_cnt++;
@@ -132,7 +132,7 @@ static inline myth_thread_t myth_io_polling(struct myth_running_env *env)
 	hit=0;
 	myth_io_cs_enter(env);
 #ifdef MYTH_IO_PROF_DETAIL
-	t0=get_rdtsc();
+	t0=myth_get_rdtsc();
 #endif
 #ifdef MYTH_ONE_IO_WORKER
 	if (env->rank!=0)return NULL;
@@ -213,12 +213,12 @@ static inline myth_thread_t myth_io_polling(struct myth_running_env *env)
 		freed_fds_size++;
 	}
 #ifdef MYTH_IO_PROF_DETAIL
-	t2=get_rdtsc();
+	t2=myth_get_rdtsc();
 #endif
 	//Check I/O readiness
 	ready=epoll_wait(env->io_struct.epfd,events,MYTH_EPOLL_SIZE,0);
 #ifdef MYTH_IO_PROF_DETAIL
-	t3=get_rdtsc();
+	t3=myth_get_rdtsc();
 #endif
 	if (ready==-1){
 		if (errno!=EINTR){
@@ -300,7 +300,7 @@ static inline myth_thread_t myth_io_polling(struct myth_running_env *env)
 	myth_flfree(env->rank,freed_fds_buf_size,freed_fds);
 	myth_io_cs_exit(env);
 #ifdef MYTH_IO_PROF_DETAIL
-	t1=get_rdtsc();
+	t1=myth_get_rdtsc();
 	if (g_sched_prof){
 		if (hit){
 			env->prof_data.io_chk_hit++;
@@ -335,17 +335,17 @@ static inline myth_thread_t myth_io_polling_sig(struct myth_running_env *env)
 	if (myth_io_is_in_cs(env))return NULL;
 	myth_io_cs_enter(env);
 #ifdef MYTH_IO_PROF_DETAIL
-	t0=get_rdtsc();
+	t0=myth_get_rdtsc();
 #endif
 #ifdef MYTH_ONE_IO_WORKER
 	if (env->rank!=0)return NULL;
 #endif
 #ifdef MYTH_IO_PROF_DETAIL
-	t2=get_rdtsc();
+	t2=myth_get_rdtsc();
 #endif
 	ready=epoll_wait(env->io_struct.epfd,events,MYTH_EPOLL_SIZE,0);
 #ifdef MYTH_IO_PROF_DETAIL
-	t3=get_rdtsc();
+	t3=myth_get_rdtsc();
 #endif
 	if (ready==-1){
 		if (errno!=EINTR){
@@ -419,7 +419,7 @@ static inline myth_thread_t myth_io_polling_sig(struct myth_running_env *env)
 		}
 	}
 #ifdef MYTH_IO_PROF_DETAIL
-	t1=get_rdtsc();
+	t1=myth_get_rdtsc();
 	if (g_sched_prof){
 		if (hit){
 			env->prof_data.io_chk_hit++;
@@ -522,7 +522,7 @@ static inline myth_thread_t myth_io_polling_thread(struct myth_running_env *env)
 	hit=0;
 	myth_io_cs_enter(env);
 #ifdef MYTH_IO_PROF_DETAIL
-	t0=get_rdtsc();
+	t0=myth_get_rdtsc();
 #endif
 #ifdef MYTH_ONE_IO_WORKER
 	if (env->rank!=0)return NULL;
@@ -555,14 +555,14 @@ static inline myth_thread_t myth_io_polling_thread(struct myth_running_env *env)
 		}
 	}
 #ifdef MYTH_IO_PROF_DETAIL
-	t2=get_rdtsc();
+	t2=myth_get_rdtsc();
 #endif
 	//wait by epoll
 	myth_io_cs_exit(env);
 	ready=epoll_wait(env->io_struct.epfd,events,MYTH_EPOLL_SIZE,MYTH_IO_THREAD_PERIOD);
 	myth_io_cs_enter(env);
 #ifdef MYTH_IO_PROF_DETAIL
-	t3=get_rdtsc();
+	t3=myth_get_rdtsc();
 #endif
 	if (ready==-1){
 		if (errno!=EINTR){
@@ -636,7 +636,7 @@ static inline myth_thread_t myth_io_polling_thread(struct myth_running_env *env)
 		}
 	}
 #ifdef MYTH_IO_PROF_DETAIL
-	t1=get_rdtsc();
+	t1=myth_get_rdtsc();
 	if (g_sched_prof){
 		if (hit){
 			env->prof_data.io_chk_hit++;
