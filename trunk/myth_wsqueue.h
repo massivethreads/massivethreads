@@ -44,10 +44,14 @@
 typedef struct myth_thread_queue
 {
        /* FIXME: align top/base and allocate only CACHE_LINE_SIZE for them */
+#ifdef PAD_MYTH_THREAD_QUEUE_TOP_BASE
        char pad0[CACHE_LINE_SIZE];
+#endif
        volatile int top;
        volatile int base;
+#ifdef PAD_MYTH_THREAD_QUEUE_TOP_BASE
        char pad1[CACHE_LINE_SIZE];
+#endif
 	struct myth_thread** ptr;
 	int size;
 	myth_internal_lock_t lock;
