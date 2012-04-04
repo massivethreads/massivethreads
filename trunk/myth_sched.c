@@ -16,12 +16,6 @@
 #include "myth_wsqueue_func.h"
 #include "myth_sched_func.h"
 
-#ifdef MYTH_ARCH_UNIVERSAL
-
-volatile __thread myth_ctx_withcall_param g_ctx_withcall_params;
-
-#endif
-
 //Global variable declarations
 //Global thread index
 int g_thread_index=0;

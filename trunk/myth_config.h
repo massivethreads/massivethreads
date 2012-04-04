@@ -182,6 +182,9 @@
 //force to use universal version
 //#define MYTH_FORCE_ARCH_UNIVERSAL
 
+//force to use ucontext
+//#define MYTH_FORCE_UCONTEXT
+
 //Set architecture dependent macro
 #if (!defined MYTH_FORCE_ARCH_UNIVERSAL) && (defined __i386__)
 #define MYTH_ARCH_i386
