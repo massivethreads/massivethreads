@@ -649,7 +649,18 @@ static inline void myth_join_body(myth_thread_t th,void **result)
 #endif
 		myth_internal_lock_unlock(&th->lock);
 		while (th->status!=MYTH_STATUS_FREE_READY2);
+#ifdef MYTH_JOIN_PROF_DETAIL
+		if (result!=NULL)*result=th->result;
+		t1=myth_get_rdtsc();
+		env->prof_data.join_join+=t1-t0;
+		t0=myth_get_rdtsc();
+		free_myth_thread_struct_desc(env,th);
+		t1=myth_get_rdtsc();
+		env->prof_data.join_release+=t1-t0;
+		env->prof_data.join_d_cnt++;
+#else
 		myth_join_1(env,th,result);
+#endif
 #ifdef MYTH_JOIN_PROF
 		t1=myth_get_rdtsc();
 		env->prof_data.join_cycles+=t1-t0;
