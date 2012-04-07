@@ -31,6 +31,27 @@
 //#define USE_LOCK_TAKE
 //#define USE_LOCK_TRYPASS
 
+#ifdef ALWAYS_LOCK_QUEUE
+#define USE_LOCK
+#define myth_wsqueue_lock_init(lock)
+#define myth_wsqueue_lock_lock(lock)
+#define myth_wsqueue_lock_trylock(lock) (1)
+#define myth_wsqueue_lock_unlock(lock)
+#define myth_wsqueue_lock_destroy(lock)
+#define myth_wsqueue_rbarrier()
+#define myth_wsqueue_wbarrier()
+#define myth_wsqueue_rwbarrier()
+#else
+#define myth_wsqueue_lock_init(lock) myth_internal_lock_init(lock)
+#define myth_wsqueue_lock_lock(lock) myth_internal_lock_lock(lock)
+#define myth_wsqueue_lock_trylock(lock) myth_internal_lock_trylock(lock)
+#define myth_wsqueue_lock_unlock(lock) myth_internal_lock_unlock(lock)
+#define myth_wsqueue_lock_destroy(lock) myth_internal_lock_destroy(lock)
+#define myth_wsqueue_rbarrier() myth_rbarrier()
+#define myth_wsqueue_wbarrier() myth_wbarrier()
+#define myth_wsqueue_rwbarrier() myth_rwbarrier()
+#endif
+
 #if defined MYTH_USE_ITIMER || defined MYTH_USE_SIGIO
 //If signal-driven I/O is enabled, this option must be defined
 #define USE_SIGNAL_CS
