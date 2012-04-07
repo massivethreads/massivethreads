@@ -16,7 +16,7 @@ static inline void myth_queue_enter_operation(myth_thread_queue_t q)
 #ifdef USE_SIGNAL_CS
 	assert(q->op_flag==0);
 	q->op_flag=1;
-	myth_wbarrier();
+	myth_wsqueue_wbarrier();
 #endif
 #ifdef USE_THREAD_CS
 	real_pthread_mutex_lock(&q->mtx);
@@ -27,7 +27,7 @@ static inline void myth_queue_exit_operation(myth_thread_queue_t q)
 {
 #ifdef USE_SIGNAL_CS
 	assert(q->op_flag==1);
-	myth_wbarrier();
+	myth_wsqueue_wbarrier();
 	q->op_flag=0;
 #endif
 #ifdef USE_THREAD_CS
@@ -45,7 +45,7 @@ static inline int myth_queue_is_operating(myth_thread_queue_t q)
 }
 
 static inline void myth_queue_init(myth_thread_queue_t q){
-	myth_internal_lock_init(&q->lock);
+	myth_wsqueue_lock_init(&q->lock);
 #if defined USE_LOCK || defined USE_LOCK_ANY
 	myth_internal_lock_init(&q->m_lock);
 #endif
@@ -68,7 +68,7 @@ static inline void myth_queue_init(myth_thread_queue_t q){
 
 static inline void myth_queue_fini(myth_thread_queue_t q){
 	myth_queue_clear(q);
-	myth_internal_lock_destroy(&q->lock);
+	myth_wsqueue_lock_destroy(&q->lock);
 #if defined USE_LOCK || defined USE_LOCK_ANY
 	myth_internal_lock_destroy(&q->m_lock);
 #endif
@@ -81,11 +81,11 @@ static inline void myth_queue_clear(myth_thread_queue_t q)
 #if defined USE_LOCK || defined USE_LOCK_CLEAR
 	myth_internal_lock_lock(&q->m_lock);
 #endif
-	myth_internal_lock_lock(&q->lock);
+	myth_wsqueue_lock_lock(&q->lock);
 	myth_assert(q->top==q->base);
 	q->base=q->size/2;
 	q->top=q->base;
-	myth_internal_lock_unlock(&q->lock);
+	myth_wsqueue_lock_unlock(&q->lock);
 #if defined USE_LOCK || defined USE_LOCK_CLEAR
 	myth_internal_lock_unlock(&q->m_lock);
 #endif
@@ -102,10 +102,10 @@ static inline void __attribute__((always_inline)) myth_queue_push(myth_thread_qu
 	//Check
 	int t=q->top;
 	//read barrier
-	myth_rbarrier();
+	myth_wsqueue_rbarrier();
 	if (t==q->size){
 		//Acquire lock
-		myth_internal_lock_lock(&q->lock);
+		myth_wsqueue_lock_lock(&q->lock);
 		//Runqueue full?
 		if (q->base==0){
 			myth_assert(0);
@@ -137,11 +137,11 @@ static inline void __attribute__((always_inline)) myth_queue_push(myth_thread_qu
 			q->top+=offset;q->base+=offset;
 		}
 		t=q->top;
-		myth_internal_lock_unlock(&q->lock);
+		myth_wsqueue_lock_unlock(&q->lock);
 	}
 	//Do not need to extend of move.
 	q->ptr[t]=th;
-	myth_wbarrier();//Guarantee W-W dependency
+	myth_wsqueue_wbarrier();//Guarantee W-W dependency
 	q->top=t+1;
 #if defined USE_LOCK || defined USE_LOCK_PUSH
 	myth_internal_lock_unlock(&q->m_lock);
@@ -162,7 +162,7 @@ static inline myth_thread_t __attribute__((always_inline)) myth_queue_pop(myth_t
 	top--;
 	q->top=top;
 	//Decrement and check top
-	myth_rwbarrier();
+	myth_wsqueue_rwbarrier();
 	base=q->base;
 	if (base+1<top){
 		ret=q->ptr[top];
@@ -174,11 +174,11 @@ static inline myth_thread_t __attribute__((always_inline)) myth_queue_pop(myth_t
 		return ret;
 	}
 	else{
-		myth_internal_lock_lock(&q->lock);
+		myth_wsqueue_lock_lock(&q->lock);
 		if (q->base<=top){//OK
 			ret=q->ptr[top];
 			q->ptr[top]=NULL;
-			myth_internal_lock_unlock(&q->lock);
+			myth_wsqueue_lock_unlock(&q->lock);
 #if defined USE_LOCK || defined USE_LOCK_POP
 			myth_internal_lock_unlock(&q->m_lock);
 #endif
@@ -188,7 +188,7 @@ static inline myth_thread_t __attribute__((always_inline)) myth_queue_pop(myth_t
 		else{
 			q->top=q->size/2;
 			q->base=q->size/2;
-			myth_internal_lock_unlock(&q->lock);
+			myth_wsqueue_lock_unlock(&q->lock);
 #if defined USE_LOCK || defined USE_LOCK_POP
 			myth_internal_lock_unlock(&q->m_lock);
 #endif
@@ -225,24 +225,24 @@ static inline myth_thread_t myth_queue_take(myth_thread_queue_t q)
 		return NULL;
 	}
 #else
-	myth_internal_lock_lock(&q->lock);
+	myth_wsqueue_lock_lock(&q->lock);
 #endif
 	//Increment base
 	b=q->base;
 	q->base=b+1;
-	myth_rwbarrier();
+	myth_wsqueue_rwbarrier();
 	top=q->top;
 	if (b<top){
 		ret=q->ptr[b];
 		//q->ptr[b]=NULL;
-		myth_internal_lock_unlock(&q->lock);
+		myth_wsqueue_lock_unlock(&q->lock);
 #if defined USE_LOCK || defined USE_LOCK_TAKE
 		myth_internal_lock_unlock(&q->m_lock);
 #endif
 		return ret;
 	}else{
 		q->base=b;
-		myth_internal_lock_unlock(&q->lock);
+		myth_wsqueue_lock_unlock(&q->lock);
 #if defined USE_LOCK || defined USE_LOCK_TAKE
 		myth_internal_lock_unlock(&q->m_lock);
 #endif
@@ -257,7 +257,7 @@ static inline int myth_queue_trypass(myth_thread_queue_t q,myth_thread_t th)
 	myth_internal_lock_lock(&q->m_lock);
 #endif
 	int ret=1;
-	if (!myth_internal_lock_trylock(&q->lock))return 0;
+	if (!myth_wsqueue_lock_trylock(&q->lock))return 0;
 	if (q->base==0){
 		ret=0;
 	}
@@ -265,10 +265,10 @@ static inline int myth_queue_trypass(myth_thread_queue_t q,myth_thread_t th)
 		int b;
 		b=q->base;
 		q->ptr[b-1]=th;
-		myth_wbarrier();
+		myth_wsqueue_wbarrier();
 		q->base--;
 	}
-	myth_internal_lock_unlock(&q->lock);
+	myth_wsqueue_lock_unlock(&q->lock);
 #if defined USE_LOCK || defined USE_LOCK_TRYPASS
 	myth_internal_lock_unlock(&q->m_lock);
 #endif
@@ -291,7 +291,7 @@ static inline void myth_queue_put(myth_thread_queue_t q,myth_thread_t th)
 #if defined USE_LOCK || defined USE_LOCK_PUSH
 	myth_internal_lock_lock(&q->m_lock);
 #endif
-	myth_internal_lock_lock(&q->lock);
+	myth_wsqueue_lock_lock(&q->lock);
 	if (q->base==0){
 		if (q->top==q->size){
 			myth_assert(0);
@@ -321,7 +321,7 @@ static inline void myth_queue_put(myth_thread_queue_t q,myth_thread_t th)
 	b--;
 	q->ptr[b]=th;
 	q->base=b;
-	myth_internal_lock_unlock(&q->lock);
+	myth_wsqueue_lock_unlock(&q->lock);
 #if defined USE_LOCK || defined USE_LOCK_PUSH
 	myth_internal_lock_unlock(&q->m_lock);
 #endif

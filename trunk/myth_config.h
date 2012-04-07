@@ -164,6 +164,9 @@
 //Do trylock before work stealing
 //#define TRY_LOCK_BEFORE_STEAL
 
+//Lock the queue on all the operation
+//#define ALWAYS_LOCK_QUEUE
+
 //Use malloc with recycle by freelist
 #define USE_MYTH_FLMALLOC
 //Use TLS on malloc with freelist
