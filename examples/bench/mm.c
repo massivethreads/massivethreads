@@ -30,13 +30,13 @@ inline double curr_time(void)
 void * malloc_local(void *args)
 {
   struct data *p = (struct data *) args;
-  int tid;
+  unsigned long tid;
   int i;
   
-  tid = 0;
+  tid = pthread_self();
   
   // malloc
-  printf("malloc from thread %d\n", tid);
+  printf("  Thread %lu: malloc\n", tid);
   p->t_alloc = curr_time();
   p->arr = malloc(sizeof(char *) * ARR_SIZE);
   if (p->arr == NULL) {
@@ -53,7 +53,7 @@ void * malloc_local(void *args)
   p->t_alloc = curr_time() - p->t_alloc;
 
   // free
-  printf("free from thread %d\n", tid);
+  printf("  Thread %lu: free\n", tid);
   p->t_free = curr_time();
   for (i = 0; i < ARR_SIZE; i++) 
     free(p->arr[i]);
@@ -61,7 +61,7 @@ void * malloc_local(void *args)
   p->t_free = curr_time() - p->t_free;
 
   // re-malloc
-  printf("re-malloc from thread %d\n", tid);
+  printf("  Thread %lu: re-malloc\n", tid);
   p->t_realloc = curr_time();
   p->arr = malloc(sizeof(char *) * ARR_SIZE);
   if (p->arr == NULL) {
@@ -78,7 +78,7 @@ void * malloc_local(void *args)
   p->t_realloc = curr_time() - p->t_realloc;
   
   // re-free
-  printf("re-free from thread %d\n", tid);
+  printf("  Thread %lu: re-free\n", tid);
   p->t_refree = curr_time();
   for (i = 0; i < ARR_SIZE; i++)
     free(p->arr[i]);
@@ -86,6 +86,8 @@ void * malloc_local(void *args)
   p->t_refree = curr_time() - p->t_refree;
 
   p->t_total = p->t_alloc + p->t_free + p->t_realloc + p->t_refree;
+
+  printf("  Thread %lu: exit\n", tid);
   pthread_exit((void *) 0);
 }
 
@@ -95,15 +97,15 @@ pthread_cond_t cond;
 void * malloc_remote_from(void *args)
 {
   struct data *p = (void *) args;
-  int tid;
+  unsigned long tid;
   int i;
  
-  tid = 0;
+  tid = pthread_self();
   
   pthread_mutex_lock(&mutex);
   
   // malloc
-  printf("malloc from thread %d\n", tid);
+  printf("  Thread %lu malloc\n", tid);
   p->t_alloc = curr_time();
   p->arr = (char **) malloc(sizeof(char *) * ARR_SIZE);
   if (p->arr == NULL) {
@@ -130,23 +132,24 @@ void * malloc_remote_from(void *args)
   
   p->t_total = p->t_alloc + p->t_free + p->t_realloc + p->t_refree;
 
+  printf("  Thread %lu: exit\n", tid);
   pthread_exit((void *) 0);
 }
 
 void * malloc_remote_to(void *args)
 {
   struct data *p = (void *) args;
-  int tid;
+  unsigned long tid;
   int i;
   
-  tid = 1;
+  tid = pthread_self();
   pthread_mutex_lock(&mutex);
   while (p->mem_allocated == 0)
     pthread_cond_wait(&cond, &mutex);
   pthread_mutex_unlock(&mutex);
 
   // free
-  printf("free from thread %d\n", tid);
+  printf("  Thread %lu: free\n", tid);
   p->t_free = curr_time();
   for (i = 0; i < ARR_SIZE; i++) 
     free(p->arr[i]);
@@ -154,7 +157,7 @@ void * malloc_remote_to(void *args)
   p->t_free = curr_time() - p->t_free;
   
   // re-malloc
-  printf("re-malloc from thread %d\n", tid);
+  printf("  Thread %lu: re-malloc\n", tid);
   p->arr = malloc(sizeof(char *) * ARR_SIZE);
   if (p->arr == NULL) {
     perror(NULL);
@@ -170,7 +173,7 @@ void * malloc_remote_to(void *args)
   p->t_realloc = curr_time() - p->t_realloc;
   
   // re-free
-  printf("re-free from thread %d\n", tid);
+  printf("  Thread %lu: re-free\n", tid);
   p->t_refree = curr_time();
   for (i = 0; i < ARR_SIZE; i++)
     free(p->arr[i]);
@@ -182,6 +185,7 @@ void * malloc_remote_to(void *args)
   pthread_cond_signal(&cond);
   pthread_mutex_unlock(&mutex);
   
+  printf("  Thread %lu: exit\n", tid);
   pthread_exit((void *) 0);
 }
 
@@ -193,6 +197,7 @@ int main(char **argv)
   
   printf("Memory management/migration test (usec)...\n");
 
+  printf("One thread...\n");
   pthread_create(&tha, NULL, malloc_local, (void *) &dat);
   pthread_join(tha, (void **) &ret);
   
@@ -203,6 +208,7 @@ int main(char **argv)
          "      Total: %.2f\n", dat.t_alloc, dat.t_free, 
          dat.t_realloc, dat.t_refree, dat.t_total);
 
+  printf("\nTwo threads...\n");
   dat.mem_allocated = 0;
   pthread_mutex_init(&mutex, NULL);
   pthread_cond_init(&cond, NULL);
