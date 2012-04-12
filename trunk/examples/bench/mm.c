@@ -105,7 +105,7 @@ void * malloc_remote_from(void *args)
   pthread_mutex_lock(&mutex);
   
   // malloc
-  printf("  Thread %lu malloc\n", tid);
+  printf("  Thread %lu: malloc\n", tid);
   p->t_alloc = curr_time();
   p->arr = (char **) malloc(sizeof(char *) * ARR_SIZE);
   if (p->arr == NULL) {
@@ -189,42 +189,49 @@ void * malloc_remote_to(void *args)
   pthread_exit((void *) 0);
 }
 
-int main(char **argv)
+int main(int argc, char **argv)
 {
   pthread_t tha, thb;
   struct data dat;
+  int nthreads;
   int ret;
-  
-  printf("Memory management/migration test (usec)...\n");
 
-  printf("One thread...\n");
-  pthread_create(&tha, NULL, malloc_local, (void *) &dat);
-  pthread_join(tha, (void **) &ret);
+  nthreads = argc == 1 ? 1 : atoi(argv[1]);
   
-  printf("     malloc: %.2f\n"
-         "       free: %.2f\n"
-         "  re-malloc: %.2f\n"
-         "    re-free: %.2f\n"
-         "      Total: %.2f\n", dat.t_alloc, dat.t_free, 
-         dat.t_realloc, dat.t_refree, dat.t_total);
+  printf("Memory management/migration test (usec)\n");
 
-  printf("\nTwo threads...\n");
-  dat.mem_allocated = 0;
-  pthread_mutex_init(&mutex, NULL);
-  pthread_cond_init(&cond, NULL);
-  pthread_create(&tha, NULL, malloc_remote_from, (void *) &dat);
-  pthread_create(&thb, NULL, malloc_remote_to, (void *) &dat);
-  pthread_join(tha, (void **) &ret);
-  pthread_join(thb, (void **) &ret);
-  pthread_mutex_destroy(&mutex);
-  pthread_cond_destroy(&cond);
-  
-  printf("     malloc: %.2f\n"
-         "       free: %.2f\n"
-         "  re-malloc: %.2f\n"
-         "    re-free: %.2f\n"
-         "      Total: %.2f\n", dat.t_alloc, dat.t_free, 
-         dat.t_realloc, dat.t_refree, dat.t_total);
+  if (nthreads == 1) {
+      printf("One thread...\n");
+      pthread_create(&tha, NULL, malloc_local, (void *) &dat);
+      pthread_join(tha, (void **) &ret);
+      
+      printf("     malloc: %.2f\n"
+             "       free: %.2f\n"
+             "  re-malloc: %.2f\n"
+             "    re-free: %.2f\n"
+             "      Total: %.2f\n", dat.t_alloc, dat.t_free, 
+             dat.t_realloc, dat.t_refree, dat.t_total);
+  }
+
+  if (nthreads >= 2) {
+      printf("Two threads...\n");
+      dat.mem_allocated = 0;
+      pthread_mutex_init(&mutex, NULL);
+      pthread_cond_init(&cond, NULL);
+      pthread_create(&tha, NULL, malloc_remote_from, (void *) &dat);
+      pthread_create(&thb, NULL, malloc_remote_to, (void *) &dat);
+      pthread_join(tha, (void **) &ret);
+      pthread_join(thb, (void **) &ret);
+      pthread_mutex_destroy(&mutex);
+      pthread_cond_destroy(&cond);
+      
+      printf("     malloc: %.2f\n"
+             "       free: %.2f\n"
+             "  re-malloc: %.2f\n"
+             "    re-free: %.2f\n"
+             "      Total: %.2f\n", dat.t_alloc, dat.t_free, 
+             dat.t_realloc, dat.t_refree, dat.t_total);
+  }
 
   return 0;
 }
