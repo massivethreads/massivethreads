@@ -1,6 +1,6 @@
 /*
- * mm.c
- * Memory management/migration 
+ * mm_myth.c
+ * Memory management/migration using native MassiveThreads APIs
  *
  * by Nan Dun <dun@logos.ic.i.u-tokyo.ac.jp>
  */
