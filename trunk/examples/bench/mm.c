@@ -11,7 +11,7 @@
 #include <pthread.h>
 #include <sys/time.h>
 
-#define ARR_SIZE  1
+#define ARR_SIZE  2048
 #define BLK_SIZE  1048576
 
 //#define MEM_TRACE
@@ -30,7 +30,7 @@ inline double curr_time(void)
 {
   struct timeval tv;
   gettimeofday(&tv, NULL);
-  return tv.tv_sec * 1e-6 + (double) tv.tv_usec;
+  return tv.tv_sec * 1e6 + (double) tv.tv_usec;
 }
 
 void * malloc_local(void *args)
@@ -164,6 +164,7 @@ void * malloc_remote_to(void *args)
   
   // re-malloc
   printf("  Thread %lu: re-malloc\n", tid);
+  p->t_realloc = curr_time();
   p->arr = malloc(sizeof(char *) * ARR_SIZE);
   if (p->arr == NULL) {
     perror(NULL);

@@ -10,7 +10,7 @@ CXXFLAGS = $(CC_CXX_FLAGS)
 all: mm
 
 mm: mm.c
-	$(CC) -o $@ $< $(CC_CXX_FLAGS) -L../../ -lmyth-compat
+	$(CC) -o $@ $< $(CC_CXX_FLAGS) -L../../.libs -lmyth-compat
 
 debug:
 	$(CC) -o mm mm.c -pthread -ggdb $(CC_CXX_FLAGS)
