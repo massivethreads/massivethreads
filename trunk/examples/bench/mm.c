@@ -11,10 +11,10 @@
 #include <pthread.h>
 #include <sys/time.h>
 
-#define ARR_SIZE  2048
+#define ARR_SIZE  1
 #define BLK_SIZE  1048576
 
-//#define MEM_TRACE
+#define MEM_TRACE
 
 #ifdef MEM_TRACE
 #include <mcheck.h>
@@ -109,7 +109,7 @@ void * malloc_remote_from(void *args)
   tid = pthread_self();
   
   pthread_mutex_lock(&mutex);
-  
+
   // malloc
   printf("  Thread %lu: malloc\n", tid);
   p->t_alloc = curr_time();
@@ -178,7 +178,7 @@ void * malloc_remote_to(void *args)
     }
   }
   p->t_realloc = curr_time() - p->t_realloc;
-  
+
   // re-free
   printf("  Thread %lu: re-free\n", tid);
   p->t_refree = curr_time();
@@ -186,6 +186,10 @@ void * malloc_remote_to(void *args)
     free(p->arr[i]);
   free(p->arr);
   p->t_refree = curr_time() - p->t_refree;
+
+#ifdef MEM_TRACE
+  muntrace();
+#endif
   
   pthread_mutex_lock(&mutex);
   p->mem_allocated = 0;
@@ -210,7 +214,7 @@ int main(int argc, char **argv)
 #ifdef MEM_TRACE
   mtrace();
 #endif
-
+  
   if (nthreads == 1) {
       printf("One thread...\n");
       pthread_create(&tha, NULL, malloc_local, (void *) &dat);
