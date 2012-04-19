@@ -24,9 +24,6 @@ fi
 
 export LD_LIBRARY_PATH=../../.libs
 export MYTH_WORKER_NUM=${WORKERS}
-echo "Executing ${MM} with ${WORKERS} workers..." 
-
-# mm
-#export MALLOC_TRACE=mm-`date +%j-%H-%M-%S`.log
 export MALLOC_TRACE=mm.log
+echo "Executing ${MM} with ${WORKERS} workers..." 
 ${MM} $@
