@@ -56,23 +56,20 @@ void *malloc(size_t size)
 	size_t realsize;
 	int idx;
 	if (size<16)size=16;
-	idx=MYTH_MALLOC_SIZE_TO_INDEX(size);
-	realsize=MYTH_MALLOC_INDEX_TO_RSIZE(idx);
 	if (!real_malloc){
 		return NULL;
 	}
-	if (!g_worker_thread_num || (g_alloc_hook_ok!=g_worker_thread_num)){
-		ptr=real_malloc(realsize+16);
+	if ((!g_worker_thread_num) || (g_alloc_hook_ok!=g_worker_thread_num) || (size>MYTH_MALLOC_FLSIZE_MAX)){
+		ptr=real_malloc(size+16);
+		if (!ptr){
+			fprintf(stderr,"size=%llu\n",(unsigned long long)size);
+		}
 		assert(ptr);
-		*ptr=idx;
+		*ptr=FREE_LIST_NUM;
 		return (void*)(ptr+16/8);
 	}
-	if (idx>=FREE_LIST_NUM){
-		ptr=real_malloc(realsize+16);
-		assert(ptr);
-		*ptr=idx;
-		return (void*)(ptr+16/8);
-	}
+	idx=MYTH_MALLOC_SIZE_TO_INDEX(size);
+	realsize=MYTH_MALLOC_INDEX_TO_RSIZE(idx);
 	void **fl_ptr;
 	myth_running_env_t env;
 	env=myth_get_current_env();

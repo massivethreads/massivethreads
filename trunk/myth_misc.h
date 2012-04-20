@@ -127,6 +127,8 @@ extern __thread uint64_t g_myth_flfree_cycles,g_myth_flfree_cnt;
 #define MYTH_MALLOC_INDEX_TO_RSIZE(s) (1<<(s))
 #define MYTH_MALLOC_SIZE_TO_RSIZE(s) (MYTH_MALLOC_INDEX_TO_RSIZE(MYTH_MALLOC_SIZE_TO_INDEX(s)))
 
+#define MYTH_MALLOC_FLSIZE_MAX (MYTH_MALLOC_INDEX_TO_RSIZE(FREE_LIST_NUM-1)-1)
+
 #ifdef USE_MYTH_FLMALLOC
 
 #ifdef MYTH_FLMALLOC_TLS
