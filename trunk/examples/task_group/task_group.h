@@ -29,6 +29,11 @@ struct task_group {
     capacity = INIT_SZ;
     tasks = tasks_;
   }
+  ~task_group() {
+    wait();
+    if (tasks != tasks_)
+      free(tasks);
+  }
   void extend() {
     int new_capacity = capacity + capacity + 1;
     task * new_tasks = (task *)malloc(sizeof(task) * new_capacity);
@@ -57,4 +62,5 @@ struct task_group {
     }
     n = 0;
   }
+  
 };

@@ -18,8 +18,12 @@ void * invoke_task(void * arg_) {
   return arg_;
 }
 
-#if !defined(INIT_SZ)
+#if !defined(TASK_GROUP_INIT_SZ)
 #define TASK_GROUP_INIT_SZ 10
+#endif
+
+#if !defined(TASK_GROUP_NULL_CREATE)
+#define TASK_GROUP_NULL_CREATE 0
 #endif
 
 struct task_group {
@@ -49,15 +53,21 @@ struct task_group {
     if (n == capacity) extend();
     task * t = &tasks[n];
     t->f = f;
-    n++;
-    pthread_create(&t->tid, NULL, invoke_task, (void*)t);
+    if (TASK_GROUP_NULL_CREATE) {
+      invoke_task((void *)t);
+    } else {
+      n++;
+      pthread_create(&t->tid, NULL, invoke_task, (void*)t);
+    }
   }
   void wait() {
     int i;
-    for (i = 0; i < n; i++) {
-      void * ret;
-      pthread_join(tasks[i].tid, &ret);
+    if (n > 0) {
+      for (i = 0; i < n; i++) {
+	void * ret;
+	pthread_join(tasks[i].tid, &ret);
+      }
+      n = 0;
     }
-    n = 0;
   }
 };
