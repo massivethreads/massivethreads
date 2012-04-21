@@ -21,8 +21,10 @@ int fib(int n) {
 
 int main(int argc, char ** argv) {
   int n = (argc > 1 ? atoi(argv[1]) : 35);
-  double t0 = cur_time();
-  int x = fib(n);
-  double t1 = cur_time();
-  printf("fib(%d) = %d in %.3f sec\n", n, x, t1 - t0);
+  while (1) {
+    double t0 = cur_time();
+    int x = fib(n);
+    double t1 = cur_time();
+    printf("fib(%d) = %d in %.3f sec\n", n, x, t1 - t0);
+  }
 }
