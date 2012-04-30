@@ -151,8 +151,9 @@ particle ** generate_particles(int n)
 			cmvx / n, cmvy / n, cmvz / n);
     
   for (int i = 0; i < n; i++)
-    printf("%f %f %f\n", a[i]->pos.x, a[i]->pos.y, a[i]->pos.z);
-	return a;
+    printf("%f %f %f\n", VX(a[i]->pos), VY(a[i]->pos), VZ(a[i]->pos));
+	
+  return a;
 }
 
 particle ** generate_particles_uniform(int n)

@@ -47,6 +47,41 @@ vect_t space::calc_accel(vect_t pos)
   }
 }
 
+vect_t space::calc_accel_morton(vect_t pos)
+{
+  switch (state) {
+    case ONE_PARTICLE: {
+      return make_vect(0.0, 0.0, 0.0);
+    } /* ONE_PARTICLE */
+    case MULTIPLE_PARTICLES: {
+      unsigned int stride = (midx.high - midx.low) / 8;
+      int idx = (vect2morton(pos) - midx.low) / stride + 1;
+      t_real resultx = 0.0, resulty = 0.0, resultz = 0.0;
+      for (int i = 0; i < N_CHILDREN; i++) {
+        space * s = subspaces[i];
+        if (i == idx) {
+          vect_t sv = s->calc_accel_morton(pos);
+          resultx += VX(sv);
+          resulty += VY(sv);
+          resultz += VZ(sv);
+        } else {
+          if (s) {
+            vect_t sv = s->calc_accel1(pos);
+            resultx += VX(sv);
+            resulty += VY(sv);
+            resultz += VZ(sv);
+          }
+        }
+      }
+      return make_vect(resultx, resulty, resultz);
+    } /* MULTIPLE_PARTICLES */
+    default: {
+      printf("NO_PARTICLES!\n"); 
+      return make_vect(0.0, 0.0, 0.0); /* never reach */
+    } /* default */
+  }
+}
+
 #if 0
 const t_real approx_theta = 0.67 * 0.67; /* 1.05263 */
 #else
@@ -90,7 +125,8 @@ vect_t space::calc_accel1(vect_t pos)
 
 void particle::set_accel(space * sp)
 {
-  vect_t a = sp->calc_accel(pos);
+//  vect_t a = sp->calc_accel(pos);
+  vect_t a = sp->calc_accel_morton(pos);
   accel = a;
 }
 

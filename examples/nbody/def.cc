@@ -71,6 +71,23 @@ space * make_empty_space(rectangle * area)
 #endif
 }
 
+space * make_empty_space_morton(t_real diameter, unsigned long midx_low,
+  unsigned long midx_high)
+{
+#if USE_MALLOC
+  space * sp = (space *) malloc(sizeof(space));
+  sp->state = NO_PARTICLE;
+  sp->mass = 0.0;
+  sp->cg = make_vect(0.0, 0.0, 0.0);
+  sp->diameter2 = diameter;
+  sp->midx.low = midx_low;
+  sp->midx.high = midx_high;
+  return sp;
+#else
+#error "make_empty_space_morton not implemented yet"
+#endif
+}
+
 int current_real_time_micro()
 {
   struct timeval tp[1];
