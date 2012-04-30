@@ -2,7 +2,155 @@
  * gentree.cc
  */
 
+#include <mcheck.h>
 #include "def.h"
+
+t_real g_stride;
+unsigned long g_morton_len;
+rectangle * g_limit_area;
+int n_buildtree = 0;
+
+inline unsigned int bitspread( unsigned int n ) {
+  if (n > 65536) {
+    fprintf(stderr, "too many cells\n");
+    exit(1);
+  };
+  n = (n | (n << 16)) & 0x030000FF;
+  n = (n | (n <<  8)) & 0x0300F00F;
+  n = (n | (n <<  4)) & 0x030C30C3;
+  n = (n | (n <<  2)) & 0x09249249;
+  /*
+  n = (n | (n << 8)) & 0x00ff00ff;
+  n = (n | (n << 4)) & 0x0f0f0f0f;
+  n = (n | (n << 2)) & 0x33333333;
+  n = (n | (n << 1)) & 0x55555555;
+  */
+  return n;
+}
+
+static inline unsigned long morton_id(unsigned int x, unsigned int y, unsigned int z)
+{
+  return bitspread(x) | bitspread(y) << 1 | bitspread(z) << 2;
+}
+
+unsigned long vect2morton(vect_t vec)
+{
+  unsigned int mx, my, mz;
+  mx = (unsigned int) floor((VX(vec) - VX(g_limit_area->ll)) / g_stride);
+  my = (unsigned int) floor((VY(vec) - VY(g_limit_area->ll)) / g_stride);
+  mz = (unsigned int) floor((VZ(vec) - VZ(g_limit_area->ll)) / g_stride);
+  return morton_id(mx, my, mz);
+}
+
+struct qsrt_thread_dat {
+  particle ** p;
+  int n;
+  int left;
+  int right;
+};
+
+void * pqsort_particles(void *args)
+{
+  pthread_t tha, thb;
+  qsrt_thread_dat dta, dtb;
+  int i, j;
+  unsigned int pivot;
+
+  qsrt_thread_dat * p = (qsrt_thread_dat *) args;
+  
+  i = p->left;
+  j = p->right;
+  
+  pivot = p->p[(p->left + p->right) / 2]->mid;
+
+  while(1) {
+    while (p->p[i]->mid < pivot) i++;
+    while (pivot < p->p[j]->mid) j--;
+    if (i >= j) break;
+    particle * tmp = p->p[i];
+    p->p[i] = p->p[j];
+    p->p[j] = tmp;
+    i++;
+    j--;
+  }
+  
+  if (p->left < i - 1) {
+    dta.p = p->p;
+    dta.left = p->left;
+    dta.right = i - 1;
+    pthread_create(&tha, NULL, pqsort_particles, &dta);
+   // pqsort_particles(&dta);
+  }
+  if (j + 1 < p->right) {
+    dtb.p = p->p;
+    dtb.left = j + 1;
+    dtb.right = p->right;
+    pqsort_particles(&dtb);
+  }
+  
+ // void * ret;
+  //if (p->left < i - 1)
+   // pthread_join(tha, (void **) ret);
+}
+
+inline void qsort_particles(particle ** particles, int left, int right)
+{
+  int i, j;
+  unsigned int pivot;
+
+  i = left;
+  j = right;
+  pivot = particles[(i + j) / 2]->mid;
+
+  while (1) {
+    while (particles[i]->mid < pivot) i++;
+    while (pivot < particles[j]->mid) j--;
+    if (i >= j) break;
+    particle * tmp = particles[i];
+    particles[i] = particles[j];
+    particles[j] = tmp;
+    i++;
+    j--;
+  }
+  if (left < i - 1)
+    qsort_particles(particles, left, i - 1);
+  if (j + 1 < right)
+    qsort_particles(particles, j + 1, right);
+}
+
+void morton_sort(particle ** particles, int n_particles)
+{
+  int i, j;
+ 
+  g_stride = fabs(VX(g_limit_area->ur) - VX(g_limit_area->ll)) / pow(2, 4);
+  // Update morton id
+  for (i = 0; i < n_particles; i++) {
+    particles[i]->mid = vect2morton(particles[i]->pos);
+    //printf("%i (%f %f %f) -> (%u, %u, %u) -> %lu\n", i, VX(particles[i]->pos), VY(particles[i]->pos),
+    // VZ(particles[i]->pos), mx, my, mz, particles[i]->mid);
+  }
+
+  // Quicksort particles in place by morton id
+#if 1
+  qsort_particles(particles, 0, n_particles - 1);
+#else
+  qsrt_thread_dat dat;
+  dat.p = particles;
+  dat.n = n_particles;
+  dat.left = 0;
+  dat.right = n_particles - 1;
+  pqsort_particles(&dat);
+#endif
+  /*
+  for (i = 0; i < n_particles; i++) {
+    //printf("%i %f %f %f\n", i, VX(particles[i]->pos), VY(particles[i]->pos),
+    // VZ(particles[i]->pos));
+    printf("%i morton id=%u\n", i, particles[i]->mid);
+  }
+  */
+  g_morton_len = vect2morton(g_limit_area->ur) / 64;
+  //printf("- morton id=%u\n", morton_id(mx, my, mz));
+}
 
 int select_covering_rectangle(vect_t pos, rectangle * rec)
 {
@@ -55,8 +203,35 @@ space ** make_new_spaces(rectangle * area)
 #else
   space ** s = new space* [N_CHILDREN];
 #endif
-  for (int i = 0; i < N_CHILDREN; i++) 
-    s[i] = make_empty_space(make_sub_rectangle(area, i));
+  //printf("make_new_spaces (%p)\n", s);
+  for (int i = 0; i < N_CHILDREN; i++) {
+    rectangle *r = make_sub_rectangle(area, i);
+    //printf("!!make_sub_rectangle (%p)\n", r);
+    s[i] = make_empty_space(r);
+    //printf("make_empty_space: make_new_spaces (%p), s=(%p), area=(%p)\n", 
+    // s[i], s, s[i]->area);
+  }
+  return s;
+}
+
+space ** make_new_spaces_morton(t_real diameter2, unsigned long low, 
+  unsigned high)
+{
+#if USE_MALLOC
+  space ** s = (space **) malloc(N_CHILDREN * sizeof(space*));
+#else
+  space ** s = new space* [N_CHILDREN];
+#endif
+  t_real d = diameter2 * 0.25;
+  unsigned long stride = (high - low) / 8;
+  s[0] = make_empty_space_morton(d, low, low + stride);
+  //printf("s[0]: %f|%d, %d, %d\n", d, stride, low, low + stride);
+  for (int i = 1; i < N_CHILDREN; i++) {
+    s[i] = make_empty_space_morton(d, low + stride * i + 1,
+      low + stride * (i + 1));
+    //printf("s[%d]: %f|%d, %d, %d\n", i, d, stride,
+    // low + stride * i + 1, low + stride * (i + 1));
+  }
   return s;
 }
 
@@ -88,10 +263,46 @@ void space::add_particle(t_real m, vect_t p)
   }
 }
 
+void space::add_particle_morton(t_real m, vect_t p)
+{
+  switch (state) {
+    case NO_PARTICLE: {
+      state = ONE_PARTICLE;
+      mass = m; cg = p;
+      return;
+    } /* NO_PARTICLE */
+    case ONE_PARTICLE: {
+      unsigned int stride = (midx.high - midx.low) / 8;
+      subspaces = make_new_spaces_morton(diameter2, midx.low, midx.high);
+      int idx0 = (vect2morton(cg) - midx.low) / stride + 1;
+      subspaces[idx0]->add_particle_morton(mass, cg);
+      int idx = (vect2morton(p) - midx.low) / stride + 1;
+      subspaces[idx]->add_particle_morton(m, p);
+      state = MULTIPLE_PARTICLES;
+      return;
+    } /* ONE_PARTICLE */
+    case MULTIPLE_PARTICLES: {
+      unsigned int stride = (midx.high - midx.low) / 8;
+      int idx = (vect2morton(p) - midx.low) / stride + 1;
+      subspaces[idx]->add_particle_morton(m, p);
+      return;
+    } /* MULTIPLE_PARTICLES */
+    default: {
+      printf("ERROR: add_particle_morton\n");
+    } /* default */
+  }
+}
+
 void space::divide()
 {
   state = MULTIPLE_PARTICLES;
   subspaces = make_new_spaces(area);
+}
+
+void space::divide_morton()
+{
+  state = MULTIPLE_PARTICLES;
+  subspaces = make_new_spaces_morton(diameter2, midx.low, midx.high);
 }
 
 t_real particle::calc_limit()
@@ -205,20 +416,30 @@ void * build_tree_rec(void * args)
   }
 }
 
+#define SUBSET_ARR_SZ 128
 void particles_in_tree2(bt_thread_dat * orig,
   bt_thread_dat * parr)
 {
   int t0, t1, t2, t3, t4, t5, t6;
+  int *arr, _arr[SUBSET_ARR_SZ], if_free;
   
   t0 = current_real_time_micro();
+
+  if (orig->subset_size <= SUBSET_ARR_SZ) {
+    arr = _arr;
+    if_free = 0;
+  } else {
 #if USE_MALLOC
-  int * arr = (int *) malloc(sizeof(int) * orig->subset_size);
+    arr = (int *) malloc(sizeof(int) * orig->subset_size);
 #else
-  int * arr = new int[orig->subset_size];
+    arr = new int[orig->subset_size];
+    if_free = 1;
 #endif
+  }
   t1 = current_real_time_micro();
   
   orig->tree->divide();
+  //printf("==return from divide (%p)\n", orig->tree->subspaces);
   t2 = current_real_time_micro();
   
   for (int i = 0; i < N_CHILDREN; i++) {
@@ -244,6 +465,7 @@ void particles_in_tree2(bt_thread_dat * orig,
 #else
       parr[i].subset_arr = new int [parr[i].subset_size];
 #endif
+      //printf("parr[%d] (%p)\n", i, parr[i].subset_arr);
     } else {
       parr[i].subset_arr = NULL;
     }
@@ -259,11 +481,15 @@ void particles_in_tree2(bt_thread_dat * orig,
   t6 = current_real_time_micro();
 
 #if USE_MALLOC
-  free(arr);
+  if (if_free)
+    free(arr);
 #endif
-
-//  printf("%d %d %d %d %d %d %d %d\n", orig->subset_size, t6-t0, 
-//    t1-t0, t2-t1, t3-t2, t4-t3, t5-t4, t6-t5);
+  
+  /*
+  if (n_buildtree >= 2)
+      fprintf(stderr, "%d %d %d %d %d %d %d %d\n", orig->subset_size, t6-t0, 
+       t1-t0, t2-t1, t3-t2, t4-t3, t5-t4, t6-t5);
+  */
 }
 
 void * build_tree_rec2(void * args)
@@ -294,12 +520,16 @@ void * build_tree_rec2(void * args)
 #endif
 }
 
+
 space * build_tree(particle ** particles, int n_particles)
 {
   bt_thread_dat dat;
+  n_buildtree++;
+
   t_real limit = calc_limit(particles, n_particles);
   rectangle * rec = make_entire_rectangle(limit);
   space * tree = make_empty_space(rec);
+  //printf("make_empty_space: build_tree (%p)\n", tree);
   dat.tree = tree;
   dat.particles = particles;
   dat.subset_size = n_particles;
@@ -310,7 +540,141 @@ space * build_tree(particle ** particles, int n_particles)
 #endif
   for (int i = 0; i < dat.subset_size; i++) dat.subset_arr[i] = i;
 //  build_tree_rec(&dat);
+  
+  //if (n_buildtree == 5) mtrace();
   build_tree_rec2(&dat);
+  //if (n_buildtree == 5) muntrace();
+  return tree;
+}
+
+struct btmorton_thread_dat {
+  space * tree;
+  particle ** particles;
+  int low, high;
+};
+
+int bin_search_low(particle ** p, int key, int imin, int imax)
+{
+  int imid;
+  
+  while (imax >= imin) {
+    imid = (imin + imax) / 2;
+    if (p[imid]->mid < key)
+      imin = imid + 1;
+    else if (p[imid]->mid > key)
+      imax = imid - 1;
+    else
+      return imid;
+  }
+  // Key does not necessarily exist, so return a lower bound
+  return imin;
+}
+
+int bin_search_high(particle ** p, int key, int imin, int imax)
+{
+  int imid;
+  
+  while (imax >= imin) {
+    imid = (imin + imax) / 2;
+    if (p[imid]->mid < key)
+      imin = imid + 1;
+    else if (p[imid]->mid > key)
+      imax = imid - 1;
+    else
+      return imid;
+  }
+  // Key does not necessarily exist, so return a lower bound
+  return imax;
+}
+
+void select_covering_range_morton(particle **p, 
+  space * s, int *low, int *high)
+{
+  int _low, _high;
+  unsigned int mx, my, mz, len;
+
+  _low = bin_search_low(p, s->midx.low, *low, *high);
+  _high = bin_search_high(p, s->midx.high, *low, *high);
+  if (_low == -1 || _high == -1 || _low > _high) {
+    _low = -1;
+    _high= -1;
+  }
+  //printf("[%d-%d] U [%d-%d] = [%d-%d]\n", *low, *high, s->midx.low,
+  //  s->midx.high, _low, _high);
+  *low = _low;
+  *high = _high;
+}
+
+void particles_in_tree_morton(btmorton_thread_dat * orig,
+  btmorton_thread_dat * parr)
+{
+  int low, high;
+  orig->tree->divide_morton();
+  for (int i = 0; i < N_CHILDREN; i++) {
+    parr[i].tree = orig->tree->subspaces[i];
+    parr[i].particles = orig->particles;
+    low = orig->low;
+    high = orig->high;
+    select_covering_range_morton(orig->particles, parr[i].tree,
+      &low, &high);
+    parr[i].low = low;
+    parr[i].high = high;
+  }
+}
+
+void * build_tree_morton_rec(void * args)
+{
+  pthread_t ths[N_CHILDREN];
+  btmorton_thread_dat parr[N_CHILDREN];
+  btmorton_thread_dat * p = (btmorton_thread_dat *) args;
+  int subset_size = 0;
+  
+  if (p->high != -1 && p->low != -1)
+    subset_size = p->high - p->low + 1;
+
+  if (subset_size == 1) {
+    particle * par = p->particles[p->low];
+    p->tree->add_particle_morton(par->mass, par->pos);
+  } else if (subset_size > 1) {
+    particles_in_tree_morton(p, parr);
+    void * ret;
+    int n_threads = N_CHILDREN - 1;
+    for (int i = 0; i < N_CHILDREN; i++) {
+      if (i < n_threads) {
+        pthread_create(&ths[i], NULL, build_tree_morton_rec, 
+          (void *) &parr[i]);
+      } else {
+        build_tree_morton_rec(&parr[i]);
+      }
+    }
+    for (int i = 0; i < n_threads; i++) 
+      pthread_join(ths[i], (void **) ret);
+  }
+}
+
+space * build_tree_morton(particle ** particles, int n_particles)
+{
+  int t0, t1, t2, t3, t4, t5, t6;
+  btmorton_thread_dat dat;
+  t_real limit = calc_limit(particles, n_particles);
+  g_limit_area = make_entire_rectangle(limit);
+  t0 = current_real_time_micro();
+  morton_sort(particles, n_particles); 
+  t1 = current_real_time_micro();
+  space * tree = make_empty_space_morton(diameter2(g_limit_area),
+    0, g_morton_len * 8);
+  //printf("tree->midx.high: %u\n", tree->midx.high);
+  dat.tree = tree;
+  dat.particles = particles;
+  dat.low = 0;
+  dat.high = n_particles - 1;
+  
+  t2 = current_real_time_micro();
+  build_tree_morton_rec(&dat);
+  t3 = current_real_time_micro();
+
+  printf("qsort: %d, build_tree_morton_rec: %d\n", t1-t0, t3-t2);
+  
   return tree;
 }
 
@@ -325,27 +689,37 @@ void* free_tree_rec(void * args)
     void * ret;
     int n_threads = N_CHILDREN - 1;
     for (int i = 0; i < N_CHILDREN; i++) {
+      //printf("---free_tree: subspace[%d] (%p), tree=(%p), area=(%p)\n", i, 
+      // tree->subspaces[i], tree->subspaces);
       if (i < n_threads) {
         pthread_create(&ths[i], NULL, free_tree_rec, 
-          (void *) tree->subspaces[i]);
+         (void *) tree->subspaces[i]);
       } else {
         free_tree_rec(tree->subspaces[i]);
       }
     }
     for (int i = 0; i < n_threads; i++) 
-      pthread_join(ths[i], (void **) ret);
+     pthread_join(ths[i], (void **) ret);
 #if USE_MALLOC
+    //printf("---free_tree: subspaces (%p)\n", tree->subspaces);
     free(tree->subspaces);
     tree->state = NO_PARTICLE;
 #endif
-  }
-  //delete tree->cg;
+ }
+#if !UNBOX_VECT
+  free(tree->cg);
+#endif
+
+#if !USE_MORTON
   free(tree->area);
+#endif
+  //printf("free_tree: area (%p)\n", tree->area);
   free(tree);
 }
 
 void free_tree(space * tree)
 {
+  //printf("root (%p)\n", tree);
   free_tree_rec((void *) tree);
 }
 
@@ -494,7 +868,11 @@ mass_momentum space::set_mass_and_cg()
 	      space * subspace = subspaces[i];
 	      mass_momentum mm = subspace->set_mass_and_cg();
 	      if (mm.n_nodes == 0) {
-	        subspaces[i] = 0;
+#if !USE_MORON
+          free(subspaces[i]->area);
+#endif
+          free(subspaces[i]);
+	        subspaces[i] = NULL; // !! Forget to free !!
         } else {
           total_mass += mm.mass;
           total_momentum = v_plus_v(total_momentum, mm.momentum);

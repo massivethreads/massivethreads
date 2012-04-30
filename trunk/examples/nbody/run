@@ -24,7 +24,8 @@ if [ ! -f ${EXE} ]; then
 	echo ""
 fi
 
-export LD_LIBRARY_PATH=../../ 
+export LD_LIBRARY_PATH=../../.libs
 export MYTH_WORKER_NUM=${WORKERS}
+export MALLOC_TRACE=nbody.log
 echo "Executing ${EXE} ${N} ${STEPS} with ${WORKERS} workers..."
 ${EXE} ${N} ${STEPS}

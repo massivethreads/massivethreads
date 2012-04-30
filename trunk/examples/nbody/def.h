@@ -13,7 +13,11 @@ typedef REAL_TYPE t_real;
 
 /* Use malloc does not have much performance gain? */
 #ifndef USE_MALLOC
-#define USE_MALLOC 0
+#define USE_MALLOC 1
+#endif
+
+#ifndef USE_MORTON
+#define USE_MORTON 1
 #endif
 
 #ifndef UNBOX_VECT 
@@ -55,7 +59,13 @@ static inline vect_t make_vect (t_real x, t_real y, t_real z)
 #define VZ(v) (v)->z
 static inline vect_t make_vect (t_real x, t_real y, t_real z)
 {
+#if USE_MALLOC
+    vect_t p = (vect_t) malloc(sizeof(vect));
+    p->x = x; p->y = y; p->z = z;
+    return p;
+#else
   vect_t p = new vect (x, y, z);
+#endif /* USE_MALLOC */
   return p;
 }
 #endif
@@ -104,6 +114,12 @@ enum space_state { NO_PARTICLE, ONE_PARTICLE, MULTIPLE_PARTICLES };
 
 #define N_CHILDREN 8
 
+struct morton_idx
+{
+  unsigned long low;
+  unsigned long high;
+};
+
 struct particle;
 struct space
 {
@@ -114,6 +130,7 @@ struct space
   vect_t cg;
   rectangle * area;
   t_real diameter2;
+  morton_idx midx;
   
   int cached;
   space (space_state s, t_real m, vect_t c, rectangle * a, t_real d) {
@@ -121,10 +138,13 @@ struct space
     cached = 0;
   }
   void add_particle(t_real, vect_t);
+  void add_particle_morton(t_real, vect_t);
   void divide();
+  void divide_morton();
   mass_momentum set_mass_and_cg();
   vect_t calc_accel(vect_t);
   vect_t calc_accel1(vect_t);
+  vect_t calc_accel_morton(vect_t);
 };
 
 struct particle_data
@@ -147,6 +167,7 @@ struct particle
   vect_t accel;
   vect_t pos;
   vect_t vel;
+  unsigned long mid; /* morton id */
   particle (int id_, t_real mass_, vect_t accel_, vect_t pos_, vect_t vel_) {
     id = id_; mass = mass_; accel = accel_;
     pos = pos_; vel = vel_;
@@ -183,17 +204,22 @@ static inline t_real distance(vect_t p0, vect_t p1)
   return sqrt(distance2(p0, p1));
 }
 
+void morton_sort(particle **, int);
 particle ** generate_particles(int);
 particle ** generate_particles_uniform(int);
 space * make_empty_space(rectangle *);
+space * make_empty_space_morton(t_real, unsigned long, unsigned long);
 rectangle * make_entire_rectangle(t_real);
 space * generate_tree(particle **, int);
 space * build_tree(particle **, int);
 void free_tree(space *);
 space * build_tree_bottomup(particle **, int);
+space * build_tree_morton(particle **, int);
 void set_accels(particle **, int, space *);
 void move_particles(particle **, int, t_real);
+t_real diameter2(rectangle *);
 
+unsigned long vect2morton(vect_t);
 int cover_p(rectangle *, vect_t);
 t_real distance2(vect_t, vect_t);
 int select_covering_rectangle(vect_t, rectangle *);
