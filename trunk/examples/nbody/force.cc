@@ -59,7 +59,7 @@ vect_t space::calc_accel_morton(vect_t pos)
       t_real resultx = 0.0, resulty = 0.0, resultz = 0.0;
       for (int i = 0; i < N_CHILDREN; i++) {
         space * s = subspaces[i];
-        if (i == idx) {
+        if (s && i == idx) {
           vect_t sv = s->calc_accel_morton(pos);
           resultx += VX(sv);
           resulty += VY(sv);
@@ -125,8 +125,11 @@ vect_t space::calc_accel1(vect_t pos)
 
 void particle::set_accel(space * sp)
 {
-//  vect_t a = sp->calc_accel(pos);
+#if USE_MORTON
   vect_t a = sp->calc_accel_morton(pos);
+#else
+  vect_t a = sp->calc_accel(pos);
+#endif
   accel = a;
 }
 

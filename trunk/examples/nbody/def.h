@@ -138,7 +138,7 @@ struct space
     cached = 0;
   }
   void add_particle(t_real, vect_t);
-  void add_particle_morton(t_real, vect_t);
+  void add_particle_morton(unsigned long, t_real, vect_t);
   void divide();
   void divide_morton();
   mass_momentum set_mass_and_cg();
