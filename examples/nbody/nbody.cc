@@ -23,7 +23,7 @@ void simulate_a_step(particle ** particles, int n_particles,  t_real dt)
   tree = generate_tree(particles, n_particles);
 #endif
   t1 = current_real_time_milli();
-//  mass_momentum mm = tree->set_mass_and_cg();
+  mass_momentum mm = tree->set_mass_and_cg();
   t2 = current_real_time_milli();
 //  set_accels(particles, n_particles, tree);
   t3 = current_real_time_milli();
@@ -44,8 +44,8 @@ void simulate_a_step(particle ** particles, int n_particles,  t_real dt)
          "  Leapfrog:      %d msec\n" \
          "  FreeTree:      %d msec\n" \
          "  TotalElapsed:  %d msec\n",
-	//	 mm.n_nodes, t1 - t0, t2 - t1, t3 - t2, t4 - t3, t5 - t4, t5 - t0);
-		 10, t1 - t0, t2 - t1, t3 - t2, t4 - t3, t5 - t4, t5 - t0);
+		 mm.n_nodes, t1 - t0, t2 - t1, t3 - t2, t4 - t3, t5 - t4, t5 - t0);
+//		 -1, t1 - t0, t2 - t1, t3 - t2, t4 - t3, t5 - t4, t5 - t0);
 }
 
 void dump_particles (particle **, int);
