@@ -1,6 +1,6 @@
 #!/bin/bash
 
-USAGE="usage: $0 WORKERS"
+USAGE="usage: $0 WORKERS PROG {ARGS}"
 
 if [ "$#" -lt 1 ]; then
 	echo ${USAGE}
@@ -8,7 +8,7 @@ if [ "$#" -lt 1 ]; then
 fi
 
 WORKERS=$1; shift
-MM=./mm
+PROG=./$1; shift
 
 if [ ! -f ${EXE} ]; then
 	echo "Executable does not exist, building..."
@@ -24,6 +24,6 @@ fi
 
 export LD_LIBRARY_PATH=../../.libs
 export MYTH_WORKER_NUM=${WORKERS}
-export MALLOC_TRACE=mm.log
-echo "Executing ${MM} with ${WORKERS} workers..." 
-${MM} $@
+export MALLOC_TRACE=$1.log
+echo "Executing ${PROG} $@ with ${WORKERS} workers..." 
+${PROG} $@
