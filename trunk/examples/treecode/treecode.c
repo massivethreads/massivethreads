@@ -5,8 +5,10 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include <math.h>
 #include <pthread.h>
+#include <assert.h>
 #include <sys/time.h>
 
 #ifndef	PARALLELIZE
@@ -49,6 +51,9 @@ typedef struct sim {  // simulation instance
   struct node *tree;
   long int t_init, t_treebuild, t_treefree;
 } sim_t;
+sim_t sim_instance;
+sim_t *sim = &sim_instance;
+  
 
 /* uitilities */
 inline int curr_time_micro(void)
@@ -69,10 +74,22 @@ inline void * xmalloc(size_t size)
   return p;
 }
 
-/* tree routines */
-inline int bin_search(mol_t *mols, int key, int imin, int imax, int low)
+inline void * xcmalloc(size_t size)
 {
-  int imid;
+  void *p = malloc(size);
+  if (p == NULL) {
+    perror("malloc failed");
+    abort();
+  }
+  memset(p, 0x0, size);
+  return p;
+}
+
+/* tree routines */
+inline int bin_search(mol_t *mols, mot_t key, 
+  idx_t imin, idx_t imax, int low_bound)
+{
+  idx_t imid;
   
   while (imax >= imin) {
     imid = (imin + imax) / 2;
@@ -83,68 +100,112 @@ inline int bin_search(mol_t *mols, int key, int imin, int imax, int low)
     else
       return imid;
   }
-  return low ? imin : imax;
+  return low_bound ? imin : imax;
 }
 
-void select_subarr(mol_t *mols, node_t *p, idx_t *idx_l, idx_t *idx_h)
+// Given ml and mh, find a subrange [il, ih] from original [il, ih]
+int select_subarr(mol_t *mols, mot_t ml, mot_t mh, idx_t *il, idx_t *ih)
 {
   idx_t _low, _high;
-  if (mols[*idx_h].mid < p->morton_l || mols[*idx_h].mid > p->morton_h) {
-    *idx_l = *idx_h = -1;
-    return;
-  }
-  _low = bin_search(mols, p->morton_l, *idx_l, *idx_h, 1);
-  _high = bin_search(mols, p->morton_h, *idx_l, *idx_h, 0);
-  if (_low == -1 || _high == -1 || _low > _high) _low = _high = -1;
-  *idx_l = _low;
-  *idx_h = _high;
+
+  if (mols[*ih].mid < ml || mols[*il].mid > mh) return 1;
+  if ((_low = bin_search(mols, ml, *il, *ih, 1)) == -1) return 1;
+  if ((_high = bin_search(mols, mh, *il, *ih, 0)) == -1) return 1;
+  if (_low > _high) return 1;
+  *il = _low;
+  *ih = _high;
+  return 0;
 }
 
-void tree_build_serial(node_t * node, mol_t * mols)
+void tree_build_serial(node_t * node)
 {
-  idx_t size = 0;
-  double stride;
-  idx_t low, high;
+  idx_t curr_il, curr_ih;
+  mot_t curr_ml, curr_mh;
+  real_t stride;
+  mol_t * mols;
   int i;
-
-  if (node->molarr_l >= 0 && node->molarr_h >= 0)
-    size = node->molarr_h - node->molarr_l + 1;
-
-  if (size == 1) {
+  
+  mols = sim->mols;
+  if (node->n_mol == 1) {
     node->v_mol = mols[node->molarr_l];
-  } else if (size > 1) {
-    for (i = 0; i < N_CHILD; i++)
-      node->child[i] = xmalloc(sizeof(node_t));
-    stride = (node->morton_h - node->morton_l + 1) / N_CHILD;
-    node->child[0]->morton_l = node->morton_l;
-    node->child[0]->morton_h = node->morton_l + stride;
-    for (i = 1; i < N_CHILD; i++) {
-      node->child[i]->morton_l = node->morton_l + stride * i + 1;
-      node->child[i]->morton_h = node->morton_l + stride * (i + 1);
-    }
-    low = node->molarr_l;
-    high = node->molarr_h;
+  } else if (node->n_mol > 1) {
+    stride = (node->morton_h - node->morton_l) / N_CHILD;
+    curr_il = node->molarr_l;
+    curr_ih = node->molarr_h;
     for (i = 0; i < N_CHILD; i++) {
-      select_subarr(mols, node, &low, &high);
-      node->child[i]->molarr_l = low;
-      node->child[i]->molarr_h = high;
-      if (low == -1 || high == -1) low = node->molarr_l;
-      else low = high;
-      high = node->molarr_h;
+      curr_ml = node->morton_l + stride * i + i;
+      curr_mh = curr_ml + stride;
+      if (select_subarr(mols, curr_ml, curr_mh, &curr_il, &curr_ih) == 0) {
+        /* subspaces is non-empty */
+        node->child[i] = xcmalloc(sizeof(node_t));
+        node->child[i]->n_mol = curr_ih - curr_il + 1; /* assert(n_mol>0) */
+        node->child[i]->molarr_l = curr_il;
+        node->child[i]->molarr_h = curr_ih;
+        node->child[i]->morton_l = curr_ml;
+        node->child[i]->morton_h = curr_mh;
+        curr_il = curr_ih;
+        
+        tree_build_serial(node->child[i]);
+      } else {
+        curr_il = node->molarr_l;
+      }
+      curr_ih = node->molarr_h;
     }
   }
 }
 
-void tree_build_parallel(node_t *node)
+void * tree_build_parallel(void *args)
 {
+  pthread_t ths[N_CHILD];
+  idx_t curr_il, curr_ih;
+  mot_t curr_ml, curr_mh;
+  real_t stride;
+  mol_t * mols;
+  node_t * node;
+  int i, n_ths;
+  void * ret;
+  
+  mols = sim->mols;
+  node = (node_t *) args;
+  if (node->n_mol == 1) {
+    node->v_mol = mols[node->molarr_l];
+  } else if (node->n_mol > 1) {
+    n_ths = 0;
+    stride = (node->morton_h - node->morton_l) / N_CHILD;
+    curr_il = node->molarr_l;
+    curr_ih = node->molarr_h;
+    for (i = 0; i < N_CHILD; i++) {
+      curr_ml = node->morton_l + stride * i + i;
+      curr_mh = curr_ml + stride;
+      if (select_subarr(mols, curr_ml, curr_mh, &curr_il, &curr_ih) == 0) {
+        /* subspaces is non-empty */
+        node->child[i] = xcmalloc(sizeof(node_t));
+        node->child[i]->n_mol = curr_ih - curr_il + 1; /* assert(n_mol>0) */
+        node->child[i]->molarr_l = curr_il;
+        node->child[i]->molarr_h = curr_ih;
+        node->child[i]->morton_l = curr_ml;
+        node->child[i]->morton_h = curr_mh;
+        curr_il = curr_ih;
+        
+        pthread_create(&ths[n_ths], NULL, tree_build_parallel, node->child[i]);
+        n_ths++;
+      } else {
+        curr_il = node->molarr_l;
+      }
+      curr_ih = node->molarr_h;
+    }
+  }
+
+  for (i = 0; i < n_ths; i++)
+    pthread_join(ths[i], (void *) ret);
 }
 
-void tree_build(sim_t * sim)
+void tree_build(void)
 {
   node_t * root;
 
   sim->t_treebuild = curr_time_micro();
-  root = (node_t *) xmalloc(sizeof(node_t));
+  root = (node_t *) xcmalloc(sizeof(node_t));
   root->n_mol = sim->n_mol;
   root->molarr_l = 0;
   root->molarr_h = sim->n_mol - 1;
@@ -155,7 +216,7 @@ void tree_build(sim_t * sim)
 #if PARALLELIZE
   tree_build_parallel(sim->tree);
 #else
-  tree_build_serial(sim->tree, sim->mols);
+  tree_build_serial(sim->tree);
 #endif
 
   sim->t_treebuild = curr_time_micro() - sim->t_treebuild;
@@ -195,8 +256,10 @@ void * tree_free_parallel(void * args)
   free(p);
 }
 
-void tree_free(sim_t * sim)
+void tree_free(void)
 {
+
+  sim->t_treefree = curr_time_micro();
 
 #if PARALLELIZE
   tree_free_parallel(sim->tree);
@@ -204,14 +267,33 @@ void tree_free(sim_t * sim)
   tree_free_serial(sim->tree);
 #endif
   
+  sim->t_treefree = curr_time_micro() - sim->t_treefree;
+}
+
+void tree_check_walk(node_t *node, int *n, int depth) {
+  int i;
+  
+  if (node == NULL) return;
+  
+  (*n)++;
+  for (i = 0; i < N_CHILD; i++) {
+    tree_check_walk(node->child[i], n, depth + 1);
+  }
+}
+
+void tree_valid_check(void)
+{
+  int n_total = 0;
+  tree_check_walk(sim->tree, &n_total, 0); 
+  printf("Valid check: walked %d nodes\n", n_total);
 }
 
 /* simulation routines */
-void init(sim_t *sim)
+void init(void)
 {
   idx_t i;
   curr_time_micro();  /* dummy call to make first timing accurate, Darwin only? */
-  sim->n_mol = 64; 
+  sim->n_mol = pow(8, 6); 
   sim->steps = 0;
   sim->t_treebuild = 0;
   sim->mols = xmalloc(sizeof(mol_t) * sim->n_mol);
@@ -221,26 +303,30 @@ void init(sim_t *sim)
   }
 }
 
-void finalize(sim_t *sim)
+void finalize(void)
 {
   free(sim->mols);
 }
 
-void status(sim_t *sim)
+void status(void)
 {
-  fprintf(stdout, "  Tree build: %ld\n", sim->t_treebuild);
+  fprintf(stdout, 
+    "  Tree build: %ld\n"
+    "  Tree free:  %ld\n", 
+    sim->t_treebuild, sim->t_treefree);
 }
 
 int main(int argc, char *argv[])
 {
-  sim_t sim;
-  
-  init(&sim);
+  init();
 
-  tree_build(&sim);
-  status(&sim);
+  tree_build();
+  tree_valid_check();
+  tree_free();
 
-  finalize(&sim);
+  status();
+
+  finalize();
 
   return 0;
 }
