@@ -17,8 +17,8 @@ cver: treecode.c
 $(PROG): $(SRCS)
 	$(CXX) -o $(PROG) $(SRCS) $(CC_CXX_FLAGS) -L../../ -lmyth-compat
 
-debug:
-	$(CXX) -o $(PROG) $(SRCS) -pthread -ggdb $(CC_CXX_FLAGS)
+debug: treecode.c
+	$(CC) -o $(PROG) $? -pthread -ggdb -lm
 
 clean: 
 	rm -f $(PROG) 
