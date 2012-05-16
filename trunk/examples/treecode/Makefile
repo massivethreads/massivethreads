@@ -1,18 +1,24 @@
-APP = treecode
+CC=gcc
+PROG=treecode
 
 # add C flags and C++ flags
-CC_CXX_FLAGS = -O3 
+CC_CXX_FLAGS = -O3 -lm
 CFLAGS = $(CC_CXX_FLAGS)
 CXXFLAGS = $(CC_CXX_FLAGS)
 
-SRCS = $(APP).cc vector.cc mol.cc tree.cc opts.cc utils.cc
-.PHONY: debug clean
+SRCS = $(PROG).cc vector.cc mol.cc tree.cc opts.cc utils.cc
+.PHONY: cver debug clean
 
-$(APP): $(SRCS)
-	$(CXX) -o $(APP) $(SRCS) $(CC_CXX_FLAGS) -L../../ -lmyth-compat
+all: cver
+
+cver: treecode.c
+	$(CC) -o $(PROG) $< $(CFLAGS)
+
+$(PROG): $(SRCS)
+	$(CXX) -o $(PROG) $(SRCS) $(CC_CXX_FLAGS) -L../../ -lmyth-compat
 
 debug:
-	$(CXX) -o $(APP) $(SRCS) -pthread -ggdb $(CC_CXX_FLAGS)
+	$(CXX) -o $(PROG) $(SRCS) -pthread -ggdb $(CC_CXX_FLAGS)
 
 clean: 
-	rm -f $(APP) 
+	rm -f $(PROG) 
