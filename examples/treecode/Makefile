@@ -12,10 +12,7 @@ SRCS = $(PROG).cc vector.cc mol.cc tree.cc opts.cc utils.cc
 all: cver
 
 cver: treecode.c
-	$(CC) -o $(PROG) $< $(CFLAGS)
-
-$(PROG): $(SRCS)
-	$(CXX) -o $(PROG) $(SRCS) $(CC_CXX_FLAGS) -L../../ -lmyth-compat
+	$(CC) -o $(PROG) $< $(CFLAGS) -L../../.libs -lmyth-compat
 
 debug: treecode.c
 	$(CC) -o $(PROG) $? -pthread -ggdb -lm

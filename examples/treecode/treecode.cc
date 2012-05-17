@@ -30,7 +30,8 @@ void init(arguments *args)
   vector rcm, vcm;
   rsc = (3 * PI) / 16;
   vsc = sqrt(1.0 / rsc);
-  rcm.clr(); vcm.clr();
+  rcm.clr();
+  vcm.clr();
   for (int i = 0; i < sim.mol; i++) {
     mol &m = sim.mols[i];
     m.mass = 1.0 / sim.mol;

@@ -734,6 +734,8 @@ space * build_tree_morton(particle ** particles, int n_particles)
 {
   int t0, t1, t2, t3, t4, t5, t6;
   btmorton_thread_dat dat;
+  
+  n_buildtree++;
   t_real limit = calc_limit(particles, n_particles);
   g_limit_area = make_entire_rectangle(limit);
   t0 = current_real_time_milli();
@@ -746,9 +748,11 @@ space * build_tree_morton(particle ** particles, int n_particles)
   dat.low = 0;
   dat.high = n_particles - 1;
   
+  if (n_buildtree == 5) mtrace();
   t2 = current_real_time_milli();
   build_tree_morton_rec(&dat);
   t3 = current_real_time_milli();
+  if (n_buildtree == 5) muntrace();
 
   printf("build_tree_morton breakdown:\n"
      "  sort: %d\n" 

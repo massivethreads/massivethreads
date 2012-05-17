@@ -19,12 +19,13 @@ void *fib(void *args)
   intptr_t arg1, arg2;
   intptr_t ret1, ret2;
   intptr_t n = (intptr_t) args;
-  intptr_t ex1, ex2;
+  int *ex1, *ex2;
+  intptr_t ex3;
 
   if (n == 0 || n == 1) pthread_exit((void *) n);
   
-  ex1 = (intptr_t) malloc(sizeof(intptr_t));
-  ex2 = (intptr_t) malloc(sizeof(intptr_t));
+  ex1 = (int *) malloc(sizeof(int));
+  ex2 = (int *) malloc(sizeof(int));
   arg1 = n - 1;
   arg2 = n - 2;
   if (pthread_create(&th1, NULL, fib, (void*) arg1) != 0) {
@@ -37,9 +38,12 @@ void *fib(void *args)
   }
   pthread_join(th1, (void**) &ret1);
   pthread_join(th2, (void**) &ret2);
-  ex1 = ret1;
-  ex2 = ret2;
-  pthread_exit((void*) (ex1 + ex2));
+  *ex1 = ret1;
+  *ex2 = ret2;
+  ex3 = *ex1 + *ex2;
+  //free(ex1);
+  //free(ex2);
+  pthread_exit((void*) ex3);
 }
 
 int main(int argc, char **argv)
