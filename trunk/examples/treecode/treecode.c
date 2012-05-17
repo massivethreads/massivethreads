@@ -12,7 +12,7 @@
 #include <sys/time.h>
 
 #ifndef	PARALLELIZE
-#define PARALLELIZE	0
+#define PARALLELIZE	1
 #endif
 
 #define	N_CHILD		8
@@ -46,9 +46,10 @@ typedef struct node {
 /* simulation data structure */
 typedef struct sim {  // simulation instance
   unsigned long n_mol;
+  int n_step;
   int steps;
   mol_t *mols;
-  struct node *tree;
+  node_t *tree;
   long int t_init, t_treebuild, t_treefree;
 } sim_t;
 sim_t sim_instance;
@@ -165,12 +166,12 @@ void * tree_build_parallel(void *args)
   int i, n_ths;
   void * ret;
   
+  n_ths = 0;
   mols = sim->mols;
   node = (node_t *) args;
   if (node->n_mol == 1) {
     node->v_mol = mols[node->molarr_l];
   } else if (node->n_mol > 1) {
-    n_ths = 0;
     stride = (node->morton_h - node->morton_l) / N_CHILD;
     curr_il = node->molarr_l;
     curr_ih = node->molarr_h;
@@ -186,7 +187,6 @@ void * tree_build_parallel(void *args)
         node->child[i]->morton_l = curr_ml;
         node->child[i]->morton_h = curr_mh;
         curr_il = curr_ih;
-        
         pthread_create(&ths[n_ths], NULL, tree_build_parallel, node->child[i]);
         n_ths++;
       } else {
@@ -195,7 +195,6 @@ void * tree_build_parallel(void *args)
       curr_ih = node->molarr_h;
     }
   }
-
   for (i = 0; i < n_ths; i++)
     pthread_join(ths[i], (void *) ret);
 }
@@ -289,11 +288,12 @@ void tree_valid_check(void)
 }
 
 /* simulation routines */
-void init(void)
+void init(int argc, char *argv[])
 {
   idx_t i;
   curr_time_micro();  /* dummy call to make first timing accurate, Darwin only? */
-  sim->n_mol = pow(8, 6); 
+  sim->n_mol = pow(N_CHILD, 7); 
+  sim->n_step = atoi(argv[1]);
   sim->steps = 0;
   sim->t_treebuild = 0;
   sim->mols = xmalloc(sizeof(mol_t) * sim->n_mol);
@@ -301,6 +301,7 @@ void init(void)
     sim->mols[i].id = i;
     sim->mols[i].mid = i;
   }
+  printf("N=%ld, STEPS=%d\n", sim->n_mol, sim->n_step);
 }
 
 void finalize(void)
@@ -318,13 +319,15 @@ void status(void)
 
 int main(int argc, char *argv[])
 {
-  init();
-
-  tree_build();
-  tree_valid_check();
-  tree_free();
-
-  status();
+  init(argc, argv);
+  
+  while (sim->steps <= sim->n_step) {
+    tree_build();
+    tree_valid_check();
+    tree_free();
+    status();
+    sim->steps++;
+  }
 
   finalize();
 

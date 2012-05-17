@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
+#include <string.h>
 #include <pthread.h>
 #include <sys/time.h>
 
@@ -34,9 +35,8 @@ inline struct node * new_node(int depth) {
     perror("malloc failed");
     exit(1);
   }
+  memset(n, 0x0, sizeof(struct node));
   n->depth = depth;
-  for (i = 0; i < N_CHILDREN; i++)
-    n->children[i] = NULL;
   return n;
 }
 

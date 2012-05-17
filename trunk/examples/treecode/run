@@ -8,9 +8,14 @@ if [ "$#" -lt 1 ]; then
 fi
 
 WORKERS=$1; shift
-EXE=./treecode
+PROG=treecode
 
-if [ ! -f ${EXE} ]; then
+export LD_LIBRARY_PATH=../../.libs
+export MYTH_WORKER_NUM=${WORKERS}
+export MALLOC_TRACE=${PROG}.log
+export PATH=./:${PATH}
+
+if [ ! -f ${PROG} ]; then
 	echo "Executable does not exist, building..."
 	make -f Makefile
 	if [ "$?" -eq 0 ]; then
@@ -22,7 +27,5 @@ if [ ! -f ${EXE} ]; then
 	echo ""
 fi
 
-export LD_LIBRARY_PATH=../../ 
-export MYTH_WORKER_NUM=${WORKERS}
-echo "Executing '${EXE} $*' with ${WORKERS} workers..."
-${EXE} $*
+echo "Executing '${PROG} $@' with ${WORKERS} workers..."
+${PROG} $@

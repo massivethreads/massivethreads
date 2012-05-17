@@ -10,7 +10,7 @@ fi
 WORKERS=$1; shift
 PROG=./$1; shift
 
-if [ ! -f ${EXE} ]; then
+if [ ! -f ${PROG} ]; then
 	echo "Executable does not exist, building..."
 	make -f Makefile
 	if [ "$?" -eq 0 ]; then
