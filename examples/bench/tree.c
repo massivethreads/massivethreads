@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <string.h>
+#include <mcheck.h>
 #include <pthread.h>
 #include <sys/time.h>
 
@@ -155,6 +156,7 @@ int main(int argc, char *argv[])
     root->depth = 0;
     
     t0 = curr_time_micro();
+    if (i == 20) mtrace();
 #if USE_THREADS
     struct thd_dat dat;
     dat.node = root;
@@ -163,6 +165,7 @@ int main(int argc, char *argv[])
 #else
     tree_build(root, depth);
 #endif
+    if (i == 20) muntrace();
     t1 = curr_time_micro();
     tree_traversal(root, &n, &n_free);
     t2 = curr_time_micro();
