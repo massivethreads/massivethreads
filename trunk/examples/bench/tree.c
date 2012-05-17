@@ -55,7 +55,6 @@ void * tree_build_parallel(void * args)
 {
   pthread_t ths[N_CHILDREN];
   node_t *p = (node_t *) args;
-  void * ret;
   int i;
 
   if (p->depth >= G_MAX_DEPTH) return (void *) 0;
@@ -69,7 +68,7 @@ void * tree_build_parallel(void * args)
   }
 
   for (i = 0; i < N_CHILDREN - 1; i++)
-    pthread_join(ths[i], (void **) ret);
+    pthread_join(ths[i], NULL);
 }
 
 void tree_build(node_t * tree)
@@ -98,7 +97,6 @@ void * tree_free_parallel(void * args)
   pthread_t ths[N_CHILDREN];
   struct node * p = (struct node *) args;
   int i;
-  void * ret;
 
   if (p == NULL) return (void *) 0;
 
@@ -109,7 +107,7 @@ void * tree_free_parallel(void * args)
       tree_free_parallel(p->children[i]);
   }
   for (i = 0; i < N_CHILDREN - 1; i++)
-    pthread_join(ths[i], (void **) ret);
+    pthread_join(ths[i], NULL);
   
   free(p);
 }
