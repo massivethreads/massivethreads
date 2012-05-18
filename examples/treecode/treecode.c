@@ -47,8 +47,8 @@ typedef struct node {
   idx_t morton_l, morton_h; /* morton range */
 #if USE_MEMPOOL
   int ith, depth;
-#endif
   idx_t memp_idx;
+#endif
 } node_t;
 
 /* simulation data structure */
@@ -188,7 +188,7 @@ void tree_build_serial(node_t * node)
 void * tree_build_parallel(void *args)
 {
   pthread_t ths[N_CHILD];
-  idx_t curr_il, curr_ih, curr_memp_idx;
+  idx_t curr_il, curr_ih, curr_memp_idx, curr_memp_base;
   mot_t curr_ml, curr_mh;
   real_t stride;
   mol_t * mols;
@@ -206,6 +206,7 @@ void * tree_build_parallel(void *args)
     curr_ih = node->molarr_h;
 #if USE_MEMPOOL
     curr_depth = node->depth + 1;
+    curr_memp_base = (pow(N_CHILD, curr_depth)-1) / (N_CHILD-1) + node->ith * N_CHILD;
 #endif
     for (i = 0; i < N_CHILD; i++) {
       curr_ml = node->morton_l + stride * i + i;
@@ -213,8 +214,7 @@ void * tree_build_parallel(void *args)
       if (select_subarr(mols, curr_ml, curr_mh, &curr_il, &curr_ih) == 0) {
         /* subspaces is non-empty */
 #if USE_MEMPOOL
-        curr_memp_idx = (pow(N_CHILD, curr_depth) - 1) / (N_CHILD - 1) + 
-          node->ith * N_CHILD + i;
+        curr_memp_idx = curr_memp_base + i;
         node->child[i] = memp_get(curr_memp_idx);
         node->child[i]->ith = i;
         node->child[i]->depth = curr_depth;
@@ -247,6 +247,9 @@ void tree_build(void)
   sim->t_treebuild = curr_time_micro();
 #if USE_MEMPOOL
   root = memp_get(0);
+  root->ith = 0;
+  root->depth = 0;
+  root->memp_idx = 0;
 #else
   root = (node_t *) xcmalloc(sizeof(node_t));
 #endif
@@ -255,10 +258,6 @@ void tree_build(void)
   root->molarr_h = sim->n_mol - 1;
   root->morton_l = sim->mols[root->molarr_l].mid;
   root->morton_h = sim->mols[root->molarr_h].mid;
-#if USE_MEMPOOL
-  root->ith = 0;
-  root->depth = 0;
-#endif
   sim->tree = root;
 
 #if PARALLELIZE
