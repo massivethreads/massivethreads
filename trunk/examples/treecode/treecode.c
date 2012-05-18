@@ -15,6 +15,10 @@
 #define PARALLELIZE	1
 #endif
 
+#ifndef USE_MEMPOOL
+#define USE_MEMPOOL 1
+#endif
+
 #define	N_CHILD		8
 
 typedef double real_t;
@@ -41,6 +45,10 @@ typedef struct node {
   idx_t n_mol;  /* # of mols in tree */
   idx_t molarr_l, molarr_h; /* array range */
   idx_t morton_l, morton_h; /* morton range */
+#if USE_MEMPOOL
+  int ith, depth;
+#endif
+  idx_t memp_idx;
 } node_t;
 
 /* simulation data structure */
@@ -48,9 +56,12 @@ typedef struct sim {  // simulation instance
   unsigned long n_mol;
   int n_step;
   int steps;
+  int depth;
   mol_t *mols;
   node_t *tree;
-  long int t_init, t_treebuild, t_treefree;
+  node_t **memp; /* memory pool, indexed by morton id + depth */
+  idx_t memp_size;
+  long int t_init, t_treebuild, t_treetraversal, t_treefree;
 } sim_t;
 sim_t sim_instance;
 sim_t *sim = &sim_instance;
@@ -87,6 +98,25 @@ inline void * xcmalloc(size_t size)
 }
 
 /* tree routines */
+inline node_t * memp_get(idx_t idx)
+{
+  node_t *ptr = sim->memp[idx];
+  if (ptr)
+    sim->memp[idx] = NULL;
+  else
+    ptr = xmalloc(sizeof(node_t));
+  return ptr;
+}
+
+inline void memp_put(node_t * ptr)
+{
+  idx_t idx = ptr->memp_idx;
+  if (sim->memp[idx])
+    printf("warning: memory pool put failed for %ld\n", idx);
+  else
+    sim->memp[idx] = ptr;
+}
+
 inline int bin_search(mol_t *mols, mot_t key, 
   idx_t imin, idx_t imax, int low_bound)
 {
@@ -158,13 +188,12 @@ void tree_build_serial(node_t * node)
 void * tree_build_parallel(void *args)
 {
   pthread_t ths[N_CHILD];
-  idx_t curr_il, curr_ih;
+  idx_t curr_il, curr_ih, curr_memp_idx;
   mot_t curr_ml, curr_mh;
   real_t stride;
   mol_t * mols;
   node_t * node;
-  int i, n_ths;
-  void * ret;
+  int i, n_ths, curr_depth;
   
   n_ths = 0;
   mols = sim->mols;
@@ -175,12 +204,24 @@ void * tree_build_parallel(void *args)
     stride = (node->morton_h - node->morton_l) / N_CHILD;
     curr_il = node->molarr_l;
     curr_ih = node->molarr_h;
+#if USE_MEMPOOL
+    curr_depth = node->depth + 1;
+#endif
     for (i = 0; i < N_CHILD; i++) {
       curr_ml = node->morton_l + stride * i + i;
       curr_mh = curr_ml + stride;
       if (select_subarr(mols, curr_ml, curr_mh, &curr_il, &curr_ih) == 0) {
         /* subspaces is non-empty */
+#if USE_MEMPOOL
+        curr_memp_idx = (pow(N_CHILD, curr_depth) - 1) / (N_CHILD - 1) + 
+          node->ith * N_CHILD + i;
+        node->child[i] = memp_get(curr_memp_idx);
+        node->child[i]->ith = i;
+        node->child[i]->depth = curr_depth;
+        node->child[i]->memp_idx = curr_memp_idx;
+#else
         node->child[i] = xcmalloc(sizeof(node_t));
+#endif
         node->child[i]->n_mol = curr_ih - curr_il + 1; /* assert(n_mol>0) */
         node->child[i]->molarr_l = curr_il;
         node->child[i]->molarr_h = curr_ih;
@@ -196,7 +237,7 @@ void * tree_build_parallel(void *args)
     }
   }
   for (i = 0; i < n_ths; i++)
-    pthread_join(ths[i], (void *) ret);
+    pthread_join(ths[i], NULL);
 }
 
 void tree_build(void)
@@ -204,12 +245,20 @@ void tree_build(void)
   node_t * root;
 
   sim->t_treebuild = curr_time_micro();
+#if USE_MEMPOOL
+  root = memp_get(0);
+#else
   root = (node_t *) xcmalloc(sizeof(node_t));
+#endif
   root->n_mol = sim->n_mol;
   root->molarr_l = 0;
   root->molarr_h = sim->n_mol - 1;
   root->morton_l = sim->mols[root->molarr_l].mid;
   root->morton_h = sim->mols[root->molarr_h].mid;
+#if USE_MEMPOOL
+  root->ith = 0;
+  root->depth = 0;
+#endif
   sim->tree = root;
 
 #if PARALLELIZE
@@ -238,7 +287,6 @@ void * tree_free_parallel(void * args)
   pthread_t ths[N_CHILD];
   node_t *p = (node_t *) args;
   int i;
-  void * ret;
 
   if (p == NULL) return;
 
@@ -250,9 +298,13 @@ void * tree_free_parallel(void * args)
   }
 
   for (i = 0; i < N_CHILD - 1; i++)
-    pthread_join(ths[i], (void *) ret);
+    pthread_join(ths[i], NULL);
 
+#if USE_MEMPOOL
+  memp_put(p);
+#else
   free(p);
+#endif
 }
 
 void tree_free(void)
@@ -283,17 +335,28 @@ void tree_check_walk(node_t *node, int *n, int depth) {
 void tree_valid_check(void)
 {
   int n_total = 0;
-  tree_check_walk(sim->tree, &n_total, 0); 
-  printf("Valid check: walked %d nodes\n", n_total);
+
+  sim->t_treetraversal = curr_time_micro();
+  tree_check_walk(sim->tree, &n_total, 0);
+  sim->t_treetraversal = curr_time_micro() - sim->t_treetraversal;
+  if (n_total != (pow(N_CHILD, sim->depth + 1) - 1) / (N_CHILD - 1))
+    printf(" valid check failed: walked %d nodes\n", n_total);
 }
 
 /* simulation routines */
 void init(int argc, char *argv[])
 {
   idx_t i;
+  
   curr_time_micro();  /* dummy call to make first timing accurate, Darwin only? */
-  sim->n_mol = pow(N_CHILD, 7); 
-  sim->n_step = atoi(argv[1]);
+  
+  if (argc < 3) {
+    printf("usage: %s DEPTH STEPS\n", argv[0]);
+    exit(0);
+  }
+  sim->depth = atoi(argv[1]);
+  sim->n_step = atoi(argv[2]);
+  sim->n_mol = pow(N_CHILD, sim->depth); 
   sim->steps = 0;
   sim->t_treebuild = 0;
   sim->mols = xmalloc(sizeof(mol_t) * sim->n_mol);
@@ -301,27 +364,41 @@ void init(int argc, char *argv[])
     sim->mols[i].id = i;
     sim->mols[i].mid = i;
   }
+#if USE_MEMPOOL
+  sim->memp_size = (pow(N_CHILD, sim->depth + 1) - 1) / (N_CHILD - 1);
+  sim->memp = xmalloc(sizeof(node_t *) * sim->memp_size);
+  for (i = 0; i < sim->memp_size; i++)
+    sim->memp[i] = xmalloc(sizeof(node_t));
+  printf("N=%ld, STEPS=%d, MEMPOOL=%ld\n", 
+    sim->n_mol, sim->n_step, sim->memp_size);
+#else
   printf("N=%ld, STEPS=%d\n", sim->n_mol, sim->n_step);
+#endif
+  
 }
 
 void finalize(void)
 {
+  idx_t i;
   free(sim->mols);
+#if USE_MEMPOOL
+  for (i = 0; i < sim->memp_size; i++)
+    free(sim->memp[i]);
+  free(sim->memp);
+#endif
 }
 
 void status(void)
 {
-  fprintf(stdout, 
-    "  Tree build: %ld\n"
-    "  Tree free:  %ld\n", 
-    sim->t_treebuild, sim->t_treefree);
+  fprintf(stdout, "[%03d] TreeBuild: %ld, TreeTraveral: %ld, TreeFree: %ld\n", sim->steps,
+    sim->t_treebuild, sim->t_treetraversal, sim->t_treefree);
 }
 
 int main(int argc, char *argv[])
 {
   init(argc, argv);
   
-  while (sim->steps <= sim->n_step) {
+  while (sim->steps < sim->n_step) {
     tree_build();
     tree_valid_check();
     tree_free();
