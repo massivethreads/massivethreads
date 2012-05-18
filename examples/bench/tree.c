@@ -47,11 +47,12 @@ inline void * xmalloc(size_t size)
 inline node_t * memp_get(int idx)
 {
   node_t *ptr = G_MEMPOOL[idx];
-  if (ptr)
+  if (ptr) {
     G_MEMPOOL[idx] = NULL;
-  else {
+  } else {
     ptr = xmalloc(sizeof(node_t));
-  //  printf("memp_get: %p for %d\n", ptr, idx);
+    memset(ptr, 0x0, sizeof(node_t));
+    ptr->memp_idx = idx;
   }
   return ptr;
 }
@@ -59,10 +60,11 @@ inline node_t * memp_get(int idx)
 inline void memp_put(node_t * ptr)
 {
   int idx = ptr->memp_idx;
-  if (G_MEMPOOL[idx])
+  if (G_MEMPOOL[idx]) {
     printf("warning: memory pool put failed for %d\n", idx);
-  else
+  } else {
     G_MEMPOOL[idx] = ptr;
+  }
 }
 
 inline node_t * new_node(int depth) {
@@ -89,23 +91,24 @@ void * tree_build_parallel(void * args)
 {
   pthread_t ths[N_CHILD];
   node_t *p = (node_t *) args;
-  int i, curr_depth, curr_base;
+  int i, child_depth, base, offset, ith;
 
   if (p->depth >= G_MAX_DEPTH) return (void *) 0;
   
-  curr_depth = p->depth + 1;
+  child_depth = p->depth + 1;
 #if USE_MEMPOOL
-  curr_base = (pow(N_CHILD, curr_depth) - 1) / (N_CHILD - 1) + p->ith * N_CHILD;
+  base = (pow(N_CHILD, child_depth) - 1) / (N_CHILD - 1);  /* base of level */
+  offset = p->ith * N_CHILD;
 #endif
 
   for (i = 0; i < N_CHILD; i++) {
 #if USE_MEMPOOL
-    p->child[i] = memp_get(curr_base + i);
-    p->child[i]->ith = i;
-    p->child[i]->depth = curr_depth;
-    p->child[i]->memp_idx = curr_base + i;
+    ith = offset + i;
+    p->child[i] = memp_get(base + ith);
+    p->child[i]->ith = ith;
+    p->child[i]->depth = child_depth;
 #else
-    p->child[i] = new_node(curr_depth); 
+    p->child[i] = new_node(child_depth); 
 #endif
     if (i < N_CHILD - 1)
       pthread_create(&ths[i], NULL, tree_build_parallel, p->child[i]);
@@ -133,9 +136,8 @@ void tree_traversal(node_t *node, int *n)
   if (node == NULL) return;
 
   (*n)++;
-  for (i = 0; i < N_CHILD; i++) {
+  for (i = 0; i < N_CHILD; i++)
     tree_traversal(node->child[i], n);
-  }
 }
 
 void * tree_free_parallel(void * args)
@@ -220,9 +222,9 @@ int main(int argc, char *argv[])
     root->depth = 0;
     
     t0 = curr_time_micro();
-//    if (i == G_TRACEITER) mtrace();
+    if (i == G_TRACEITER) mtrace();
     tree_build(root);
-//   if (i == G_TRACEITER) muntrace();
+    if (i == G_TRACEITER) muntrace();
     t1 = curr_time_micro();
 
     n = 0;
@@ -231,7 +233,7 @@ int main(int argc, char *argv[])
       printf("Tree check failed! (%d vs. %d)\n", total, n);
     
     t2 = curr_time_micro();
-//    tree_free(root);
+    tree_free(root);
     t3 = curr_time_micro();
     printf("[%2d] Build: %d, Traversal: %d, Free: %d\n", i, t1-t0, t2-t1, t3-t2);
   }

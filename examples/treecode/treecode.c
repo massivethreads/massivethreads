@@ -60,7 +60,7 @@ typedef struct sim {  // simulation instance
   mol_t *mols;
   node_t *tree;
   node_t **memp; /* memory pool, indexed by morton id + depth */
-  idx_t memp_size;
+  idx_t memp_len;
   long int t_init, t_treebuild, t_treetraversal, t_treefree;
 } sim_t;
 sim_t sim_instance;
@@ -101,20 +101,24 @@ inline void * xcmalloc(size_t size)
 inline node_t * memp_get(idx_t idx)
 {
   node_t *ptr = sim->memp[idx];
-  if (ptr)
+  if (ptr) {
     sim->memp[idx] = NULL;
-  else
+  } else {
     ptr = xmalloc(sizeof(node_t));
+    memset(ptr, 0x0, sizeof(node_t));
+    ptr->memp_idx = idx;
+  }
   return ptr;
 }
 
 inline void memp_put(node_t * ptr)
 {
   idx_t idx = ptr->memp_idx;
-  if (sim->memp[idx])
+  if (sim->memp[idx]) {
     printf("warning: memory pool put failed for %ld\n", idx);
-  else
+  } else {
     sim->memp[idx] = ptr;
+  }
 }
 
 inline int bin_search(mol_t *mols, mot_t key, 
@@ -188,7 +192,7 @@ void tree_build_serial(node_t * node)
 void * tree_build_parallel(void *args)
 {
   pthread_t ths[N_CHILD];
-  idx_t curr_il, curr_ih, curr_memp_idx, curr_memp_base;
+  idx_t curr_il, curr_ih, base, offset, ith;
   mot_t curr_ml, curr_mh;
   real_t stride;
   mol_t * mols;
@@ -204,21 +208,23 @@ void * tree_build_parallel(void *args)
     stride = (node->morton_h - node->morton_l) / N_CHILD;
     curr_il = node->molarr_l;
     curr_ih = node->molarr_h;
+
 #if USE_MEMPOOL
     curr_depth = node->depth + 1;
-    curr_memp_base = (pow(N_CHILD, curr_depth)-1) / (N_CHILD-1) + node->ith * N_CHILD;
+    base = (pow(N_CHILD, curr_depth) - 1) / (N_CHILD - 1);
+    offset = node->ith * N_CHILD;
 #endif
+
     for (i = 0; i < N_CHILD; i++) {
       curr_ml = node->morton_l + stride * i + i;
       curr_mh = curr_ml + stride;
       if (select_subarr(mols, curr_ml, curr_mh, &curr_il, &curr_ih) == 0) {
         /* subspaces is non-empty */
 #if USE_MEMPOOL
-        curr_memp_idx = curr_memp_base + i;
-        node->child[i] = memp_get(curr_memp_idx);
-        node->child[i]->ith = i;
+        ith = offset + i;
+        node->child[i] = memp_get(base + ith);
+        node->child[i]->ith = ith;
         node->child[i]->depth = curr_depth;
-        node->child[i]->memp_idx = curr_memp_idx;
 #else
         node->child[i] = xcmalloc(sizeof(node_t));
 #endif
@@ -253,6 +259,7 @@ void tree_build(void)
 #else
   root = (node_t *) xcmalloc(sizeof(node_t));
 #endif
+
   root->n_mol = sim->n_mol;
   root->molarr_l = 0;
   root->molarr_h = sim->n_mol - 1;
@@ -364,12 +371,11 @@ void init(int argc, char *argv[])
     sim->mols[i].mid = i;
   }
 #if USE_MEMPOOL
-  sim->memp_size = (pow(N_CHILD, sim->depth + 1) - 1) / (N_CHILD - 1);
-  sim->memp = xmalloc(sizeof(node_t *) * sim->memp_size);
-  for (i = 0; i < sim->memp_size; i++)
-    sim->memp[i] = xmalloc(sizeof(node_t));
+  sim->memp_len = (pow(N_CHILD, sim->depth + 1) - 1) / (N_CHILD - 1);
+  sim->memp = xmalloc(sizeof(node_t *) * sim->memp_len);
+  memset(sim->memp, 0x0, sizeof(node_t *) * sim->memp_len);
   printf("N=%ld, STEPS=%d, MEMPOOL=%ld\n", 
-    sim->n_mol, sim->n_step, sim->memp_size);
+    sim->n_mol, sim->n_step, sim->memp_len);
 #else
   printf("N=%ld, STEPS=%d\n", sim->n_mol, sim->n_step);
 #endif
@@ -381,7 +387,7 @@ void finalize(void)
   idx_t i;
   free(sim->mols);
 #if USE_MEMPOOL
-  for (i = 0; i < sim->memp_size; i++)
+  for (i = 0; i < sim->memp_len; i++)
     free(sim->memp[i]);
   free(sim->memp);
 #endif
