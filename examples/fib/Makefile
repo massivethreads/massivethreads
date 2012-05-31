@@ -10,10 +10,10 @@ CXXFLAGS = $(CC_CXX_FLAGS)
 all: fib fib2
 
 fib: fib.c
-	$(CC) -o $@ $< $(CC_CXX_FLAGS) -L../../ -lmyth-compat
+	$(CC) -o $@ $< $(CC_CXX_FLAGS) -L../../.libs -lmyth-compat
 
 fib2: fib2.c
-	$(CC) -o $@ $< $(CC_CXX_FLAGS) -L../../ -lmyth-compat
+	$(CC) -o $@ $< $(CC_CXX_FLAGS) -L../../.libs -lmyth-compat
 
 debug:
 	$(CC) -o fib fib.c -pthread -ggdb $(CC_CXX_FLAGS)
