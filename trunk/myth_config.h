@@ -173,7 +173,7 @@
 //#define MYTH_FLMALLOC_TLS
 
 //Inline context switching codes by inline assembler
-#define MYTH_INLINE_CONTEXT
+//#define MYTH_INLINE_CONTEXT
 //At inlined codes, save callee-saved registers explicitly
 #define MYTH_INLINE_PUSH_CALLEE_SAVED
 
@@ -198,6 +198,10 @@
 #define MYTH_ARCH_i386
 #elif (!defined MYTH_FORCE_ARCH_UNIVERSAL) && (defined __x86_64__)
 #define MYTH_ARCH_amd64
+
+//Save FPU and SIMD control registers
+//#define MYTH_SAVE_FPCSR
+
 #else
 #define MYTH_ARCH_UNIVERSAL
 //force to use pthread_spin

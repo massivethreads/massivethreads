@@ -127,6 +127,20 @@ myth_set_context_withcall_s:
 
 #elif defined MYTH_ARCH_amd64
 
+#ifdef MYTH_SAVE_FPCSR
+#define PUSH_FPCSR \
+	sub $16,%rsp;\
+	stmxcsr 8(%rsp);\
+	fnstcw (%rsp)
+#define POP_FPCSR \
+	fldcw (%rsp);\
+	ldmxcsr 8(%rsp);\
+	add $16,%rsp
+#else
+#define PUSH_FPCSR
+#define POP_FPCSR
+#endif
+
 #ifdef USE_JUMP_INSN_A
 #define MY_RET_A pop %rax;jmp *%rax
 #else
@@ -170,12 +184,14 @@ myth_swap_context_s:
 	push %r13
 	push %r14
 	push %r15
+	PUSH_FPCSR
 	PUSH_1F_USING_RAX
 	//Switch stack and return
 	mov %rsp,(%rdi)
 	mov (%rsi),%rsp
 	MY_RET_A
 1:
+	POP_FPCSR
 	pop %r15
 	pop %r14
 	pop %r13
@@ -196,6 +212,7 @@ myth_swap_context_withcall_s:
 	push %r13
 	push %r14
 	push %r15
+	PUSH_FPCSR
 	PUSH_1F_USING_RAX
 	//Switch stack and return
 	mov %rsp,(%rdi)
@@ -207,6 +224,7 @@ myth_swap_context_withcall_s:
 	call *%rax
 	MY_RET_A
 1:
+	POP_FPCSR
 	pop %r15
 	pop %r14
 	pop %r13
