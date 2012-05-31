@@ -23,7 +23,7 @@ if [ ! -f ${EXE} ]; then
 	echo ""
 fi
 
-export LD_LIBRARY_PATH=../../ 
+export LD_LIBRARY_PATH=../../.libs 
 export MYTH_WORKER_NUM=${WORKERS}
 echo "Executing ${EXE} ${N} with ${WORKERS} workers..."
 ${EXE} ${N}
