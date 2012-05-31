@@ -13,9 +13,10 @@ typedef void (*void_func_t)(void);
 #define MYTH_CONTEXT_ARCH_i386
 #elif defined MYTH_ARCH_amd64 && !defined MYTH_FORCE_UCONTEXT
 #define MYTH_CONTEXT_ARCH_amd64
-#elif defined MYTH_FORCE_UCONTEXT
+#elif defined MYTH_ARCH_UNIVERSAL || defined MYTH_FORCE_UCONTEXT
 #define MYTH_CONTEXT_ARCH_UNIVERSAL
 #undef MYTH_INLINE_CONTEXT
+#elif defined MYTH_CONTEXT_ARCH_UNIVERSAL
 #else
 #error "Specify architecture"
 #endif
@@ -345,6 +346,20 @@ static inline void myth_make_context_voidcall(myth_context_t ctx,void_func_t fun
 #define PUSH_LABEL_USING_BP(label) PUSH_LABEL(label)
 #endif
 
+#ifdef MYTH_SAVE_FPCSR
+#define PUSH_FPCSR() \
+	"sub $16,%%rsp\n"\
+	"stmxcsr 8(%%rsp)\n"\
+	"fnstcw (%%rsp)\n"
+#define POP_FPCSR() \
+	"fldcw (%%rsp)\n"\
+	"ldmxcsr 8(%%rsp)\n"\
+	"add $16,%%rsp\n"
+#else
+#define PUSH_FPCSR()
+#define POP_FPCSR()
+#endif
+
 #if defined MYTH_INLINE_PUSH_CALLEE_SAVED
 
 #define PUSH_CALLEE_SAVED() \
@@ -354,8 +369,10 @@ static inline void myth_make_context_voidcall(myth_context_t ctx,void_func_t fun
 	"push %%r12\n"\
 	"push %%r13\n"\
 	"push %%r14\n"\
-	"push %%r15\n"
+	"push %%r15\n"\
+	PUSH_FPCSR()
 #define POP_CALLEE_SAVED() \
+	POP_FPCSR() \
 	"pop %%r15\n"\
 	"pop %%r14\n"\
 	"pop %%r13\n"\
@@ -384,8 +401,10 @@ static inline void myth_make_context_voidcall(myth_context_t ctx,void_func_t fun
 
 #define PUSH_CALLEE_SAVED() \
 	"sub $128,%%rsp\n"\
-	"push %%rbp\n"
+	"push %%rbp\n"\
+	PUSH_FPCSR()
 #define POP_CALLEE_SAVED() \
+	POP_FPCSR() \
 	"pop %%rbp\n"\
 	"add $128,%%rsp\n"
 
