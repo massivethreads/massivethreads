@@ -13,18 +13,23 @@
 #define USE_MEMPOOL 1
 #endif
 
+#ifndef BUILD_TOPDOWN
+#define BUILD_TOPDOWN 0
+#endif
+
 #define N_CHILD  8
 
 int G_MAX_DEPTH = 7;
 int G_INC_DEPTH = 0;
 int G_ITERATION = 11;
 int G_TRACEITER = -1;
+int G_ITER = 0;
 
 typedef struct node {
   int depth;
   struct node* child[N_CHILD];
   int ith, memp_idx;
-} node_t;
+} node_t; 
 node_t **G_MEMPOOL = NULL;
 
 inline int curr_time_micro(void)
@@ -43,6 +48,14 @@ inline void * xmalloc(size_t size)
     abort();
   }
   return p;
+}
+
+inline void eat_cpu(int n)
+{
+  struct timespec req, rem;
+  req.tv_sec = 0;
+  req.tv_nsec = n; /* millisecond */
+  nanosleep(&req, &rem);
 }
 
 inline node_t * memp_get(int idx)
@@ -68,22 +81,75 @@ inline void memp_put(node_t * ptr)
   }
 }
 
-inline node_t * new_node(int depth) {
+inline node_t * new_node(void) {
   node_t *n = (node_t *) xmalloc(sizeof(struct node));
   memset(n, 0x0, sizeof(node_t));
-  n->depth = depth;
   return n;
 }
 
-void tree_build_serial(node_t * node)
+void tree_build_serial_topdown(node_t * node)
 {
-  int i;
+  int i, child_depth, base, offset, ith;
+  
 
   if (node->depth >= G_MAX_DEPTH) return;
 
+  child_depth = node->depth + 1;
+#if USE_MEMPOOL
+  base = quick_base(child_depth);
+  offset = node->ith * N_CHILD;
+#endif
+
   for (i = 0; i < N_CHILD; i++) {
-    node->child[i]  = new_node(node->depth + 1);
-    tree_build_serial(node->child[i]);
+#if USE_MEMPOOL
+    ith = offset + i;
+    node->child[i] = memp_get(base + ith);
+    node->child[i]->ith = ith;
+#else
+    node->child[i] = new_node();
+#endif
+
+    node->child[i]->depth = child_depth;
+    if (child_depth < G_MAX_DEPTH)
+      tree_build_serial_topdown(node->child[i]);
+  }
+}
+
+void tree_build_serial_downtop(node_t * node)
+{
+  int i, child_depth, base, offset, ith;
+  node_t nodes[N_CHILD];
+
+
+  if (node->depth >= G_MAX_DEPTH) return;
+  
+  child_depth = node->depth + 1;
+  memset(nodes, 0x0, sizeof(node_t) * N_CHILD);
+
+#if USE_MEMPOOL
+  base = quick_base(child_depth);
+  offset = node->ith * N_CHILD;
+#endif
+
+  for (i = 0; i < N_CHILD; i++) {
+#if USE_MEMPOOL
+    ith = offset + i;
+    nodes[i].ith = ith;
+    nodes[i].memp_idx = base + ith;
+#endif
+
+    nodes[i].depth = child_depth;
+
+    if (child_depth < G_MAX_DEPTH)
+      tree_build_serial_downtop(&nodes[i]);
+
+#if USE_MEMPOOL
+    node->child[i] = memp_get(nodes[i].memp_idx);
+#else
+    node->child[i] = new_node();
+#endif /* USE_MEMPOOL */
+
+    *(node->child[i]) = nodes[i];
   }
 }
 
@@ -105,57 +171,134 @@ inline int quick_base(int depth)
   }
 }
 
-void * tree_build_parallel(void * args)
+void * tree_build_parallel_topdown(void * args)
 {
   pthread_t ths[N_CHILD];
-  node_t *p = (node_t *) args;
+  node_t *node = (node_t *) args;
   int i, child_depth, base, offset, ith;
+  int t0, t1, t2, t3;
 
-  if (p->depth >= G_MAX_DEPTH) return (void *) 0;
   
-  child_depth = p->depth + 1;
+  if (node->depth >= G_MAX_DEPTH) return (void *) 0;
+
+  child_depth = node->depth + 1;
 #if USE_MEMPOOL
   if (child_depth > G_INC_DEPTH) {
-    // base = (pow(N_CHILD, child_depth) - 1) / (N_CHILD - 1);  /* base of level */
     base = quick_base(child_depth);
-    offset = p->ith * N_CHILD;
+    offset = node->ith * N_CHILD;
+    //eat_cpu(1);
   }
 #endif
+  
+  //t0 = curr_time_micro();
   
   for (i = 0; i < N_CHILD; i++) {
-    if (child_depth > G_INC_DEPTH) {
 #if USE_MEMPOOL
-      ith = offset + i;
-      p->child[i] = memp_get(base + ith);
-      p->child[i]->ith = ith;
-      p->child[i]->depth = child_depth;
+    ith = offset + i;
+    node->child[i] = memp_get(base + ith);
+    node->child[i]->ith = ith;
+    node->child[i]->depth = child_depth;
 #else
-      p->child[i] = new_node(child_depth); 
+    node->child[i] = new_node(child_depth); 
 #endif
-    }
-    
-    if (child_depth < G_MAX_DEPTH) {
-      if (i < N_CHILD - 1)
-        pthread_create(&ths[i], NULL, tree_build_parallel, p->child[i]);
-      else
-        tree_build_parallel(p->child[i]);
+  }
+
+  if (child_depth >= G_MAX_DEPTH) return (void *) 0;
+
+  //t1 = curr_time_micro();
+
+  for (i = 0; i < N_CHILD; i++) {
+    if (i < N_CHILD - 1) {
+      pthread_create(&ths[i], NULL, tree_build_parallel_topdown, node->child[i]);
+    } else {
+      tree_build_parallel_topdown(node->child[i]);
     }
   }
+
+  //t2 = curr_time_micro();
   
+  for (i = 0; i < N_CHILD - 1; i++)
+    pthread_join(ths[i], NULL);
+  
+  //t3 = curr_time_micro();
+  
+  //if (G_ITER > 0)
+  //  fprintf(stderr, "tree_build %d %d %d\n", t1-t0, t2-t1, t3-t2);
+
+  return (void *) 0;
+}
+
+void * tree_build_parallel_downtop(void * args)
+{
+  pthread_t ths[N_CHILD];
+  node_t *node = (node_t *) args;
+  node_t nodes[N_CHILD];
+  int i, child_depth, base, offset, ith;
+  int t0, t1, t2, t3;
+
+  
+  if (node->depth >= G_MAX_DEPTH) return;
+
+  child_depth = node->depth + 1;
+  memset(nodes, 0x0, sizeof(node_t) * N_CHILD);
+
+#if USE_MEMPOOL
+  base = quick_base(child_depth);
+  offset = node->ith * N_CHILD;
+#endif
+    
+  //eat_cpu(1);
+  
+  for (i = 0; i < N_CHILD; i++) {
+#if USE_MEMPOOL
+    ith = offset + i;
+    nodes[i].ith = ith;
+    nodes[i].memp_idx = base + ith;
+#endif
+
+    nodes[i].depth = child_depth;
+
+  }
+
   if (child_depth < G_MAX_DEPTH) {
+    for (i = 0; i < N_CHILD; i++) {
+      if (i < N_CHILD - 1) {
+        pthread_create(&ths[i], NULL, tree_build_parallel_downtop, &nodes[i]);
+      } else {
+        tree_build_parallel_downtop(&nodes[i]);
+      }
+    }
     for (i = 0; i < N_CHILD - 1; i++)
       pthread_join(ths[i], NULL);
   }
 
+  for (i = 0; i < N_CHILD; i++) {
+#if USE_MEMPOOL
+    node->child[i] = memp_get(nodes[i].memp_idx);
+#else
+    node->child[i] = new_node();
+#endif /* USE_MEMPOOL */
+
+    *(node->child[i]) = nodes[i];
+  }
+  
   return (void *) 0;
 }
 
 void tree_build(node_t * tree)
 {
 #if PARALLELIZE
-  tree_build_parallel(tree);
+#if BUILD_TOPDOWN
+  tree_build_parallel_topdown(tree);
+#else 
+  tree_build_parallel_downtop(tree);
+#endif /* BUILD_TOPDOWN */
 #else
-  tree_build_serial(tree);
+#if BUILD_TOPDOWN
+  tree_build_serial_topdown(tree);
+#else
+  tree_build_serial_downtop(tree);
+#endif /* BUILD_TOPDOWN */
 #endif /* PARALLELIZE */
 }
 
@@ -293,7 +436,7 @@ int main(int argc, char *argv[])
   
   inc = G_INC_DEPTH;
   G_INC_DEPTH = 0;
-  for (i = 0; i < G_ITERATION; i++) {
+  for (G_ITER = 0; G_ITER < G_ITERATION; G_ITER++) {
     if (G_INC_DEPTH == 0) {
 #if USE_MEMPOOL
       root = memp_get(0);
@@ -306,9 +449,9 @@ int main(int argc, char *argv[])
     }
     
     t0 = curr_time_micro();
-    if (i == G_TRACEITER) mtrace();
+    if (G_ITER == G_TRACEITER) mtrace();
     tree_build(root);
-    if (i == G_TRACEITER) muntrace();
+    if (G_ITER == G_TRACEITER) muntrace();
     t1 = curr_time_micro();
 
     n = 0;
@@ -321,8 +464,7 @@ int main(int argc, char *argv[])
     t2 = curr_time_micro();
     tree_free(root);
     t3 = curr_time_micro();
-    printf("[%02d] Build: %d Traversal: %d Free: %d\n", i, t1-t0, t2-t1, t3-t2);
-
+    printf("[%02d] Build: %d Traversal: %d Free: %d\n", G_ITER, t1-t0, t2-t1, t3-t2);
   }
 
 #if USE_MEMPOOL
