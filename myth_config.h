@@ -155,11 +155,17 @@
 
 #define PAD_MYTH_THREAD_QUEUE_TOP_BASE
 
-//Check the number of threads in runqueue before work stealing
-#define DOUBLECHECK_ON_STEAL
+//Check the number of threads in the local runqueue before poping
+//turned out very important; never turn off
+#define QUICK_CHECK_ON_POP
+
+//Check the number of threads in the victim's runqueue before 
+//seriously trying to steal work 
+//turned out very important; never turn off
+#define QUICK_CHECK_ON_STEAL
 
 //Check whether the thread is sure to be ready for release before acquiring the lock
-#define DOUBLECHECK_ON_JOIN
+#define QUICK_CHECK_ON_JOIN
 
 //Do trylock before work stealing
 //#define TRY_LOCK_BEFORE_STEAL
