@@ -153,6 +153,13 @@ static inline void __attribute__((always_inline)) myth_queue_push(myth_thread_qu
 static inline myth_thread_t __attribute__((always_inline)) myth_queue_pop(myth_thread_queue_t q)
 {
 	myth_queue_enter_operation(q);
+
+#ifdef QUICK_CHECK_ON_POP
+	if (q->top <= q->base) {
+	  return NULL;
+	}
+#endif
+
 #if defined USE_LOCK || defined USE_LOCK_POP
 	myth_internal_lock_lock(&q->m_lock);
 #endif
@@ -211,7 +218,7 @@ static inline myth_thread_t myth_queue_take(myth_thread_queue_t q)
 {
 	myth_thread_t ret;
 	int b,top;
-#ifdef DOUBLECHECK_ON_STEAL
+#ifdef QUICK_CHECK_ON_STEAL
 	if (q->top-q->base<=0){
 		return NULL;
 	}

@@ -611,7 +611,7 @@ static inline void myth_join_body(myth_thread_t th,void **result)
 #ifdef MYTH_JOIN_DEBUG
 	myth_dprintf("myth_join:join started\n");
 #endif
-#ifdef DOUBLECHECK_ON_JOIN
+#ifdef QUICK_CHECK_ON_JOIN
 	//If target is finished, return immediately
 	if (th->status==MYTH_STATUS_FREE_READY2){
 #ifdef MYTH_JOIN_DEBUG
@@ -782,7 +782,7 @@ MYTH_CTX_CALLBACK void myth_entry_point_1(void *arg1,void *arg2,void *arg3)
 		free_myth_thread_struct_desc(env,this_thread);
 	}
 	else{
-#ifdef DOUBLECHECK_ON_JOIN
+#ifdef QUICK_CHECK_ON_JOIN
 		this_thread->status=MYTH_STATUS_FREE_READY;
 		myth_internal_lock_unlock(&this_thread->lock);
 		this_thread->status=MYTH_STATUS_FREE_READY2;
@@ -830,7 +830,7 @@ MYTH_CTX_CALLBACK void myth_entry_point_2(void *arg1,void *arg2,void *arg3)
 		free_myth_thread_struct_desc(env,this_thread);
 	}
 	else{
-#ifdef DOUBLECHECK_ON_JOIN
+#ifdef QUICK_CHECK_ON_JOIN
 		this_thread->status=MYTH_STATUS_FREE_READY;
 		myth_internal_lock_unlock(&this_thread->lock);
 		this_thread->status=MYTH_STATUS_FREE_READY2;
