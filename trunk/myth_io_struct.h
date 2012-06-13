@@ -229,6 +229,9 @@ static inline void myth_io_wait_list_push(myth_running_env_t e,myth_io_wait_list
 static inline myth_io_op_t myth_io_wait_list_pop(myth_running_env_t e,myth_io_wait_list_t wl)
 {
 	myth_io_op_t ret;
+#ifdef QUICK_CHECK_IO_WAIT_LIST
+	if (!wl->count) return NULL;
+#endif
 	myth_internal_lock_lock(&wl->lock);
 	if (wl->count){
 		ret=wl->io_ops[wl->count-1];
@@ -264,6 +267,9 @@ static inline void myth_io_fd_list_push(myth_running_env_t env,myth_io_fd_list_t
 static inline myth_io_struct_perfd_t myth_io_fd_list_pop(myth_io_fd_list_t cl)
 {
 	myth_io_struct_perfd_t ret;
+#ifdef QUICK_CHECK_IO_FD_LIST
+	if (cl->size<=0) return NULL;
+#endif
 	myth_internal_lock_lock(&cl->lock);
 	if (cl->size>0){
 		ret=cl->data[cl->size-1];
