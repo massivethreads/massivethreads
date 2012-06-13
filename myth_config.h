@@ -40,6 +40,10 @@
 
 //Wrap and multipelx I/O functions
 #define MYTH_WRAP_SOCKIO
+//Quick emptiness check on io wait list
+#define QUICK_CHECK_IO_WAIT_LIST
+//Quick emptiness check on io fd list
+#define QUICK_CHECK_IO_FD_LIST
 
 //Wrapped select() return immediately regardless of I/O readiness
 #define SELECT_ALWAYS_RETURN_IMMEDIATELY
