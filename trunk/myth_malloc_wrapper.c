@@ -1,3 +1,4 @@
+#include <dlfcn.h>
 #include "myth_config.h"
 
 #include "myth_sched.h"
@@ -57,7 +58,13 @@ void *malloc(size_t size)
 	int idx;
 	if (size<16)size=16;
 	if (!real_malloc){
-		return NULL;
+		static int load_malloc_protect=0;
+		if (load_malloc_protect==0){
+			load_malloc_protect=1;
+			real_malloc=dlsym(RTLD_NEXT,"malloc");
+		}
+		else return NULL;
+		assert(real_malloc);
 	}
 	if ((!g_worker_thread_num) || (g_alloc_hook_ok!=g_worker_thread_num) || (size>MYTH_MALLOC_FLSIZE_MAX)){
 		ptr=real_malloc(size+16);
@@ -88,8 +95,11 @@ void *malloc(size_t size)
 }
 void free(void *ptr)
 {
-	if (!real_free)return;
 	if (!ptr)return;
+	if (!real_free){
+		real_free=dlsym(RTLD_NEXT,"free");
+		assert(real_free);
+	}
 #ifdef MYTH_WRAP_MALLOC_DLSYM_ENABLED
 	//do nothing if in dlsym region
 	intptr_t s,e;
