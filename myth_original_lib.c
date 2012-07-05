@@ -34,10 +34,10 @@ int (*real_pthread_spin_unlock) (pthread_spinlock_t *);
 
 int (*real_sched_yield)(void);
 
-void *(*real_calloc)(size_t,size_t);
-void *(*real_malloc)(size_t);
-void (*real_free)(void *);
-void *(*real_realloc)(void *,size_t);
+void *(*real_calloc)(size_t,size_t)=NULL;
+void *(*real_malloc)(size_t)=NULL;
+void (*real_free)(void *)=NULL;
+void *(*real_realloc)(void *,size_t)=NULL;
 
 static void* s_pthread_handle;
 
