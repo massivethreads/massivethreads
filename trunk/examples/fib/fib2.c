@@ -41,8 +41,8 @@ void *fib(void *args)
   *ex1 = ret1;
   *ex2 = ret2;
   ex3 = *ex1 + *ex2;
-  //free(ex1);
-  //free(ex2);
+  free(ex1);
+  free(ex2);
   pthread_exit((void*) ex3);
 }
 
