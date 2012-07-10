@@ -1,19 +1,22 @@
 #!/bin/bash
 
-USAGE="usage: $0 N WORKERS"
+USAGE="usage: $0 WORKERS PROG {ARGS}"
 
-if [ "$#" != 2 ]; then
+if [ "$#" -lt 1 ]; then
 	echo ${USAGE}
 	exit 1
 fi
 
-N=$1
-WORKERS=$2
-EXE=./fib
+WORKERS=$1; shift
+PROG=$1; shift
 
-if [ ! -f ${EXE} ]; then
+export LD_LIBRARY_PATH=../../.libs
+export MYTH_WORKER_NUM=${WORKERS}
+export PATH=./:${PATH}
+
+if [ ! -f ${PROG} ]; then
 	echo "Executable does not exist, building..."
-	make -f Makefile
+	make ${PROG}
 	if [ "$?" -eq 0 ]; then
 		echo "Done."
 	else
@@ -23,7 +26,5 @@ if [ ! -f ${EXE} ]; then
 	echo ""
 fi
 
-export LD_LIBRARY_PATH=../../.libs 
-export MYTH_WORKER_NUM=${WORKERS}
-echo "Executing ${EXE} ${N} with ${WORKERS} workers..."
-${EXE} ${N}
+echo "Executing ${PROG} $@ with ${WORKERS} workers..."
+${PROG} $@

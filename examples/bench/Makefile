@@ -7,7 +7,7 @@ CXXFLAGS = $(CC_CXX_FLAGS)
 
 .PHONY: debug clean
 
-all: mm tree
+all: mm tree hybrid_tree
 
 mm: mm.c
 	$(CC) -o $@ $< $(CC_CXX_FLAGS) -L../../.libs -lmyth-compat
@@ -15,7 +15,10 @@ mm: mm.c
 tree: tree.c
 	$(CC) -o $@ $< $(CC_CXX_FLAGS) -L../../.libs -lmyth-compat -lm
 
-debug: mm_debug tree_debug
+hybrid_tree: hybrid_tree.c
+	$(CC) -o $@ $< $(CC_CXX_FLAGS) -L../../.libs -lmyth-compat -lm
+
+debug: mm_debug tree_debug hybrid_tree_debug
 
 mm_debug: mm.c
 	$(CC) -o $@ $< -pthread -ggdb $(CC_CXX_FLAGS)
@@ -23,5 +26,8 @@ mm_debug: mm.c
 tree_debug: tree.c
 	$(CC) -o $@ $< -pthread -ggdb -lm $(CC_CXX_FLAGS)
 
+hybrid_tree_debug: hybrid_tree.c
+	$(CC) -o $@ $< -pthread -ggdb -lm $(CC_CXX_FLAGS)
+
 clean: 
-	rm -f mm tree
+	rm -f mm tree hybrid_tree
