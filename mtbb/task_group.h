@@ -6,9 +6,24 @@
 
 #include <functional>
 
+#if !defined(TASK_GROUP_INIT_SZ)
+#define TASK_GROUP_INIT_SZ 10
+#endif
+
+#if !defined(TASK_GROUP_NULL_CREATE)
+#define TASK_GROUP_NULL_CREATE 0
+#endif
+
 struct task {
   pthread_t tid;
   std::function<void ()> f;
+};
+
+struct task_list_node {
+  task_list_node * next;
+  int capacity;
+  int n;
+  task a[TASK_GROUP_INIT_SZ];
 };
 
 void * invoke_task(void * arg_) {
@@ -18,56 +33,55 @@ void * invoke_task(void * arg_) {
   return arg_;
 }
 
-#if !defined(TASK_GROUP_INIT_SZ)
-#define TASK_GROUP_INIT_SZ 10
-#endif
-
-#if !defined(TASK_GROUP_NULL_CREATE)
-#define TASK_GROUP_NULL_CREATE 0
-#endif
-
 struct task_group {
-  int n;
-  int capacity;
-  task tasks_[TASK_GROUP_INIT_SZ];
-  task * tasks;
+  task_list_node first_chunk_[1];
+  task_list_node * head;
+  task_list_node * tail;
   task_group() {
-    n = 0;
-    capacity = TASK_GROUP_INIT_SZ;
-    tasks = tasks_;
+    head = first_chunk_;
+    tail = first_chunk_;
+    head->next = NULL;
+    head->capacity = TASK_GROUP_INIT_SZ;
+    head->n = 0;
   }
-  void extend() {
-    int new_capacity = capacity + capacity + 1;
-    task * new_tasks = (task *)malloc(sizeof(task) * new_capacity);
-    assert(new_tasks);
-    memcpy(new_tasks, tasks, sizeof(task) * capacity);
-    if (tasks == tasks_) {
-      memset(tasks, 0, sizeof(task) * capacity);
-    } else {
-      free(tasks);
+  ~task_group() {
+    task_list_node * q = NULL;
+    for (task_list_node * p = head; p; p = q) {
+      q = p->next;
+      if (p != first_chunk_) delete p;
     }
-    tasks = new_tasks;
-    capacity = new_capacity;
+  }
+
+  void extend() {
+    task_list_node * new_node = new task_list_node();
+    new_node->next = NULL;
+    new_node->n = 0;
+    new_node->capacity = TASK_GROUP_INIT_SZ;
+    tail->next = new_node;
+    tail = new_node;
   }
   void run(std::function<void ()> f) {
-    if (n == capacity) extend();
-    task * t = &tasks[n];
+    if (tail->n == tail->capacity) {
+      if (tail->next == NULL) extend();
+      else tail = tail->next;
+      assert(tail->n == 0);
+    }
+    task * t = &tail->a[tail->n];
     t->f = f;
     if (TASK_GROUP_NULL_CREATE) {
       invoke_task((void *)t);
     } else {
-      n++;
+      tail->n++;
       pthread_create(&t->tid, NULL, invoke_task, (void*)t);
     }
   }
   void wait() {
-    int i;
-    if (n > 0) {
-      for (i = 0; i < n; i++) {
+    for (task_list_node * p = head; p && p->n; p = p->next) {
+      for (int i = 0; i < p->n; i++) {
 	void * ret;
-	pthread_join(tasks[i].tid, &ret);
+	pthread_join(p->a[i].tid, &ret);
       }
-      n = 0;
+      p->n = 0;
     }
   }
 };
