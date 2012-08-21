@@ -48,10 +48,14 @@ static inline uint64_t myth_get_rdtsc()
 {
 #if (defined MYTH_ARCH_i386 || defined MYTH_ARCH_amd64)
   uint32_t hi,lo;
-  asm volatile("lfence\nrdtsc\n"
-	       :"=a"(lo),"=d"(hi));
+  asm volatile("lfence\nrdtsc\n" : "=a"(lo),"=d"(hi));
   return ((uint64_t)hi)<<32 | lo;
+#elif (defined MYTH_ARCH_sparc)
+  uint64_t tick;
+  asm volatile("rd %%tick, %0" : "=r" (tick));
+  return tick;
 #else
+#warning "myth_get_rdtsc() not implemented" 
   return 0;
 #endif
 }
