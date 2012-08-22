@@ -4,11 +4,21 @@
 #include <string.h>
 #include <functional>
 
-#if QTHREAD || NANOX
-#define PTHREAD_LIKE 0
+#if QTHREAD 
+#include <qthread.h>
+#elif NANOX
+#include <nanos.h>
 #else
-#define PTHREAD_LIKE 1
 #include <pthread.h>
+#define PTHREAD_LIKE 1
+#endif
+
+#if PTHREAD_LIKE
+#define th_func_ret_type void *
+#elif QTHREAD
+#define th_func_ret_type aligned_t
+#elif NANOX
+#define th_func_ret_type void
 #endif
 
 #if !defined(TASK_GROUP_INIT_SZ)
@@ -17,16 +27,6 @@
 
 #if !defined(TASK_GROUP_NULL_CREATE)
 #define TASK_GROUP_NULL_CREATE 0
-#endif
-
-#if PTHREAD_LIKE
-#define th_func_ret_type void *
-#endif
-#if QTHREAD
-#define th_func_ret_type aligned_t
-#endif
-#if NANOX
-#define th_func_ret_type void
 #endif
 
 struct task {
