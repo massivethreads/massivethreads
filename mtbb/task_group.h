@@ -1,10 +1,15 @@
 #pragma once
 #include <assert.h>
-#include <pthread.h>
 #include <stdlib.h>
 #include <string.h>
-
 #include <functional>
+
+#if QTHREAD || NANOX
+#define PTHREAD_LIKE 0
+#else
+#define PTHREAD_LIKE 1
+#include <pthread.h>
+#endif
 
 #if !defined(TASK_GROUP_INIT_SZ)
 #define TASK_GROUP_INIT_SZ 10
@@ -14,9 +19,22 @@
 #define TASK_GROUP_NULL_CREATE 0
 #endif
 
+#if PTHREAD_LIKE
+#define th_func_ret_type void *
+#endif
+#if QTHREAD
+#define th_func_ret_type aligned_t
+#endif
+#if NANOX
+#define th_func_ret_type void
+#endif
+
 struct task {
   pthread_t tid;
   std::function<void ()> f;
+#if QTHREAD
+  aligned_t ret;
+#endif
 };
 
 struct task_list_node {
@@ -26,12 +44,18 @@ struct task_list_node {
   task a[TASK_GROUP_INIT_SZ];
 };
 
-void * invoke_task(void * arg_) {
+th_func_ret_type invoke_task(void * arg_) {
   task * arg = (task *)arg_;
   std::function<void()> f = arg->f;
   f();
-  return arg_;
+#if PTHREAD_LIKE || QTHREAD
+  return 0;
+#endif
 }
+
+#if NANOX
+nanos_smp_args_t invoke_task_arg={invoke_task};
+#endif
 
 struct task_group {
   task_list_node first_chunk_[1];
@@ -72,14 +96,47 @@ struct task_group {
       invoke_task((void *)t);
     } else {
       tail->n++;
+#if PTHREAD_LIKE
       pthread_create(&t->tid, NULL, invoke_task, (void*)t);
+#elif QTHREAD
+      qthread_fork(invoke_task, (void*)t, &t->ret);
+#elif NANOX
+      nanos_wd_t wd=NULL;
+      nanos_device_t dev[1] = {NANOS_SMP_DESC(invoke_task_arg)};
+      nanos_wd_props_t props;	// originally, ={true,false,false};
+      props.mandatory_creation = true;
+      props.tied = false;
+      props.reserved0 = false;
+      NANOS_SAFE(nanos_create_wd(&wd,1,dev,sizeof(struct task),
+				 __alignof__(struct task),
+				 (void**)&t,nanos_current_wd(),&props,0,NULL));
+      NANOS_SAFE(nanos_submit(wd,0,0,0));
+#else
+#error "neither PTHREAD_LIKE, QTHREAD, nor NANOX defined"
+#endif
     }
   }
+
   void wait() {
+    int n_joined = 0;
     for (task_list_node * p = head; p && p->n; p = p->next) {
       for (int i = 0; i < p->n; i++) {
+#if TASK_GROUP_NULL_CREATE 
+	/* noop */
+#elif PTHREAD_LIKE
 	void * ret;
 	pthread_join(p->a[i].tid, &ret);
+#elif QTHREAD
+	aligned_t ret;
+	qthread_readFF(&ret,&p->a[i].ret);
+#elif NANOX
+	if (n_joined == 0) {
+	  NANOS_SAFE(nanos_wg_wait_completion(nanos_current_wd()));
+	}
+#else
+#error "neither PTHREAD_LIKE, QTHREAD, nor NANOX defined"
+#endif
+	n_joined++;
       }
       p->n = 0;
     }
