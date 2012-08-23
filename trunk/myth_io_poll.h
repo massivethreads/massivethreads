@@ -3,6 +3,11 @@
 
 #ifdef MYTH_WRAP_SOCKIO
 
+// Workaround for FX10 glibc bug
+#ifndef EPOLLRDHUP
+#define EPOLLRDHUP 0x2000
+#endif
+
 #include "myth_config.h"
 
 //Perform I/O operation. Return 0 if the operation failed because of blocking, or 1

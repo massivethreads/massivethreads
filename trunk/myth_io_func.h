@@ -31,6 +31,11 @@
 
 #include "myth_sched_func.h"
 
+// Workaround for FX10 glibc bug
+#ifndef EPOLLRDHUP
+#define EPOLLRDHUP 0x2000
+#endif
+
 #define MYTH_IO_SIGNAL_NO SIGRTMIN
 
 #define MYTH_IO_EPOLL_FLAG (EPOLLIN|EPOLLOUT|EPOLLRDHUP|EPOLLET)
