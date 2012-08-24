@@ -44,17 +44,17 @@ typedef struct myth_context
 	uint32_t esp;
 #elif defined MYTH_CONTEXT_ARCH_amd64
 	uint64_t rsp;
-#elif defined MYTH_CONTEXT_ARCH_sparc
+#elif defined MYTH_CONTEXT_ARCH_sparc || defined MYTH_CONTEXT_ARCH_UNIVERSAL
   ucontext_t uc;  // FIXME
-#elif defined MYTH_CONTEXT_ARCH_UNIVERSAL
-	ucontext_t uc;
 #else
 #error "Architecture not defined"
 #endif
-}myth_context,*myth_context_t;
+} myth_context,*myth_context_t;
 
-static inline void myth_make_context_empty(myth_context_t ctx,void *stack,size_t stacksize);
-static inline void myth_make_context_voidcall(myth_context_t ctx,void_func_t func,void *stack,size_t stacksize);
+static inline void myth_make_context_empty(myth_context_t ctx, void *stack,
+  size_t stacksize);
+static inline void myth_make_context_voidcall(myth_context_t ctx, void_func_t func,
+  void *stack, size_t stacksize);
 
 #if defined MYTH_COLLECT_LOG && defined MYTH_COLLECT_CONTEXT_SWITCH
 //static inline void myth_log_add_context_switch(struct myth_running_env *env,struct myth_thread *th);
@@ -62,40 +62,58 @@ static inline void myth_make_context_voidcall(myth_context_t ctx,void_func_t fun
 { \
 	struct myth_running_env* env=myth_get_current_env(); \
 	myth_thread_t th=myth_context_to_thread(env,ctx); \
-	myth_log_add_context_switch(env,th);\
+	myth_log_add_context_switch(env,th); \
 }
 #else
 #define myth_context_switch_hook(ctx)
 #endif
 
-#if defined MYTH_CONTEXT_ARCH_UNIVERSAL || defined MYTH_CONTEXT_ARCH_sparc // FIXME
+#if defined MYTH_CONTEXT_ARCH_i386 || defined MYTH_CONTEXT_ARCH_amd64
+void myth_swap_context_s(myth_context_t switch_from, myth_context_t switch_to);
+void myth_swap_context_withcall_s(myth_context_t switch_from, myth_context_t switch_to,
+  void(*func)(void*,void*,void*), void *arg1, void *arg2, void *arg3);
+void myth_get_context_s(myth_context_t ctx);
+void myth_set_context_s(myth_context_t ctx);
+void myth_set_context_withcall_s(myth_context_t switch_to, 
+  void(*func)(void*,void*,void*), void *arg1, void *arg2, void *arg3);
+
+#elif defined MYTH_CONTEXT_ARCH_UNIVERSAL || defined MYTH_CONTEXT_ARCH_sparc // FIXME
+
 typedef struct myth_ctx_withcall_param
 {
 	void(*fn)(void*,void*,void*);
-	void *arg1,*arg2,*arg3;
-}myth_ctx_withcall_param,*myth_ctx_withcall_param_t;
+	void *arg1, *arg2, *arg3;
+} myth_ctx_withcall_param, *myth_ctx_withcall_param_t;
 
 extern volatile __thread myth_ctx_withcall_param g_ctx_withcall_params;
 
-static inline void myth_swap_context_s(myth_context_t switch_from,myth_context_t switch_to)
+static inline void myth_swap_context_s(myth_context_t switch_from,
+  myth_context_t switch_to)
 {
 	//clear
 	g_ctx_withcall_params.fn=NULL;
-	swapcontext(&switch_from->uc,&switch_to->uc);
+	swapcontext(&switch_from->uc, &switch_to->uc);
 	//execute
 	if (g_ctx_withcall_params.fn){
-		g_ctx_withcall_params.fn(g_ctx_withcall_params.arg1,g_ctx_withcall_params.arg2,g_ctx_withcall_params.arg3);
+		g_ctx_withcall_params.fn(g_ctx_withcall_params.arg1,
+      g_ctx_withcall_params.arg2, g_ctx_withcall_params.arg3);
 	}
 }
-static inline void myth_swap_context_withcall_s(myth_context_t switch_from,myth_context_t switch_to,void(*func)(void*,void*,void*),void *arg1,void *arg2,void *arg3)
+static inline void myth_swap_context_withcall_s(myth_context_t switch_from,
+  myth_context_t switch_to, void(*func)(void*,void*,void*), 
+  void *arg1, void *arg2, void *arg3)
 {
 	//set
-	g_ctx_withcall_params.fn=func;g_ctx_withcall_params.arg1=arg1;g_ctx_withcall_params.arg2=arg2;g_ctx_withcall_params.arg3=arg3;
+	g_ctx_withcall_params.fn=func;
+  g_ctx_withcall_params.arg1=arg1;
+  g_ctx_withcall_params.arg2=arg2;
+  g_ctx_withcall_params.arg3=arg3;
 
 	swapcontext(&switch_from->uc,&switch_to->uc);
 	//execute
-	if (g_ctx_withcall_params.fn){
-		g_ctx_withcall_params.fn(g_ctx_withcall_params.arg1,g_ctx_withcall_params.arg2,g_ctx_withcall_params.arg3);
+	if (g_ctx_withcall_params.fn) {
+		g_ctx_withcall_params.fn(g_ctx_withcall_params.arg1,
+      g_ctx_withcall_params.arg2, g_ctx_withcall_params.arg3);
 	}
 }
 /*static inline void myth_get_context_s(myth_context_t ctx)
@@ -107,16 +125,22 @@ static inline void myth_set_context_s(myth_context_t ctx)
 	g_ctx_withcall_params.fn=NULL;
 	setcontext(&ctx->uc);
 }
-static inline void myth_set_context_withcall_s(myth_context_t switch_to,void(*func)(void*,void*,void*),void *arg1,void *arg2,void *arg3)
+static inline void myth_set_context_withcall_s(myth_context_t switch_to,
+  void(*func)(void*,void*,void*), void *arg1, void *arg2, void *arg3)
 {
 	//set
-	g_ctx_withcall_params.fn=func;g_ctx_withcall_params.arg1=arg1;g_ctx_withcall_params.arg2=arg2;g_ctx_withcall_params.arg3=arg3;
+	g_ctx_withcall_params.fn=func;
+  g_ctx_withcall_params.arg1=arg1;
+  g_ctx_withcall_params.arg2=arg2;
+  g_ctx_withcall_params.arg3=arg3;
 	setcontext(&switch_to->uc);
 }
 
-static void empty_context_ep(void){
-	if (g_ctx_withcall_params.fn){
-		g_ctx_withcall_params.fn(g_ctx_withcall_params.arg1,g_ctx_withcall_params.arg2,g_ctx_withcall_params.arg3);
+static void empty_context_ep(void)
+{
+	if (g_ctx_withcall_params.fn) {
+		g_ctx_withcall_params.fn(g_ctx_withcall_params.arg1,
+      g_ctx_withcall_params.arg2, g_ctx_withcall_params.arg3);
 	}
 }
 
@@ -135,107 +159,99 @@ static void voidcall_context_ep(int pfn0,int pfn1)
 	fn_ints[0]=pfn0;
 	fn_ints[1]=pfn1;
 	fn=(void_func_t*)&fn_ints[0];
-	if (g_ctx_withcall_params.fn){
-		g_ctx_withcall_params.fn(g_ctx_withcall_params.arg1,g_ctx_withcall_params.arg2,g_ctx_withcall_params.arg3);
+	if (g_ctx_withcall_params.fn) {
+		g_ctx_withcall_params.fn(g_ctx_withcall_params.arg1,
+      g_ctx_withcall_params.arg2, g_ctx_withcall_params.arg3);
 	}
 	(*fn)();
 }
-#else
-void myth_swap_context_s(myth_context_t switch_from,myth_context_t switch_to);
-void myth_swap_context_withcall_s(myth_context_t switch_from,myth_context_t switch_to,void(*func)(void*,void*,void*),void *arg1,void *arg2,void *arg3);
-void myth_get_context_s(myth_context_t ctx);
-void myth_set_context_s(myth_context_t ctx);
-void myth_set_context_withcall_s(myth_context_t switch_to,void(*func)(void*,void*,void*),void *arg1,void *arg2,void *arg3);
 #endif /* MYTH_CONTEXT_ARCH_UNIVERSAL */
 
 #if defined MYTH_INLINE_CONTEXT
-#define myth_set_context(ctx) {myth_context_switch_hook(ctx);myth_set_context_i(ctx);}
-#define myth_swap_context(from,to) {myth_context_switch_hook(to);myth_swap_context_i(from,to);}
-#define myth_swap_context_withcall(from,to,fn,a1,a2,a3) {myth_context_switch_hook(to);myth_swap_context_withcall_i(from,to,fn,a1,a2,a3);}
-#define myth_set_context_withcall(ctx,fn,a1,a2,a3) {myth_context_switch_hook(ctx);myth_set_context_withcall_i(ctx,fn,a1,a2,a3);}
-#else
-#define myth_set_context(ctx) {myth_context_switch_hook(ctx);myth_set_context_s(ctx);}
-#define myth_swap_context(from,to) {myth_context_switch_hook(to);myth_swap_context_s(from,to);}
-#define myth_swap_context_withcall(from,to,fn,a1,a2,a3) {myth_context_switch_hook(to);myth_swap_context_withcall_s(from,to,fn,a1,a2,a3);}
-#define myth_set_context_withcall(ctx,fn,a1,a2,a3) {myth_context_switch_hook(ctx);myth_set_context_withcall_s(ctx,fn,a1,a2,a3);}
+#define myth_set_context(ctx) \
+  {myth_context_switch_hook(ctx); myth_set_context_i(ctx);}
+#define myth_swap_context(from,to) \
+  {myth_context_switch_hook(to); myth_swap_context_i(from,to);}
+#define myth_swap_context_withcall(from,to,fn,a1,a2,a3) \
+  {myth_context_switch_hook(to); myth_swap_context_withcall_i(from,to,fn,a1,a2,a3);}
+#define myth_set_context_withcall(ctx,fn,a1,a2,a3) \
+  {myth_context_switch_hook(ctx); myth_set_context_withcall_i(ctx,fn,a1,a2,a3);}
+#else /* MYTH_ASSEMBLY_CONTEXT */
+#define myth_set_context(ctx) \
+  {myth_context_switch_hook(ctx); myth_set_context_s(ctx);}
+#define myth_swap_context(from,to) \
+  {myth_context_switch_hook(to); myth_swap_context_s(from,to);}
+#define myth_swap_context_withcall(from,to,fn,a1,a2,a3) \
+  {myth_context_switch_hook(to); myth_swap_context_withcall_s(from,to,fn,a1,a2,a3);}
+#define myth_set_context_withcall(ctx,fn,a1,a2,a3) \
+  {myth_context_switch_hook(ctx); myth_set_context_withcall_s(ctx,fn,a1,a2,a3);}
 #endif
 
-static inline void myth_make_context_voidcall(myth_context_t ctx,void_func_t func,void *stack,size_t stacksize);
-
-static inline void myth_make_context_empty(myth_context_t ctx,void *stack,size_t stacksize)
+//Make a context for executing "void foo(void)"
+static inline void myth_make_context_voidcall(myth_context_t ctx,
+  void_func_t func, void *stack, size_t stacksize)
 {
 #if defined MYTH_CONTEXT_ARCH_i386
 	//Get stack tail
-	uint32_t stack_tail=((uint32_t)stack);
+	uint32_t stack_tail = ((uint32_t)stack);
+	stack_tail -= 4;
+	uint32_t *dest_addr;
 	//Align
-	stack_tail&=0xFFFFFFF0;
+	stack_tail &= 0xFFFFFFF0;
+	dest_addr = (uint32_t*)stack_tail;
 	//Set stack pointer
-	ctx->esp=stack_tail;
+	ctx->esp = stack_tail;
+	//Set retuen address
+	*dest_addr = (uint32_t)func;
 #elif defined MYTH_CONTEXT_ARCH_amd64
 	//Get stack tail
-	uint64_t stack_tail=((uint64_t)stack);
+	uint64_t stack_tail = ((uint64_t)stack);
+	stack_tail -= 8;
+	uint64_t *dest_addr;
 	//Align
-	stack_tail&=0xFFFFFFFFFFFFFFF0;
+	stack_tail &= 0xFFFFFFFFFFFFFFF0;
+	dest_addr = (uint64_t*) stack_tail;
 	//Set stack pointer
-	ctx->rsp=stack_tail;
-#elif defined MYTH_CONTEXT_ARCH_sparc
-  //FIXME: temp use universal approach
-	myth_make_context_voidcall(ctx,empty_context_ep,stack,stacksize);
-#else
-	myth_make_context_voidcall(ctx,empty_context_ep,stack,stacksize);
+	ctx->rsp = stack_tail;
+	//Set retuen address
+	*dest_addr = (uint64_t) func;
+#elif defined MYTH_CONTEXT_ARCH_sparc || defined MYTH_CONTEXT_ARCH_UNIVERSAL
+  //FIXME: current use universal solution
+	uintptr_t stack_start = ((uintptr_t) stack) - (stacksize - sizeof(void*));
+	getcontext(&ctx->uc);
+	ctx->uc.uc_stack.ss_sp = (void*) stack_start;
+	ctx->uc.uc_stack.ss_size = stacksize;
+	ctx->uc.uc_link = NULL;
+	//makecontext can pass only integer as arguments, so decompose the pointer into integers
+	int fn_ints[2];
+	memset(fn_ints, 0, sizeof(fn_ints));
+	memcpy(fn_ints, &func, sizeof(void*));
+	makecontext(&ctx->uc, (void(*)())voidcall_context_ep, 2, fn_ints[0], fn_ints[1]);
 #endif
 }
 
-//Make a context for executing "void foo(void)"
-static inline void myth_make_context_voidcall(myth_context_t ctx,void_func_t func,void *stack,size_t stacksize)
+static inline void myth_make_context_empty(myth_context_t ctx, void *stack,
+  size_t stacksize)
 {
 #if defined MYTH_CONTEXT_ARCH_i386
 	//Get stack tail
 	uint32_t stack_tail=((uint32_t)stack);
-	stack_tail-=4;
-	uint32_t *dest_addr;
 	//Align
-	stack_tail&=0xFFFFFFF0;
-	dest_addr=(uint32_t*)stack_tail;
+	stack_tail &= 0xFFFFFFF0;
 	//Set stack pointer
-	ctx->esp=stack_tail;
-	//Set retuen address
-	*dest_addr=(uint32_t)func;
+	ctx->esp = stack_tail;
 #elif defined MYTH_CONTEXT_ARCH_amd64
 	//Get stack tail
-	uint64_t stack_tail=((uint64_t)stack);
-	stack_tail-=8;
-	uint64_t *dest_addr;
+	uint64_t stack_tail = ((uint64_t)stack);
 	//Align
-	stack_tail&=0xFFFFFFFFFFFFFFF0;
-	dest_addr=(uint64_t*)stack_tail;
+	stack_tail &= 0xFFFFFFFFFFFFFFF0;
 	//Set stack pointer
-	ctx->rsp=stack_tail;
-	//Set retuen address
-	*dest_addr=(uint64_t)func;
+	ctx->rsp = stack_tail;
 #elif defined MYTH_CONTEXT_ARCH_sparc
-  //FIXME: current use universal solution
-	uintptr_t stack_start=((uintptr_t)stack)-(stacksize-sizeof(void*));
-	getcontext(&ctx->uc);
-	ctx->uc.uc_stack.ss_sp=(void*)stack_start;
-	ctx->uc.uc_stack.ss_size=stacksize;
-	ctx->uc.uc_link=NULL;
-	//makecontext can pass only integer as arguments, so decompose the pointer into integers
-	int fn_ints[2];
-	memset(fn_ints,0,sizeof(fn_ints));
-	memcpy(fn_ints,&func,sizeof(void*));
-	makecontext(&ctx->uc,(void(*)())voidcall_context_ep,2,fn_ints[0],fn_ints[1]);
-#else /* MYTH_CONTEXT_ARCH_UNIVERSAL */
-	uintptr_t stack_start=((uintptr_t)stack)-(stacksize-sizeof(void*));
-	getcontext(&ctx->uc);
-	ctx->uc.uc_stack.ss_sp=(void*)stack_start;
-	ctx->uc.uc_stack.ss_size=stacksize;
-	ctx->uc.uc_link=NULL;
-	//makecontext can pass only integer as arguments, so decompose the pointer into integers
-	int fn_ints[2];
-	memset(fn_ints,0,sizeof(fn_ints));
-	memcpy(fn_ints,&func,sizeof(void*));
-	makecontext(&ctx->uc,(void(*)())voidcall_context_ep,2,fn_ints[0],fn_ints[1]);
+  //FIXME: temp use universal approach
+	myth_make_context_voidcall(ctx, empty_context_ep, stack, stacksize);
+#else
+	myth_make_context_voidcall(ctx, empty_context_ep, stack, stacksize);
 #endif
 }
 
