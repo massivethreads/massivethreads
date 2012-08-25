@@ -1,12 +1,12 @@
 /* Measure the overhead of ucontext routines */
 
-#include <ucontext.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <ucontext.h>
 
 static ucontext_t uctx_main, uctx_func1, uctx_func2;
-static uint64_t t0, t1, t2, t3, t4, t5, t6, t7;
+static uint64_t t0, t1, t2, t3, t4, t5;
 
 #define handle_error(msg) \
   do { perror(msg); exit(EXIT_FAILURE); } while (0)
@@ -29,26 +29,24 @@ static inline uint64_t get_rdtsc(void)
 
 static void func1(void)
 {
-  t3 = get_rdtsc();
-  printf("func1: started\n");
-  printf("func1: swapcontext(&uctx_func1, &uctx_func2)\n");
-  t4 = get_rdtsc();
+  t2 = get_rdtsc();
+  //printf("func1: started\n");
+  //printf("func1: swapcontext(&uctx_func1, &uctx_func2)\n");
   if (swapcontext(&uctx_func1, &uctx_func2)  == -1)
     handle_error("swapcontext");
-  t6 = get_rdtsc();
-  printf("func1: returning\n");
+  t4 = get_rdtsc();
+  //printf("func1: returning\n");
 }
 
 static void func2(void)
 {
   t1 = get_rdtsc();
-  printf("func2: started\n");
-  printf("func2: swapcontext(&uctx_func2, &uctx_func1)\n");
-  t2 = get_rdtsc();
+  //printf("func2: started\n");
+  //printf("func2: swapcontext(&uctx_func2, &uctx_func1)\n");
   if (swapcontext(&uctx_func2, &uctx_func1) == -1)
     handle_error("swapcontext");
-  t5 = get_rdtsc();
-  printf("func2: returning\n");
+  t3 = get_rdtsc();
+  //printf("func2: returning\n");
 }
 
 int main(int argc, char *argv[])
@@ -78,13 +76,14 @@ int main(int argc, char *argv[])
   t2 = get_rdtsc();
   printf("main: getcontext: %llu, makecontext: %llu\n", t1 - t0, t2 - t1);
 
-  printf("main: swapcontext(&uctx_main, &uctx_func2)\n");
+  //printf("main: swapcontext(&uctx_main, &uctx_func2)\n");
   t0 = get_rdtsc();
   if (swapcontext(&uctx_main, &uctx_func2) == -1)
     handle_error("swapcontext");
-  t7 = get_rdtsc();
+  t5 = get_rdtsc();
   
-  printf("main: swapcontext: %llu, %llu, %llu, %llu\n", t1-t0, t3-t2, t5-t4, t7-t6);
+  printf("main: swapcontext: %llu, %llu, %llu, %llu, %llu\n", 
+    t1-t0, t2-t1, t3-t2, t4-t3, t5-t4);
   printf("main: exiting\n");
   exit(EXIT_SUCCESS);
 }
