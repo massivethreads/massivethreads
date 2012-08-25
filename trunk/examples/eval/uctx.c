@@ -84,6 +84,5 @@ int main(int argc, char *argv[])
   
   printf("main: swapcontext: %llu, %llu, %llu, %llu, %llu\n", 
     t1-t0, t2-t1, t3-t2, t4-t3, t5-t4);
-  printf("main: exiting\n");
   exit(EXIT_SUCCESS);
 }
