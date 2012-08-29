@@ -249,7 +249,10 @@ myth_set_context_withcall_s:
 	MY_RET_B
 .size myth_set_context_withcall_s,.-myth_set_context_withcall_s
 
+#elif defined MYTH_ARCH_sparc
+//FIXME
+
 #else
+#warning "assembly context routines not implemented"
 
 #endif
-

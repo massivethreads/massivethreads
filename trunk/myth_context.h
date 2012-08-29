@@ -49,7 +49,7 @@ typedef struct myth_context
 #else
 #error "Architecture not defined"
 #endif
-} myth_context,*myth_context_t;
+} myth_context, *myth_context_t;
 
 static inline void myth_make_context_empty(myth_context_t ctx, void *stack,
   size_t stacksize);
@@ -60,9 +60,9 @@ static inline void myth_make_context_voidcall(myth_context_t ctx, void_func_t fu
 //static inline void myth_log_add_context_switch(struct myth_running_env *env,struct myth_thread *th);
 #define  myth_context_switch_hook(ctx) \
 { \
-	struct myth_running_env* env=myth_get_current_env(); \
-	myth_thread_t th=myth_context_to_thread(env,ctx); \
-	myth_log_add_context_switch(env,th); \
+	struct myth_running_env* env = myth_get_current_env(); \
+	myth_thread_t th = myth_context_to_thread(env, ctx); \
+	myth_log_add_context_switch(env, th); \
 }
 #else
 #define myth_context_switch_hook(ctx)
@@ -91,7 +91,7 @@ static inline void myth_swap_context_s(myth_context_t switch_from,
   myth_context_t switch_to)
 {
 	//clear
-	g_ctx_withcall_params.fn=NULL;
+	g_ctx_withcall_params.fn = NULL;
 	swapcontext(&switch_from->uc, &switch_to->uc);
 	//execute
 	if (g_ctx_withcall_params.fn){
@@ -99,17 +99,18 @@ static inline void myth_swap_context_s(myth_context_t switch_from,
       g_ctx_withcall_params.arg2, g_ctx_withcall_params.arg3);
 	}
 }
+
 static inline void myth_swap_context_withcall_s(myth_context_t switch_from,
   myth_context_t switch_to, void(*func)(void*,void*,void*), 
   void *arg1, void *arg2, void *arg3)
 {
 	//set
-	g_ctx_withcall_params.fn=func;
-  g_ctx_withcall_params.arg1=arg1;
-  g_ctx_withcall_params.arg2=arg2;
-  g_ctx_withcall_params.arg3=arg3;
+	g_ctx_withcall_params.fn = func;
+  g_ctx_withcall_params.arg1 = arg1;
+  g_ctx_withcall_params.arg2 = arg2;
+  g_ctx_withcall_params.arg3 = arg3;
 
-	swapcontext(&switch_from->uc,&switch_to->uc);
+	swapcontext(&switch_from->uc, &switch_to->uc);
 	//execute
 	if (g_ctx_withcall_params.fn) {
 		g_ctx_withcall_params.fn(g_ctx_withcall_params.arg1,
@@ -122,17 +123,17 @@ static inline void myth_swap_context_withcall_s(myth_context_t switch_from,
 static inline void myth_set_context_s(myth_context_t ctx)
 {
 	//clear
-	g_ctx_withcall_params.fn=NULL;
+	g_ctx_withcall_params.fn = NULL;
 	setcontext(&ctx->uc);
 }
 static inline void myth_set_context_withcall_s(myth_context_t switch_to,
   void(*func)(void*,void*,void*), void *arg1, void *arg2, void *arg3)
 {
 	//set
-	g_ctx_withcall_params.fn=func;
-  g_ctx_withcall_params.arg1=arg1;
-  g_ctx_withcall_params.arg2=arg2;
-  g_ctx_withcall_params.arg3=arg3;
+	g_ctx_withcall_params.fn = func;
+  g_ctx_withcall_params.arg1 = arg1;
+  g_ctx_withcall_params.arg2 = arg2;
+  g_ctx_withcall_params.arg3 = arg3;
 	setcontext(&switch_to->uc);
 }
 
@@ -152,13 +153,13 @@ static void empty_context_ep(void)
 #error "sizeof(void*) is too relatively small with sizeof(void*)"
 #endif
 
-static void voidcall_context_ep(int pfn0,int pfn1)
+static void voidcall_context_ep(int pfn0, int pfn1)
 {
 	void_func_t *fn;
-	int fn_ints[2]; //FIXME:shoud be aligned the same as pointer
-	fn_ints[0]=pfn0;
-	fn_ints[1]=pfn1;
-	fn=(void_func_t*)&fn_ints[0];
+	int fn_ints[2]; //FIXME: shoud be aligned the same as pointer
+	fn_ints[0] = pfn0;
+	fn_ints[1] = pfn1;
+	fn = (void_func_t*) &fn_ints[0];
 	if (g_ctx_withcall_params.fn) {
 		g_ctx_withcall_params.fn(g_ctx_withcall_params.arg1,
       g_ctx_withcall_params.arg2, g_ctx_withcall_params.arg3);
@@ -198,14 +199,14 @@ static inline void myth_make_context_voidcall(myth_context_t ctx,
 	uint32_t *dest_addr;
 	//Align
 	stack_tail &= 0xFFFFFFF0;
-	dest_addr = (uint32_t*)stack_tail;
+	dest_addr = (uint32_t*) stack_tail;
 	//Set stack pointer
 	ctx->esp = stack_tail;
 	//Set retuen address
-	*dest_addr = (uint32_t)func;
+	*dest_addr = (uint32_t) func;
 #elif defined MYTH_CONTEXT_ARCH_amd64
 	//Get stack tail
-	uint64_t stack_tail = ((uint64_t)stack);
+	uint64_t stack_tail = (uint64_t) stack;
 	stack_tail -= 8;
 	uint64_t *dest_addr;
 	//Align
@@ -247,10 +248,8 @@ static inline void myth_make_context_empty(myth_context_t ctx, void *stack,
 	stack_tail &= 0xFFFFFFFFFFFFFFF0;
 	//Set stack pointer
 	ctx->rsp = stack_tail;
-#elif defined MYTH_CONTEXT_ARCH_sparc
+#elif defined MYTH_CONTEXT_ARCH_sparc || defined MYTH_CONTEXT_ARCH_UNIVERSAL
   //FIXME: temp use universal approach
-	myth_make_context_voidcall(ctx, empty_context_ep, stack, stacksize);
-#else
 	myth_make_context_voidcall(ctx, empty_context_ep, stack, stacksize);
 #endif
 }
