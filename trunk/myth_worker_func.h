@@ -325,10 +325,11 @@ static inline void myth_startpoint_exit_ex_body(int rank)
 	myth_notify_workers_exit();
 	//If running on a different worker, switch context
 	while (env->rank!=rank){
-		intptr_t rank_=rank;
+		intptr_t rank_ = rank;
 		myth_thread_t th;
-		th=env->this_thread;
-		myth_swap_context_withcall(&th->context,&env->sched.context,myth_startpoint_exit_ex_1,(void*)th,(void*)rank_,NULL);
+		th = env->this_thread;
+		myth_swap_context_withcall(&th->context, &env->sched.context, 
+      myth_startpoint_exit_ex_1, (void*)th, (void*) rank_, NULL);
 		myth_rwbarrier();
 		//Obtain worker thread descriptor again, because env may be changed
 		env=th->env;

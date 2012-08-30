@@ -92,6 +92,8 @@ static inline void myth_swap_context_s(myth_context_t switch_from,
 {
 	//clear
 	g_ctx_withcall_params.fn = NULL;
+  asm volatile("st %%g7, [%0]" \
+    : : "r"(&switch_to->uc.uc_mcontext.gregs[REG_G7]) : "memory");
 	swapcontext(&switch_from->uc, &switch_to->uc);
 	//execute
 	if (g_ctx_withcall_params.fn){
@@ -110,6 +112,8 @@ static inline void myth_swap_context_withcall_s(myth_context_t switch_from,
   g_ctx_withcall_params.arg2 = arg2;
   g_ctx_withcall_params.arg3 = arg3;
 
+  asm volatile("st %%g7, [%0]" \
+    : : "r"(&switch_to->uc.uc_mcontext.gregs[REG_G7]) : "memory");
 	swapcontext(&switch_from->uc, &switch_to->uc);
 	//execute
 	if (g_ctx_withcall_params.fn) {
@@ -124,6 +128,8 @@ static inline void myth_set_context_s(myth_context_t ctx)
 {
 	//clear
 	g_ctx_withcall_params.fn = NULL;
+  asm volatile("st %%g7, [%0]" \
+    : : "r"(&ctx->uc.uc_mcontext.gregs[REG_G7]) : "memory");
 	setcontext(&ctx->uc);
 }
 static inline void myth_set_context_withcall_s(myth_context_t switch_to,
@@ -134,6 +140,8 @@ static inline void myth_set_context_withcall_s(myth_context_t switch_to,
   g_ctx_withcall_params.arg1 = arg1;
   g_ctx_withcall_params.arg2 = arg2;
   g_ctx_withcall_params.arg3 = arg3;
+  asm volatile("st %%g7, [%0]" \
+    : : "r"(&switch_to->uc.uc_mcontext.gregs[REG_G7]) : "memory");
 	setcontext(&switch_to->uc);
 }
 
@@ -218,7 +226,8 @@ static inline void myth_make_context_voidcall(myth_context_t ctx,
 	*dest_addr = (uint64_t) func;
 #elif defined MYTH_CONTEXT_ARCH_sparc || defined MYTH_CONTEXT_ARCH_UNIVERSAL
   //FIXME: current use universal solution
-	uintptr_t stack_start = ((uintptr_t) stack) - (stacksize - sizeof(void*));
+	///uintptr_t stack_start = ((uintptr_t) stack) - (stacksize - sizeof(void*));
+	uintptr_t stack_start = ((uintptr_t) stack) - stacksize;
 	getcontext(&ctx->uc);
 	ctx->uc.uc_stack.ss_sp = (void*) stack_start;
 	ctx->uc.uc_stack.ss_size = stacksize;
