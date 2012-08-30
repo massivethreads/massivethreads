@@ -281,7 +281,7 @@ static inline void myth_startpoint_init_ex_body(int rank)
 	myth_setup_worker(rank);
 	myth_running_env_t env;
 	env=myth_get_current_env();
-	env->exit_flag=-1;
+	env->exit_flag = -1;
 	myth_thread_t this_th;
 	//Allocate thread descriptor for current thread
 #ifdef MYTH_SPLIT_STACK_DESC
@@ -294,12 +294,14 @@ static inline void myth_startpoint_init_ex_body(int rank)
 	sprintf(this_th->annotation_str,"%p(main)",this_th);
 #endif
 	//Set worker thread descrptor
-	this_th->env=env;
+	this_th->env = env;
 	//Initialize context for scheduler
-	env->sched.stack=myth_malloc(SCHED_STACK_SIZE);
-	myth_make_context_voidcall(&env->sched.context,myth_sched_loop,(void*)(((char*)env->sched.stack)+SCHED_STACK_SIZE),SCHED_STACK_SIZE);
+	env->sched.stack = myth_malloc(SCHED_STACK_SIZE);
+	myth_make_context_voidcall(&env->sched.context, myth_sched_loop, 
+		(void*)(((char*)env->sched.stack)+SCHED_STACK_SIZE), SCHED_STACK_SIZE);
 	//Switch to scheduler
-	myth_swap_context_withcall(&this_th->context,&env->sched.context,myth_startpoint_init_ex_1,env,this_th,NULL);
+	myth_swap_context_withcall(&this_th->context, &env->sched.context,
+		myth_startpoint_init_ex_1, env, this_th, NULL);
 }
 
 MYTH_CTX_CALLBACK void myth_startpoint_exit_ex_1(void *arg1,void *arg2,void *arg3)
@@ -324,7 +326,7 @@ static inline void myth_startpoint_exit_ex_body(int rank)
 	//Set exit flag
 	myth_notify_workers_exit();
 	//If running on a different worker, switch context
-	while (env->rank!=rank){
+	while (env->rank != rank) {
 		intptr_t rank_ = rank;
 		myth_thread_t th;
 		th = env->this_thread;
@@ -348,11 +350,10 @@ static inline void *myth_worker_thread_fn(void *args)
 	cs=myth_get_worker_cpuset(rank);
 	real_pthread_setaffinity_np(real_pthread_self(),sizeof(cpu_set_t),&cs);
 #endif
-	if (rank==0){
+	if (rank == 0) {
 		//setup as a main thread
 		myth_startpoint_init_ex_body(rank);
-	}
-	else{
+	} else {
 		//setup as a worker
 		myth_worker_start_ex_body(rank);
 	}
@@ -407,7 +408,8 @@ static void myth_sched_loop(void)
 {
 	MAY_BE_UNUSED uint64_t t0,t1;
 	myth_running_env_t env;
-	t0=0;t1=0;
+	t0=0;
+	t1=0;
 	env=myth_get_current_env();
 #ifdef MYTH_SCHED_LOOP_DEBUG
 	myth_dprintf("myth_sched_loop:entered main loop\n");
@@ -416,10 +418,12 @@ static void myth_sched_loop(void)
 	env->prof_data.ws_attempt_count=myth_malloc(sizeof(uint64_t)*g_worker_thread_num);
 	{
 		int i;
-		for (i=0;i<g_worker_thread_num;i++){env->prof_data.ws_attempt_count[i]=0;}
+		for (i = 0; i < g_worker_thread_num; i++) {
+			env->prof_data.ws_attempt_count[i] = 0;
+		}
 	}
 #endif
-	while (1){
+	while (1) {
 		//sched_yield();
 		myth_thread_t next_run;
 		//Get runnable thread
@@ -446,7 +450,7 @@ static void myth_sched_loop(void)
 			myth_dprintf("myth_sched_loop:switching to thread:%p\n",next_run);
 #endif
 			myth_assert(next_run->status==MYTH_STATUS_READY);
-			myth_swap_context(&env->sched.context,&next_run->context);
+			myth_swap_context(&env->sched.context, &next_run->context);
 #ifdef MYTH_SCHED_LOOP_DEBUG
 			myth_dprintf("myth_sched_loop:returned from thread:%p\n",(void*)next_run);
 #endif
