@@ -20,16 +20,16 @@ void * func2(void *arg)
 int main(int argc, char *argv)
 {
   printf("start\n");
-	/*
+	/* MYTH_NATIVE test 
+  myth_init();
+  printf("run\n");
+	myth_fini();
+   */
   pthread_t th1, th2;
   pthread_create(&th1, NULL, func1, NULL);
   pthread_create(&th2, NULL, func2, NULL);
   pthread_join(th1, NULL);
   pthread_join(th2, NULL);
-	*/
-	myth_init();
-  printf("run\n");
-	myth_fini();
-  printf("exit\n");
+  printf("start\n");
   return 0;
 }
