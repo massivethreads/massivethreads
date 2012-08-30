@@ -16,10 +16,10 @@ typedef void (*void_func_t)(void);
 #elif defined MYTH_ARCH_sparc && !defined MYTH_FORCE_UCONTEXT
 #define MYTH_CONTEXT_ARCH_sparc
 #if __WORDSIZE == 32
-#define RESTORE_G7(ctx) asm volatile("st %%g7,[%0]" \
+#define PRESERVE_G7(ctx) asm volatile("st %%g7,[%0]" \
 	:: "r"(&ctx->uc.uc_mcontext.gregs[REG_G7]) : "memory")
 #else /* __WORDSIZE == 64 */
-#define RESTORE_G7(ctx) asm volatile("stx %%g7,[%0]" \
+#define PRESERVE_G7(ctx) asm volatile("stx %%g7,[%0]" \
 	:: "r"(&ctx->uc.uc_mcontext.mc_gregs[MC_G7]) : "memory")
 #endif /* __WORDISZE == 64 */
 #elif defined MYTH_ARCH_UNIVERSAL || defined MYTH_FORCE_UCONTEXT
@@ -99,7 +99,7 @@ static inline void myth_swap_context_s(myth_context_t switch_from,
 {
 	//clear
 	g_ctx_withcall_params.fn = NULL;
-	RESTORE_G7(switch_to);
+	PRESERVE_G7(switch_to);
 	swapcontext(&switch_from->uc, &switch_to->uc);
 	//execute
 	if (g_ctx_withcall_params.fn){
@@ -118,7 +118,7 @@ static inline void myth_swap_context_withcall_s(myth_context_t switch_from,
   g_ctx_withcall_params.arg2 = arg2;
   g_ctx_withcall_params.arg3 = arg3;
 
-	RESTORE_G7(switch_to);
+	PRESERVE_G7(switch_to);
 	swapcontext(&switch_from->uc, &switch_to->uc);
 	//execute
 	if (g_ctx_withcall_params.fn) {
@@ -133,7 +133,7 @@ static inline void myth_set_context_s(myth_context_t ctx)
 {
 	//clear
 	g_ctx_withcall_params.fn = NULL;
-	RESTORE_G7(ctx);
+	PRESERVE_G7(ctx);
 	setcontext(&ctx->uc);
 }
 static inline void myth_set_context_withcall_s(myth_context_t switch_to,
@@ -144,7 +144,7 @@ static inline void myth_set_context_withcall_s(myth_context_t switch_to,
   g_ctx_withcall_params.arg1 = arg1;
   g_ctx_withcall_params.arg2 = arg2;
   g_ctx_withcall_params.arg3 = arg3;
-	RESTORE_G7(switch_to);
+	PRESERVE_G7(switch_to);
 	setcontext(&switch_to->uc);
 }
 
