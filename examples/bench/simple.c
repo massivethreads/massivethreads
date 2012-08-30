@@ -19,7 +19,7 @@ void * func2(void *arg)
 
 int main(int argc, char *argv)
 {
-  printf("main start\n");
+  printf("start\n");
   pthread_t th1, th2;
   pthread_create(&th1, NULL, func1, NULL);
   pthread_create(&th2, NULL, func2, NULL);
