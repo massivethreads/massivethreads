@@ -208,10 +208,8 @@
 #define MYTH_ARCH_i386
 #elif (!defined MYTH_FORCE_ARCH_UNIVERSAL) && (defined __x86_64__)
 #define MYTH_ARCH_amd64
-
 //Save FPU and SIMD control registers
 //#define MYTH_SAVE_FPCSR
-
 #elif (!defined MYTH_FORCE_ARCH_UNIVERSAL) && (defined __sparc__)
 #define MYTH_ARCH_sparc
 // FIXME: Do we need spinlock here?
