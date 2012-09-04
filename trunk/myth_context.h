@@ -15,17 +15,9 @@ typedef void (*void_func_t)(void);
 #define MYTH_CONTEXT_ARCH_amd64
 #elif defined MYTH_ARCH_sparc && !defined MYTH_FORCE_UCONTEXT
 #define MYTH_CONTEXT_ARCH_sparc
-#if __WORDSIZE == 32
-#define PRESERVE_G7(ctx) asm volatile("st %%g7,[%0]" \
-	:: "r"(&ctx->uc.uc_mcontext.gregs[REG_G7]) : "memory")
-#else /* __WORDSIZE == 64 */
-#define PRESERVE_G7(ctx) asm volatile("stx %%g7,[%0]" \
-	:: "r"(&ctx->uc.uc_mcontext.mc_gregs[MC_G7]) : "memory")
-#endif /* __WORDISZE == 64 */
 #elif defined MYTH_ARCH_UNIVERSAL || defined MYTH_FORCE_UCONTEXT
 #define MYTH_CONTEXT_ARCH_UNIVERSAL
 #undef MYTH_INLINE_CONTEXT
-#elif defined MYTH_CONTEXT_ARCH_UNIVERSAL
 #else
 #error "Specify architecture"
 #endif
@@ -51,8 +43,9 @@ typedef struct myth_context
 	uint32_t esp;
 #elif defined MYTH_CONTEXT_ARCH_amd64
 	uint64_t rsp;
-#elif defined MYTH_CONTEXT_ARCH_sparc || defined MYTH_CONTEXT_ARCH_UNIVERSAL
-  ucontext_t uc;  // FIXME
+#elif defined MYTH_CONTEXT_ARCH_sparc 
+#elif defined MYTH_CONTEXT_ARCH_UNIVERSAL
+  ucontext_t uc;
 #else
 #error "Architecture not defined"
 #endif
@@ -75,7 +68,9 @@ static inline void myth_make_context_voidcall(myth_context_t ctx, void_func_t fu
 #define myth_context_switch_hook(ctx)
 #endif
 
-#if defined MYTH_CONTEXT_ARCH_i386 || defined MYTH_CONTEXT_ARCH_amd64
+#if defined MYTH_CONTEXT_ARCH_i386 || defined MYTH_CONTEXT_ARCH_amd64 || \
+    defined MYTH_CONTEXT_ARCH_sparc
+
 void myth_swap_context_s(myth_context_t switch_from, myth_context_t switch_to);
 void myth_swap_context_withcall_s(myth_context_t switch_from, myth_context_t switch_to,
   void(*func)(void*,void*,void*), void *arg1, void *arg2, void *arg3);
@@ -84,105 +79,21 @@ void myth_set_context_s(myth_context_t ctx);
 void myth_set_context_withcall_s(myth_context_t switch_to, 
   void(*func)(void*,void*,void*), void *arg1, void *arg2, void *arg3);
 
-#elif defined MYTH_CONTEXT_ARCH_sparc
-
-typedef struct myth_ctx_withcall_param
-{
-	void(*fn)(void*,void*,void*);
-	void *arg1, *arg2, *arg3;
-} myth_ctx_withcall_param, *myth_ctx_withcall_param_t;
-
-extern volatile __thread myth_ctx_withcall_param g_ctx_withcall_params;
-
-static inline void myth_swap_context_s(myth_context_t switch_from,
-  myth_context_t switch_to)
-{
-	//clear
-	g_ctx_withcall_params.fn = NULL;
-	PRESERVE_G7(switch_to);
-	swapcontext(&switch_from->uc, &switch_to->uc);
-	//execute
-	if (g_ctx_withcall_params.fn){
-		g_ctx_withcall_params.fn(g_ctx_withcall_params.arg1,
-      g_ctx_withcall_params.arg2, g_ctx_withcall_params.arg3);
-	}
-}
-
-static inline void myth_swap_context_withcall_s(myth_context_t switch_from,
-  myth_context_t switch_to, void(*func)(void*,void*,void*), 
-  void *arg1, void *arg2, void *arg3)
-{
-	//set
-	g_ctx_withcall_params.fn = func;
-  g_ctx_withcall_params.arg1 = arg1;
-  g_ctx_withcall_params.arg2 = arg2;
-  g_ctx_withcall_params.arg3 = arg3;
-
-	PRESERVE_G7(switch_to);
-	swapcontext(&switch_from->uc, &switch_to->uc);
-	//execute
-	if (g_ctx_withcall_params.fn) {
-		g_ctx_withcall_params.fn(g_ctx_withcall_params.arg1,
-      g_ctx_withcall_params.arg2, g_ctx_withcall_params.arg3);
-	}
-}
-/*static inline void myth_get_context_s(myth_context_t ctx)
-{
-}*/
-static inline void myth_set_context_s(myth_context_t ctx)
-{
-	//clear
-	g_ctx_withcall_params.fn = NULL;
-	PRESERVE_G7(ctx);
-	setcontext(&ctx->uc);
-}
-static inline void myth_set_context_withcall_s(myth_context_t switch_to,
-  void(*func)(void*,void*,void*), void *arg1, void *arg2, void *arg3)
-{
-	//set
-	g_ctx_withcall_params.fn = func;
-  g_ctx_withcall_params.arg1 = arg1;
-  g_ctx_withcall_params.arg2 = arg2;
-  g_ctx_withcall_params.arg3 = arg3;
-	PRESERVE_G7(switch_to);
-	setcontext(&switch_to->uc);
-}
-
-static void empty_context_ep(void)
-{
-	if (g_ctx_withcall_params.fn) {
-		g_ctx_withcall_params.fn(g_ctx_withcall_params.arg1,
-      g_ctx_withcall_params.arg2, g_ctx_withcall_params.arg3);
-	}
-}
-
-#define NUMBER_OF_INTS_TO_PASS_PTR (SIZEOF_VOIDP/SIZEOF_INT)
-#if ((SIZEOF_VOIDP%SIZEOF_INT)!=0)
-#error "sizeof(void*) cannot be divided by sizeof(void*)"
-#endif
-#if NUMBER_OF_INTS_TO_PASS_PTR>2
-#error "sizeof(void*) is too relatively small with sizeof(void*)"
-#endif
-
-static void voidcall_context_ep(int pfn0, int pfn1)
-{
-	void_func_t *fn;
-	int fn_ints[2]; //FIXME: shoud be aligned the same as pointer
-	fn_ints[0] = pfn0;
-	fn_ints[1] = pfn1;
-	fn = (void_func_t*) &fn_ints[0];
-	if (g_ctx_withcall_params.fn) {
-		g_ctx_withcall_params.fn(g_ctx_withcall_params.arg1,
-      g_ctx_withcall_params.arg2, g_ctx_withcall_params.arg3);
-	}
-	(*fn)();
-}
-
 #elif defined MYTH_CONTEXT_ARCH_UNIVERSAL
 
+#ifdef MYTH_ARCH_sparc
+#if __WORDSIZE == 32
+#define PRESERVE_G7(ctx) asm volatile("st %%g7,[%0]" \
+	:: "r"(&ctx->uc.uc_mcontext.gregs[REG_G7]) : "memory")
+#else /* __WORDSIZE == 64 */
+#define PRESERVE_G7(ctx) asm volatile("stx %%g7,[%0]" \
+	:: "r"(&ctx->uc.uc_mcontext.mc_gregs[MC_G7]) : "memory")
+#endif /* __WORDISZE == 64 */
+#endif /* MYTH_ARCH_sparc */
+
 typedef struct myth_ctx_withcall_param
 {
-	void(*fn)(void*,void*,void*);
+	void(*fn)(void*, void*, void*);
 	void *arg1, *arg2, *arg3;
 } myth_ctx_withcall_param, *myth_ctx_withcall_param_t;
 
@@ -193,9 +104,12 @@ static inline void myth_swap_context_s(myth_context_t switch_from,
 {
 	//clear
 	g_ctx_withcall_params.fn = NULL;
+#ifdef MYTH_ARCH_sparc
+	PRESERVE_G7(switch_to);
+#endif /* MYTH_ARCH_sparc */
 	swapcontext(&switch_from->uc, &switch_to->uc);
 	//execute
-	if (g_ctx_withcall_params.fn){
+	if (g_ctx_withcall_params.fn) {
 		g_ctx_withcall_params.fn(g_ctx_withcall_params.arg1,
       g_ctx_withcall_params.arg2, g_ctx_withcall_params.arg3);
 	}
@@ -211,6 +125,9 @@ static inline void myth_swap_context_withcall_s(myth_context_t switch_from,
   g_ctx_withcall_params.arg2 = arg2;
   g_ctx_withcall_params.arg3 = arg3;
 
+#ifdef MYTH_ARCH_sparc
+	PRESERVE_G7(switch_to);
+#endif /* MYTH_ARCH_sparc */
 	swapcontext(&switch_from->uc, &switch_to->uc);
 	//execute
 	if (g_ctx_withcall_params.fn) {
@@ -225,6 +142,9 @@ static inline void myth_set_context_s(myth_context_t ctx)
 {
 	//clear
 	g_ctx_withcall_params.fn = NULL;
+#ifdef MYTH_ARCH_sparc
+	PRESERVE_G7(ctx);
+#endif /* MYTH_ARCH_sparc */
 	setcontext(&ctx->uc);
 }
 static inline void myth_set_context_withcall_s(myth_context_t switch_to,
@@ -235,6 +155,9 @@ static inline void myth_set_context_withcall_s(myth_context_t switch_to,
   g_ctx_withcall_params.arg1 = arg1;
   g_ctx_withcall_params.arg2 = arg2;
   g_ctx_withcall_params.arg3 = arg3;
+#ifdef MYTH_ARCH_sparc
+	PRESERVE_G7(switch_to);
+#endif /* MYTH_ARCH_sparc */
 	setcontext(&switch_to->uc);
 }
 
@@ -295,7 +218,7 @@ static inline void myth_make_context_voidcall(myth_context_t ctx,
 {
 #if defined MYTH_CONTEXT_ARCH_i386
 	//Get stack tail
-	uint32_t stack_tail = ((uint32_t)stack);
+	uint32_t stack_tail = (uint32_t) stack;
 	stack_tail -= 4;
 	uint32_t *dest_addr;
 	//Align
@@ -317,15 +240,16 @@ static inline void myth_make_context_voidcall(myth_context_t ctx,
 	ctx->rsp = stack_tail;
 	//Set retuen address
 	*dest_addr = (uint64_t) func;
-#elif defined MYTH_CONTEXT_ARCH_sparc || defined MYTH_CONTEXT_ARCH_UNIVERSAL
-  //FIXME: current use universal solution
+#elif defined MYTH_CONTEXT_ARCH_sparc 
+#error "Not implemented yet"
+#elif defined MYTH_CONTEXT_ARCH_UNIVERSAL
 	uintptr_t stack_start = ((uintptr_t) stack) - (stacksize - sizeof(void*));
-	//uintptr_t stack_start = ((uintptr_t) stack) - stacksize;
 	getcontext(&ctx->uc);
 	ctx->uc.uc_stack.ss_sp = (void*) stack_start;
 	ctx->uc.uc_stack.ss_size = stacksize;
 	ctx->uc.uc_link = NULL;
-	//makecontext can pass only integer as arguments, so decompose the pointer into integers
+	// makecontext can pass only integer as arguments, 
+  // so decompose the pointer into integers
 	int fn_ints[2];
 	memset(fn_ints, 0, sizeof(fn_ints));
 	memcpy(fn_ints, &func, sizeof(void*));
@@ -350,8 +274,8 @@ static inline void myth_make_context_empty(myth_context_t ctx, void *stack,
 	stack_tail &= 0xFFFFFFFFFFFFFFF0;
 	//Set stack pointer
 	ctx->rsp = stack_tail;
-#elif defined MYTH_CONTEXT_ARCH_sparc || defined MYTH_CONTEXT_ARCH_UNIVERSAL
-  //FIXME: temp use universal approach
+#elif defined MYTH_CONTEXT_ARCH_sparc 
+#elif defined MYTH_CONTEXT_ARCH_UNIVERSAL
 	myth_make_context_voidcall(ctx, empty_context_ep, stack, stacksize);
 #endif
 }

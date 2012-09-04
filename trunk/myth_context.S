@@ -254,5 +254,4 @@ myth_set_context_withcall_s:
 
 #else
 #warning "assembly context routines not implemented"
-
 #endif
