@@ -419,9 +419,7 @@ static void myth_sched_loop(void)
 	t0=0;
 	t1=0;
 	env=myth_get_current_env();
-	//---
-	//Insert initialization code here
-	//---
+	myth_log_add_context_switch(env,NULL);
 #ifdef MYTH_SCHED_LOOP_DEBUG
 	myth_dprintf("myth_sched_loop:entered main loop\n");
 #endif
@@ -473,9 +471,6 @@ static void myth_sched_loop(void)
 #ifdef MYTH_SCHED_LOOP_DEBUG
 			myth_dprintf("env %p received exit signal,exiting\n",env);
 #endif
-			//Insert terminaltion code here
-			//---
-			//---
 			return;
 		}
 	}

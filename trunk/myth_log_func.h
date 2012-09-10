@@ -55,7 +55,9 @@ static inline void myth_log_add_context_switch(myth_running_env_t env,myth_threa
 	//store state to log_entry
 	e.type=MYTH_LOG_SWITCH;
 	e.u.ctx_switch.th=th;
-	e.u.ctx_switch.recycle_count=(th)?th->recycle_count:0;
+#ifdef MYTH_ENABLE_THREAD_ANNOTATION
+	e.u.ctx_switch.recycle_count=(th && th!=TRREAD_PTR_SCHED_SLEEP)?th->recycle_count:0;
+#endif
 	//strcpy(e->u.str,(th)?th->annotation_str:"Scheduler");
 	myth_log_add(env,&e);
 }
@@ -104,11 +106,15 @@ static inline void myth_log_annotate_thread_body(myth_thread_t th,char *name)
 
 static inline void myth_log_get_thread_annotation(myth_log_entry_t logs,int logcount,myth_thread_t th,int recycle_count,char *ret)
 {
-#ifdef MYTH_ENABLE_THREAD_ANNOTATION
 	if (!th){
-		sprintf(ret,"Scheduler");
+		strcpy(ret,"Scheduler");
 		return;
 	}
+	if (th==TRREAD_PTR_SCHED_SLEEP){
+		strcpy(ret,"Sleep");
+		return;
+	}
+#ifdef MYTH_ENABLE_THREAD_ANNOTATION
 	int i;
 	for (i=logcount-1;i>=0;i--){
 		assert(logs[i].type==MYTH_LOG_THREAD_ANNOTATION);
@@ -119,7 +125,7 @@ static inline void myth_log_get_thread_annotation(myth_log_entry_t logs,int logc
 	}
 	sprintf(ret,"%p@%d",th,recycle_count);
 #else
-	strcpy(name,"");
+	strcpy(ret,"Computation");
 #endif
 }
 
@@ -175,7 +181,6 @@ static inline void myth_log_flush_body(void)
 	int i;
 	int total_log_entry_count=0;
 	for (i=0;i<g_worker_thread_num;i++){
-		myth_log_add_context_switch(&g_envs[i],NULL);
 		myth_internal_lock_lock(&g_envs[i].log_lock);
 		total_log_entry_count+=g_envs[i].log_count;
 	}
@@ -203,14 +208,40 @@ static inline void myth_log_flush_body(void)
 		}
 	}
 	n_switch=i-n_annotation;
+	int wth_idx=0;
 	for (i=n_annotation;i<n_switch+n_annotation-1;i++){
 		myth_log_entry_t le=&all_logs[i],le2=&all_logs[i+1];
 		assert(le->type==MYTH_LOG_SWITCH && le2->type==MYTH_LOG_SWITCH);
-		if (le->rank==le2->rank){
-			//fprintf(stderr,"[%lld-%lld] %d:%s\n",(long long int)le->tsc,(long long int)le2->tsc-1,i,le->u.str);
-			char th_name[100];
-			myth_log_get_thread_annotation(all_logs,n_annotation,le->u.ctx_switch.th,le->u.ctx_switch.recycle_count,th_name);
-			fprintf(g_log_fp,"%s,%lld,%lld,%d,%s\n",th_name,(long long int)(le->tsc-g_tsc_base),(long long int)(le2->tsc-1-g_tsc_base),le->rank,th_name);
+		assert(wth_idx>=le->rank);
+		if (le->u.ctx_switch.th==THREAD_PTR_SCHED_TERM)wth_idx++;
+		if (wth_idx>le->rank){
+			continue;
+		}
+		char th_name[100];
+		int rank=le->rank;
+		uint64_t t0,t1;
+		myth_log_get_thread_annotation(all_logs,n_annotation,le->u.ctx_switch.th,le->u.ctx_switch.recycle_count,th_name);
+		t0=le->tsc-g_tsc_base;
+		while (1){
+#ifdef MYTH_LOG_MERGE_SAME_NAME_THREADS
+			char n[100];
+			myth_log_get_thread_annotation(all_logs,n_annotation,le2->u.ctx_switch.th,le2->u.ctx_switch.recycle_count,n);
+#endif
+			if (rank!=le2->rank ||
+				le2->u.ctx_switch.th==THREAD_PTR_SCHED_TERM ||
+#ifdef MYTH_LOG_MERGE_SAME_NAME_THREADS
+				strcmp(th_name,n)!=0 ||
+#endif
+				i==n_switch+n_annotation-1-1){
+				break;
+			}
+			i++;
+			le2=&all_logs[i+1];
+		}
+		t1=le2->tsc-1-g_tsc_base;
+		if (rank==le2->rank){
+			//fprintf(g_log_fp,"%s,%lld,%lld,%d,%s\n",th_name,(long long int)t0,(long long int)t1,le->rank,th_name);
+			fprintf(g_log_fp,"%s,%.9lf,%.9lf,%d,%s\n",th_name,(double)t0/(1000.0*1000.0*1000.0),(double)t1/(1000.0*1000.0*1000.0),le->rank,th_name);
 		}
 	}
 	fflush(g_log_fp);
