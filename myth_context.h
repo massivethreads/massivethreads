@@ -18,6 +18,7 @@ typedef void (*void_func_t)(void);
 #elif defined MYTH_ARCH_UNIVERSAL || defined MYTH_FORCE_UCONTEXT
 #define MYTH_CONTEXT_ARCH_UNIVERSAL
 #undef MYTH_INLINE_CONTEXT
+#define MYTH_CONTEXT_ARCH_UNIVERSAL
 #else
 #error "Specify architecture"
 #endif
@@ -30,7 +31,11 @@ typedef void (*void_func_t)(void);
 #define MYTH_CTX_CALLBACK static __attribute__((used,noinline,sysv_abi))
 #define USE_AVOID_OPTIMIZE
 //#define MYTH_CTX_CALLBACK static __attribute((used,noinline))
-#else
+#elif defined MYTH_CONTEXT_ARCH_sparc
+#include <string.h>
+#include <ucontext.h>
+#define MYTH_CTX_CALLBACK static __attribute__((used,noinline))
+#elif defined MYTH_CONTEXT_ARCH_UNIVERSAL
 #include <string.h>
 #include <ucontext.h>
 #define MYTH_CTX_CALLBACK static __attribute__((used,noinline))
@@ -43,9 +48,10 @@ typedef struct myth_context
 	uint32_t esp;
 #elif defined MYTH_CONTEXT_ARCH_amd64
 	uint64_t rsp;
-#elif defined MYTH_CONTEXT_ARCH_sparc 
+#elif defined MYTH_CONTEXT_ARCH_sparc
+	ucontext_t uc;
 #elif defined MYTH_CONTEXT_ARCH_UNIVERSAL
-  ucontext_t uc;
+	ucontext_t uc;
 #else
 #error "Architecture not defined"
 #endif
@@ -68,8 +74,7 @@ static inline void myth_make_context_voidcall(myth_context_t ctx, void_func_t fu
 #define myth_context_switch_hook(ctx)
 #endif
 
-#if defined MYTH_CONTEXT_ARCH_i386 || defined MYTH_CONTEXT_ARCH_amd64 || \
-    defined MYTH_CONTEXT_ARCH_sparc
+#if defined MYTH_CONTEXT_ARCH_i386 || defined MYTH_CONTEXT_ARCH_amd64
 
 void myth_swap_context_s(myth_context_t switch_from, myth_context_t switch_to);
 void myth_swap_context_withcall_s(myth_context_t switch_from, myth_context_t switch_to,
@@ -79,17 +84,19 @@ void myth_set_context_s(myth_context_t ctx);
 void myth_set_context_withcall_s(myth_context_t switch_to, 
   void(*func)(void*,void*,void*), void *arg1, void *arg2, void *arg3);
 
-#elif defined MYTH_CONTEXT_ARCH_UNIVERSAL
+#elif defined MYTH_CONTEXT_ARCH_sparc || defined MYTH_CONTEXT_ARCH_UNIVERSAL
 
-#ifdef MYTH_ARCH_sparc
+#ifdef MYTH_CONTEXT_ARCH_sparc
 #if __WORDSIZE == 32
-#define PRESERVE_G7(ctx) asm volatile("st %%g7,[%0]" \
+#define PRESERVE_TLSREG(ctx) asm volatile("st %%g7,[%0]" \
 	:: "r"(&ctx->uc.uc_mcontext.gregs[REG_G7]) : "memory")
 #else /* __WORDSIZE == 64 */
-#define PRESERVE_G7(ctx) asm volatile("stx %%g7,[%0]" \
+#define PRESERVE_TLSREG(ctx) asm volatile("stx %%g7,[%0]" \
 	:: "r"(&ctx->uc.uc_mcontext.mc_gregs[MC_G7]) : "memory")
 #endif /* __WORDISZE == 64 */
-#endif /* MYTH_ARCH_sparc */
+#else
+#define PRESERVE_TLSREG(ctx) //do nothing
+#endif /* MYTH_CONTEXT_ARCH_sparc */
 
 typedef struct myth_ctx_withcall_param
 {
@@ -104,9 +111,7 @@ static inline void myth_swap_context_s(myth_context_t switch_from,
 {
 	//clear
 	g_ctx_withcall_params.fn = NULL;
-#ifdef MYTH_ARCH_sparc
-	PRESERVE_G7(switch_to);
-#endif /* MYTH_ARCH_sparc */
+	PRESERVE_TLSREG(switch_to);
 	swapcontext(&switch_from->uc, &switch_to->uc);
 	//execute
 	if (g_ctx_withcall_params.fn) {
@@ -121,30 +126,24 @@ static inline void myth_swap_context_withcall_s(myth_context_t switch_from,
 {
 	//set
 	g_ctx_withcall_params.fn = func;
-  g_ctx_withcall_params.arg1 = arg1;
-  g_ctx_withcall_params.arg2 = arg2;
-  g_ctx_withcall_params.arg3 = arg3;
+	g_ctx_withcall_params.arg1 = arg1;
+	g_ctx_withcall_params.arg2 = arg2;
+	g_ctx_withcall_params.arg3 = arg3;
 
-#ifdef MYTH_ARCH_sparc
-	PRESERVE_G7(switch_to);
-#endif /* MYTH_ARCH_sparc */
+	PRESERVE_TLSREG(switch_to);
 	swapcontext(&switch_from->uc, &switch_to->uc);
 	//execute
 	if (g_ctx_withcall_params.fn) {
 		g_ctx_withcall_params.fn(g_ctx_withcall_params.arg1,
-      g_ctx_withcall_params.arg2, g_ctx_withcall_params.arg3);
+	g_ctx_withcall_params.arg2, g_ctx_withcall_params.arg3);
 	}
 }
-/*static inline void myth_get_context_s(myth_context_t ctx)
-{
-}*/
+
 static inline void myth_set_context_s(myth_context_t ctx)
 {
 	//clear
 	g_ctx_withcall_params.fn = NULL;
-#ifdef MYTH_ARCH_sparc
-	PRESERVE_G7(ctx);
-#endif /* MYTH_ARCH_sparc */
+	PRESERVE_TLSREG(ctx);
 	setcontext(&ctx->uc);
 }
 static inline void myth_set_context_withcall_s(myth_context_t switch_to,
@@ -152,12 +151,10 @@ static inline void myth_set_context_withcall_s(myth_context_t switch_to,
 {
 	//set
 	g_ctx_withcall_params.fn = func;
-  g_ctx_withcall_params.arg1 = arg1;
-  g_ctx_withcall_params.arg2 = arg2;
-  g_ctx_withcall_params.arg3 = arg3;
-#ifdef MYTH_ARCH_sparc
-	PRESERVE_G7(switch_to);
-#endif /* MYTH_ARCH_sparc */
+	g_ctx_withcall_params.arg1 = arg1;
+	g_ctx_withcall_params.arg2 = arg2;
+	g_ctx_withcall_params.arg3 = arg3;
+	PRESERVE_TLSREG(ctx);
 	setcontext(&switch_to->uc);
 }
 
@@ -165,7 +162,7 @@ static void empty_context_ep(void)
 {
 	if (g_ctx_withcall_params.fn) {
 		g_ctx_withcall_params.fn(g_ctx_withcall_params.arg1,
-      g_ctx_withcall_params.arg2, g_ctx_withcall_params.arg3);
+		g_ctx_withcall_params.arg2, g_ctx_withcall_params.arg3);
 	}
 }
 
@@ -546,7 +543,9 @@ static inline void myth_make_context_empty(myth_context_t ctx, void *stack,
 	myth_unreachable();\
 	}
 
-#elif defined MYTH_CONTEXT_ARCH_sparc || defined MYTH_CONTEXT_ARCH_UNIVERSAL
+#elif defined MYTH_CONTEXT_ARCH_sparc
+
+#elif defined MYTH_CONTEXT_ARCH_UNIVERSAL
 
 #else /* UNSUPPORTED ARCH */
 #error "This architecture is not supported"

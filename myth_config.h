@@ -16,7 +16,7 @@
 #define MYTH_TLS_KEY_SIZE 256
 
 //Stack size
-#define DEF_STACK_SIZE (128*1024)
+#define DEF_STACK_SIZE (16*1024)
 //Scheduler stack size
 #define SCHED_STACK_SIZE (1024*1024)
 
@@ -216,6 +216,7 @@
 #undef MYTH_INTERNAL_LOCK_SPINLOCK2
 #define MYTH_INTERNAL_LOCK_SPINLOCK1
 #undef MYTH_INLINE_CONTEXT
+
 #else
 #define MYTH_ARCH_UNIVERSAL
 //force to use pthread_spin

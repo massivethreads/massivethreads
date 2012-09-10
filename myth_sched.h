@@ -84,6 +84,8 @@ typedef struct myth_sched
 extern int g_log_worker_stat;
 extern int g_sched_prof;
 
+extern size_t g_default_stack_size;
+
 //Cancel constants, set as the same as those of pthreads
 #define MYTH_CANCEL_DEFERRED PTHREAD_CANCEL_DEFERRED
 #define MYTH_CANCEL_ENABLE PTHREAD_CANCEL_ENABLE

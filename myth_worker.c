@@ -20,6 +20,7 @@ myth_thread_t myth_default_steal_func(int rank)
 	myth_running_env_t env,busy_env;
 	myth_thread_t next_run=NULL;
 #ifdef MYTH_WS_PROF_DETAIL
+	uint64_t t0,t1;
 	t0=myth_get_rdtsc();
 #endif
 	//Choose a worker thread that seems to be busy
