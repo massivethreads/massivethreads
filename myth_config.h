@@ -118,8 +118,15 @@
 #define MYTH_LOG_INITIAL_BUFFER_SIZE 1024
 //Collect context switching events
 #define MYTH_COLLECT_CONTEXT_SWITCH
-//Enable thread annotation
-#define MYTH_ENABLE_THREAD_ANNOTATION
+
+//Enable setting the name for each thread
+//By default thread-specific name (<memory address of thread descriptor>@<recycle count>) is assigned,
+//so huge number of categories are generated.
+//Thus it is strongly recommended to annotate by hand for each thread when enabling this option
+//#define MYTH_ENABLE_THREAD_ANNOTATION
+
+#define MYTH_LOG_MERGE_SAME_NAME_THREADS
+
 //Maximum length for thread annotation
 #define MYTH_THREAD_ANNOTATION_MAXLEN 100
 

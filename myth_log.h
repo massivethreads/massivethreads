@@ -4,6 +4,11 @@
 #include <stdint.h>
 #include "myth_config.h"
 
+//Special pointer describing status
+#define THREAD_PTR_SCHED NULL //scheduler running
+#define TRREAD_PTR_SCHED_SLEEP ((myth_thread_t)0xFFFFFFFF) //scheduler sleeping
+#define THREAD_PTR_SCHED_TERM ((myth_thread_t)0xFFFFFFFE) //scheduler entering termination
+
 typedef enum
 {
 	MYTH_LOG_THREAD_ANNOTATION=0,//thread annotation

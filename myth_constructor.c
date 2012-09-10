@@ -18,9 +18,9 @@
 __attribute__((constructor)) static void myth_to_pthread_init(void)
 {
 	myth_get_original_funcs();
+	myth_log_start_body();
 	myth_init_body();
 	myth_sched_prof_start_body();
-	myth_log_start_body();
 }
 
 __attribute__((destructor)) static void myth_to_pthread_fini(void)

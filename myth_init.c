@@ -333,13 +333,17 @@ void myth_fini_ex_body(void)
 //Termination
 void myth_fini_body(void)
 {
+	//add context switch as a sentinel for emitting logs
+	int i;
+	for (i=0;i<g_worker_thread_num;i++){
+		myth_log_add_context_switch(&g_envs[i],THREAD_PTR_SCHED_TERM);
+	}
 	myth_startpoint_exit_ex_body(0);
 	myth_running_env_t env;
 	int rank;
 	env=myth_get_current_env();
 	rank=env->rank;
 	assert(rank==0);
-	int i;
 	//Wait for other worker threads
 	for (i=1;i<g_worker_thread_num;i++){
 		real_pthread_join(g_envs[i].worker,NULL);
