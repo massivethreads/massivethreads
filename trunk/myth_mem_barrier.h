@@ -6,13 +6,9 @@
 //A macro for supressing optimization
 #define myth_loop_barrier() asm volatile("":::"memory")
 
-#if (!(defined MYTH_ARCH_i386 || defined MYTH_ARCH_amd64))
+//MEMO:Architecture-Dependent Code
+#if defined MYTH_ARCH_i386 || defined MYTH_ARCH_amd64
 
-#define myth_rbarrier() __sync_synchronize()
-#define myth_wbarrier() __sync_synchronize()
-#define myth_rwbarrier() __sync_synchronize()
-
-#else
 #ifdef MYTH_BARRIER_FENCES
 //Memory barriers by x86 fence instructions
 //Guarantees successive reads to be executed after this
@@ -46,6 +42,21 @@
 #else
 #error "Choose memory barrier"
 #endif
+
+#elif defined MYTH_ARCH_sparc
+//Default
+#define myth_rbarrier() __sync_synchronize()
+#define myth_wbarrier() __sync_synchronize()
+#define myth_rwbarrier() __sync_synchronize()
+
+#else
+#warning "Architecture-dependent memory barrier is not defined, substituted by GCC extension"
+
+//Default
+#define myth_rbarrier() __sync_synchronize()
+#define myth_wbarrier() __sync_synchronize()
+#define myth_rwbarrier() __sync_synchronize()
+
 #endif
 
 #endif /* MYTH_BARRIER_H_ */

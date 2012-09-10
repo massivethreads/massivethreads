@@ -152,7 +152,7 @@ static inline void myth_setup_worker(int rank)
 		size_t th_size;
 		size_t alloc_size;
 		char *th_ptr;
-		th_size=MYTH_MALLOC_SIZE_TO_RSIZE(STACK_SIZE);
+		th_size=g_default_stack_size;
 		alloc_size=th_size*INITIAL_STACK_ALLOC_UNIT;
 #ifdef ALLOCATE_STACK_BY_MALLOC
 		th_ptr=myth_flmalloc(env->rank,alloc_size);
@@ -165,10 +165,19 @@ static inline void myth_setup_worker(int rank)
 		th_ptr=mmap(NULL,alloc_size,PROT_READ|PROT_WRITE,MAP_PRIVATE|MAP_ANONYMOUS,-1,0);
 #endif
 #endif
-		th_ptr+=th_size-sizeof(void*);
+		/*th_ptr+=th_size-sizeof(void*);
 		for (i=0;i<INITIAL_STACK_ALLOC_UNIT;i++){
 			void **ret;
 			ret=(void**)th_ptr;
+			myth_freelist_push(env->freelist_stack,ret);
+			th_ptr+=th_size;
+		}*/
+		th_ptr+=th_size-(sizeof(void*)*2);
+		for (i=0;i<STACK_ALLOC_UNIT;i++){
+			void**
+			ret=(void**)th_ptr;
+			uintptr_t *blk_size=(uintptr_t*)(th_ptr+sizeof(void*));
+			*blk_size=0;//indicates default
 			myth_freelist_push(env->freelist_stack,ret);
 			th_ptr+=th_size;
 		}
@@ -296,9 +305,8 @@ static inline void myth_startpoint_init_ex_body(int rank)
 	//Set worker thread descrptor
 	this_th->env = env;
 	//Initialize context for scheduler
-	env->sched.stack = myth_malloc(SCHED_STACK_SIZE);
-	myth_make_context_voidcall(&env->sched.context, myth_sched_loop, 
-		(void*)(((char*)env->sched.stack)+SCHED_STACK_SIZE), SCHED_STACK_SIZE);
+	env->sched.stack=myth_malloc(SCHED_STACK_SIZE);
+	myth_make_context_voidcall(&env->sched.context,myth_sched_loop,(void*)(((char*)env->sched.stack)+SCHED_STACK_SIZE-sizeof(void*)),SCHED_STACK_SIZE-sizeof(void*));
 	//Switch to scheduler
 	myth_swap_context_withcall(&this_th->context, &env->sched.context,
 		myth_startpoint_init_ex_1, env, this_th, NULL);
@@ -411,6 +419,9 @@ static void myth_sched_loop(void)
 	t0=0;
 	t1=0;
 	env=myth_get_current_env();
+	//---
+	//Insert initialization code here
+	//---
 #ifdef MYTH_SCHED_LOOP_DEBUG
 	myth_dprintf("myth_sched_loop:entered main loop\n");
 #endif
@@ -462,6 +473,9 @@ static void myth_sched_loop(void)
 #ifdef MYTH_SCHED_LOOP_DEBUG
 			myth_dprintf("env %p received exit signal,exiting\n",env);
 #endif
+			//Insert terminaltion code here
+			//---
+			//---
 			return;
 		}
 	}

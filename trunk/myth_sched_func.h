@@ -439,8 +439,9 @@ static inline myth_thread_t myth_create_body(myth_func_t func,
 	init_myth_thread_struct(env, new_thread);
 	new_thread->result = arg;
 
-#ifdef SWITCH_AFTER_CREATE /* default */
-	myth_make_context_empty(&new_thread->context, stk, stk_size);
+	stk_size=g_default_stack_size-sizeof(void*)*2;
+#ifdef SWITCH_AFTER_CREATE
+	myth_make_context_empty(&new_thread->context,stk,stk_size);
 #else
 	new_thread->entry_func = func;
 	//Create context

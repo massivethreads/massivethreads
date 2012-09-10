@@ -45,7 +45,8 @@ static inline int myth_internal_lock_trylock(myth_internal_lock_t *lock)
 	return real_pthread_spin_trylock(lock)==0;
 }
 #elif defined MYTH_INTERNAL_LOCK_SPINLOCK2
-//Inlined spinlock
+//Architecture-dependent Inlined spinlock
+//MEMO:Architecture-Dependent Code
 #if (defined MYTH_ARCH_i386) || (defined MYTH_ARCH_amd64)
 typedef volatile int myth_internal_lock_t;
 static inline void myth_internal_lock_init(myth_internal_lock_t *ptr)
@@ -82,8 +83,48 @@ static inline void myth_internal_lock_unlock(myth_internal_lock_t *ptr)
 	//Reset value
 	*ptr=0;
 }
+
+#elif (defined MYTH_ARCH_sparc)
+#warning "Inlined spinlock is not provided in this architecture, substituted by pthread_spin"
+typedef pthread_spinlock_t myth_internal_lock_t;
+static inline void myth_internal_lock_init(myth_internal_lock_t *ptr){
+	assert(real_pthread_spin_init(ptr,PTHREAD_PROCESS_PRIVATE)==0);
+}
+static inline void myth_internal_lock_destroy(myth_internal_lock_t *ptr){
+	assert(real_pthread_spin_destroy(ptr)==0);
+}
+static inline void myth_internal_lock_lock(myth_internal_lock_t *ptr){
+	assert(real_pthread_spin_lock(ptr)==0);
+}
+static inline void myth_internal_lock_unlock(myth_internal_lock_t *ptr){
+	assert(real_pthread_spin_unlock(ptr)==0);
+}
+static inline int myth_internal_lock_trylock(myth_internal_lock_t *lock)
+{
+	return real_pthread_spin_trylock(lock)==0;
+}
+
 #else
-#error "Inlined spinlock is not provided in this architecture"
+#warning "Inlined spinlock is not provided in this architecture, substituted by pthread_spin"
+
+typedef pthread_spinlock_t myth_internal_lock_t;
+static inline void myth_internal_lock_init(myth_internal_lock_t *ptr){
+	assert(real_pthread_spin_init(ptr,PTHREAD_PROCESS_PRIVATE)==0);
+}
+static inline void myth_internal_lock_destroy(myth_internal_lock_t *ptr){
+	assert(real_pthread_spin_destroy(ptr)==0);
+}
+static inline void myth_internal_lock_lock(myth_internal_lock_t *ptr){
+	assert(real_pthread_spin_lock(ptr)==0);
+}
+static inline void myth_internal_lock_unlock(myth_internal_lock_t *ptr){
+	assert(real_pthread_spin_unlock(ptr)==0);
+}
+static inline int myth_internal_lock_trylock(myth_internal_lock_t *lock)
+{
+	return real_pthread_spin_trylock(lock)==0;
+}
+
 #endif
 #else
 #error "Please choose internal locking method"

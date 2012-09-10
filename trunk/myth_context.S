@@ -252,6 +252,7 @@ myth_set_context_withcall_s:
 #elif defined MYTH_ARCH_sparc
 //FIXME
 
+#elif defined MYTH_ARCH_UNIVERSAL
 #else
-#warning "assembly context routines not implemented"
+#error "specify architecture"
 #endif
