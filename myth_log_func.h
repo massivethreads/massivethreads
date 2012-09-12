@@ -374,6 +374,10 @@ static inline void myth_log_add_ws(myth_running_env_t env,myth_log_type_t type,i
 static inline void myth_log_add(myth_running_env_t env,myth_log_type_t type)
 {
 }
+static inline void myth_log_add_context_switch(myth_running_env_t env,myth_thread_t th)
+{
+
+}
 static inline void myth_log_init(void)
 {
 }
