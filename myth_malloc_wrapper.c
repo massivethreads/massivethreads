@@ -1,4 +1,5 @@
 #include <dlfcn.h>
+#include <stdlib.h>
 #include "myth_config.h"
 
 #include "myth_sched.h"
@@ -10,6 +11,14 @@
 int g_alloc_hook_ok=0;
 
 myth_freelist_t **g_myth_malloc_wrapper_fl;
+
+typedef union malloc_wrapper_header{
+	struct{
+		uint64_t fl_index;
+		void *org_ptr;
+	}s;
+	uint8_t c[16];
+}malloc_wrapper_header,*malloc_wrapper_header_t;
 
 void myth_malloc_wrapper_init(int nthreads)
 {
@@ -53,7 +62,7 @@ void *calloc(size_t nmemb,size_t size)
 }
 void *malloc(size_t size)
 {
-	uint64_t *ptr;
+	malloc_wrapper_header_t ptr;
 	size_t realsize;
 	int idx;
 	if (size<16)size=16;
@@ -67,13 +76,15 @@ void *malloc(size_t size)
 		assert(real_malloc);
 	}
 	if ((!g_worker_thread_num) || (g_alloc_hook_ok!=g_worker_thread_num) || (size>MYTH_MALLOC_FLSIZE_MAX)){
-		ptr=real_malloc(size+16);
+		ptr=real_malloc(size+sizeof(malloc_wrapper_header));
 		if (!ptr){
 			fprintf(stderr,"size=%llu\n",(unsigned long long)size);
 		}
 		assert(ptr);
-		*ptr=FREE_LIST_NUM;
-		return (void*)(ptr+16/8);
+		ptr->s.fl_index=FREE_LIST_NUM;
+		ptr->s.org_ptr=ptr;
+		//fprintf(stderr,"malloc A,%p,%d\n",ptr,FREE_LIST_NUM);
+		return (void*)(ptr+1);
 	}
 	idx=MYTH_MALLOC_SIZE_TO_INDEX(size);
 	realsize=MYTH_MALLOC_INDEX_TO_RSIZE(idx);
@@ -84,15 +95,61 @@ void *malloc(size_t size)
 	myth_freelist_pop(g_myth_malloc_wrapper_fl[rank][idx],fl_ptr);
 	if (!fl_ptr){
 		//Freelist is empty, allocate
-		ptr=real_malloc(realsize+16);
+		ptr=real_malloc(realsize+sizeof(malloc_wrapper_header));
+		//fprintf(stderr,"malloc B,%p,%d\n",ptr,idx);
 		assert(ptr);
 	}
 	else{
-	  ptr=(uint64_t*)fl_ptr;
+	  ptr=(malloc_wrapper_header_t)fl_ptr;
 	}
-	*ptr=idx;
-	return (void*)(ptr+16/8);
+	ptr->s.fl_index=idx;
+	ptr->s.org_ptr=ptr;
+	return (void*)(ptr+1);
 }
+int posix_memalign(void **memptr,size_t alignment,size_t size)
+{
+	if (size==0){*memptr=NULL;return 0;}
+	malloc_wrapper_header_t ptr;
+	if (size<16)size=16;
+	if (!real_malloc){
+		static int load_malloc_protect=0;
+		if (load_malloc_protect==0){
+			load_malloc_protect=1;
+			real_malloc=dlsym(RTLD_NEXT,"malloc");
+		}
+		else {*memptr=NULL;return 0;}
+		assert(real_malloc);
+	}
+	uintptr_t n0,n;
+	n0=(uintptr_t)real_malloc(size+alignment+sizeof(malloc_wrapper_header));
+	if (!n0){
+		fprintf(stderr,"size=%llu\n",(unsigned long long)size);
+		return ENOMEM;
+	}
+	//align
+	n=n0+alignment-1;
+	n/=alignment;n*=alignment;
+	ptr=(malloc_wrapper_header_t)n;ptr--;
+	ptr->s.fl_index=FREE_LIST_NUM;
+	ptr->s.org_ptr=(void*)n0;
+	//fprintf(stderr,"memalign A,%p,%p,%p,%d\n",(void*)n0,ptr,(void*)n,FREE_LIST_NUM);
+	*memptr=(void*)n;
+	return 0;
+}
+
+void *aligned_alloc(size_t alignment, size_t size)
+{
+	void *ret;
+	errno=posix_memalign(&ret,alignment,size);
+	return ret;
+}
+void *valloc(size_t size)
+{
+	void *ret;
+	errno=posix_memalign(&ret,PAGE_SIZE,size);
+	return ret;
+}
+
 void free(void *ptr)
 {
 	if (!ptr)return;
@@ -107,11 +164,12 @@ void free(void *ptr)
 	e=s+MYTH_WRAP_MALLOC_DLSYM_SIZE;
 	if (s<=((intptr_t)ptr) && ((intptr_t)ptr)<e)return;
 #endif
-	uint64_t *rptr=(uint64_t*)ptr;
-	rptr-=16/8;
-	int idx=(int)*rptr;
+	malloc_wrapper_header_t rptr=(malloc_wrapper_header_t)ptr;
+	rptr--;
+	uint64_t idx=rptr->s.fl_index;
 	if (idx>=FREE_LIST_NUM){
-		real_free(rptr);
+		//fprintf(stderr,"free A,%p,%d\n",rptr->s.org_ptr,(int)idx);
+		real_free(rptr->s.org_ptr);
 		return;
 	}
 	if (g_worker_thread_num && (g_alloc_hook_ok==g_worker_thread_num)){
@@ -121,7 +179,8 @@ void free(void *ptr)
 		myth_freelist_push(g_myth_malloc_wrapper_fl[rank][idx],(void**)rptr);
 		return ;
 	}
-	real_free(rptr);
+	//fprintf(stderr,"free B,%p,%d\n",rptr->s.org_ptr,(int)idx);
+	real_free(rptr->s.org_ptr);
 }
 void *realloc(void *ptr,size_t size)
 {
