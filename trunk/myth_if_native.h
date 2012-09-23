@@ -13,9 +13,10 @@ typedef struct myth_thread_option{
 }myth_thread_option,*myth_thread_option_t;
 
 void myth_init(void);
+void myth_init_withparam(int worker_num,size_t def_stack_size);
 void myth_fini(void);
 
-int myth_init_ex(int worker_num);
+int myth_init_ex(int worker_num,size_t def_stack_size);
 void myth_fini_ex(void);
 void myth_exit_workers_ex(void);
 void myth_ext_exit_workers_ex(void);

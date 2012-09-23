@@ -15,7 +15,11 @@
 
 void myth_init(void)
 {
-	myth_init_body();
+	myth_init_body(0,0);
+}
+void myth_init_withparam(int worker_num,size_t def_stack_size)
+{
+	myth_init_body(worker_num,def_stack_size);
 }
 void myth_fini(void)
 {
@@ -23,9 +27,9 @@ void myth_fini(void)
 }
 
 //alternative init/fini
-int myth_init_ex(int worker_num)
+int myth_init_ex(int worker_num,size_t def_stack_size)
 {
-	return myth_init_ex_body(worker_num);
+	return myth_init_ex_body(worker_num,def_stack_size);
 }
 
 void myth_fini_ex(void)
