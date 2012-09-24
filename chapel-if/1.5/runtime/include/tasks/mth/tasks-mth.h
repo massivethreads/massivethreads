@@ -2,9 +2,8 @@
   Copyright (c) 2004-2011, Cray Inc.  (See LICENSE file for more details)
 **************************************************************************/
 
-
-#ifndef _tasks_none_h_
-#define _tasks_none_h_
+#ifndef _tasks_mth_h_
+#define _tasks_mth_h_
 
 #include "myth.h"
 
