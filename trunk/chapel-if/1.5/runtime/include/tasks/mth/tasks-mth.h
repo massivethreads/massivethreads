@@ -5,6 +5,8 @@
 #ifndef _tasks_mth_h_
 #define _tasks_mth_h_
 
+#define CHPL_COMM_YIELD_TASK_WHILE_POLLING
+
 #include "myth.h"
 
 typedef struct{

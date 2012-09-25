@@ -62,6 +62,7 @@ void *calloc(size_t nmemb,size_t size)
 }
 void *malloc(size_t size)
 {
+	//fprintf(stderr,"malloc %d\n",size);
 	malloc_wrapper_header_t ptr;
 	size_t realsize;
 	int idx;

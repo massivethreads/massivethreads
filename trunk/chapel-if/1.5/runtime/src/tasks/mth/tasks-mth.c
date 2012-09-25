@@ -10,6 +10,7 @@
 #endif
 
 #include "chpl-mem.h"
+#include "chpl-comm.h"
 #include "chplcast.h"
 #include "chplrt.h"
 #include "chpl-tasks.h"
@@ -19,6 +20,7 @@
 #include <stdint.h>
 #include <sys/resource.h>
 #include <unistd.h>
+#include <sched.h>
 #include <stdio.h>
 
 #include <dlfcn.h>
@@ -84,15 +86,48 @@ void chpl_sync_destroyAux(chpl_sync_aux_t *s)
 	myth_felock_destroy(s->lock);
 }
 
-// Tasks
+static cpu_set_t worker_cpusets[CPU_SETSIZE];
+static int available_cores=-1;
 
+static void get_process_affinity_info(void)
+{
+	cpu_set_t cset;
+	sched_getaffinity(getpid(),sizeof(cpu_set_t),&cset);
+	int i;
+	for (i=0;i<CPU_SETSIZE;i++){
+		CPU_ZERO(&worker_cpusets[i]);
+	}
+	available_cores=0;
+	for (i=0;i<CPU_SETSIZE;i++){
+		if (CPU_ISSET(i,&cset)){
+			CPU_SET(i,&worker_cpusets[available_cores]);
+			available_cores++;
+		}
+	}
+}
+
+//Return the number of CPU cores
+static int get_cpu_num(void)
+{
+	assert(available_cores>0);
+	return available_cores;
+}
+
+// Tasks
 void chpl_task_init(int32_t numThreadsPerLocale, int32_t maxThreadsPerLocale,
                     int numCommTasks, uint64_t callStackSize)
 {
 	//Initialize tasking layer
 	//numThreadsPerLocale and callStackSize is specified or 0(default)
 	//initializing change the number of workers
-	myth_init_withparam((int)numThreadsPerLocale,(size_t)callStackSize);
+	get_process_affinity_info();
+	char *env;
+	int n_workers;
+	env=getenv("MYTH_WORKER_NUM");
+	n_workers=(int)((numThreadsPerLocale>0)?numThreadsPerLocale:-1);
+	if (n_workers<=0 && env){n_workers=atoi(env);}
+	if (n_workers<=0){n_workers=get_cpu_num();}
+	myth_init_withparam((int)(n_workers+numCommTasks),(size_t)callStackSize);
 }
 
 int chpl_task_createCommTask(chpl_fn_p fn, void* arg) {
@@ -170,7 +205,7 @@ chpl_taskID_t chpl_task_getId(void)
 void chpl_task_yield(void)
 {
 	//yield execution to other tasks
-	myth_yield();
+	myth_yield(1);
 }
 
 void chpl_task_sleep(int secs) {

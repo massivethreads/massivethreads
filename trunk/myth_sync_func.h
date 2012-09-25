@@ -281,7 +281,7 @@ static inline int myth_mutex_lock_body(myth_mutex_t mtx)
 		if (!loop_count){
 			loop_count=loop_count_start;
 			//yield execution
-			myth_yield_body();
+			myth_yield_body(0);
 		}
 	}
 	return 0;
