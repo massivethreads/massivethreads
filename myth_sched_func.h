@@ -41,7 +41,7 @@ void myth_dprintf_1(char *func,char *fmt,...);
 static inline void myth_entry_point_cleanup(myth_thread_t this_thread);
 
 static inline myth_thread_t myth_create_body(myth_func_t func,void *arg,size_t stack_size);
-static inline void myth_yield_body(void);
+static inline void myth_yield_body(int force_worksteal);
 static inline void myth_join_body(myth_thread_t th,void **result);
 
 //Return a new thread descriptor
@@ -518,7 +518,7 @@ MYTH_CTX_CALLBACK void myth_yield_1(void *arg1,void *arg2,void *arg3)
 }
 
 //Yield execution to next runnable thread
-static inline void myth_yield_body(void)
+static inline void myth_yield_body(int force_worksteal)
 {
 	myth_running_env_t env;
 	myth_thread_t th,next;
@@ -529,8 +529,15 @@ static inline void myth_yield_body(void)
 	myth_dprintf("myth_yield:thread %p yields execution to scheduler\n",th);
 #endif
 	//Get next runnable thread
-	next=myth_queue_pop(&env->runnable_q);
-	if (!next)next=g_myth_steal_func(env->rank);
+	next=NULL;
+	if (force_worksteal){
+		next=g_myth_steal_func(env->rank);
+		if (!next)next=myth_queue_pop(&env->runnable_q);
+	}
+	else{
+		next=myth_queue_pop(&env->runnable_q);
+		if (!next)next=g_myth_steal_func(env->rank);
+	}
 	if (next){
 		next->env=env;
 		//Switch context and push current thread to runqueue

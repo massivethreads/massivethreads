@@ -22,7 +22,7 @@ int sched_yield(void)
 {
 
 	real_sched_yield();
-	myth_yield_body();
+	myth_yield_body(1);
 	return 0;
 }
 

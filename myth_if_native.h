@@ -27,7 +27,7 @@ void myth_startpoint_exit_ex(int rank);
 myth_thread_t myth_create(myth_func_t func,void *arg);
 myth_thread_t myth_create_ex(myth_func_t func,void *arg,myth_thread_option_t opt);
 void myth_exit(void *ret);
-void myth_yield(void);
+void myth_yield(int force_worksteal);
 void myth_yield2(void);
 void myth_join(myth_thread_t th,void **result);
 myth_thread_t myth_self(void);
