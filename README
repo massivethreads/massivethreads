@@ -86,15 +86,16 @@ $ ./configure --prefix=$PREFIX
 $ make
 $ make install
 
-2.Merge the contents in chapel-if/1.x.0/ to the Chapel installation directory
+2.Merge the contents in chapel-if/(version)/ to the Chapel installation directory
 
-$ cp -pr chapel-if/1.5.0/* $(CHPL_HOME)/
+$ cp -pr chapel-if/1.5/* $(CHPL_HOME)/
 
 3.Compile Chapel compiler and runtime
 
 $ cd $(CHPL_HOME) # move to the directory Chapel installed
 # Set environmental variables
 $ export CHPL_TASKS=myth
+$ export CHPL_THREADS=none
 $ export MYTH_INCLUDE_DIR=$(PREFIX)/include
 $ export MYTH_LIB_DIR=$(PREFIX)/lib
 # Please set additional environmental variables here (ex: CHPL_COMM)
@@ -104,6 +105,7 @@ $ make # compile Chapel compiler and runtime
 
 $ cd $(CHPL_HOME)
 $ export CHPL_TASKS=myth
+$ export CHPL_THREADS=none
 $ export MYTH_INCLUDE_DIR=$(PREFIX)/include
 $ export MYTH_LIB_DIR=$(PREFIX)/lib
 # Please set additional environmental variables here
