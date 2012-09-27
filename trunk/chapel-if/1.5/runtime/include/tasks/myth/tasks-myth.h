@@ -2,8 +2,8 @@
   Copyright (c) 2004-2011, Cray Inc.  (See LICENSE file for more details)
 **************************************************************************/
 
-#ifndef _tasks_mth_h_
-#define _tasks_mth_h_
+#ifndef _tasks_myth_h_
+#define _tasks_myth_h_
 
 #define CHPL_COMM_YIELD_TASK_WHILE_POLLING
 

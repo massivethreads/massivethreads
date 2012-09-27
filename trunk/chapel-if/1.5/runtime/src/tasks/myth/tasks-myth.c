@@ -155,6 +155,9 @@ static int get_cpu_num(void)
 	return available_cores;
 }
 
+static int32_t s_num_workers;
+static uint64_t s_stack_size;
+
 // Tasks
 void chpl_task_init(int32_t numThreadsPerLocale, int32_t maxThreadsPerLocale,
                     int numCommTasks, uint64_t callStackSize)
@@ -165,6 +168,8 @@ void chpl_task_init(int32_t numThreadsPerLocale, int32_t maxThreadsPerLocale,
 	char *env;
 	int n_workers;
 	int i;
+	s_num_workers=numThreadsPerLocale;
+	s_stack_size=callStackSize;
 	assert(!is_worker_in_cs());
 	get_process_affinity_info();
 	env=getenv("MYTH_WORKER_NUM");
@@ -273,6 +278,7 @@ void chpl_task_sleep(int secs) {
 	sleep(secs);
 }
 
+//FIXME: serial state ignored
 static chpl_bool serial_state;
 
 chpl_bool chpl_task_getSerial(void)
@@ -291,7 +297,7 @@ void chpl_task_setSerial(chpl_bool new_state)
 uint64_t chpl_task_getCallStackSize(void)
 {
 	//return call stack size
-	return 16384;
+	return s_stack_size;
 }
 
 
@@ -304,7 +310,7 @@ uint32_t chpl_task_getNumQueuedTasks(void)
 uint32_t chpl_task_getNumRunningTasks(void)
 {
 	//return the number of running tasks
-	return 1;
+	return 0;
 }
 
 int32_t  chpl_task_getNumBlockedTasks(void)
@@ -317,19 +323,19 @@ int32_t  chpl_task_getNumBlockedTasks(void)
 int32_t chpl_task_getMaxThreads(void)
 {
 	//return max threads
-	return 1;
+	return s_num_workers;
 }
 
 int32_t chpl_task_getMaxThreadsLimit(void)
 {
 	//return the limit of max threads
-	return 1;
+	return s_num_workers;
 }
 
 uint32_t chpl_task_getNumThreads(void)
 {
-	//return the number of threads
-	return 1;
+	//return the number of threads (excluding a thread for comm)
+	return s_num_workers;
 }
 
 uint32_t chpl_task_getNumIdleThreads(void)
