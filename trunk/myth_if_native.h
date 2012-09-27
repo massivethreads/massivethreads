@@ -44,6 +44,18 @@ myth_barrier_t myth_barrier_create(int nthreads);
 int myth_barrier_wait(myth_barrier_t bar);
 int myth_barrier_destroy(myth_barrier_t bar);
 
+myth_mutex_t myth_mutex_create(void);
+void myth_mutex_destroy(myth_mutex_t mtx);
+int myth_mutex_trylock(myth_mutex_t mtx);
+void myth_mutex_lock(myth_mutex_t mtx);
+void myth_mutex_unlock(myth_mutex_t mtx);
+
+myth_cond_t myth_cond_create(void);
+void myth_cond_destroy(myth_cond_t c);
+void myth_cond_signal(myth_cond_t c);
+void myth_cond_broadcast(myth_cond_t c);
+void myth_cond_wait (myth_cond_t c,myth_mutex_t mtx);
+
 myth_felock_t myth_felock_create(void);
 int myth_felock_destroy(myth_felock_t fe);
 int myth_felock_lock(myth_felock_t fe);
@@ -51,6 +63,11 @@ int myth_felock_wait_lock(myth_felock_t fe,int val);
 int myth_felock_unlock(myth_felock_t fe);
 int myth_felock_status(myth_felock_t fe);
 int myth_felock_set_unlock(myth_felock_t fe,int val);
+
+int myth_key_create(myth_key_t *__key,void (*__destr_function) (void *));
+int myth_key_delete(myth_key_t __key);
+void *myth_getspecific(myth_key_t __key);
+int myth_setspecific(myth_key_t __key,void *__pointer);
 
 void myth_serialize(myth_thread_t th,myth_pickle_t p);
 #define myth_ext_serialize(th,p) myth_serialize(th,p)
