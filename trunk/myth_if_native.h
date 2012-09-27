@@ -10,6 +10,7 @@
 
 typedef struct myth_thread_option{
 	size_t stack_size;
+	int switch_immediately;
 }myth_thread_option,*myth_thread_option_t;
 
 void myth_init(void);

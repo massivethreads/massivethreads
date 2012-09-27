@@ -190,15 +190,9 @@
 //#define MYTH_FLMALLOC_TLS
 
 //Inline context switching codes by inline assembler
-//#define MYTH_INLINE_CONTEXT
+#define MYTH_INLINE_CONTEXT
 //At inlined codes, save callee-saved registers explicitly
 #define MYTH_INLINE_PUSH_CALLEE_SAVED
-
-//Option for overhead evaluation
-//#define MYTH_NO_JOIN
-//#define MYTH_NO_SWITCH
-//#define MYTH_ONE_STACK
-//#define MYTH_NO_QUEUEOP
 
 //To switch context, use jmp instruction instead of ret
 #define USE_JUMP_INSN_A

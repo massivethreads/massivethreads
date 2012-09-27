@@ -84,7 +84,12 @@ myth_thread_t myth_create(myth_func_t func,void *arg)
 
 myth_thread_t myth_create_ex(myth_func_t func,void *arg,myth_thread_option_t opt)
 {
-	return myth_create_body(func,arg,opt->stack_size);
+	if (opt->switch_immediately){
+		return myth_create_body(func,arg,opt->stack_size);
+	}
+	else{
+		return myth_create_ns_body(func,arg,opt->stack_size);
+	}
 }
 
 void myth_exit(void *ret)
