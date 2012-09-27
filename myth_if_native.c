@@ -281,6 +281,56 @@ int myth_felock_set_unlock(myth_felock_t fe,int val)
 	return myth_felock_set_unlock_body(fe,val);
 }
 
+myth_mutex_t myth_mutex_create(void)
+{
+	return myth_mutex_create_body();
+}
+
+void myth_mutex_destroy(myth_mutex_t mtx)
+{
+	myth_mutex_destroy_body(mtx);
+}
+
+int myth_mutex_trylock(myth_mutex_t mtx)
+{
+	return myth_mutex_trylock_body(mtx);
+}
+
+void myth_mutex_lock(myth_mutex_t mtx)
+{
+	myth_mutex_lock_body(mtx);
+}
+
+void myth_mutex_unlock(myth_mutex_t mtx)
+{
+	myth_mutex_unlock_body(mtx);
+}
+
+myth_cond_t myth_cond_create(void)
+{
+	return myth_cond_create_body();
+}
+
+void myth_cond_destroy(myth_cond_t c)
+{
+	myth_cond_destroy_body(c);
+}
+
+void myth_cond_signal(myth_cond_t c)
+{
+	myth_cond_signal_body(c);
+}
+
+void myth_cond_broadcast(myth_cond_t c)
+{
+	myth_cond_broadcast_body(c);
+}
+
+void myth_cond_wait (myth_cond_t c,myth_mutex_t mtx)
+{
+	myth_cond_wait_body(c,mtx);
+}
+
 //TODO: temporalily disable
 #if 0
 
