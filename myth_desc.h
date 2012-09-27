@@ -27,9 +27,7 @@ typedef enum
 typedef struct myth_thread
 {
 	struct myth_thread* join_thread;//8//A thread which is waiting for this
-#ifndef SWITCH_AFTER_CREATE
 	myth_func_t entry_func;
-#endif
 	void *result;//16//Return value
 	myth_context context;//24//Context
 	void *stack;//32//Pointer to stack

@@ -144,7 +144,7 @@ static inline void myth_wait_for_read(int fd,myth_running_env_t env,myth_io_op_t
 	fd_data=myth_fd_map_lookup(fd_map,fd);
 	if (!fd_data){
 		while (1){
-			myth_yield_body();
+			myth_yield_body(0);
 			if (myth_io_execute(op))break;
 		}
 		return;
@@ -200,7 +200,7 @@ static inline void myth_wait_for_write(int fd,myth_running_env_t env,myth_io_op_
 	fd_data=myth_fd_map_lookup(fd_map,fd);
 	if (!fd_data){
 		while (1){
-			myth_yield_body();
+			myth_yield_body(0);
 			if (myth_io_execute(op))break;
 		}
 		return;
@@ -405,7 +405,7 @@ static inline int myth_select_body(int nfds, fd_set *readfds, fd_set *writefds,
 		tv_immediate.tv_sec=0;tv_immediate.tv_usec=0;
 		ret=real_select(nfds,readfds,writefds,exceptfds,&tv_immediate);
 #ifdef SELECT_ALWAYS_RETURN_IMMEDIATELY
-		if (ret!=0)myth_yield_body();
+		if (ret!=0)myth_yield_body(0);
 		break;
 #endif
 		if (ret!=0)break;
@@ -416,7 +416,7 @@ static inline int myth_select_body(int nfds, fd_set *readfds, fd_set *writefds,
 			t_current=tv.tv_sec*1000*1000+tv.tv_usec;
 			if (t_goal<=t_current)break;
 		}
-		myth_yield_body();
+		myth_yield_body(0);
 	}
 	if (timeout){
 		//rewrite timeval
