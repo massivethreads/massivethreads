@@ -23,7 +23,7 @@ if ($preset_threads eq "") {
 	$threads = "none";
     } elsif ($preset_tasks eq "qthreads") {
 	$threads = "none";
-	} elsif ($preset_tasks eq "myth") {
+	} elsif ($preset_tasks eq "massivethreads") {
 	$threads = "none";
     } elsif ($preset_tasks eq "none") {
 	$threads = "none";
