@@ -49,7 +49,11 @@ typedef struct myth_context
 #elif defined MYTH_CONTEXT_ARCH_amd64
 	uint64_t rsp;
 #elif defined MYTH_CONTEXT_ARCH_sparc
-	ucontext_t uc;
+#ifdef __arch64__
+  uint64_t sp;
+#else
+  uint32_t sp;
+#endif
 #elif defined MYTH_CONTEXT_ARCH_UNIVERSAL
 	ucontext_t uc;
 #else
@@ -74,29 +78,27 @@ static inline void myth_make_context_voidcall(myth_context_t ctx, void_func_t fu
 #define myth_context_switch_hook(ctx)
 #endif
 
-#if defined MYTH_CONTEXT_ARCH_i386 || defined MYTH_CONTEXT_ARCH_amd64
-
+#if defined MYTH_CONTEXT_ARCH_i386 || defined MYTH_CONTEXT_ARCH_amd64 || \
+    defined MYTH_CONTEXT_ARCH_sparc
 void myth_swap_context_s(myth_context_t switch_from, myth_context_t switch_to);
 void myth_swap_context_withcall_s(myth_context_t switch_from, myth_context_t switch_to,
   void(*func)(void*,void*,void*), void *arg1, void *arg2, void *arg3);
-void myth_get_context_s(myth_context_t ctx);
 void myth_set_context_s(myth_context_t ctx);
 void myth_set_context_withcall_s(myth_context_t switch_to, 
   void(*func)(void*,void*,void*), void *arg1, void *arg2, void *arg3);
+#elif defined MYTH_CONTEXT_ARCH_UNIVERSAL
 
-#elif defined MYTH_CONTEXT_ARCH_sparc || defined MYTH_CONTEXT_ARCH_UNIVERSAL
-
-#ifdef MYTH_CONTEXT_ARCH_sparc
-#if __WORDSIZE == 32
-#define PRESERVE_TLSREG(ctx) asm volatile("st %%g7,[%0]" \
-	:: "r"(&ctx->uc.uc_mcontext.gregs[REG_G7]) : "memory")
-#else /* __WORDSIZE == 64 */
+#ifdef MYTH_ARCH_sparc
+#ifdef __arch64__
 #define PRESERVE_TLSREG(ctx) asm volatile("stx %%g7,[%0]" \
 	:: "r"(&ctx->uc.uc_mcontext.mc_gregs[MC_G7]) : "memory")
-#endif /* __WORDISZE == 64 */
 #else
+#define PRESERVE_TLSREG(ctx) asm volatile("st %%g7,[%0]" \
+	:: "r"(&ctx->uc.uc_mcontext.gregs[REG_G7]) : "memory")
+#endif
+#else /* MYTH_ARCH_sparc */
 #define PRESERVE_TLSREG(ctx) //do nothing
-#endif /* MYTH_CONTEXT_ARCH_sparc */
+#endif 
 
 typedef struct myth_ctx_withcall_param
 {
@@ -135,7 +137,7 @@ static inline void myth_swap_context_withcall_s(myth_context_t switch_from,
 	//execute
 	if (g_ctx_withcall_params.fn) {
 		g_ctx_withcall_params.fn(g_ctx_withcall_params.arg1,
-	g_ctx_withcall_params.arg2, g_ctx_withcall_params.arg3);
+    g_ctx_withcall_params.arg2, g_ctx_withcall_params.arg3);
 	}
 }
 
@@ -154,7 +156,7 @@ static inline void myth_set_context_withcall_s(myth_context_t switch_to,
 	g_ctx_withcall_params.arg1 = arg1;
 	g_ctx_withcall_params.arg2 = arg2;
 	g_ctx_withcall_params.arg3 = arg3;
-	PRESERVE_TLSREG(ctx);
+	PRESERVE_TLSREG(switch_to);
 	setcontext(&switch_to->uc);
 }
 
@@ -238,7 +240,28 @@ static inline void myth_make_context_voidcall(myth_context_t ctx,
 	//Set retuen address
 	*dest_addr = (uint64_t) func;
 #elif defined MYTH_CONTEXT_ARCH_sparc 
-#error "Not implemented yet"
+#ifdef __arch64__
+#error "TOFIX"
+  uint64_t stack_tail = (uint64_t) stack;
+  stack_tail -= 8;
+  uint64_t *dest_addr;
+  stack_tail &= 0xFFFFFFFFFFFFFFF0;
+  dest_addr = (uint64_t *) stack_tail + 96;
+  ctx->sp = stack_tail;
+  *dest_addr = (uint64_t) func;
+#else
+  uint32_t stack_tail = (uint32_t) stack;
+  stack_tail -= 4;
+  uint32_t *dest_addr, *fp;
+  stack_tail &= 0xFFFFFFF0;
+  /* synthesize two frames */
+  ctx->sp = stack_tail - 112 * 2;
+  /* do not use ctx->sp, it is pointer arthmetic */
+  fp = stack_tail - 112 * 2 + 68; /* %fp */
+  *fp = (uint32_t) stack_tail - 112;
+  dest_addr = stack_tail - 112 * 2 + 72; /* %i7 */
+  *dest_addr = (uint32_t) func - 8;
+#endif
 #elif defined MYTH_CONTEXT_ARCH_UNIVERSAL
 	uintptr_t stack_start = ((uintptr_t) stack) - (stacksize - sizeof(void*));
 	getcontext(&ctx->uc);
@@ -259,19 +282,32 @@ static inline void myth_make_context_empty(myth_context_t ctx, void *stack,
 {
 #if defined MYTH_CONTEXT_ARCH_i386
 	//Get stack tail
-	uint32_t stack_tail=((uint32_t)stack);
+	uint32_t stack_tail = (uint32_t) stack;
 	//Align
 	stack_tail &= 0xFFFFFFF0;
 	//Set stack pointer
 	ctx->esp = stack_tail;
 #elif defined MYTH_CONTEXT_ARCH_amd64
 	//Get stack tail
-	uint64_t stack_tail = ((uint64_t)stack);
+	uint64_t stack_tail = (uint64_t) stack;
 	//Align
 	stack_tail &= 0xFFFFFFFFFFFFFFF0;
 	//Set stack pointer
 	ctx->rsp = stack_tail;
-#elif defined MYTH_CONTEXT_ARCH_sparc 
+#elif defined MYTH_CONTEXT_ARCH_sparc
+#ifdef __arch64__ 
+#error "TOFIX"
+  uint64_t stack_tail = (uint64_t) stack;
+	stack_tail &= 0xFFFFFFFFFFFFFFF0;
+  ctx->sp = stack_tail;
+#else
+  uint32_t stack_tail = (uint32_t) stack;
+  uint32_t *fp;
+  stack_tail &= 0xFFFFFFF0;
+  ctx->sp = stack_tail - 112 * 2;
+  fp = stack_tail - 112 * 2 + 68; /* %fp */
+  *fp = (uint32_t) stack_tail - 112;
+#endif
 #elif defined MYTH_CONTEXT_ARCH_UNIVERSAL
 	myth_make_context_voidcall(ctx, empty_context_ep, stack, stacksize);
 #endif

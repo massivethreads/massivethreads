@@ -1,3 +1,4 @@
+#include <asm/traps.h>
 #include "myth_config.h"
 
 .text
@@ -14,6 +15,9 @@
 #else
 #define MY_RET_B ret
 #endif
+
+// AT&T Syntax
+// op src dst
 
 .p2align 4
 .globl myth_set_context_s
@@ -250,7 +254,109 @@ myth_set_context_withcall_s:
 .size myth_set_context_withcall_s,.-myth_set_context_withcall_s
 
 #elif defined MYTH_ARCH_sparc
-//FIXME
+#ifdef __arch64_
+#define STACK_BIAS 2047 /* Required by V9 ABI */
+
+.p2align 4
+.global myth_set_context_s
+.type myth_set_context_s, @function
+myth_set_context_s:
+.size myth_set_context_s, .-myth_set_context_s
+
+.p2align 4
+.global myth_swap_context_s
+.type myth_swap_context_s, @function
+myth_swap_context_s:
+.size myth_set_context_s, .-myth_set_context_s
+
+.p2align 4
+.global myth_set_context_withcall_s
+.type myth_set_context_withcall_s, @function
+myth_set_context_withcall_s:
+.size myth_set_context_withcall_s, .-myth_set_context_withcall_s
+
+.p2align 4
+.global myth_swap_context_withcall_s
+.type myth_swap_context_withcall_s, @function
+myth_swap_context_withcall_s:
+.size myth_swap_context_withcall_s, .-myth_swap_context_withcall_s
+
+
+#else
+
+#define FRAMESIZE 112
+/* offset from %sp, 
+ do not clobber kernel save area, i.e, (%sp, %sp+64) */
+#define SP 68
+#define I7 72
+
+.p2align 4
+.global myth_set_context_s
+.type myth_set_context_s, @function
+myth_set_context_s:
+  save %sp, -FRAMESIZE, %sp
+  ta ST_FLUSH_WINDOWS
+	ld [%i0], %sp
+  ld [%sp+SP], %fp
+  ld [%sp+I7], %i7
+  restore
+	jmpl %o7+8, %g0
+.size myth_set_context_s, .-myth_set_context_s
+
+.p2align 4
+.global myth_swap_context_s
+.type myth_swap_context_s, @function
+myth_swap_context_s:
+  save %sp, -FRAMESIZE, %sp
+  st %sp, [%i0]
+  st %fp, [%sp+SP]
+  st %i7, [%sp+I7]
+  ta ST_FLUSH_WINDOWS
+  ld [%i1], %sp
+  ld [%sp+SP], %fp
+  ld [%sp+I7], %i7
+  restore
+	jmpl %o7+8, %g0
+.size myth_swap_context_s, .-myth_swap_context_s
+
+.p2align 4
+.global myth_set_context_withcall_s
+.type myth_set_context_withcall_s, @function
+myth_set_context_withcall_s:
+  save %sp, -FRAMESIZE, %sp
+  ta ST_FLUSH_WINDOWS
+	ld [%i0], %sp
+  ld [%sp+SP], %fp
+  ld [%sp+I7], %i7
+	mov %i2, %o0
+	mov %i3, %o1
+	call %i1
+	 mov %i4, %o2
+  restore
+	jmpl %o7+8, %g0
+.size myth_set_context_withcall_s, .-myth_set_context_withcall_s
+
+.p2align 4
+.global myth_swap_context_withcall_s
+.type myth_swap_context_withcall_s, @function
+myth_swap_context_withcall_s:
+  save %sp, -FRAMESIZE, %sp
+  st %sp, [%i0]
+  st %fp, [%sp+SP]
+  st %i7, [%sp+I7]
+  ta ST_FLUSH_WINDOWS
+  ld [%i1], %sp
+  ld [%sp+SP], %fp
+  ld [%sp+I7], %i7
+  mov %i3, %o0
+  mov %i4, %o1
+  call %i2
+   mov %i5, %o2 /* last parameter in delay slot */
+  restore
+	jmpl %o7+8, %g0
+.size myth_swap_context_withcall_s, .-myth_swap_context_withcall_s
+
+#endif
 
 #elif defined MYTH_ARCH_UNIVERSAL
 #else
