@@ -254,37 +254,81 @@ myth_set_context_withcall_s:
 .size myth_set_context_withcall_s,.-myth_set_context_withcall_s
 
 #elif defined MYTH_ARCH_sparc
-#ifdef __arch64_
-#define STACK_BIAS 2047 /* Required by V9 ABI */
+#ifdef MYTH_ARCH_sparc_v9
+#define BIAS 2047 /* Required by V9 ABI */
+#define FRAMESIZE 176
+#define SP 128
+#define I7 136
 
-.p2align 4
+.p2align 4 /* instruction is 4 */
 .global myth_set_context_s
 .type myth_set_context_s, @function
 myth_set_context_s:
+  save %sp, -FRAMESIZE, %sp
+  flushw
+  ldx [%i0], %sp
+  ldx [%sp+BIAS+SP], %fp
+  ldx [%sp+BIAS+I7], %i7
+  restore
+   jmpl %o7+8, %g0
 .size myth_set_context_s, .-myth_set_context_s
 
 .p2align 4
 .global myth_swap_context_s
 .type myth_swap_context_s, @function
 myth_swap_context_s:
-.size myth_set_context_s, .-myth_set_context_s
+  save %sp, -FRAMESIZE, %sp
+  stx %sp, [%i0]
+  stx %fp, [%sp+BIAS+SP]
+  stx %i7, [%sp+BIAS+I7]
+  flushw
+  ldx [%i1], %sp
+  ldx [%sp+BIAS+SP], %fp
+  ldx [%sp+BIAS+I7], %i7
+  restore
+   jmpl %o7+8, %g0
+.size myth_swap_context_s, .-myth_swap_context_s
 
 .p2align 4
 .global myth_set_context_withcall_s
 .type myth_set_context_withcall_s, @function
 myth_set_context_withcall_s:
+  save %sp, -FRAMESIZE, %sp
+  flushw
+  ldx [%i0], %sp
+  ldx [%sp+BIAS+SP], %fp
+  ldx [%sp+BIAS+I7], %i7
+  mov %i2, %o0
+  mov %i3, %o1
+  call %i1
+   mov %i4, %o2
+  restore
+   jmpl %o7+8, %g0
 .size myth_set_context_withcall_s, .-myth_set_context_withcall_s
 
 .p2align 4
 .global myth_swap_context_withcall_s
 .type myth_swap_context_withcall_s, @function
 myth_swap_context_withcall_s:
+  save %sp, -FRAMESIZE, %sp
+  stx %sp, [%i0]
+  stx %fp, [%sp+BIAS+SP]
+  stx %i7, [%sp+BIAS+I7]
+  flushw
+  ldx [%i1], %sp
+  ldx [%sp+BIAS+SP], %fp
+  ldx [%sp+BIAS+I7], %i7
+  mov %i3, %o0
+  mov %i4, %o1
+  call %i2
+   mov %i5, %o2 /* last parameter in delay slot */
+  restore
+   jmpl %o7+8, %g0
 .size myth_swap_context_withcall_s, .-myth_swap_context_withcall_s
-
 
 #else
 
-#define FRAMESIZE 112
+#define FRAMESIZE 92
 /* offset from %sp, 
  do not clobber kernel save area, i.e, (%sp, %sp+64) */
 #define SP 68
@@ -296,11 +340,11 @@ myth_swap_context_withcall_s:
 myth_set_context_s:
   save %sp, -FRAMESIZE, %sp
   ta ST_FLUSH_WINDOWS
-	ld [%i0], %sp
+  ld [%i0], %sp
   ld [%sp+SP], %fp
   ld [%sp+I7], %i7
   restore
-	jmpl %o7+8, %g0
+   jmpl %o7+8, %g0
 .size myth_set_context_s, .-myth_set_context_s
 
 .p2align 4
@@ -316,7 +360,7 @@ myth_swap_context_s:
   ld [%sp+SP], %fp
   ld [%sp+I7], %i7
   restore
-	jmpl %o7+8, %g0
+   jmpl %o7+8, %g0
 .size myth_swap_context_s, .-myth_swap_context_s
 
 .p2align 4
@@ -325,15 +369,15 @@ myth_swap_context_s:
 myth_set_context_withcall_s:
   save %sp, -FRAMESIZE, %sp
   ta ST_FLUSH_WINDOWS
-	ld [%i0], %sp
+  ld [%i0], %sp
   ld [%sp+SP], %fp
   ld [%sp+I7], %i7
-	mov %i2, %o0
-	mov %i3, %o1
-	call %i1
-	 mov %i4, %o2
+  mov %i2, %o0
+  mov %i3, %o1
+  call %i1
+   mov %i4, %o2
   restore
-	jmpl %o7+8, %g0
+   jmpl %o7+8, %g0
 .size myth_set_context_withcall_s, .-myth_set_context_withcall_s
 
 .p2align 4
@@ -353,9 +397,8 @@ myth_swap_context_withcall_s:
   call %i2
    mov %i5, %o2 /* last parameter in delay slot */
   restore
-	jmpl %o7+8, %g0
+   jmpl %o7+8, %g0
 .size myth_swap_context_withcall_s, .-myth_swap_context_withcall_s
-
 #endif
 
 #elif defined MYTH_ARCH_UNIVERSAL
