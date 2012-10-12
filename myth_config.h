@@ -213,6 +213,11 @@
 //#define MYTH_SAVE_FPCSR
 #elif (!defined MYTH_FORCE_ARCH_UNIVERSAL) && (defined __sparc__)
 #define MYTH_ARCH_sparc
+  #if defined __arch64__
+  #define MYTH_ARCH_sparc_v9
+  #else
+  #define MYTH_ARCH_sparc_v8
+  #endif
 // FIXME: Do we need spinlock here?
 #undef MYTH_INTERNAL_LOCK_SPINLOCK2
 #define MYTH_INTERNAL_LOCK_SPINLOCK1
