@@ -1,4 +1,3 @@
-#include <asm/traps.h>
 #include "myth_config.h"
 
 .text
@@ -332,6 +331,7 @@ myth_swap_context_withcall_s:
 
 #else
 
+#define ST_FLUSH_WINDOWS 0x3
 #define FRAMESIZE 92
 /* offset from %sp, 
  do not clobber kernel save area, i.e, (%sp, %sp+64) */
