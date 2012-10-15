@@ -311,7 +311,7 @@ myth_set_context_withcall_s:
 .type myth_swap_context_withcall_s, @function
 myth_swap_context_withcall_s:
   save %sp, -FRAMESIZE, %sp
-  /* save 
+  /* save old stack pointer, frame pointer, return address */
   stx %sp, [%i0]
   stx %fp, [%sp+BIAS+SP]
   stx %i7, [%sp+BIAS+I7]
