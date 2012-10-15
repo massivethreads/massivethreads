@@ -311,17 +311,21 @@ myth_set_context_withcall_s:
 .type myth_swap_context_withcall_s, @function
 myth_swap_context_withcall_s:
   save %sp, -FRAMESIZE, %sp
+  /* save 
   stx %sp, [%i0]
   stx %fp, [%sp+BIAS+SP]
   stx %i7, [%sp+BIAS+I7]
   flushw
+  /* load stack pointer, frame pointer, return address */
   ldx [%i1], %sp
   ldx [%sp+BIAS+SP], %fp
   ldx [%sp+BIAS+I7], %i7
+  /* call function */
   mov %i3, %o0
   mov %i4, %o1
   call %i2
    mov %i5, %o2 /* last parameter in delay slot */
+  /* restore and return */
   restore
    jmpl %o7+8, %g0
 .size myth_swap_context_withcall_s, .-myth_swap_context_withcall_s
