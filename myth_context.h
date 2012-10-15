@@ -318,8 +318,8 @@ static inline void myth_make_context_empty(myth_context_t ctx, void *stack,
   uint32_t *fp;
   stack_tail &= 0xFFFFFFF0;
   ctx->sp = stack_tail - FRAMESIZE * 2;
-  fp = stack_tail - FRAMESIZE * 2 + SAVE_FP; /* %fp */
-  *fp = (uint32_t) stack_tail - FRAMESIZE;
+  fp = (uint32_t *) (stack_tail - FRAMESIZE * 2 + SAVE_FP); /* %fp */
+  *fp = (uint32_t) (stack_tail - FRAMESIZE);
 #endif
 #elif defined MYTH_CONTEXT_ARCH_UNIVERSAL
 	myth_make_context_voidcall(ctx, empty_context_ep, stack, stacksize);
