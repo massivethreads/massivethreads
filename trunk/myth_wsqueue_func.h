@@ -258,6 +258,28 @@ static inline myth_thread_t myth_queue_take(myth_thread_queue_t q)
 	myth_unreachable();
 }
 
+static inline myth_thread_t myth_queue_peek(myth_thread_queue_t q)
+{
+	myth_thread_t ret;
+	int b,top;
+#ifdef QUICK_CHECK_ON_STEAL
+	if (q->top-q->base<=0){
+		return NULL;
+	}
+#endif
+	//Increment base
+	b=q->base;
+	top=q->top;
+	if (b<top){
+		ret=q->ptr[b];
+		return ret;
+	}else{
+		return NULL;
+	}
+	myth_unreachable();
+}
+
+
 static inline int myth_queue_trypass(myth_thread_queue_t q,myth_thread_t th)
 {
 #if defined USE_LOCK || defined USE_LOCK_TRYPASS

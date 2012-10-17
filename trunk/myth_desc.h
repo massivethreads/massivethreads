@@ -46,7 +46,19 @@ typedef struct myth_thread
 #ifdef MYTH_DESC_REUSE_CHECK
 	myth_internal_lock_t sanity_check;
 #endif
+	void *custom_data_ptr;
+	int custom_data_size;
 }__attribute__((aligned(CACHE_LINE_SIZE))) myth_thread,*myth_thread_t;
+
+#ifndef MYTH_THREAD_OPTION_DEFINED
+#define MYTH_THREAD_OPTION_DEFINED
+typedef struct myth_thread_option{
+	size_t stack_size;
+	int switch_immediately;
+	size_t custom_data_size;
+	void *custom_data;
+}myth_thread_option,*myth_thread_option_t;
+#endif
 
 static inline myth_thread_t myth_context_to_thread(myth_running_env_t env,myth_context_t ctx)
 {

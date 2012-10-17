@@ -470,8 +470,8 @@ static inline myth_thread_t myth_create_body(myth_func_t func,
 }
 
 //Create a thread without switching context
-static inline myth_thread_t myth_create_ns_body(myth_func_t func,
-  void *arg, size_t stack_size)
+static inline myth_thread_t myth_create_ex_body(myth_func_t func,
+  void *arg, myth_thread_option_t opt)
 {
 	MAY_BE_UNUSED uint64_t t0, t1;
 	myth_thread_t new_thread;
@@ -480,6 +480,22 @@ static inline myth_thread_t myth_create_ns_body(myth_func_t func,
 	MAY_BE_UNUSED size_t stk_size;
 	t0 = 0;
 	t1 = 0;
+	size_t stack_size;
+	size_t custom_data_size;
+	void *custom_data_ptr;
+	int switch_immediately;
+	if (!opt){
+		stack_size=0;
+		custom_data_size=0;
+		custom_data_ptr=NULL;
+		switch_immediately=1;
+	}
+	else{
+		stack_size=opt->stack_size;
+		custom_data_size=opt->custom_data_size;
+		custom_data_ptr=opt->custom_data;
+		switch_immediately=opt->switch_immediately;
+	}
 
 #ifdef MYTH_CREATE_PROF
 	t0 = myth_get_rdtsc();
@@ -503,31 +519,116 @@ static inline myth_thread_t myth_create_ns_body(myth_func_t func,
 #endif /* MYTH_SPLIT_STACK_DESC */
 	stk_size = (stack_size>0)?stack_size:g_default_stack_size;
 
+	//Allocate custom data region on stack
+	if (custom_data_size>0){
+		new_thread->custom_data_size=custom_data_size;
+		intptr_t i_stk=(intptr_t)stk;
+		//Align 16byte
+		i_stk-=16+(((custom_data_size+15)>>4)<<4);
+		new_thread->custom_data_ptr=(void*)(i_stk+16);
+		memcpy((void*)(i_stk+16),custom_data_ptr,custom_data_size);
+		stk=(void*)i_stk;
+	}
+	else{new_thread->custom_data_size=0;}
+
   // Initialize thread descriptor
 	init_myth_thread_struct(env, new_thread);
 	new_thread->result = arg;
 
 	stk_size=g_default_stack_size-sizeof(void*)*2;
-	new_thread->entry_func = func;
-	//Create context
-	myth_make_context_voidcall(&new_thread->context, myth_entry_point, stk, stk_size);
+	if (switch_immediately){
+		myth_make_context_empty(&new_thread->context,stk,stk_size);
 
 #ifdef MYTH_CREATE_PROF_DETAIL
-	t1 = myth_get_rdtsc();
-	env->prof_data.create_alloc += t1-t0;
+		t1 = myth_get_rdtsc();
+		env->prof_data.create_alloc += t1-t0;
 #endif /* MYTH_CREATE_PROF_DETAIL */
 
 #ifdef MYTH_CREATE_PROF
-	env->prof_data.create_cycles_tmp=t0;
+		env->prof_data.create_cycles_tmp=t0;
 #endif /* MYTH_CREATE_PROF */
 
-	//Push a new thread to runqueue
-	myth_queue_push(&env->runnable_q, new_thread);
+		myth_thread_t this_thread;
+		// Push current thread to runqueue and switch context to new thread
+		this_thread = env->this_thread;
+#ifdef MYTH_CREATE_PROF_DETAIL
+	env->prof_data.create_d_tmp=myth_get_rdtsc();
+#endif /* MYTH_CREATE_PROF_DETAIL */
+		myth_swap_context_withcall(&this_thread->context,
+		&new_thread->context, myth_create_1, (void*)env, (void*)func, (void*)new_thread);
+	}
+	else{
+		new_thread->entry_func = func;
+		//Create context
+		myth_make_context_voidcall(&new_thread->context, myth_entry_point, stk, stk_size);
+
+#ifdef MYTH_CREATE_PROF_DETAIL
+		t1 = myth_get_rdtsc();
+		env->prof_data.create_alloc += t1-t0;
+#endif /* MYTH_CREATE_PROF_DETAIL */
+
 #ifdef MYTH_CREATE_PROF
-	t1=myth_get_rdtsc();
-	env->prof_data.create_cycles+=t1-t0;env->prof_data.create_cnt++;
+		env->prof_data.create_cycles_tmp=t0;
 #endif /* MYTH_CREATE_PROF */
 
+		//Push a new thread to runqueue
+		myth_queue_push(&env->runnable_q, new_thread);
+#ifdef MYTH_CREATE_PROF
+		t1=myth_get_rdtsc();
+		env->prof_data.create_cycles+=t1-t0;env->prof_data.create_cnt++;
+#endif /* MYTH_CREATE_PROF */
+	}
+
+	return new_thread;
+}
+
+static inline myth_thread_t myth_create_nosched_body(myth_func_t func,void *arg,myth_thread_option_t opt)
+{
+	MAY_BE_UNUSED uint64_t t0,t1;
+	myth_thread_t new_thread;
+	myth_running_env_t env;
+	void *stk;
+	MAY_BE_UNUSED size_t stk_size;
+	size_t stack_size;
+	size_t custom_data_size;
+	void *custom_data_ptr;
+	if (!opt){
+		stack_size=0;
+		custom_data_size=0;
+		custom_data_ptr=NULL;
+	}
+	else{
+		stack_size=opt->stack_size;
+		custom_data_size=opt->custom_data_size;
+		custom_data_ptr=opt->custom_data;
+	}
+	t0=0;
+	t1=0;
+	env=myth_get_current_env();
+	//Allocate new thread descriptor
+	new_thread=get_new_myth_thread_struct_desc(env);
+	//allocate stack and get pointer
+	stk=get_new_myth_thread_struct_stack(env,stack_size);
+	new_thread->stack=stk;
+	stk_size=/*g_default_*/stack_size;
+	//Allocate custom data region on stack
+	if (custom_data_size>0){
+		new_thread->custom_data_size=custom_data_size;
+		intptr_t i_stk=(intptr_t)stk;
+		//Align 16byte
+		i_stk-=16+(((custom_data_size+15)>>4)<<4);
+		new_thread->custom_data_ptr=(void*)(i_stk+16);
+		memcpy((void*)(i_stk+16),custom_data_ptr,custom_data_size);
+		//fprintf(stderr,"Data:%X\n",*(int32_t*)(i_stk+16));
+		stk=(void*)i_stk;
+	}
+	else{new_thread->custom_data_size=0;}
+	//Initialize thread descriptor
+	init_myth_thread_struct(env,new_thread);
+	new_thread->result=arg;
+	new_thread->entry_func=func;
+	//Create context
+	myth_make_context_voidcall(&new_thread->context,myth_entry_point,stk,stk_size);
 	return new_thread;
 }
 
