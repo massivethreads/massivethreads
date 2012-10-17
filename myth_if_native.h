@@ -8,10 +8,15 @@
 #ifndef MYTH_IF_NATIVE_H_
 #define MYTH_IF_NATIVE_H_
 
+#ifndef MYTH_THREAD_OPTION_DEFINED
+#define MYTH_THREAD_OPTION_DEFINED
 typedef struct myth_thread_option{
 	size_t stack_size;
 	int switch_immediately;
+	size_t custom_data_size;
+	void *custom_data;
 }myth_thread_option,*myth_thread_option_t;
+#endif
 
 void myth_init(void);
 void myth_init_withparam(int worker_num,size_t def_stack_size);
@@ -27,6 +32,7 @@ void myth_startpoint_exit_ex(int rank);
 
 myth_thread_t myth_create(myth_func_t func,void *arg);
 myth_thread_t myth_create_ex(myth_func_t func,void *arg,myth_thread_option_t opt);
+myth_thread_t myth_create_nosched(myth_func_t func,void *arg,myth_thread_option_t opt);
 void myth_exit(void *ret);
 void myth_yield(int force_worksteal);
 void myth_yield2(void);
@@ -96,5 +102,14 @@ void myth_sched_prof_pause(void);
 
 int myth_get_worker_num(void);
 int myth_get_num_workers(void);
+
+void *myth_get_custom_data(myth_thread_t th,size_t *size);
+myth_thread_t myth_schedapi_runqueue_take(int victim);
+int myth_schedapi_runqueue_pass(int target,myth_thread_t th);
+void myth_schedapi_runqueue_push(myth_thread_t th);
+myth_thread_t myth_schedapi_runqueue_pop(void);
+myth_thread_t myth_schedapi_runqueue_peek(int victim);
+int myth_schedapi_rand(void);
+int myth_schedapi_rand2(int min,int max);
 
 #endif /* MYTH_IF_NATIVE_H_ */

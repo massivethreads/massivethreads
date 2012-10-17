@@ -84,12 +84,7 @@ myth_thread_t myth_create(myth_func_t func,void *arg)
 
 myth_thread_t myth_create_ex(myth_func_t func,void *arg,myth_thread_option_t opt)
 {
-	if (opt->switch_immediately){
-		return myth_create_body(func,arg,opt->stack_size);
-	}
-	else{
-		return myth_create_ns_body(func,arg,opt->stack_size);
-	}
+	return myth_create_ex_body(func,arg,opt);
 }
 
 void myth_exit(void *ret)
@@ -334,6 +329,48 @@ void myth_cond_broadcast(myth_cond_t c)
 void myth_cond_wait (myth_cond_t c,myth_mutex_t mtx)
 {
 	myth_cond_wait_body(c,mtx);
+}
+
+myth_thread_t myth_schedapi_runqueue_take(int victim)
+{
+	return myth_queue_take(&g_envs[victim].runnable_q);
+}
+
+myth_thread_t myth_schedapi_runqueue_peek(int victim)
+{
+	return myth_queue_peek(&g_envs[victim].runnable_q);
+}
+
+int myth_schedapi_runqueue_pass(int target,myth_thread_t th)
+{
+	//fprintf(stderr,"pass %d %p\n",target,th);
+	return myth_queue_trypass(&g_envs[target].runnable_q,th);
+}
+
+void myth_schedapi_runqueue_push(myth_thread_t th)
+{
+	myth_running_env_t env=myth_get_current_env();
+	myth_queue_push(&env->runnable_q,th);
+}
+
+myth_thread_t myth_schedapi_runqueue_pop(void)
+{
+	myth_running_env_t env=myth_get_current_env();
+	return myth_queue_pop(&env->runnable_q);
+}
+
+int myth_schedapi_rand(void)
+{
+	myth_running_env_t env,busy_env;
+	//Choose a worker thread that seems to be busy
+	env=myth_get_current_env();
+	busy_env=myth_env_get_first_busy(env);
+	return busy_env->rank;
+}
+
+int myth_schedapi_rand2(int min,int max)
+{
+	return myth_random(min,max);
 }
 
 //TODO: temporalily disable
