@@ -1,6 +1,10 @@
 #ifndef MYTH_H_
 #define MYTH_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 //Exported function declarations
 
 #ifdef MYTH_USE_INLINE
@@ -21,6 +25,10 @@ typedef unsigned int myth_key_t;
 //Native functions
 #include "myth_if_native.h"
 
+#endif
+
+#ifdef __cplusplus
+} //extern "C"
 #endif
 
 #endif /* MYTH_H_ */
