@@ -133,7 +133,6 @@ struct task_group {
 #if TASK_GROUP_NULL_CREATE 
 	/* noop */
 #elif PTHREAD_LIKE
-	void * ret;
 	pthread_join(p->a[i].tid, NULL);
 #elif QTHREAD
 	aligned_t ret;
