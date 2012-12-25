@@ -87,7 +87,6 @@ struct nanos_const_wd_definition_for_task wd_definition_for_task = {
   }
 };
 #endif
-#endif
 
 
 struct task_group {
