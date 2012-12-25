@@ -62,7 +62,33 @@ th_func_ret_type invoke_task(void * arg_) {
 
 #if NANOX
 nanos_smp_args_t invoke_task_arg={invoke_task};
+
+struct nanos_const_wd_definition_for_task {
+  nanos_const_wd_definition_t base;
+  nanos_device_t devices[1];
+};
+
+struct nanos_const_wd_definition_for_task wd_definition_for_task = {
+  {
+    {
+      0,			/* mandatory_creation */
+      0,			/* tied */
+      0,0,0,0,0,0		/* reserved0-5 */
+    },
+    __alignof__(struct task),
+    0,
+    1
+  },
+  {
+    {
+      nanos_smp_factory,
+      &invoke_task_arg
+    }
+  }
+};
 #endif
+#endif
+
 
 struct task_group {
   task_list_node first_chunk_[1];
@@ -109,6 +135,14 @@ struct task_group {
       qthread_fork(invoke_task, (void*)t, &t->ret);
 #elif NANOX
       nanos_wd_t wd=NULL;
+      nanos_wd_dyn_props_t dyn_props = { 0, 0 };
+      NANOS_SAFE(nanos_create_wd_compact(&wd,&const_data.base,&dyn_props,
+					 sizeof(struct task), (void**)&t,
+					 nanos_current_wd(),NULL));
+
+
+#if OBSOLETE_NANOS
+      /* Nanos at some prior versions. obsolete  */
       nanos_device_t dev[1] = {NANOS_SMP_DESC(invoke_task_arg)};
       nanos_wd_props_t props;	// originally, ={true,false,false};
       props.mandatory_creation = true;
@@ -117,6 +151,9 @@ struct task_group {
       NANOS_SAFE(nanos_create_wd(&wd,1,dev,sizeof(struct task),
 				 __alignof__(struct task),
 				 (void**)&t,nanos_current_wd(),&props,0,NULL));
+#endif
+
+
       NANOS_SAFE(nanos_submit(wd,0,0,0));
 #elif MTH_NATIVE
       t->hthread=myth_create(invoke_task,(void*)t);
@@ -139,7 +176,7 @@ struct task_group {
 	qthread_readFF(&ret,&p->a[i].ret);
 #elif NANOX
 	if (n_joined == 0) {
-	  NANOS_SAFE(nanos_wg_wait_completion(nanos_current_wd()));
+	  NANOS_SAFE(nanos_wg_wait_completion(nanos_current_wd(), 1));
 	}
 #elif MTH_NATIVE
 	myth_join(p->a[i].hthread,NULL);
