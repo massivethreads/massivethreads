@@ -135,7 +135,8 @@ struct task_group {
 #elif NANOX
       nanos_wd_t wd=NULL;
       nanos_wd_dyn_props_t dyn_props = { 0, 0 };
-      NANOS_SAFE(nanos_create_wd_compact(&wd,&const_data.base,&dyn_props,
+      NANOS_SAFE(nanos_create_wd_compact(&wd,&wd_definition_for_task.base,
+					 &dyn_props,
 					 sizeof(struct task), (void**)&t,
 					 nanos_current_wd(),NULL));
 
