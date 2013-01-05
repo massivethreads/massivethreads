@@ -43,15 +43,15 @@
 // wrap malloc. it is the behavior of the previous 
 // implementation
 // (3) when both MYTH_WRAP_MALLOC and MYTH_WRAP_MALLOC_RUNTIME
-// are defined, the environment variable "MYTH_WRAP_MALLOC"
+// are defined, the environment variable "MYTH_DONT_WRAP_MALLOC"
 // determines whether malloc etc. are wrapped. if its first 
-// character is '1', 'y', or 'Y', malloc etc. are wrapped. 
-// otherwise they are not wrapped
+// character is '1', malloc etc. are not wrapped. 
+// otherwise they are wrapped
 
 //Wrap malloc function as worker-private freelist
 #define MYTH_WRAP_MALLOC
 //Turn on/off malloc wrap by environment variable
-#define MYTH_WRAP_MALLOC_RUNTIME
+//#define MYTH_WRAP_MALLOC_RUNTIME
 
 
 //Wrap and multipelx I/O functions

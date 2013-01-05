@@ -46,7 +46,7 @@ extern void *(*real_malloc)(size_t);
 extern void (*real_free)(void *);
 extern void *(*real_realloc)(void *,size_t);
 
-#if MYTH_WRAP_MALLOC_RUNTIME
+#ifdef MYTH_WRAP_MALLOC_RUNTIME
 extern int (*real_posix_memalign)(void **, size_t, size_t);
 extern void *(*real_valloc)(size_t);
 extern int g_wrap_malloc_completed;
