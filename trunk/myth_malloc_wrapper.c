@@ -10,6 +10,13 @@
 
 int g_alloc_hook_ok=0;
 
+#if MYTH_WRAP_MALLOC_RUNTIME
+/* this option allows user to turn on/off malloc wrappers
+   at invocation time, through environment variable 
+   "MYTH_WRAP_MALLOC" (myth_init.h) */
+int g_wrap_malloc = 0;
+#endif
+
 myth_freelist_t **g_myth_malloc_wrapper_fl;
 
 typedef union malloc_wrapper_header{
@@ -22,38 +29,117 @@ typedef union malloc_wrapper_header{
 
 void myth_malloc_wrapper_init(int nthreads)
 {
-	assert(real_malloc);
-	g_myth_malloc_wrapper_fl=real_malloc(sizeof(myth_freelist_t*)*nthreads);
+#if MYTH_WRAP_MALLOC_RUNTIME
+          /* check if the user wants to wrap malloc.
+	     if not return without doing anything */
+          char * e = getenv(ENV_MYTH_WRAP_MALLOC);
+	  if (e && (e[0] == '1' || e[0] == 'y' || e[0] == 'Y')) g_wrap_malloc = 1;
+          if (!g_wrap_malloc) return;
+#endif
+	  assert(real_malloc);
+	  g_myth_malloc_wrapper_fl=real_malloc(sizeof(myth_freelist_t*)*nthreads);
 }
 
 void myth_malloc_wrapper_init_worker(int rank)
 {
-	int i;
-	//allocate freelist
-	assert(real_malloc);
-	g_myth_malloc_wrapper_fl[rank]=real_malloc(sizeof(myth_freelist_t)*FREE_LIST_NUM);
-	//initialize
-	for (i=0;i<FREE_LIST_NUM;i++){myth_freelist_init(g_myth_malloc_wrapper_fl[rank][i]);}
-	__sync_fetch_and_add(&g_alloc_hook_ok,1);
+#if MYTH_WRAP_MALLOC_RUNTIME
+       /* is it possible to come here before myth_malloc_wrapper_init is called? */
+       if (!g_wrap_malloc) return;
+#endif
+       int i;
+       //allocate freelist
+       assert(real_malloc);
+       g_myth_malloc_wrapper_fl[rank]=real_malloc(sizeof(myth_freelist_t)*FREE_LIST_NUM);
+       //initialize
+       for (i=0;i<FREE_LIST_NUM;i++){myth_freelist_init(g_myth_malloc_wrapper_fl[rank][i]);}
+       __sync_fetch_and_add(&g_alloc_hook_ok,1);
 }
 
 void myth_malloc_wrapper_fini()
 {
-	real_free(g_myth_malloc_wrapper_fl);
+#if MYTH_WRAP_MALLOC_RUNTIME
+       /* is it possible to come here before myth_malloc_wrapper_init is called? */
+       if (!g_wrap_malloc) return;
+#endif
+       real_free(g_myth_malloc_wrapper_fl);
 }
 
 void myth_malloc_wrapper_fini_worker(int rank)
 {
-	//Release freelist contents
-	/*for (i=0;i<FREE_LIST_NUM;i++){
-	}*/
-	//Release the array
-	real_free(g_myth_malloc_wrapper_fl[rank]);
-	__sync_fetch_and_sub(&g_alloc_hook_ok,1);
+#if MYTH_WRAP_MALLOC_RUNTIME
+       /* is it possible to come here before myth_malloc_wrapper_init is called? */
+       if (!g_wrap_malloc) return;
+#endif
+       //Release freelist contents
+       /*for (i=0;i<FREE_LIST_NUM;i++){
+	 }*/
+       //Release the array
+       real_free(g_myth_malloc_wrapper_fl[rank]);
+       __sync_fetch_and_sub(&g_alloc_hook_ok,1);
 }
+
+#if MYTH_WRAP_MALLOC_RUNTIME
+
+/* the fall-back region used by malloc/calloc/realloc/valloc/posix_memalign
+   when called before wrappers are in place. in particular they are used
+   when called by dlsym.
+   if we run out of memory for them, we are simply out of luck.
+   below we allocate 4KB, but it may be too much.
+   (in one experiment, it only allocated 32 bytes before wrapping
+   is complete).
+   TODO: we should make it dynamically adjustable.
+ */
+#define SYS_ALLOC_REGION_SIZE (1 << 12)
+char g_sys_alloc_region[SYS_ALLOC_REGION_SIZE];
+char * volatile g_sys_alloc_region_ptr = g_sys_alloc_region;
+char * g_sys_alloc_region_end = g_sys_alloc_region + SYS_ALLOC_REGION_SIZE;
+
+/* return true if ptr is in the g_sys_alloc_region array. */
+int sys_alloc_region(void * ptr) {
+  if ((char *)ptr < g_sys_alloc_region) return 0;
+  if ((char *)ptr >= g_sys_alloc_region + SYS_ALLOC_REGION_SIZE) return 0;
+  return 1;
+}
+
+/* a generic, fall-back allocator used until malloc wrapping is incomplete.
+   it is the simplest pointer bumping allocator, which cannot free.
+   NOTE: you should not use any function that may in turn call any memory
+   allocator (malloc etc.). doing so may result in infinite recursions
+   (and stack overflow). */
+void * sys_alloc_align(size_t alignment, size_t size) {
+  while (1) {
+    char * p = g_sys_alloc_region_ptr;
+    char * q = p + alignment - 1;
+    q = q - (long)q % alignment;
+    char * r = q + size;
+    if (r > g_sys_alloc_region_end) {
+      /* Ah, out of luck! 
+	 should increase SYS_ALLOC_REGION_SIZE */
+      return NULL;
+    }
+    char * s = __sync_val_compare_and_swap(&g_sys_alloc_region_ptr, p, r);
+    if (p == s) {
+      return q;
+    }
+  }
+}
+
+#endif
 
 void *calloc(size_t nmemb,size_t size)
 {
+#if MYTH_WRAP_MALLOC_RUNTIME
+  /* fall back to the bump allocator before wrapping completed */
+  if (!g_wrap_malloc_completed) {
+    void *ptr = sys_alloc_align(16, nmemb * size);
+    memset(ptr, 0, nmemb * size);
+    return ptr;
+  }
+  /* no wrap. call the real one */
+  if (!g_wrap_malloc) {
+    return real_calloc(nmemb, size);
+  }
+#endif
 	void *ptr;
 	ptr=malloc(nmemb*size);
 	if (!ptr)return NULL;
@@ -62,6 +148,18 @@ void *calloc(size_t nmemb,size_t size)
 }
 void *malloc(size_t size)
 {
+#if MYTH_WRAP_MALLOC_RUNTIME
+  /* fall back to the bump allocator before wrapping completed */
+  if (!g_wrap_malloc_completed) {
+    void *ptr = sys_alloc_align(16, size);
+    return ptr;
+  }
+  /* no wrap. call the real one */
+  if (!g_wrap_malloc) {
+    return real_malloc(size);
+  }
+#endif
+
 	//fprintf(stderr,"malloc %d\n",size);
 	malloc_wrapper_header_t ptr;
 	size_t realsize;
@@ -109,6 +207,22 @@ void *malloc(size_t size)
 }
 int posix_memalign(void **memptr,size_t alignment,size_t size)
 {
+#if MYTH_WRAP_MALLOC_RUNTIME
+  /* fall back to the bump allocator before wrapping completed */
+  if (!g_wrap_malloc_completed) {
+    void *ptr = sys_alloc_align(alignment, size);
+    if (ptr) {
+      *memptr = ptr;
+      return 0;
+    } else {
+      return ENOMEM;
+    }
+  }
+  /* no wrap. call the real one */
+  if (!g_wrap_malloc) {
+    return real_posix_memalign(memptr, alignment, size);
+  }
+#endif
 	if (size==0){*memptr=NULL;return 0;}
 	malloc_wrapper_header_t ptr;
 	if (size<16)size=16;
@@ -146,6 +260,17 @@ void *aligned_alloc(size_t alignment, size_t size)
 }
 void *valloc(size_t size)
 {
+#if MYTH_WRAP_MALLOC_RUNTIME
+  /* fall back to the bump allocator before wrapping completed */
+  if (!g_wrap_malloc_completed) {
+    void *ptr = sys_alloc_align(PAGE_SIZE, size);
+    return ptr;
+  }
+  /* no wrap. call the real one */
+  if (!g_wrap_malloc) {
+    return real_valloc(size);
+  }
+#endif
 	void *ret;
 	errno=posix_memalign(&ret,PAGE_SIZE,size);
 	return ret;
@@ -153,6 +278,24 @@ void *valloc(size_t size)
 
 void free(void *ptr)
 {
+#if MYTH_WRAP_MALLOC_RUNTIME
+  /* before wrapping completed, we simply forget about it.
+     (real_free not available yet, so we cannot call it.
+     the problem may be deeper. the ptr may have been allocated
+     by yet another function (not the original system malloc),
+     so even passing it to real_free may not be the right action */
+  if (!g_wrap_malloc_completed) {
+    /* leak */
+    return;
+  }
+  if (!g_wrap_malloc) {
+    /* we call real_free, except for region we have allocated
+       before wrapping is complete */
+    if (!sys_alloc_region(ptr)) {
+      return real_free(ptr);
+    }
+  }
+#endif
 	if (!ptr)return;
 	if (!real_free){
 		real_free=dlsym(RTLD_NEXT,"free");
@@ -185,6 +328,19 @@ void free(void *ptr)
 }
 void *realloc(void *ptr,size_t size)
 {
+#if MYTH_WRAP_MALLOC_RUNTIME
+  /* fall back to the bump allocator before wrapping completed */
+  if (!g_wrap_malloc_completed) {
+    /* leak old ptr */
+    void *new_ptr = sys_alloc_align(16, size);
+    memcpy(new_ptr, ptr, size);
+    return new_ptr;
+  }
+  /* no wrap. call the real one */
+  if (!g_wrap_malloc) {
+    return real_realloc(ptr, size);
+  }
+#endif
 	if (size==0){free(ptr);return NULL;}
 	if (!ptr)return malloc(size);
 	uint64_t *rptr=(uint64_t*)ptr;rptr-=16/8;
