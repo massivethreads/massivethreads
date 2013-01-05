@@ -51,7 +51,7 @@
 //Wrap malloc function as worker-private freelist
 #define MYTH_WRAP_MALLOC
 //Turn on/off malloc wrap by environment variable
-//#define MYTH_WRAP_MALLOC_RUNTIME
+#define MYTH_WRAP_MALLOC_RUNTIME
 
 
 //Wrap and multipelx I/O functions
