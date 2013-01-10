@@ -43,7 +43,7 @@ void *(*real_realloc)(void *,size_t)=NULL;
 int (*real_posix_memalign)(void **, size_t, size_t);
 void *(*real_valloc)(size_t);
 int g_wrap_malloc_completed = 0;
-
+int g_wrap_malloc = 0;
 #endif
 
 static void* s_pthread_handle;
@@ -66,6 +66,8 @@ static void myth_get_pthread_funcs(void)
 #ifdef MYTH_WRAP_MALLOC_RUNTIME
 	LOAD_FN(posix_memalign);
 	LOAD_FN(valloc);
+	char * e = getenv(ENV_MYTH_DONT_WRAP_MALLOC);
+	if (!e || e[0] != '1') g_wrap_malloc = 1;
 	g_wrap_malloc_completed = 1;
 #endif
 	LOAD_FN(sched_yield);
