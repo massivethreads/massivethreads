@@ -10,13 +10,6 @@
 
 int g_alloc_hook_ok=0;
 
-#ifdef MYTH_WRAP_MALLOC_RUNTIME
-/* this option allows user to turn on/off malloc wrappers
-   at invocation time, through environment variable 
-   "MYTH_DONT_WRAP_MALLOC" (myth_init.h) */
-int g_wrap_malloc = 0;
-#endif
-
 myth_freelist_t **g_myth_malloc_wrapper_fl;
 
 typedef union malloc_wrapper_header{
@@ -32,8 +25,6 @@ void myth_malloc_wrapper_init(int nthreads)
 #ifdef MYTH_WRAP_MALLOC_RUNTIME
           /* check if the user wants to wrap malloc.
 	     if not return without doing anything */
-          char * e = getenv(ENV_MYTH_DONT_WRAP_MALLOC);
-	  if (!e || e[0] != '1') g_wrap_malloc = 1;
           if (!g_wrap_malloc) return;
 #endif
 	  assert(real_malloc);
