@@ -138,7 +138,7 @@ struct task_group {
       NANOS_SAFE(nanos_create_wd_compact(&wd,&wd_definition_for_task.base,
 					 &dyn_props,
 					 sizeof(struct task), (void**)&t,
-					 nanos_current_wd(),NULL));
+					 nanos_current_wd(),NULL,NULL));
 
 
 #if OBSOLETE_NANOS
