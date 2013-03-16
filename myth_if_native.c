@@ -331,6 +331,86 @@ void myth_cond_wait (myth_cond_t c,myth_mutex_t mtx)
 	myth_cond_wait_body(c,mtx);
 }
 
+size_t myth_custom_data_size(myth_thread_t th)
+{
+	return th->custom_data_size;
+}
+
+void *myth_custom_data_ptr(myth_thread_t th)
+{
+	return th->custom_data_ptr;
+}
+
+int myth_schedapi_rand(void)
+{
+	return myth_random(0,myth_get_num_workers());
+}
+
+void myth_schedapi_randarr(int *ret,int n)
+{
+	int i,j;
+	assert(n<=myth_get_num_workers());
+	for (i=0;i<n;i++){
+		while (1){
+			int r;
+			r=myth_schedapi_rand();
+			for (j=0;j<i;j++){
+				if (r==ret[j])break;
+			}
+			if (j==i){
+				ret[i]=r;
+				break;
+			}
+		}
+	}
+}
+
+myth_thread_t myth_schedapi_runqueue_take_ex(int victim,myth_schedapi_decidefn_t decidefn,void *udata)
+{
+	myth_thread_queue_t q;
+	myth_thread_t ret;
+	int b,top;
+	q=&g_envs[victim].runnable_q;
+#ifdef QUICK_CHECK_ON_STEAL
+	if (q->top-q->base<=0){
+		return NULL;
+	}
+#endif
+#if defined USE_LOCK || defined USE_LOCK_TAKE
+	myth_internal_lock_lock(&q->m_lock);
+#endif
+#ifdef TRY_LOCK_BEFORE_STEAL
+	if (!myth_internal_lock_trylock(&q->lock)){
+		myth_queue_exit_operation();
+		return NULL;
+	}
+#else
+	myth_wsqueue_lock_lock(&q->lock);
+#endif
+	//Increment base
+	b=q->base;
+	q->base=b+1;
+	myth_wsqueue_rwbarrier();
+	top=q->top;
+	if (b<top){
+		ret=q->ptr[b];
+		if (decidefn(ret,udata)){
+			//q->ptr[b]=NULL;
+			myth_wsqueue_lock_unlock(&q->lock);
+#if defined USE_LOCK || defined USE_LOCK_TAKE
+			myth_internal_lock_unlock(&q->m_lock);
+#endif
+			return ret;
+		}
+	}
+	q->base=b;
+	myth_wsqueue_lock_unlock(&q->lock);
+#if defined USE_LOCK || defined USE_LOCK_TAKE
+	myth_internal_lock_unlock(&q->m_lock);
+#endif
+	return NULL;
+}
+
 myth_thread_t myth_schedapi_runqueue_take(int victim)
 {
 	return myth_queue_take(&g_envs[victim].runnable_q);
@@ -357,20 +437,6 @@ myth_thread_t myth_schedapi_runqueue_pop(void)
 {
 	myth_running_env_t env=myth_get_current_env();
 	return myth_queue_pop(&env->runnable_q);
-}
-
-int myth_schedapi_rand(void)
-{
-	myth_running_env_t env,busy_env;
-	//Choose a worker thread that seems to be busy
-	env=myth_get_current_env();
-	busy_env=myth_env_get_first_busy(env);
-	return busy_env->rank;
-}
-
-int myth_schedapi_rand2(int min,int max)
-{
-	return myth_random(min,max);
 }
 
 //TODO: temporalily disable
