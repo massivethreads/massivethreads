@@ -39,6 +39,12 @@
 	asm volatile("xchgl %0,%1":"=r"(x):"m"(y),"0"(x):"memory");\
 }
 //#define myth_rwbarrier() asm volatile("mfence":::"memory")
+#elif defined MYTH_BARRIER_INTRINSIC
+
+#define myth_rbarrier() __sync_synchronize()
+#define myth_wbarrier() __sync_synchronize()
+#define myth_rwbarrier() __sync_synchronize()
+
 #else
 #error "Choose memory barrier"
 #endif

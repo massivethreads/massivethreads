@@ -155,6 +155,7 @@
 //#define MYTH_BARRIER_FENCES
 //#define MYTH_BARRIER_CILK
 #define MYTH_BARRIER_CILK_WEAK
+//#define MYTH_BARRIER_INTRINSIC
 //#define MYTH_BARRIER_NONE
 
 //Select TLS implementation
@@ -225,6 +226,9 @@
 #define MYTH_ARCH_i386
 #elif (!defined MYTH_FORCE_ARCH_UNIVERSAL) && (defined __x86_64__)
 #define MYTH_ARCH_amd64
+  #if defined __MIC__
+  #define MYTH_ARCH_amd64_mic
+  #endif
 //Save FPU and SIMD control registers
 //#define MYTH_SAVE_FPCSR
 #elif (!defined MYTH_FORCE_ARCH_UNIVERSAL) && (defined __sparc__)
