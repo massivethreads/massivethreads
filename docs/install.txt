@@ -1,0 +1,5 @@
+== XeonPhi (a.k.a. KNC, Intel MIC) ==
+
+  edit config.h to choose MYTH_BARRIER_INTRINSIC
+  CC=icc CFLAGS=-mmic ./configure --host=x86_64-unknown-linux-gnu [OTHER_OPTIONS]
+

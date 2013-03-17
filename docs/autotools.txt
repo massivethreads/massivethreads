@@ -37,7 +37,7 @@ To avoid this, you can simply
 
 right after you check out.
 
-I don't know if there is a smaerter way to avoid this...
+I don't know if there is a smarter way to avoid this...
 
 
 = info about autotools.txt =
