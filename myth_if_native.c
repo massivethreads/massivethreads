@@ -416,9 +416,33 @@ myth_thread_t myth_schedapi_runqueue_take(int victim)
 	return myth_queue_take(&g_envs[victim].runnable_q);
 }
 
-myth_thread_t myth_schedapi_runqueue_peek(int victim)
+/*myth_thread_t myth_schedapi_runqueue_peek(int victim)
 {
 	return myth_queue_peek(&g_envs[victim].runnable_q);
+}*/
+
+static int peekdata_fn(myth_thread_t th,void *udata)
+{
+	void **ud=(void**)udata;
+	void *ptr=ud[0];
+	size_t *psize=ud[1];
+	size_t ps=0;
+	size_t cs=myth_custom_data_size(th);
+	if (psize)ps=*psize;
+	if (cs>0){
+		cs=(cs<ps)?cs:ps;
+		if (ptr)memcpy(ptr,myth_custom_data_ptr(th),cs);
+	}
+	if (psize)*psize=cs;
+	ud[2]=(void*)th;
+	return 0;
+}
+
+myth_thread_t myth_schedapi_runqueue_peek(int victim,void *ptr,size_t *psize)
+{
+	void *udata[3]={ptr,(void*)psize,NULL};
+	myth_schedapi_runqueue_take_ex(victim,peekdata_fn,(void*)&udata);
+	return (myth_thread_t)udata[2];
 }
 
 int myth_schedapi_runqueue_pass(int target,myth_thread_t th)

@@ -105,6 +105,7 @@ int myth_get_num_workers(void);
 
 typedef int (*myth_schedapi_decidefn_t)(myth_thread_t th,void *udata);
 
+myth_thread_t myth_schedapi_runqueue_peek(int victim,void *ptr,size_t *psize);
 size_t myth_custom_data_size(myth_thread_t th);
 void *myth_custom_data_ptr(myth_thread_t th);
 int myth_schedapi_rand(void);
@@ -114,6 +115,6 @@ myth_thread_t myth_schedapi_runqueue_take_ex(int victim,myth_schedapi_decidefn_t
 int myth_schedapi_runqueue_pass(int target,myth_thread_t th);
 void myth_schedapi_runqueue_push(myth_thread_t th);
 myth_thread_t myth_schedapi_runqueue_pop(void);
-myth_thread_t myth_schedapi_runqueue_peek(int victim);
+//myth_thread_t myth_schedapi_runqueue_peek(int victim);
 
 #endif /* MYTH_IF_NATIVE_H_ */
