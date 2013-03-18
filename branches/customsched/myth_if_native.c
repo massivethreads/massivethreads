@@ -438,12 +438,29 @@ static int peekdata_fn(myth_thread_t th,void *udata)
 	return 0;
 }
 
+#if 0
 myth_thread_t myth_schedapi_runqueue_peek(int victim,void *ptr,size_t *psize)
 {
 	void *udata[3]={ptr,(void*)psize,NULL};
 	myth_schedapi_runqueue_take_ex(victim,peekdata_fn,(void*)&udata);
 	return (myth_thread_t)udata[2];
 }
+#else
+myth_thread_t myth_schedapi_runqueue_peek(int victim,void *ptr,size_t *psize)
+{
+	myth_thread_t ret;
+	ret=myth_queue_peek(&g_envs[victim].runnable_q);
+	size_t csize=myth_custom_data_size(ret);
+	if (psize && ptr && (*psize)>0){
+		csize=((*psize)<csize)?(*psize):csize;
+		*psize=csize;
+		if (csize>0){
+			memcpy(ptr,myth_custom_data_ptr(ret),csize);
+		}
+	}
+	return ret;
+}
+#endif
 
 int myth_schedapi_runqueue_pass(int target,myth_thread_t th)
 {
