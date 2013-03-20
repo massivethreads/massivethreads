@@ -470,7 +470,7 @@ myth_thread_t myth_schedapi_runqueue_peek(int victim,void *ptr,size_t *psize)
 			//Increment sequence
 			s=wc->seq;
 			wc->seq=s+1;
-			myth_wsqueue_rwbarrier();
+			myth_wsqueue_wbarrier();
 			//Copy data
 			wc->ptr=th;
 			wc->size=(WS_CACHE_SIZE<thcs)?WS_CACHE_SIZE:thcs;
