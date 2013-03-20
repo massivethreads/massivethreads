@@ -461,8 +461,8 @@ myth_thread_t myth_schedapi_runqueue_peek(int victim,void *ptr,size_t *psize)
 		myth_wsqueue_rwbarrier();
 		top=q->top;
 		if (b<top){
-			myth_thread_t th;
 			int s;
+			myth_thread_t th;
 			th=q->ptr[b];
 			size_t thcs=myth_custom_data_size(th);
 			void* thcd=myth_custom_data_ptr(th);
@@ -485,16 +485,26 @@ myth_thread_t myth_schedapi_runqueue_peek(int victim,void *ptr,size_t *psize)
 		//Release lock
 		myth_wsqueue_lock_unlock(&q->lock);
 	}
-	//Copy date from cache
-	size_t ps=0;
-	size_t cs=wc->size;
-	if (psize)ps=*psize;
-	if (cs>0){
-		cs=(cs<ps)?cs:ps;
-		if (ptr)memcpy(ptr,wc->data,cs);
-	}
-	if (psize)*psize=cs;
-	return wc->ptr;
+	//read sequence
+	int s0,s1;
+	myth_thread_t ret;
+	do{
+		s0=wc->seq;
+		myth_wsqueue_rbarrier();
+		//Copy date from cache
+		size_t ps=0;
+		size_t cs=wc->size;
+		ret=wc->ptr;
+		if (psize)ps=*psize;
+		if (cs>0){
+			cs=(cs<ps)?cs:ps;
+			if (ptr)memcpy(ptr,wc->data,cs);
+		}
+		if (psize)*psize=cs;
+		myth_wsqueue_rbarrier();
+		s1=wc->seq;
+	}while ((s0 & 1)||(s1^s0));
+	return ret;
 }
 #elif 0
 static int peekdata_fn(myth_thread_t th,void *udata)
