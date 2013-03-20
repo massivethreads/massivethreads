@@ -441,7 +441,7 @@ myth_thread_t myth_schedapi_runqueue_peek(int victim,void *ptr,size_t *psize)
 	q=&g_envs[victim].runnable_q;
 	wc=&s_wc[victim];
 	//Check cache status
-	if (wc->ptr){
+	if (!wc->ptr){
 		int b,top;
 		//runqueue empty?
 		if (q->top-q->base<=0){
