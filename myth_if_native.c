@@ -365,11 +365,25 @@ void myth_schedapi_randarr(int *ret,int n)
 	}
 }
 
+#define WS_CACHE_SIZE 2048
+
+//cache
+typedef struct{
+	char data[WS_CACHE_SIZE];
+	myth_thread_t ptr;
+	size_t size;
+	volatile int seq;
+}__attribute__((aligned(CACHE_LINE_SIZE))) myth_wscache,*myth_wscache_t;
+
+static myth_wscache s_wc[128];
+
 myth_thread_t myth_schedapi_runqueue_take_ex(int victim,myth_schedapi_decidefn_t decidefn,void *udata)
 {
 	myth_thread_queue_t q;
+	myth_wscache_t wc;
 	myth_thread_t ret;
 	int b,top;
+	wc=&s_wc[victim];
 	q=&g_envs[victim].runnable_q;
 #ifdef QUICK_CHECK_ON_STEAL
 	if (q->top-q->base<=0){
@@ -396,12 +410,15 @@ myth_thread_t myth_schedapi_runqueue_take_ex(int victim,myth_schedapi_decidefn_t
 		ret=q->ptr[b];
 		if (decidefn(ret,udata)){
 			//q->ptr[b]=NULL;
+			//invalidate cache
+			wc->ptr=NULL;
 			myth_wsqueue_lock_unlock(&q->lock);
 #if defined USE_LOCK || defined USE_LOCK_TAKE
 			myth_internal_lock_unlock(&q->m_lock);
 #endif
 			return ret;
 		}
+		myth_wsqueue_rwbarrier();
 	}
 	q->base=b;
 	myth_wsqueue_lock_unlock(&q->lock);
@@ -416,11 +433,70 @@ myth_thread_t myth_schedapi_runqueue_take(int victim)
 	return myth_queue_take(&g_envs[victim].runnable_q);
 }
 
-/*myth_thread_t myth_schedapi_runqueue_peek(int victim)
+#if 1
+myth_thread_t myth_schedapi_runqueue_peek(int victim,void *ptr,size_t *psize)
 {
-	return myth_queue_peek(&g_envs[victim].runnable_q);
-}*/
-
+	myth_thread_queue_t q;
+	myth_wscache_t wc;
+	q=&g_envs[victim].runnable_q;
+	wc=&s_wc[victim];
+	//Check cache status
+	if (wc->ptr){
+		int b,top;
+		//runqueue empty?
+		if (q->top-q->base<=0){
+			//empty,return NULL
+			return NULL;
+		}
+		//Update cache
+		//Acquire lock
+#if 0
+		if (!myth_wsqueue_lock_trylock(&q->lock))return NULL;
+#else
+		myth_wsqueue_lock_lock(&q->lock);
+#endif
+		//Increment base
+		b=q->base;
+		q->base=b+1;
+		myth_wsqueue_rwbarrier();
+		top=q->top;
+		if (b<top){
+			myth_thread_t th;
+			int s;
+			th=q->ptr[b];
+			size_t thcs=myth_custom_data_size(th);
+			void* thcd=myth_custom_data_ptr(th);
+			//Copy data
+			//Increment sequence
+			s=wc->seq;
+			wc->seq=s+1;
+			myth_wsqueue_rwbarrier();
+			//Copy data
+			wc->ptr=th;
+			wc->size=(WS_CACHE_SIZE<thcs)?WS_CACHE_SIZE:thcs;
+			memcpy(wc->data,thcd,wc->size);
+			//Increment sequence
+			myth_wsqueue_wbarrier();
+			wc->seq=s+2;
+			myth_wsqueue_wbarrier();
+		}
+		//Restore b
+		q->base=b;
+		//Release lock
+		myth_wsqueue_lock_unlock(&q->lock);
+	}
+	//Copy date from cache
+	size_t ps=0;
+	size_t cs=wc->size;
+	if (psize)ps=*psize;
+	if (cs>0){
+		cs=(cs<ps)?cs:ps;
+		if (ptr)memcpy(ptr,wc->data,cs);
+	}
+	if (psize)*psize=cs;
+	return wc->ptr;
+}
+#elif 0
 static int peekdata_fn(myth_thread_t th,void *udata)
 {
 	void **ud=(void**)udata;
@@ -437,8 +513,6 @@ static int peekdata_fn(myth_thread_t th,void *udata)
 	ud[2]=(void*)th;
 	return 0;
 }
-
-#if 0
 myth_thread_t myth_schedapi_runqueue_peek(int victim,void *ptr,size_t *psize)
 {
 	void *udata[3]={ptr,(void*)psize,NULL};
