@@ -183,22 +183,25 @@ static inline myth_thread_t __attribute__((always_inline)) myth_queue_pop(myth_t
 	}
 	else{
 		myth_wsqueue_lock_lock(&q->lock);
-		if (q->base<=top){//OK
+		base=q->base;
+		if (base<=top){//OK
 			ret=q->ptr[top];
 			q->ptr[top]=NULL;
-			//invalidate cache
-			myth_wscache_t wc=&q->wc;
-			fprintf(stderr,"cache Invalidate\n");
-			//Increment sequence
-			int s=wc->seq;
-			wc->seq=s+1;
-			myth_wsqueue_wbarrier();
-			//Copy data
-			wc->ptr=NULL;
-			wc->size=0;
-			//Increment sequence
-			myth_wsqueue_wbarrier();
-			wc->seq=s+2;
+			if (top<=base){
+				//invalidate cache
+				myth_wscache_t wc=&q->wc;
+				//fprintf(stderr,"cache Invalidate\n");
+				//Increment sequence
+				int s=wc->seq;
+				wc->seq=s+1;
+				myth_wsqueue_wbarrier();
+				//Copy data
+				wc->ptr=NULL;
+				wc->size=0;
+				//Increment sequence
+				myth_wsqueue_wbarrier();
+				wc->seq=s+2;
+			}
 			myth_wsqueue_lock_unlock(&q->lock);
 #if defined USE_LOCK || defined USE_LOCK_POP
 			myth_internal_lock_unlock(&q->m_lock);
@@ -240,9 +243,10 @@ static inline myth_thread_t myth_queue_take(myth_thread_queue_t q)
 #if defined USE_LOCK || defined USE_LOCK_TAKE
 	myth_internal_lock_lock(&q->m_lock);
 #endif
-#ifdef TRY_LOCK_BEFORE_STEAL
-	if (!myth_internal_lock_trylock(&q->lock)){
-		myth_queue_exit_operation();
+//#ifdef TRY_LOCK_BEFORE_STEAL
+#if 0
+	if (!myth_wsqueue_lock_trylock(&q->lock)){
+		//myth_queue_exit_operation();
 		return NULL;
 	}
 #else
@@ -281,13 +285,17 @@ static inline myth_thread_t myth_queue_peek(myth_thread_queue_t q)
 		return NULL;
 	}
 #endif
+	//myth_wsqueue_lock_lock(&q->lock);
+	//if (!myth_wsqueue_lock_trylock(&q->lock))return NULL;
 	//Increment base
 	b=q->base;
 	top=q->top;
 	if (b<top){
 		ret=q->ptr[b];
+		//myth_wsqueue_lock_unlock(&q->lock);
 		return ret;
 	}else{
+		//myth_wsqueue_lock_unlock(&q->lock);
 		return NULL;
 	}
 	myth_unreachable();

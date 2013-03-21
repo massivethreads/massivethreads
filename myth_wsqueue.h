@@ -57,8 +57,8 @@
 //cache
 typedef struct{
 	char data[WS_CACHE_SIZE];
-	struct myth_thread* ptr;
 	size_t size;
+	volatile void* ptr;
 	volatile int seq;
 }__attribute__((aligned(CACHE_LINE_SIZE))) myth_wscache,*myth_wscache_t;
 
