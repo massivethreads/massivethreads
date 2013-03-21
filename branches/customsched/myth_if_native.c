@@ -365,26 +365,14 @@ void myth_schedapi_randarr(int *ret,int n)
 	}
 }
 
-#define WS_CACHE_SIZE 2048
-
-//cache
-typedef struct{
-	char data[WS_CACHE_SIZE];
-	myth_thread_t ptr;
-	size_t size;
-	volatile int seq;
-}__attribute__((aligned(CACHE_LINE_SIZE))) myth_wscache,*myth_wscache_t;
-
-static myth_wscache s_wc[128];
-
 myth_thread_t myth_schedapi_runqueue_take_ex(int victim,myth_schedapi_decidefn_t decidefn,void *udata)
 {
 	myth_thread_queue_t q;
 	myth_wscache_t wc;
 	myth_thread_t ret;
 	int b,top;
-	wc=&s_wc[victim];
 	q=&g_envs[victim].runnable_q;
+	wc=&q->wc;
 #ifdef QUICK_CHECK_ON_STEAL
 	if (q->top-q->base<=0){
 		return NULL;
@@ -439,7 +427,7 @@ myth_thread_t myth_schedapi_runqueue_peek(int victim,void *ptr,size_t *psize)
 	myth_thread_queue_t q;
 	myth_wscache_t wc;
 	q=&g_envs[victim].runnable_q;
-	wc=&s_wc[victim];
+	wc=&q->wc;
 	//Check cache status
 	if (!wc->ptr){
 		int b,top;

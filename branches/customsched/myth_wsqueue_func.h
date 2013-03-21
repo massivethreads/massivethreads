@@ -185,6 +185,19 @@ static inline myth_thread_t __attribute__((always_inline)) myth_queue_pop(myth_t
 		if (q->base<=top){//OK
 			ret=q->ptr[top];
 			q->ptr[top]=NULL;
+			//invalidate cache
+			myth_wscache_t wc=&q->wc;
+			fprintf(stderr,"cache Invalidate\n");
+			//Increment sequence
+			int s=wc->seq;
+			wc->seq=s+1;
+			myth_wsqueue_wbarrier();
+			//Copy data
+			wc->ptr=NULL;
+			wc->size=0;
+			//Increment sequence
+			myth_wsqueue_wbarrier();
+			wc->seq=s+2;
 			myth_wsqueue_lock_unlock(&q->lock);
 #if defined USE_LOCK || defined USE_LOCK_POP
 			myth_internal_lock_unlock(&q->m_lock);
