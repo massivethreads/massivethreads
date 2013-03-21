@@ -381,9 +381,9 @@ myth_thread_t myth_schedapi_runqueue_take_ex(int victim,myth_schedapi_decidefn_t
 #if defined USE_LOCK || defined USE_LOCK_TAKE
 	myth_internal_lock_lock(&q->m_lock);
 #endif
-#ifdef TRY_LOCK_BEFORE_STEAL
-	if (!myth_internal_lock_trylock(&q->lock)){
-		myth_queue_exit_operation();
+//#ifdef TRY_LOCK_BEFORE_STEAL
+#if 1
+	if (!myth_wsqueue_lock_trylock(&q->lock)){
 		return NULL;
 	}
 #else
@@ -399,14 +399,24 @@ myth_thread_t myth_schedapi_runqueue_take_ex(int victim,myth_schedapi_decidefn_t
 		if (decidefn(ret,udata)){
 			//q->ptr[b]=NULL;
 			//invalidate cache
+			//fprintf(stderr,"%d cache Invalidate\n",victim);
+			//Increment sequence
+			int s=wc->seq;
+			wc->seq=s+1;
+			myth_wsqueue_wbarrier();
+			//Copy data
 			wc->ptr=NULL;
+			wc->size=0;
+			//Increment sequence
+			myth_wsqueue_wbarrier();
+			wc->seq=s+2;
 			myth_wsqueue_lock_unlock(&q->lock);
 #if defined USE_LOCK || defined USE_LOCK_TAKE
 			myth_internal_lock_unlock(&q->m_lock);
 #endif
 			return ret;
 		}
-		myth_wsqueue_rwbarrier();
+		myth_wsqueue_wbarrier();
 	}
 	q->base=b;
 	myth_wsqueue_lock_unlock(&q->lock);
@@ -416,9 +426,14 @@ myth_thread_t myth_schedapi_runqueue_take_ex(int victim,myth_schedapi_decidefn_t
 	return NULL;
 }
 
+static int take_fn(myth_thread_t th,void *udata)
+{
+	return 1;
+}
+
 myth_thread_t myth_schedapi_runqueue_take(int victim)
 {
-	return myth_queue_take(&g_envs[victim].runnable_q);
+	return myth_schedapi_runqueue_take_ex(victim,take_fn,NULL);
 }
 
 #if 1
@@ -428,52 +443,58 @@ myth_thread_t myth_schedapi_runqueue_peek(int victim,void *ptr,size_t *psize)
 	myth_wscache_t wc;
 	q=&g_envs[victim].runnable_q;
 	wc=&q->wc;
+start:;
+	//runqueue empty?
+	if (q->top-q->base<=0){
+		//empty,return NULL
+		return NULL;
+	}
 	//Check cache status
 	if (!wc->ptr){
 		int b,top;
-		//runqueue empty?
-		if (q->top-q->base<=0){
-			//empty,return NULL
-			return NULL;
-		}
 		//Update cache
 		//Acquire lock
-#if 0
-		if (!myth_wsqueue_lock_trylock(&q->lock))return NULL;
+#if 1
+		if (!myth_wsqueue_lock_trylock(&q->lock))goto start;
 #else
 		myth_wsqueue_lock_lock(&q->lock);
 #endif
-		//Increment base
-		b=q->base;
-		q->base=b+1;
-		myth_wsqueue_rwbarrier();
-		top=q->top;
-		if (b<top){
-			int s;
-			myth_thread_t th;
-			th=q->ptr[b];
-			size_t thcs=myth_custom_data_size(th);
-			void* thcd=myth_custom_data_ptr(th);
-			//Copy data
-			//Increment sequence
-			s=wc->seq;
-			wc->seq=s+1;
-			myth_wsqueue_wbarrier();
-			//Copy data
-			wc->ptr=th;
-			wc->size=(WS_CACHE_SIZE<thcs)?WS_CACHE_SIZE:thcs;
-			memcpy(wc->data,thcd,wc->size);
-			//Increment sequence
-			myth_wsqueue_wbarrier();
-			wc->seq=s+2;
-			myth_wsqueue_wbarrier();
+		//check status again
+		if (!wc->ptr){
+			//Increment base
+			b=q->base;
+			q->base=b+1;
+			myth_wsqueue_rwbarrier();
+			top=q->top;
+			if (b<top){
+				//fprintf(stderr,"%d cache update\n",victim);
+				int s;
+				myth_thread_t th;
+				th=q->ptr[b];
+				size_t thcs=myth_custom_data_size(th);
+				void* thcd=myth_custom_data_ptr(th);
+				//Copy data
+				//Increment sequence
+				s=wc->seq;
+				wc->seq=s+1;
+				myth_wsqueue_wbarrier();
+				//Copy data
+				wc->ptr=th;
+				wc->size=(WS_CACHE_SIZE<thcs)?WS_CACHE_SIZE:thcs;
+				memcpy(wc->data,thcd,wc->size);
+				//Increment sequence
+				myth_wsqueue_wbarrier();
+				wc->seq=s+2;
+				myth_wsqueue_wbarrier();
+			}
+			//Restore b
+			q->base=b;
 		}
-		//Restore b
-		q->base=b;
 		//Release lock
 		myth_wsqueue_lock_unlock(&q->lock);
 	}
 	//read sequence
+	//fprintf(stderr,"%d cache read\n",victim);
 	int s0,s1;
 	myth_thread_t ret;
 	do{
@@ -482,7 +503,7 @@ myth_thread_t myth_schedapi_runqueue_peek(int victim,void *ptr,size_t *psize)
 		//Copy date from cache
 		size_t ps=0;
 		size_t cs=wc->size;
-		ret=wc->ptr;
+		ret=(myth_thread_t)wc->ptr;
 		if (psize)ps=*psize;
 		if (cs>0){
 			cs=(cs<ps)?cs:ps;
