@@ -64,6 +64,7 @@ static inline void myth_queue_init(myth_thread_queue_t q){
 	memset(q->ptr,0,sizeof(myth_thread_t)*q->size);
 	q->base=q->size/2;
 	q->top=q->base;
+	memset(q->wc,0,sizeof(myth_wscache));
 }
 
 static inline void myth_queue_fini(myth_thread_queue_t q){
