@@ -226,7 +226,7 @@
 #define MYTH_ARCH_i386
 #elif (!defined MYTH_FORCE_ARCH_UNIVERSAL) && (defined __x86_64__)
 #define MYTH_ARCH_amd64
-  #if defined __MIC__
+  #if (defined __MIC__) || (defined __KNC__)
   #define MYTH_ARCH_amd64_mic
   #endif
 //Save FPU and SIMD control registers
