@@ -76,9 +76,25 @@ static void myth_get_pthread_funcs(void)
 		s_pthread_handle=RTLD_NEXT;
 	}
 	else{
+#if defined LIBPTHREAD_PATH
 		//pthread functions are not available in RTLD_NEXT. Load by myself
 		s_pthread_handle=dlopen(LIBPTHREAD_PATH,RTLD_LAZY);
 		assert(s_pthread_handle);
+#else
+	/* if LIBPTHREAD_PATH is not defined, it means 
+	   the command to automatically guess pthread path
+	   (ldd search_shlib_path | grep libpthread.so | ...)
+	   failed. this happens when you are cross-compiling 
+	   (esp. for MIC).  in my understanding it's OK as long as
+	   you link with pthread, in which case dysym(RTLD_NEXT, ...)
+	   returns non-null.
+	   TODO: 
+	   - see why this is ever needed
+	   - if it is needed, figure out the better way to handle this case.
+	   (how to 
+	*/
+		fprintf(stderr, "error: could not find a path to libpthread.so\n");
+#endif
 	}
 
 	//Basic operation
