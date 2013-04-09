@@ -43,8 +43,6 @@
 #error "Choose memory barrier"
 #endif
 
-hoge
-
 #elif defined MYTH_ARCH_sparc
 //Default
 #define myth_rbarrier() __sync_synchronize()
