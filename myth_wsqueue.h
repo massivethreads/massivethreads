@@ -52,6 +52,16 @@
 #define myth_wsqueue_rwbarrier() myth_rwbarrier()
 #endif
 
+#define WS_CACHE_SIZE 2048
+
+//cache
+typedef struct{
+	char data[WS_CACHE_SIZE];
+	size_t size;
+	volatile void* ptr;
+	volatile int seq;
+}__attribute__((aligned(CACHE_LINE_SIZE))) myth_wscache,*myth_wscache_t;
+
 #if defined MYTH_USE_ITIMER || defined MYTH_USE_SIGIO
 //If signal-driven I/O is enabled, this option must be defined
 #define USE_SIGNAL_CS
@@ -85,6 +95,7 @@ typedef struct myth_thread_queue
 #ifdef USE_THREAD_CS
 	pthread_mutex_t mtx;
 #endif
+	myth_wscache wc;
 }myth_thread_queue,*myth_thread_queue_t;
 
 //User-thread local structure for queue operation: Currently not used

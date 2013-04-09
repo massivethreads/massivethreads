@@ -1342,16 +1342,6 @@ uninstall-am: uninstall-includeHEADERS uninstall-libLTLIBRARIES \
 	uninstall-nobase_includeHEADERS
 
 
-pthread_so_path.def:
-	$(CC) -o search_shlib_path search_shlib_path.c -lpthread
-	ldd search_shlib_path | grep libpthread.so | $(AWK) '{printf("#define LIBPTHREAD_PATH \"%s\"", $$3); }' > pthread_so_path.def
-	rm search_shlib_path
-
-myth.d: pthread_so_path.def
-	gcc -MM -w *.c > myth.d
-
--include myth.d
-
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

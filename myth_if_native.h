@@ -103,12 +103,18 @@ void myth_sched_prof_pause(void);
 int myth_get_worker_num(void);
 int myth_get_num_workers(void);
 
-void *myth_get_custom_data(myth_thread_t th,size_t *size);
+typedef int (*myth_schedapi_decidefn_t)(myth_thread_t th,void *udata);
+
+myth_thread_t myth_schedapi_runqueue_peek(int victim,void *ptr,size_t *psize);
+size_t myth_custom_data_size(myth_thread_t th);
+void *myth_custom_data_ptr(myth_thread_t th);
+int myth_schedapi_rand(void);
+void myth_schedapi_randarr(int *ret,int n);
 myth_thread_t myth_schedapi_runqueue_take(int victim);
 int myth_schedapi_runqueue_pass(int target,myth_thread_t th);
 void myth_schedapi_runqueue_push(myth_thread_t th);
 myth_thread_t myth_schedapi_runqueue_pop(void);
-myth_thread_t myth_schedapi_runqueue_peek(int victim);
+//myth_thread_t myth_schedapi_runqueue_peek(int victim);
 int myth_schedapi_rand(void);
 int myth_schedapi_rand2(int min,int max);
 
