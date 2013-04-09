@@ -37,8 +37,8 @@
 //the initialization y=0 is not necessary but desirable to suppress 
 //may-be-used-before-defined warning by icc
 #define myth_rwbarrier() {\
-	int x=0,y=0;\
-	asm volatile("xchgl %0,%1":"=r"(x),"=m"(y):"0"(x):"memory");\
+	int x,y;\
+	asm volatile("xchgl %0,%1":"=r"(x),"=m"(y)::"memory");\
 }
 //#define myth_rwbarrier() asm volatile("mfence":::"memory")
 #elif defined MYTH_BARRIER_INTRINSIC
