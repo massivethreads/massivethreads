@@ -25,14 +25,3 @@ libmyth_compat_la_CFLAGS  = $(COMMON_FLAGS)
 libmyth_la_CCASFLAGS      = $(COMMON_FLAGS)
 libmyth_native_la_CCASFLAGS  = $(COMMON_FLAGS)
 libmyth_compat_la_CCASFLAGS  = $(COMMON_FLAGS)
-
-pthread_so_path.def:
-	$(CC) -o search_shlib_path search_shlib_path.c -lpthread
-	ldd search_shlib_path | grep libpthread.so | $(AWK) '{printf("#define LIBPTHREAD_PATH \"%s\"", $$3); }' > pthread_so_path.def
-	rm search_shlib_path
-
-myth.d: pthread_so_path.def
-	gcc -MM -w *.c > myth.d
-
--include myth.d
-

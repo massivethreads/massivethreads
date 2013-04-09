@@ -331,15 +331,234 @@ void myth_cond_wait (myth_cond_t c,myth_mutex_t mtx)
 	myth_cond_wait_body(c,mtx);
 }
 
-myth_thread_t myth_schedapi_runqueue_take(int victim)
+size_t myth_custom_data_size(myth_thread_t th)
 {
-	return myth_queue_take(&g_envs[victim].runnable_q);
+	return th->custom_data_size;
 }
 
-myth_thread_t myth_schedapi_runqueue_peek(int victim)
+void *myth_custom_data_ptr(myth_thread_t th)
 {
-	return myth_queue_peek(&g_envs[victim].runnable_q);
+	return th->custom_data_ptr;
 }
+
+int myth_schedapi_rand(void)
+{
+	return myth_random(0,myth_get_num_workers());
+}
+
+void myth_schedapi_randarr(int *ret,int n)
+{
+	int i,j;
+	assert(n<=myth_get_num_workers());
+	for (i=0;i<n;i++){
+		while (1){
+			int r;
+			r=myth_schedapi_rand();
+			for (j=0;j<i;j++){
+				if (r==ret[j])break;
+			}
+			if (j==i){
+				ret[i]=r;
+				break;
+			}
+		}
+	}
+}
+
+myth_thread_t myth_schedapi_runqueue_take_ex(int victim,myth_schedapi_decidefn_t decidefn,void *udata)
+{
+	myth_thread_queue_t q;
+	myth_wscache_t wc;
+	myth_thread_t ret;
+	int b,top;
+	q=&g_envs[victim].runnable_q;
+	wc=&q->wc;
+#ifdef QUICK_CHECK_ON_STEAL
+	if (q->top-q->base<=0){
+		return NULL;
+	}
+#endif
+#if defined USE_LOCK || defined USE_LOCK_TAKE
+	myth_internal_lock_lock(&q->m_lock);
+#endif
+//#ifdef TRY_LOCK_BEFORE_STEAL
+#if 1
+	if (!myth_wsqueue_lock_trylock(&q->lock)){
+		return NULL;
+	}
+#else
+	myth_wsqueue_lock_lock(&q->lock);
+#endif
+	//Increment base
+	b=q->base;
+	q->base=b+1;
+	myth_wsqueue_rwbarrier();
+	top=q->top;
+	if (b<top){
+		ret=q->ptr[b];
+		if (decidefn(ret,udata)){
+			//q->ptr[b]=NULL;
+			//invalidate cache
+			//fprintf(stderr,"%d cache Invalidate\n",victim);
+			//Increment sequence
+			int s=wc->seq;
+			wc->seq=s+1;
+			myth_wsqueue_wbarrier();
+			//Copy data
+			wc->ptr=NULL;
+			wc->size=0;
+			//Increment sequence
+			myth_wsqueue_wbarrier();
+			wc->seq=s+2;
+			myth_wsqueue_lock_unlock(&q->lock);
+#if defined USE_LOCK || defined USE_LOCK_TAKE
+			myth_internal_lock_unlock(&q->m_lock);
+#endif
+			return ret;
+		}
+		myth_wsqueue_wbarrier();
+	}
+	q->base=b;
+	myth_wsqueue_lock_unlock(&q->lock);
+#if defined USE_LOCK || defined USE_LOCK_TAKE
+	myth_internal_lock_unlock(&q->m_lock);
+#endif
+	return NULL;
+}
+
+static int take_fn(myth_thread_t th,void *udata)
+{
+	return 1;
+}
+
+myth_thread_t myth_schedapi_runqueue_take(int victim)
+{
+	return myth_schedapi_runqueue_take_ex(victim,take_fn,NULL);
+}
+
+#if 1
+myth_thread_t myth_schedapi_runqueue_peek(int victim,void *ptr,size_t *psize)
+{
+	myth_thread_queue_t q;
+	myth_wscache_t wc;
+	q=&g_envs[victim].runnable_q;
+	wc=&q->wc;
+start:;
+	//runqueue empty?
+	if (q->top-q->base<=0){
+		//empty,return NULL
+		return NULL;
+	}
+	//Check cache status
+	if (!wc->ptr){
+		int b,top;
+		//Update cache
+		//Acquire lock
+#if 1
+		if (!myth_wsqueue_lock_trylock(&q->lock))goto start;
+#else
+		myth_wsqueue_lock_lock(&q->lock);
+#endif
+		//check status again
+		if (!wc->ptr){
+			//Increment base
+			b=q->base;
+			q->base=b+1;
+			myth_wsqueue_rwbarrier();
+			top=q->top;
+			if (b<top){
+				//fprintf(stderr,"%d cache update\n",victim);
+				int s;
+				myth_thread_t th;
+				th=q->ptr[b];
+				size_t thcs=myth_custom_data_size(th);
+				void* thcd=myth_custom_data_ptr(th);
+				//Copy data
+				//Increment sequence
+				s=wc->seq;
+				wc->seq=s+1;
+				myth_wsqueue_wbarrier();
+				//Copy data
+				wc->ptr=th;
+				wc->size=(WS_CACHE_SIZE<thcs)?WS_CACHE_SIZE:thcs;
+				memcpy(wc->data,thcd,wc->size);
+				//Increment sequence
+				myth_wsqueue_wbarrier();
+				wc->seq=s+2;
+				myth_wsqueue_wbarrier();
+			}
+			//Restore b
+			q->base=b;
+		}
+		//Release lock
+		myth_wsqueue_lock_unlock(&q->lock);
+	}
+	//read sequence
+	//fprintf(stderr,"%d cache read\n",victim);
+	int s0,s1;
+	myth_thread_t ret;
+	do{
+		s0=wc->seq;
+		myth_wsqueue_rbarrier();
+		//Copy date from cache
+		size_t ps=0;
+		size_t cs=wc->size;
+		ret=(myth_thread_t)wc->ptr;
+		if (psize)ps=*psize;
+		if (cs>0){
+			cs=(cs<ps)?cs:ps;
+			if (ptr)memcpy(ptr,wc->data,cs);
+		}
+		if (psize)*psize=cs;
+		myth_wsqueue_rbarrier();
+		s1=wc->seq;
+	}while ((s0 & 1)||(s1^s0));
+	return ret;
+}
+#elif 0
+static int peekdata_fn(myth_thread_t th,void *udata)
+{
+	void **ud=(void**)udata;
+	void *ptr=ud[0];
+	size_t *psize=ud[1];
+	size_t ps=0;
+	size_t cs=myth_custom_data_size(th);
+	if (psize)ps=*psize;
+	if (cs>0){
+		cs=(cs<ps)?cs:ps;
+		if (ptr)memcpy(ptr,myth_custom_data_ptr(th),cs);
+	}
+	if (psize)*psize=cs;
+	ud[2]=(void*)th;
+	return 0;
+}
+myth_thread_t myth_schedapi_runqueue_peek(int victim,void *ptr,size_t *psize)
+{
+	void *udata[3]={ptr,(void*)psize,NULL};
+	myth_schedapi_runqueue_take_ex(victim,peekdata_fn,(void*)&udata);
+	return (myth_thread_t)udata[2];
+}
+#else
+myth_thread_t myth_schedapi_runqueue_peek(int victim,void *ptr,size_t *psize)
+{
+	myth_thread_t ret;
+	ret=myth_queue_peek(&g_envs[victim].runnable_q);
+	if (ret){
+		size_t csize=myth_custom_data_size(ret);
+		if (psize && ptr && (*psize)>0){
+			csize=((*psize)<csize)?(*psize):csize;
+			*psize=csize;
+			if (csize>0){
+				memcpy(ptr,myth_custom_data_ptr(ret),csize);
+			}
+		}
+	}
+	else{
+		if (psize)*psize=0;
+	}
+	return ret;
+}
+#endif
 
 int myth_schedapi_runqueue_pass(int target,myth_thread_t th)
 {
@@ -357,20 +576,6 @@ myth_thread_t myth_schedapi_runqueue_pop(void)
 {
 	myth_running_env_t env=myth_get_current_env();
 	return myth_queue_pop(&env->runnable_q);
-}
-
-int myth_schedapi_rand(void)
-{
-	myth_running_env_t env,busy_env;
-	//Choose a worker thread that seems to be busy
-	env=myth_get_current_env();
-	busy_env=myth_env_get_first_busy(env);
-	return busy_env->rank;
-}
-
-int myth_schedapi_rand2(int min,int max)
-{
-	return myth_random(min,max);
 }
 
 //TODO: temporalily disable
