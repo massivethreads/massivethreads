@@ -36,7 +36,7 @@
 //R->W orderings are NOT guaranteed. Need to serialize by atomic or fence insns
 #define myth_rwbarrier() {\
 	int x=0,y;\
-	asm volatile("xchgl %0,%1":"=r"(x):"m"(y),"0"(x):"memory");\
+	asm volatile("xchgl %0,%1":"=r"(x),"=m"(y):"0"(x):"memory");\
 }
 //#define myth_rwbarrier() asm volatile("mfence":::"memory")
 #else
