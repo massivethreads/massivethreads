@@ -66,5 +66,20 @@ on MIC.
   $ make
   $ make install
 
-== Installation for FX10 (SPARCv7 architecture) ==
+== Installation for FX10 (SPARCv9 architecture) ==
+  
+ * Enter interactive mode on one computing node
+   
+  $ pjsub --interact
 
+ * Enable GCC-4.6.1 on FX10
+  
+  $ module unload TCSuite
+  $ module load GCC/4.6.1
+  $ module load gdb/6.6
+
+ * rest of the steps is the same.
+  
+  $ ./configure
+  $ make
+  $ make install
