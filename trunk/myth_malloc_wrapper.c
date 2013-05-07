@@ -233,9 +233,11 @@ int posix_memalign(void **memptr,size_t alignment,size_t size)
 		return ENOMEM;
 	}
 	//align
-	n=n0+alignment-1;
-	n/=alignment;n*=alignment;
+	n = n0 + sizeof(malloc_wrapper_header) + alignment - 1;
+	n = n - n % alignment;
 	ptr=(malloc_wrapper_header_t)n;ptr--;
+	assert(n0 <= (uintptr_t)ptr);
+	assert(n + size <= n0 + size+alignment+sizeof(malloc_wrapper_header));
 	ptr->s.fl_index=FREE_LIST_NUM;
 	ptr->s.org_ptr=(void*)n0;
 	//fprintf(stderr,"memalign A,%p,%p,%p,%d\n",(void*)n0,ptr,(void*)n,FREE_LIST_NUM);
