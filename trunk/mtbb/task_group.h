@@ -75,9 +75,11 @@ struct nanos_const_wd_definition_for_task wd_definition_for_task = {
       0,			/* tied */
       0,0,0,0,0,0		/* reserved0-5 */
     },
-    __alignof__(struct task),
-    0,
-    1
+    __alignof__(struct task),	/* data_alignment */
+    0,				/* num_copies */
+    1,				/* num_devices */
+    1,				/* num_dimensions */
+    NULL			/* description */
   },
   {
     {
@@ -134,7 +136,7 @@ struct task_group {
       qthread_fork(invoke_task, (void*)t, &t->ret);
 #elif NANOX
       nanos_wd_t wd=NULL;
-      nanos_wd_dyn_props_t dyn_props = { 0, 0 };
+      nanos_wd_dyn_props_t dyn_props = { { 0,0,0,0,0,0,0,0 }, 0, 0 };
       NANOS_SAFE(nanos_create_wd_compact(&wd,&wd_definition_for_task.base,
 					 &dyn_props,
 					 sizeof(struct task), (void**)&t,
