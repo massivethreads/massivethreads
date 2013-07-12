@@ -51,7 +51,7 @@ struct task_list_node {
   task a[TASK_GROUP_INIT_SZ];
 };
 
-th_func_ret_type invoke_task(void * arg_) {
+static th_func_ret_type invoke_task(void * arg_) {
   task * arg = (task *)arg_;
   std::function<void()> f = arg->f;
   f();
