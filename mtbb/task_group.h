@@ -4,24 +4,27 @@
 #include <string.h>
 #include <functional>
 
-#if QTHREAD 
+#if TO_QTHREAD 
 #include <qthread.h>
-#elif NANOX
+#elif TO_NANOX
 #include <nanos.h>
-#elif MTH_NATIVE
+#elif TO_MTHREAD
+#include <pthread.h>
+#elif TO_MTHREAD_NATIVE
 #include <myth.h>
 #else
-#include <pthread.h>
-#define PTHREAD_LIKE 1
+
+#error "none of TO_QTHREAD/TO_NANOX/TO_MTHREAD/TO_MTHREAD_NATIVE defined"
+
 #endif
 
-#if PTHREAD_LIKE
+#if TO_MTHREAD
 #define th_func_ret_type void *
-#elif QTHREAD
+#elif TO_QTHREAD
 #define th_func_ret_type aligned_t
-#elif NANOX
+#elif TO_NANOX
 #define th_func_ret_type void
-#elif MTH_NATIVE
+#elif TO_MTHREAD_NATIVE
 #define th_func_ret_type void *
 #endif
 
@@ -35,12 +38,18 @@
 
 struct task {
   std::function<void ()> f;
-#if PTHREAD_LIKE
+#if TO_MTHREAD
   pthread_t tid;
-#elif QTHREAD
+#elif TO_QTHREAD
   aligned_t ret;
-#elif MTH_NATIVE
+#elif TO_MTHREAD_NATIVE
   myth_thread_t hthread;
+#elif TO_NANOX
+
+#else
+
+#error "none of TO_QTHREAD/TO_NANOX/TO_MTHREAD/TO_MTHREAD_NATIVE defined"
+
 #endif
 };
 
@@ -55,20 +64,26 @@ static th_func_ret_type invoke_task(void * arg_) {
   task * arg = (task *)arg_;
   std::function<void()> f = arg->f;
   f();
-#if PTHREAD_LIKE || QTHREAD || MTH_NATIVE
+#if TO_MTHREAD || TO_QTHREAD || TO_MTHREAD_NATIVE
   return 0;
+#elif TO_NANOX
+
+#else
+
+#error "none of TO_QTHREAD/TO_NANOX/TO_MTHREAD/TO_MTHREAD_NATIVE defined"
+
 #endif
 }
 
-#if NANOX
-nanos_smp_args_t invoke_task_arg={invoke_task};
+#if TO_NANOX
+static nanos_smp_args_t invoke_task_arg={invoke_task};
 
 struct nanos_const_wd_definition_for_task {
   nanos_const_wd_definition_t base;
   nanos_device_t devices[1];
 };
 
-struct nanos_const_wd_definition_for_task wd_definition_for_task = {
+static struct nanos_const_wd_definition_for_task wd_definition_for_task = {
   {
     {
       0,			/* mandatory_creation */
@@ -130,11 +145,11 @@ struct task_group {
       invoke_task((void *)t);
     } else {
       tail->n++;
-#if PTHREAD_LIKE
+#if TO_MTHREAD
       pthread_create(&t->tid, NULL, invoke_task, (void*)t);
-#elif QTHREAD
+#elif TO_QTHREAD
       qthread_fork(invoke_task, (void*)t, &t->ret);
-#elif NANOX
+#elif TO_NANOX
       nanos_wd_t wd=NULL;
       nanos_wd_dyn_props_t dyn_props = { { 0,0,0,0,0,0,0,0 }, 0, 0 };
       NANOS_SAFE(nanos_create_wd_compact(&wd,&wd_definition_for_task.base,
@@ -157,10 +172,12 @@ struct task_group {
 
 
       NANOS_SAFE(nanos_submit(wd,0,0,0));
-#elif MTH_NATIVE
+#elif TO_MTHREAD_NATIVE
       t->hthread=myth_create(invoke_task,(void*)t);
 #else
-#error "neither PTHREAD_LIKE, QTHREAD, NANOX, nor MTH_NATIVE defined"
+
+#error "none of TO_QTHREAD/TO_NANOX/TO_MTHREAD/TO_MTHREAD_NATIVE defined"
+
 #endif
     }
   }
@@ -171,19 +188,21 @@ struct task_group {
       for (int i = 0; i < p->n; i++) {
 #if TASK_GROUP_NULL_CREATE 
 	/* noop */
-#elif PTHREAD_LIKE
+#elif TO_MTHREAD
 	pthread_join(p->a[i].tid, NULL);
-#elif QTHREAD
+#elif TO_QTHREAD
 	aligned_t ret;
 	qthread_readFF(&ret,&p->a[i].ret);
-#elif NANOX
+#elif TO_NANOX
 	if (n_joined == 0) {
 	  NANOS_SAFE(nanos_wg_wait_completion(nanos_current_wd(), 1));
 	}
-#elif MTH_NATIVE
+#elif TO_MTHREAD_NATIVE
 	myth_join(p->a[i].hthread,NULL);
 #else
-#error "neither PTHREAD_LIKE, QTHREAD, NANOX, nor MTH_NATIVE defined"
+
+#error "none of TO_QTHREAD/TO_NANOX/TO_MTHREAD/TO_MTHREAD_NATIVE defined"
+
 #endif
 	n_joined++;
       }
