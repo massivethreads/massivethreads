@@ -1,6 +1,10 @@
 #include <sys/time.h>
 #include <stdio.h>
-#include "task_group.h"
+
+// this should be found in include under 
+// the massivethreads installation directory 
+// (<prefix>/include)
+#include <mtbb/task_group.h>
 
 double cur_time() {
   struct timeval tp[1];
@@ -11,7 +15,7 @@ double cur_time() {
 int fib(int n) {
   if (n < 2) return 1;
   else {
-    task_group tg; int x, y;
+    mtbb::task_group tg; int x, y;
     tg.run([=,&x] { x = fib(n - 1); });
     y = fib(n - 2);
     tg.wait();
