@@ -15,10 +15,15 @@
 //TLS key size
 #define MYTH_TLS_KEY_SIZE 256
 
-//Stack size
-#define DEF_STACK_SIZE (128*1024)
-//Scheduler stack size
-#define SCHED_STACK_SIZE (1024*1024)
+/* 2013. Aug 8th.  the following two variables are
+   renamed to MYTH_DEF_STACK_SIZE and MYTH_SCHED_STACK_SIZE,
+   respectively, and now set by configure.  
+   try ./configure --help.
+
+   DO NOT EDIT THEM
+   #define DEF_STACK_SIZE (128*1024)
+   #define SCHED_STACK_SIZE (1024*1024)
+*/
 
 //#define USE_STACK_GUARDPAGE
 
@@ -35,24 +40,13 @@
 //Runqueue length
 #define INITIAL_QUEUE_SIZE (65536*2)
 
-// (1) when MYTH_WRAP_MALLOC is undefined, we do not 
-// define malloc, calloc, etc. at all, so the default
-// behavior is guaranteeed.
-// (2) when MYTH_WRAP_MALLOC is defined but
-// MYTH_WRAP_MALLOC_RUNTIME is undefined, we always
-// wrap malloc. it is the behavior of the previous 
-// implementation
-// (3) when both MYTH_WRAP_MALLOC and MYTH_WRAP_MALLOC_RUNTIME
-// are defined, the environment variable "MYTH_DONT_WRAP_MALLOC"
-// determines whether malloc etc. are wrapped. if its first 
-// character is '1', malloc etc. are not wrapped. 
-// otherwise they are wrapped
+/* 2013. Aug 8th.  the following two variables are
+   now set by configure.  try ./configure --help
 
-//Wrap malloc function as worker-private freelist
-#define MYTH_WRAP_MALLOC
-//Turn on/off malloc wrap by environment variable
-#define MYTH_WRAP_MALLOC_RUNTIME
-
+   DO NOT EDIT THEM
+   #define MYTH_WRAP_MALLOC
+   #define MYTH_WRAP_MALLOC_RUNTIME
+*/
 
 //Wrap and multipelx I/O functions
 //#define MYTH_WRAP_SOCKIO
