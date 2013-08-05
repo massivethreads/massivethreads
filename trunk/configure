@@ -732,6 +732,9 @@ ac_subst_files=''
 ac_user_opts='
 enable_option_checking
 enable_dependency_tracking
+enable_malloc_wrapper
+with_default_stack_size
+with_sched_stack_size
 enable_shared
 enable_static
 with_pic
@@ -1373,6 +1376,18 @@ Optional Features:
   --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
   --disable-dependency-tracking  speeds up one-time build
   --enable-dependency-tracking   do not reject slow dependency extractors
+  --enable-malloc-wrapper=yes|no
+                          Enable or disable malloc wrapper. "no" completely
+                          disables it when compiling MassiveThreads. "yes"
+                          enables it, but you can still disable it at runtime
+                          by setting environment variable
+                          MYTH_DONT_WRAP_MALLOC=1. Default is "yes". If you
+                          experience a segfault for programs which don't
+                          without MassiveThreads, it may be a MassiveThreads
+                          bug around malloc wapper; chances are that
+                          MYTH_DONT_WRAP_MALLOC=0 at runtime or
+                          --disable-malloc will avoid it at the cost of
+                          resorting to less scalable malloc implementation.
   --enable-shared[=PKGS]  build shared libraries [default=yes]
   --enable-static[=PKGS]  build static libraries [default=yes]
   --enable-fast-install[=PKGS]
@@ -1382,6 +1397,13 @@ Optional Features:
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
+  --with-default-stack-size=S
+                          Set default stack size of threads to S bytes.
+                          Default: 131072. You can change it at runtime by
+                          setting MYTH_DEF_STKSIZE.
+  --with-sched-stack-size=S
+                          Set default stack size of the scheduler thread to S
+                          bytes. Default: 1048576.
   --with-pic              try to use only PIC/non-PIC objects [default=use
                           both]
   --with-gnu-ld           assume the C compiler uses GNU ld [default=no]
@@ -4515,6 +4537,69 @@ _ACEOF
 
 # Check functions
 # AC_CHECK_FUNCS(__builtin_unreachable __builtin_clz)
+
+#
+# --enable-malloc-wrapper
+#   flag controlling the behavior of malloc
+#
+
+# Check whether --enable-malloc_wrapper was given.
+if test "${enable_malloc_wrapper+set}" = set; then :
+  enableval=$enable_malloc_wrapper;
+fi
+
+
+if test "x$enable_malloc_wrapper" = "xyes" ; then
+
+cat >>confdefs.h <<_ACEOF
+#define MYTH_WRAP_MALLOC /**/
+_ACEOF
+
+
+cat >>confdefs.h <<_ACEOF
+#define MYTH_WRAP_MALLOC_RUNTIME /**/
+_ACEOF
+
+fi
+
+#
+# set user threads' default stack size
+#
+
+
+# Check whether --with-default-stack-size was given.
+if test "${with_default_stack_size+set}" = set; then :
+  withval=$with_default_stack_size; default_stack_size="$withval"
+else
+  default_stack_size=131072
+fi
+
+
+
+cat >>confdefs.h <<_ACEOF
+#define MYTH_DEF_STACK_SIZE $default_stack_size
+_ACEOF
+
+
+#
+# set the scheduler thread's stack size
+#
+
+
+# Check whether --with-sched-stack-size was given.
+if test "${with_sched_stack_size+set}" = set; then :
+  withval=$with_sched_stack_size; sched_stack_size="$withval"
+else
+  sched_stack_size=1048576
+fi
+
+
+
+cat >>confdefs.h <<_ACEOF
+#define MYTH_SCHED_STACK_SIZE $sched_stack_size
+_ACEOF
+
+
 
 # initialize libtool
 case `pwd` in

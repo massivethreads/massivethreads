@@ -305,8 +305,8 @@ static inline void myth_startpoint_init_ex_body(int rank)
 	//Set worker thread descrptor
 	this_th->env = env;
 	//Initialize context for scheduler
-	env->sched.stack=myth_malloc(SCHED_STACK_SIZE);
-	myth_make_context_voidcall(&env->sched.context,myth_sched_loop,(void*)(((char*)env->sched.stack)+SCHED_STACK_SIZE-sizeof(void*)),SCHED_STACK_SIZE-sizeof(void*));
+	env->sched.stack=myth_malloc(MYTH_SCHED_STACK_SIZE);
+	myth_make_context_voidcall(&env->sched.context,myth_sched_loop,(void*)(((char*)env->sched.stack)+MYTH_SCHED_STACK_SIZE-sizeof(void*)),MYTH_SCHED_STACK_SIZE-sizeof(void*));
 	//Switch to scheduler
 	myth_swap_context_withcall(&this_th->context, &env->sched.context,
 		myth_startpoint_init_ex_1, env, this_th, NULL);
