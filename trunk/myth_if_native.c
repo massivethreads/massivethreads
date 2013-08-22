@@ -17,6 +17,7 @@ void myth_init(void)
 {
 	myth_init_body(0,0);
 }
+
 void myth_init_withparam(int worker_num,size_t def_stack_size)
 {
 	myth_init_body(worker_num,def_stack_size);
@@ -339,6 +340,14 @@ size_t myth_custom_data_size(myth_thread_t th)
 void *myth_custom_data_ptr(myth_thread_t th)
 {
 	return th->custom_data_ptr;
+}
+
+void myth_set_custom_data(myth_thread_t th,void **data,size_t *size)
+{
+	if (th==NULL)th=myth_self();
+	void *newdata=*data;size_t newsize=*size;
+	*data=th->custom_data_ptr;*size=th->custom_data_size;
+	th->custom_data_ptr=newdata;th->custom_data_size=newsize;
 }
 
 int myth_schedapi_rand(void)
