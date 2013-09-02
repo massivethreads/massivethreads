@@ -1,0 +1,24 @@
+* About:
+native API is a collection of functions with a prefix "myth_". With native API, you can use full functionalities of MassiveThreads such as work stealing strategy customization.
+
+* Tutorial:
+
+** How to compile and link with native API:
+
+Please include myth.h in ${prefix}/include and link libmyth.so or libmyth-native.so in ${prefix}/lib.
+${prefix} shows MassiveThreads install directory. Please change accordingly.
+
+Example:
+
+$ cat foo.c
+#include <myth.h>
+int main(int argc,char **argv)
+{
+  myth_init();
+  printf("Hello, MassiveThreads!\n");
+  myth_fini();
+  return 0;
+}
+
+$ gcc -o foo foo.c -I${prefix}/include -L${prefix}/lib -lmyth 
+
