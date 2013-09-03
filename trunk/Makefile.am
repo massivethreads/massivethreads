@@ -13,7 +13,7 @@ include_HEADERS = myth.h myth_if_native.h
 nobase_include_HEADERS = mtbb/task_group.h
 
 libmyth_la_SOURCES        = $(COMMON_SRCS) myth_if_native.c myth_if_pthread.c myth_constructor.c
-libmyth_native_la_SOURCES = $(COMMON_SRCS) myth_if_native.c
+libmyth_native_la_SOURCES = $(COMMON_SRCS) myth_if_native.c                   myth_constructor.c
 libmyth_compat_la_SOURCES = $(COMMON_SRCS)                  myth_if_pthread.c myth_constructor.c
 
 # C compiler flags
