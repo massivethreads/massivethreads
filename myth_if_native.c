@@ -1116,7 +1116,7 @@ void myth_cond_wait (myth_cond_t c,myth_mutex_t mtx)
 
       TODO: see also.
 */
-size_t myth_custom_data_size(myth_thread_t th)
+size_t myth_wsapi_get_hint_size(myth_thread_t th)
 {
 	return th->custom_data_size;
 }
@@ -1138,7 +1138,7 @@ size_t myth_custom_data_size(myth_thread_t th)
 
       TODO: see also.
 */
-void *myth_custom_data_ptr(myth_thread_t th)
+void *myth_wsapi_get_hint_ptr(myth_thread_t th)
 {
 	return th->custom_data_ptr;
 }
@@ -1160,7 +1160,7 @@ void *myth_custom_data_ptr(myth_thread_t th)
 
       TODO: see also.
 */
-void myth_set_custom_data(myth_thread_t th,void **data,size_t *size)
+void myth_wsapi_set_hint(myth_thread_t th,void **data,size_t *size)
 {
 	if (th==NULL)th=myth_self();
 	void *newdata=*data;size_t newsize=*size;
@@ -1169,7 +1169,7 @@ void myth_set_custom_data(myth_thread_t th,void **data,size_t *size)
 }
 
 /*
-   Function: myth_schedapi_rand
+   Function: myth_wsapi_rand
 
    TODO: description.
 
@@ -1185,13 +1185,13 @@ void myth_set_custom_data(myth_thread_t th,void **data,size_t *size)
 
       TODO: see also.
 */
-int myth_schedapi_rand(void)
+int myth_wsapi_rand(void)
 {
 	return myth_random(0,myth_get_num_workers());
 }
 
 /*
-   Function: myth_schedapi_randarr
+   Function: myth_wsapi_randarr
 
    TODO: description.
 
@@ -1207,14 +1207,14 @@ int myth_schedapi_rand(void)
 
       TODO: see also.
 */
-void myth_schedapi_randarr(int *ret,int n)
+void myth_wsapi_randarr(int *ret,int n)
 {
 	int i,j;
 	assert(n<=myth_get_num_workers());
 	for (i=0;i<n;i++){
 		while (1){
 			int r;
-			r=myth_schedapi_rand();
+			r=myth_wsapi_rand();
 			for (j=0;j<i;j++){
 				if (r==ret[j])break;
 			}
@@ -1227,7 +1227,7 @@ void myth_schedapi_randarr(int *ret,int n)
 }
 
 /*
-   Function: myth_schedapi_runqueue_take_ex
+   Function: myth_wsapi_runqueue_take_ex
 
    TODO: description.
 
@@ -1243,7 +1243,7 @@ void myth_schedapi_randarr(int *ret,int n)
 
       TODO: see also.
 */
-myth_thread_t myth_schedapi_runqueue_take_ex(int victim,myth_schedapi_decidefn_t decidefn,void *udata)
+myth_thread_t myth_wsapi_runqueue_take(int victim,myth_wsapi_decidefn_t decidefn,void *udata)
 {
 	myth_thread_queue_t q;
 	myth_wscache_t wc;
@@ -1274,7 +1274,7 @@ myth_thread_t myth_schedapi_runqueue_take_ex(int victim,myth_schedapi_decidefn_t
 	top=q->top;
 	if (b<top){
 		ret=q->ptr[b];
-		if (decidefn(ret,udata)){
+		if ((!decidefn) || decidefn(ret,udata)){
 			//q->ptr[b]=NULL;
 			//invalidate cache
 			//fprintf(stderr,"%d cache Invalidate\n",victim);
@@ -1304,36 +1304,9 @@ myth_thread_t myth_schedapi_runqueue_take_ex(int victim,myth_schedapi_decidefn_t
 	return NULL;
 }
 
-static int take_fn(myth_thread_t th,void *udata)
-{
-	return 1;
-}
-
-/*
-   Function: myth_schedapi_runqueue_take
-
-   TODO: description.
-
-   Parameters:
-
-      x - TODO: parameters.
-
-   Returns:
-
-      TODO: return value.
-
-   See Also:
-
-      TODO: see also.
-*/
-myth_thread_t myth_schedapi_runqueue_take(int victim)
-{
-	return myth_schedapi_runqueue_take_ex(victim,take_fn,NULL);
-}
-
 #if 1
 /*
-   Function: myth_schedapi_runqueue_peek
+   Function: myth_wsapi_runqueue_peek
 
    TODO: description.
 
@@ -1349,7 +1322,7 @@ myth_thread_t myth_schedapi_runqueue_take(int victim)
 
       TODO: see also.
 */
-myth_thread_t myth_schedapi_runqueue_peek(int victim,void *ptr,size_t *psize)
+myth_thread_t myth_wsapi_runqueue_peek(int victim,void *ptr,size_t *psize)
 {
 	myth_thread_queue_t q;
 	myth_wscache_t wc;
@@ -1383,8 +1356,8 @@ start:;
 				int s;
 				myth_thread_t th;
 				th=q->ptr[b];
-				size_t thcs=myth_custom_data_size(th);
-				void* thcd=myth_custom_data_ptr(th);
+				size_t thcs=myth_wsapi_get_hint_size(th);
+				void* thcd=myth_wsapi_get_hint_ptr(th);
 				//Copy data
 				//Increment sequence
 				s=wc->seq;
@@ -1444,14 +1417,14 @@ static int peekdata_fn(myth_thread_t th,void *udata)
 	ud[2]=(void*)th;
 	return 0;
 }
-myth_thread_t myth_schedapi_runqueue_peek(int victim,void *ptr,size_t *psize)
+myth_thread_t myth_wsapi_runqueue_peek(int victim,void *ptr,size_t *psize)
 {
 	void *udata[3]={ptr,(void*)psize,NULL};
-	myth_schedapi_runqueue_take_ex(victim,peekdata_fn,(void*)&udata);
+	myth_wsapi_runqueue_take_ex(victim,peekdata_fn,(void*)&udata);
 	return (myth_thread_t)udata[2];
 }
 #else
-myth_thread_t myth_schedapi_runqueue_peek(int victim,void *ptr,size_t *psize)
+myth_thread_t myth_wsapi_runqueue_peek(int victim,void *ptr,size_t *psize)
 {
 	myth_thread_t ret;
 	ret=myth_queue_peek(&g_envs[victim].runnable_q);
@@ -1472,19 +1445,19 @@ myth_thread_t myth_schedapi_runqueue_peek(int victim,void *ptr,size_t *psize)
 }
 #endif
 
-int myth_schedapi_runqueue_pass(int target,myth_thread_t th)
+int myth_wsapi_runqueue_pass(int target,myth_thread_t th)
 {
 	//fprintf(stderr,"pass %d %p\n",target,th);
 	return myth_queue_trypass(&g_envs[target].runnable_q,th);
 }
 
-void myth_schedapi_runqueue_push(myth_thread_t th)
+void myth_wsapi_runqueue_push(myth_thread_t th)
 {
 	myth_running_env_t env=myth_get_current_env();
 	myth_queue_push(&env->runnable_q,th);
 }
 
-myth_thread_t myth_schedapi_runqueue_pop(void)
+myth_thread_t myth_wsapi_runqueue_pop(void)
 {
 	myth_running_env_t env=myth_get_current_env();
 	return myth_queue_pop(&env->runnable_q);

@@ -103,21 +103,19 @@ void myth_sched_prof_pause(void);
 int myth_get_worker_num(void);
 int myth_get_num_workers(void);
 
-typedef int (*myth_schedapi_decidefn_t)(myth_thread_t th,void *udata);
+typedef int (*myth_wsapi_decidefn_t)(myth_thread_t th,void *udata);
 
-myth_thread_t myth_schedapi_runqueue_peek(int victim,void *ptr,size_t *psize);
-size_t myth_custom_data_size(myth_thread_t th);
-void *myth_custom_data_ptr(myth_thread_t th);
-void myth_set_custom_data(myth_thread_t th,void **data,size_t *size);
-int myth_schedapi_rand(void);
-void myth_schedapi_randarr(int *ret,int n);
-myth_thread_t myth_schedapi_runqueue_take(int victim);
-myth_thread_t myth_schedapi_runqueue_take_ex(int victim,myth_schedapi_decidefn_t decidefn,void *udata);
-int myth_schedapi_runqueue_pass(int target,myth_thread_t th);
-void myth_schedapi_runqueue_push(myth_thread_t th);
-myth_thread_t myth_schedapi_runqueue_pop(void);
-//myth_thread_t myth_schedapi_runqueue_peek(int victim);
-int myth_schedapi_rand(void);
-int myth_schedapi_rand2(int min,int max);
+myth_thread_t myth_wsapi_runqueue_peek(int victim,void *ptr,size_t *psize);
+size_t myth_wsapi_get_hint_size(myth_thread_t th);
+void *myth_wsapi_get_hint_ptr(myth_thread_t th);
+void myth_wsapi_set_hint(myth_thread_t th,void **data,size_t *size);
+int myth_wsapi_rand(void);
+void myth_wsapi_randarr(int *ret,int n);
+myth_thread_t myth_wsapi_runqueue_take(int victim,myth_wsapi_decidefn_t decidefn,void *udata);
+int myth_wsapi_runqueue_pass(int target,myth_thread_t th);
+void myth_wsapi_runqueue_push(myth_thread_t th);
+myth_thread_t myth_wsapi_runqueue_pop(void);
+int myth_wsapi_rand(void);
+int myth_wsapi_rand2(int min,int max);
 
 #endif /* MYTH_IF_NATIVE_H_ */
