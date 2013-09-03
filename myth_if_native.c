@@ -1118,6 +1118,7 @@ void myth_cond_wait (myth_cond_t c,myth_mutex_t mtx)
 */
 size_t myth_wsapi_get_hint_size(myth_thread_t th)
 {
+	if (th==NULL)th=myth_self();
 	return th->custom_data_size;
 }
 
@@ -1140,6 +1141,7 @@ size_t myth_wsapi_get_hint_size(myth_thread_t th)
 */
 void *myth_wsapi_get_hint_ptr(myth_thread_t th)
 {
+	if (th==NULL)th=myth_self();
 	return th->custom_data_ptr;
 }
 
