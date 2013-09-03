@@ -54,9 +54,16 @@ int myth_init_ex_body(int worker_num, size_t def_stack_size)
 	return nthreads;
 }
 
+int g_myth_initialized=0;
+
 //Initialize
 void myth_init_body(int worker_num,size_t def_stack_size)
 {
+	if (g_myth_initialized){
+		myth_fini_body();
+	}
+	assert(g_myth_initialized==0);
+	g_myth_initialized=1;
 	myth_init_ex_body(worker_num,def_stack_size);
 	//Create worker threads
 	intptr_t i;
@@ -335,6 +342,7 @@ void myth_fini_ex_body(void)
 //Termination
 void myth_fini_body(void)
 {
+	if (!g_myth_initialized)return;
 	//add context switch as a sentinel for emitting logs
 	int i;
 	for (i=0;i<g_worker_thread_num;i++){
@@ -351,6 +359,7 @@ void myth_fini_body(void)
 		real_pthread_join(g_envs[i].worker,NULL);
 	}
 	myth_fini_ex_body();
+	g_myth_initialized=0;
 }
 
 //Tell all the worker threads to terminate
