@@ -60,3 +60,38 @@ int main(int argc, chart **argv)
   return 0;
 }
 
+** Thread creation and termination
+
+myth_create and myth_create_ex are functions to create a new thread.
+myth_create creates a new thread and calls an entry point function. On success it returns a handle of new thread, otherwise NULL is returned.
+
+myth_create_ex takes an extra argument of structure myth_thread_option which describes the configuration of a thread to be created. By filling the structure, the following parameters can be configured.
+* stack_size         : Stack size in bytes
+* swtich_immediately : Execution strategy (0: help-first, others:work-first) 
+* custom_data_size   : The size of the hint data (described later)
+* custom_data        : Initial data of the hint
+
+myth_join is a function to wait for the termination of a thread. It takes two arguments: a handle to thread and a pointer to store the return value of the entry point function. If return value is not needed, NULL can be specified as second argument.
+
+myth_detach is a function to release the resource of the thread after it is finished.   
+
+These semantics are similar to those of pthread. Specifically, myth_detach or myth_join must be called ONCE for every thread.
+
+Example:
+
+/* Create threads recursively */
+void *threadfn(void* arg)
+{
+	myth_thread_t th[2];
+	int i;
+	int depth=(int)arg;
+	if (depth<=0) return NULL;
+	for (i=0;i<2;i++){
+		th[i]=myth_create(threadfn,(void*)(depth-1));
+	}
+	for (i=0;i<2;i++){
+		myth_join(th[i],NULL);
+	}
+	return NULL;
+}
+
