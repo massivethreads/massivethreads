@@ -95,3 +95,45 @@ void *threadfn(void* arg)
 	return NULL;
 }
 
+* Thread and worker properties
+
+The MassiveThreads library provides 3 functions to acquire properties of thread and its underlying worker thread.
+myth_get_worker_num returns an ID of the underlying worker thread of the current thread.
+myth_get_num_workers returns the number of worker threads.
+myth_self returns a handle of the current thread. 
+
+* Work stealing strategy customization
+
+Programmers can customize the strategy of work stealing by implementing an user-defined callback function invoked on work stealing. Typically, an user-defined work stealing function is implemented by the following 5 steps:
+
+1. Select the candidates of worker threads to steal
+2. Read hint data of tasks that are available from candidates
+3. Choose one candidate as target of work stealing
+3. Try to steal
+4. (Optional) commit the steal if an actually stolen task is good to be executed 
+
+The following subsections describe building blocks to implement a customized work stealing function.
+
+** Thread-local hint data
+
+Prgrammers can give data for each thread as a hint of work stealing.
+myth_wsapi_set_hint function gives hint data to a thread and returns the previous hint data.
+myth_create_ex can also be used to give hint data. (see "Thread creation and termination")
+
+myth_wsapi_get_hint_ptr returns a pointer to the hint data. Similarly, myth_wsapi_get_hint_size returns a size of the hint.
+
+** Candidate selection
+
+myth_wsapi_rand gives a random integer from 0 to (myth_get_num_workers()-1).
+myth_wsapi_randarr gives a non-duplicated list of random integers from 0 to (myth_get_num_workers()-1).
+
+** Runqueue operation
+
+myth_wsapi_runqueue_peek reads a hint from a task which can be stolen from the specified worker thread, and returns a copy of it.
+
+myth_wsapi_runquque_take tries to steal a task from the specified victim. Programmers can also specify a user-defined callback function which is called when the steal attempt is about to be succeeded. The purpose of the callback function is to check whether an actually stolen task is good to be executed on the worker thread. If the function returns non-zero, the steal is committed, otherwise it is cancelled.
+
+** Work stealing function override
+
+By calling myth_wsapi_set_stealfunc, programmers can override the default work stealing function to user-defined one.
+
