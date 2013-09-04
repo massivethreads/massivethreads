@@ -6,7 +6,7 @@ myth_thread_t myth_default_steal_func(int rank);
 
 myth_steal_func_t g_myth_steal_func=myth_default_steal_func;
 
-myth_steal_func_t myth_set_steal_func(myth_steal_func_t fn)
+myth_steal_func_t myth_wsapi_set_stealfunc(myth_steal_func_t fn)
 {
 	myth_steal_func_t prev=g_myth_steal_func;
 	g_myth_steal_func=fn;

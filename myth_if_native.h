@@ -89,8 +89,6 @@ void myth_ext_import(myth_thread_t th);
 void myth_release_stack(myth_thread_t th);
 void myth_release_desc(myth_thread_t th);
 
-myth_steal_func_t myth_set_steal_func(myth_steal_func_t fn);
-
 void myth_log_start(void);
 void myth_log_pause(void);
 void myth_log_flush(void);
@@ -117,5 +115,6 @@ void myth_wsapi_runqueue_push(myth_thread_t th);
 myth_thread_t myth_wsapi_runqueue_pop(void);
 int myth_wsapi_rand(void);
 int myth_wsapi_rand2(int min,int max);
+myth_steal_func_t myth_wsapi_set_stealfunc(myth_steal_func_t fn);
 
 #endif /* MYTH_IF_NATIVE_H_ */
