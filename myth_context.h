@@ -38,12 +38,7 @@ typedef void (*void_func_t)(void);
 #define MYTH_CTX_CALLBACK static __attribute__((used,noinline,regparm(0)))
 #define USE_AVOID_OPTIMIZE
 #elif defined MYTH_CONTEXT_ARCH_amd64
-#if defined __ICC
-//Intel Compiler does not recognize sysv_abi
-#define MYTH_CTX_CALLBACK static __attribute__((used,noinline))
-#else
 #define MYTH_CTX_CALLBACK static __attribute__((used,noinline,sysv_abi))
-#endif
 #define USE_AVOID_OPTIMIZE
 //#define MYTH_CTX_CALLBACK static __attribute((used,noinline))
 #elif defined MYTH_CONTEXT_ARCH_sparc

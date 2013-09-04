@@ -46,15 +46,6 @@ extern void *(*real_malloc)(size_t);
 extern void (*real_free)(void *);
 extern void *(*real_realloc)(void *,size_t);
 
-#ifdef MYTH_WRAP_MALLOC_RUNTIME
-extern int (*real_posix_memalign)(void **, size_t, size_t);
-extern void *(*real_valloc)(size_t);
-extern int g_wrap_malloc_completed;
-extern int g_wrap_malloc;
-#define ENV_MYTH_DONT_WRAP_MALLOC "MYTH_DONT_WRAP_MALLOC"
-#endif
-
-
 extern int (*real_socket)(int, int, int);
 extern int (*real_connect)(int, const struct sockaddr *, socklen_t);
 extern int (*real_accept)(int , struct sockaddr *,socklen_t *);

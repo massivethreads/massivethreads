@@ -1,0 +1,1 @@
+#define LIBPTHREAD_PATH "/lib/libpthread.so.0"

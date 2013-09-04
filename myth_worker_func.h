@@ -19,6 +19,9 @@
 
 #include "myth_io_func.h"
 
+#ifdef MYTH_ECO_MODE
+#include "myth_eco.h"
+#endif
 
 static void myth_sched_loop(void);
 
@@ -221,6 +224,10 @@ static inline void myth_setup_worker(int rank)
 //Cleanup a worker thread
 static inline void myth_cleanup_worker(int rank)
 {
+#ifdef MYTH_ECO_MODE
+  myth_wakeup_all();
+  g_envs[rank].c = EXITED;
+#endif
 	//synchronize
 	real_pthread_barrier_wait(&g_worker_barrier);
 	myth_running_env_t env;
@@ -305,8 +312,8 @@ static inline void myth_startpoint_init_ex_body(int rank)
 	//Set worker thread descrptor
 	this_th->env = env;
 	//Initialize context for scheduler
-	env->sched.stack=myth_malloc(MYTH_SCHED_STACK_SIZE);
-	myth_make_context_voidcall(&env->sched.context,myth_sched_loop,(void*)(((char*)env->sched.stack)+MYTH_SCHED_STACK_SIZE-sizeof(void*)),MYTH_SCHED_STACK_SIZE-sizeof(void*));
+	env->sched.stack=myth_malloc(SCHED_STACK_SIZE);
+	myth_make_context_voidcall(&env->sched.context,myth_sched_loop,(void*)(((char*)env->sched.stack)+SCHED_STACK_SIZE-sizeof(void*)),SCHED_STACK_SIZE-sizeof(void*));
 	//Switch to scheduler
 	myth_swap_context_withcall(&this_th->context, &env->sched.context,
 		myth_startpoint_init_ex_1, env, this_th, NULL);
@@ -422,6 +429,84 @@ static inline void myth_ext_import_body(myth_thread_t th)
 	while (!myth_queue_trypass(&target->runnable_q,th));
 }
 
+#ifdef MYTH_ECO_MODE
+//extern static void myth_eco_sched_loop(myth_running_env_t env);
+static void myth_eco_sched_loop(myth_running_env_t env) {
+  //  printf("%d\n",FINISH);
+  while (1) {
+    //sched_yield();
+    myth_thread_t next_run;
+    //Get runnable thread
+    next_run=myth_queue_pop(&env->runnable_q);
+#ifdef MYTH_WRAP_SOCKIO
+    //If there is no runnable thread, check I/O
+    if (!next_run){
+      next_run=myth_io_polling(env);
+    }
+#endif
+    //If there is no runnable thread after I/O checking, try work-stealing
+    if (!next_run){
+      //next_run=myth_steal_from_others(env);
+      //next_run=g_myth_steal_func(env->rank);
+      next_run=myth_eco_steal(env->rank);
+    }
+    if ((worker_cond_t)next_run == FINISH) { //next_run == FINISH
+      if(env->rank != 0) {
+	env->this_thread=NULL;
+	return;
+      } else {
+	while(1) {
+	  int temp = 0;
+	  int j;
+	  for(j = 1; j < g_worker_thread_num; j++) {
+	    if(g_envs[j].c != EXITED) {
+	      temp = 1;
+	    }
+	  }
+	  //	  if(temp == 0) return;
+	}
+      }
+    }
+    if (next_run)
+      {
+	//sanity check
+	myth_assert(next_run->status==MYTH_STATUS_READY);
+	env->this_thread=next_run;
+	next_run->env=env;
+	//Switch to runnable thread
+#ifdef MYTH_SCHED_LOOP_DEBUG
+	myth_dprintf("myth_sched_loop:switching to thread:%p\n",next_run);
+#endif
+	myth_assert(next_run->status==MYTH_STATUS_READY);
+	myth_swap_context(&env->sched.context, &next_run->context);
+#ifdef MYTH_SCHED_LOOP_DEBUG
+	myth_dprintf("myth_sched_loop:returned from thread:%p\n",(void*)next_run);
+#endif
+	env->this_thread=NULL;
+      }
+    //Check exit flag
+    if (env->exit_flag==1){
+      if(env->rank == 0)
+	while(1) {
+	  int temp = 0;
+	  int j;
+	  for(j = 1; j < g_worker_thread_num; j++) {
+	    if(g_envs[j].c != EXITED) {
+	      temp = 1;
+	    }
+	  }
+	  if(temp == 0) return;
+	}
+      env->this_thread=NULL;
+#ifdef MYTH_SCHED_LOOP_DEBUG
+      myth_dprintf("env %p received exit signal,exiting\n",env);
+#endif
+      return;
+    }
+  }
+}
+#endif
+
 //Main loop of scheduler
 static void myth_sched_loop(void)
 {
@@ -443,6 +528,9 @@ static void myth_sched_loop(void)
 		}
 	}
 #endif
+#ifdef MYTH_ECO_MODE
+	myth_eco_sched_loop(env);
+#else
 	while (1) {
 		//sched_yield();
 		myth_thread_t next_run;
@@ -476,6 +564,11 @@ static void myth_sched_loop(void)
 #endif
 			env->this_thread=NULL;
 		}
+#ifdef MYTH_PAUSE
+		else {
+		  __asm__ __volatile("pause;");
+		}
+#endif
 		//Check exit flag
 		if (env->exit_flag==1){
 			env->this_thread=NULL;
@@ -485,6 +578,7 @@ static void myth_sched_loop(void)
 			return;
 		}
 	}
+#endif
 }
 
 static inline int myth_get_worker_num_body(void)

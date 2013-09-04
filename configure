@@ -673,7 +673,6 @@ CCAS
 am__fastdepCC_FALSE
 am__fastdepCC_TRUE
 CCDEPMODE
-am__nodep
 AMDEPBACKSLASH
 AMDEP_FALSE
 AMDEP_TRUE
@@ -752,9 +751,6 @@ ac_subst_files=''
 ac_user_opts='
 enable_option_checking
 enable_dependency_tracking
-enable_malloc_wrapper
-with_default_stack_size
-with_sched_stack_size
 enable_shared
 enable_static
 with_pic
@@ -1394,18 +1390,6 @@ Optional Features:
   --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
   --disable-dependency-tracking  speeds up one-time build
   --enable-dependency-tracking   do not reject slow dependency extractors
-  --enable-malloc-wrapper=yes|no
-                          Enable or disable malloc wrapper. "no" completely
-                          disables it when compiling MassiveThreads. "yes"
-                          enables it, but you can still disable it at runtime
-                          by setting environment variable
-                          MYTH_DONT_WRAP_MALLOC=1. Default is "yes". If you
-                          experience a segfault for programs which don't
-                          without MassiveThreads, it may be a MassiveThreads
-                          bug around malloc wapper; chances are that
-                          MYTH_DONT_WRAP_MALLOC=0 at runtime or
-                          --disable-malloc will avoid it at the cost of
-                          resorting to less scalable malloc implementation.
   --enable-shared[=PKGS]  build shared libraries [default=yes]
   --enable-static[=PKGS]  build static libraries [default=yes]
   --enable-fast-install[=PKGS]
@@ -1415,13 +1399,6 @@ Optional Features:
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
-  --with-default-stack-size=S
-                          Set default stack size of threads to S bytes.
-                          Default: 131072. You can change it at runtime by
-                          setting MYTH_DEF_STKSIZE.
-  --with-sched-stack-size=S
-                          Set default stack size of the scheduler thread to S
-                          bytes. Default: 1048576.
   --with-pic              try to use only PIC/non-PIC objects [default=use
                           both]
   --with-gnu-ld           assume the C compiler uses GNU ld [default=no]
@@ -2813,11 +2790,11 @@ MAKEINFO=${MAKEINFO-"${am_missing_run}makeinfo"}
 
 # We need awk for the "check" target.  The system "awk" is bad on
 # some platforms.
-# Always define AMTAR for backward compatibility.  Yes, it's still used
-# in the wild :-(  We should find a proper way to deprecate it ...
-AMTAR='$${TAR-tar}'
+# Always define AMTAR for backward compatibility.
 
-am__tar='$${TAR-tar} chof - "$$tardir"' am__untar='$${TAR-tar} xf -'
+AMTAR=${AMTAR-"${am_missing_run}tar"}
+
+am__tar='${AMTAR} chof - "$$tardir"'; am__untar='${AMTAR} xf -'
 
 
 
@@ -3665,7 +3642,6 @@ fi
 if test "x$enable_dependency_tracking" != xno; then
   am_depcomp="$ac_aux_dir/depcomp"
   AMDEPBACKSLASH='\'
-  am__nodep='_no'
 fi
  if test "x$enable_dependency_tracking" != xno; then
   AMDEP_TRUE=
@@ -3690,7 +3666,6 @@ else
   # instance it was reported that on HP-UX the gcc test will end up
   # making a dummy file named `D' -- because `-MD' means `put the output
   # in D'.
-  rm -rf conftest.dir
   mkdir conftest.dir
   # Copy depcomp to subdir because otherwise we won't find it if we're
   # using a relative directory.
@@ -3750,7 +3725,7 @@ else
 	break
       fi
       ;;
-    msvc7 | msvc7msys | msvisualcpp | msvcmsys)
+    msvisualcpp | msvcmsys)
       # This compiler won't grok `-c -o', but also, the minuso test has
       # not run yet.  These depmodes are late enough in the game, and
       # so weak that their functioning should not be impacted.
@@ -3810,13 +3785,15 @@ if test "$ac_test_CFLAGS" = set; then
   CFLAGS=$ac_save_CFLAGS
 elif test $ac_cv_prog_cc_g = yes; then
   if test "$GCC" = yes; then
-    CFLAGS="-g -O3 -Wall -ftls-model=initial-exec"
+    CFLAGS="-g -lm -Wall -ftls-model=initial-exec"
+#    CFLAGS="-g -O3 -Wall -ftls-model=initial-exec"
   else
     CFLAGS="-g"
   fi
 else
   if test "$GCC" = yes; then
-    CFLAGS="-O3 -Wall -ftls-model=initial-exec"
+    CFLAGS="-lm -Wall -ftls-model=initial-exec"
+#    CFLAGS="-O3 -Wall -ftls-model=initial-exec"
   else
     CFLAGS=
   fi
@@ -3883,7 +3860,6 @@ else
   # instance it was reported that on HP-UX the gcc test will end up
   # making a dummy file named `D' -- because `-MD' means `put the output
   # in D'.
-  rm -rf conftest.dir
   mkdir conftest.dir
   # Copy depcomp to subdir because otherwise we won't find it if we're
   # using a relative directory.
@@ -3941,7 +3917,7 @@ else
 	break
       fi
       ;;
-    msvc7 | msvc7msys | msvisualcpp | msvcmsys)
+    msvisualcpp | msvcmsys)
       # This compiler won't grok `-c -o', but also, the minuso test has
       # not run yet.  These depmodes are late enough in the game, and
       # so weak that their functioning should not be impacted.
@@ -4560,69 +4536,6 @@ _ACEOF
 # Check functions
 # AC_CHECK_FUNCS(__builtin_unreachable __builtin_clz)
 
-#
-# --enable-malloc-wrapper
-#   flag controlling the behavior of malloc
-#
-
-# Check whether --enable-malloc_wrapper was given.
-if test "${enable_malloc_wrapper+set}" = set; then :
-  enableval=$enable_malloc_wrapper;
-fi
-
-
-if test "x$enable_malloc_wrapper" = "xyes" ; then
-
-cat >>confdefs.h <<_ACEOF
-#define MYTH_WRAP_MALLOC /**/
-_ACEOF
-
-
-cat >>confdefs.h <<_ACEOF
-#define MYTH_WRAP_MALLOC_RUNTIME /**/
-_ACEOF
-
-fi
-
-#
-# set user threads' default stack size
-#
-
-
-# Check whether --with-default-stack-size was given.
-if test "${with_default_stack_size+set}" = set; then :
-  withval=$with_default_stack_size; default_stack_size="$withval"
-else
-  default_stack_size=131072
-fi
-
-
-
-cat >>confdefs.h <<_ACEOF
-#define MYTH_DEF_STACK_SIZE $default_stack_size
-_ACEOF
-
-
-#
-# set the scheduler thread's stack size
-#
-
-
-# Check whether --with-sched-stack-size was given.
-if test "${with_sched_stack_size+set}" = set; then :
-  withval=$with_sched_stack_size; sched_stack_size="$withval"
-else
-  sched_stack_size=1048576
-fi
-
-
-
-cat >>confdefs.h <<_ACEOF
-#define MYTH_SCHED_STACK_SIZE $sched_stack_size
-_ACEOF
-
-
-
 # initialize libtool
 case `pwd` in
   *\ * | *\	*)
@@ -4632,8 +4545,8 @@ esac
 
 
 
-macro_version='2.4.2'
-macro_revision='1.3337'
+macro_version='2.4'
+macro_revision='1.3293'
 
 
 

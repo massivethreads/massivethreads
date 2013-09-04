@@ -40,19 +40,6 @@
    */
 #undef LT_OBJDIR
 
-/* Default stack size */
-#undef MYTH_DEF_STACK_SIZE
-
-/* Scheduler stack size */
-#undef MYTH_SCHED_STACK_SIZE
-
-/* If unset, we never wrap malloc */
-#undef MYTH_WRAP_MALLOC
-
-/* If set, you can choose wrap malloc or not at runtime. default is to wrap.
-   set environment variable MYTH_DONT_WRAP_MALLOC=1 not to wrap it */
-#undef MYTH_WRAP_MALLOC_RUNTIME
-
 /* Name of package */
 #undef PACKAGE
 

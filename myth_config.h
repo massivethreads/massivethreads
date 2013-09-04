@@ -6,6 +6,17 @@
 //Enable debug
 //#define MYTH_DEBUG
 
+//Enable eco-mode
+#define MYTH_ECO_MODE
+
+#define MYTH_ECO_TEIAN_STEAL
+
+//#define MYTH_ECO_TEST
+
+//#define MYTH_PAUSE
+
+//Enable debug for eco-mode 
+
 //Cache line size
 #define CACHE_LINE_SIZE 64
 
@@ -15,15 +26,10 @@
 //TLS key size
 #define MYTH_TLS_KEY_SIZE 256
 
-/* 2013. Aug 8th.  the following two variables are
-   renamed to MYTH_DEF_STACK_SIZE and MYTH_SCHED_STACK_SIZE,
-   respectively, and now set by configure.  
-   try ./configure --help.
-
-   DO NOT EDIT THEM
-   #define DEF_STACK_SIZE (128*1024)
-   #define SCHED_STACK_SIZE (1024*1024)
-*/
+//Stack size
+#define DEF_STACK_SIZE (16*1024)
+//Scheduler stack size
+#define SCHED_STACK_SIZE (1024*1024)
 
 //#define USE_STACK_GUARDPAGE
 
@@ -40,16 +46,11 @@
 //Runqueue length
 #define INITIAL_QUEUE_SIZE (65536*2)
 
-/* 2013. Aug 8th.  the following two variables are
-   now set by configure.  try ./configure --help
-
-   DO NOT EDIT THEM
-   #define MYTH_WRAP_MALLOC
-   #define MYTH_WRAP_MALLOC_RUNTIME
-*/
+//Wrap malloc function as worker-private freelist
+#define MYTH_WRAP_MALLOC
 
 //Wrap and multipelx I/O functions
-//#define MYTH_WRAP_SOCKIO
+#define MYTH_WRAP_SOCKIO
 //Quick emptiness check on io wait list
 #define QUICK_CHECK_IO_WAIT_LIST
 //Quick emptiness check on io fd list
@@ -149,7 +150,6 @@
 //#define MYTH_BARRIER_FENCES
 //#define MYTH_BARRIER_CILK
 #define MYTH_BARRIER_CILK_WEAK
-//#define MYTH_BARRIER_INTRINSIC
 //#define MYTH_BARRIER_NONE
 
 //Select TLS implementation
@@ -220,9 +220,6 @@
 #define MYTH_ARCH_i386
 #elif (!defined MYTH_FORCE_ARCH_UNIVERSAL) && (defined __x86_64__)
 #define MYTH_ARCH_amd64
-  #if (defined __MIC__) || (defined __KNC__)
-  #define MYTH_ARCH_amd64_mic
-  #endif
 //Save FPU and SIMD control registers
 //#define MYTH_SAVE_FPCSR
 #elif (!defined MYTH_FORCE_ARCH_UNIVERSAL) && (defined __sparc__)

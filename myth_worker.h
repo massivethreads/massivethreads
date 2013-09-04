@@ -9,6 +9,17 @@
 #include "myth_log.h"
 #include "myth_wsqueue.h"
 
+#if defined(MYTH_ECO_MODE) && defined (MYTH_ECO_TEIAN_STEAL)
+//#include "myth_eco.h"
+typedef enum {
+  RUNNING = 31,
+  STEALING,
+  SLEEPING,
+  FINISH,
+  EXITED,
+}worker_cond_t;
+#endif
+
 //A structure describing an environment for executing a thread
 //(scheduler, worker thread, runqueue, etc...)
 //Each worker thread have one of them
@@ -42,6 +53,18 @@ typedef struct myth_running_env
 	myth_freelist_t *freelist_stack_g;//Freelist of stack
 #endif
 	struct myth_io_struct_perenv io_struct;//I/O-related data structure. See myth_io_struct.h
+#ifdef MYTH_ECO_MODE
+  int my_sem;
+  int isSleepy;
+  int ws_target;
+#endif
+#ifdef MYTH_ECO_TEST
+  int thief_count;
+#endif
+#if defined(MYTH_ECO_TEIAN_STEAL)
+  worker_cond_t c;
+  int knowledge;
+#endif
 	int exit_flag;
 	//-1:Main thread, must not be terminated at the scheduling loop
 	//0:Currently application is running

@@ -51,19 +51,15 @@ int myth_init_ex_body(int worker_num, size_t def_stack_size)
 	g_envs=myth_malloc(sizeof(myth_running_env)*nthreads);
 	//Initialize TLS for worker thread descriptor
 	myth_env_init();
+#ifdef MYTH_ECO_MODE
+	myth_eco_init();
+#endif
 	return nthreads;
 }
-
-int g_myth_initialized=0;
 
 //Initialize
 void myth_init_body(int worker_num,size_t def_stack_size)
 {
-	if (g_myth_initialized){
-		myth_fini_body();
-	}
-	assert(g_myth_initialized==0);
-	g_myth_initialized=1;
 	myth_init_ex_body(worker_num,def_stack_size);
 	//Create worker threads
 	intptr_t i;
@@ -342,7 +338,6 @@ void myth_fini_ex_body(void)
 //Termination
 void myth_fini_body(void)
 {
-	if (!g_myth_initialized)return;
 	//add context switch as a sentinel for emitting logs
 	int i;
 	for (i=0;i<g_worker_thread_num;i++){
@@ -359,12 +354,12 @@ void myth_fini_body(void)
 		real_pthread_join(g_envs[i].worker,NULL);
 	}
 	myth_fini_ex_body();
-	g_myth_initialized=0;
 }
 
 //Tell all the worker threads to terminate
 //Worker threads initialized by "myth_startpoint_init_ex" is NOT terminated by this function
 //To terminate them, call "myth_startpoint_exit_ex" from the context that "myth_startpoint_init_ex" called
+#ifndef MYTH_ECO_MODE
 void myth_notify_workers_exit(void)
 {
 	int i;
@@ -373,3 +368,14 @@ void myth_notify_workers_exit(void)
 			g_envs[i].exit_flag=1;
 	}
 }
+#else
+void myth_notify_workers_exit(void)
+{
+	int i;
+	for (i=0;i<g_worker_thread_num;i++){
+	  //	  if (g_envs[i].exit_flag==0){
+	    g_envs[i].exit_flag=1;
+	    g_envs[i].c = FINISH;
+	}
+}
+#endif

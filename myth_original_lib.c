@@ -5,7 +5,7 @@
 #include "myth_original_lib.h"
 
 #define LOAD_FN(fn) {real_##fn=dlsym(RTLD_NEXT,#fn);assert(real_##fn);}
-#define LOAD_PTHREAD_FN(fn) {real_pthread_##fn=dlsym(RTLD_NEXT,"pthread_"#fn);assert(real_pthread_##fn);}
+#define LOAD_PTHREAD_FN(fn) {real_pthread_##fn=dlsym(s_pthread_handle,"pthread_"#fn);assert(real_pthread_##fn);}
 
 //pthread function pointers
 int (*real_pthread_key_create) (pthread_key_t *,void (*)(void *));
@@ -39,12 +39,12 @@ void *(*real_malloc)(size_t)=NULL;
 void (*real_free)(void *)=NULL;
 void *(*real_realloc)(void *,size_t)=NULL;
 
-#ifdef MYTH_WRAP_MALLOC_RUNTIME
-int (*real_posix_memalign)(void **, size_t, size_t);
-void *(*real_valloc)(size_t);
-int g_wrap_malloc_completed = 0;
-int g_wrap_malloc = 0;
-#endif
+static void* s_pthread_handle;
+
+//In pthread_so_path.def, LIBPTHREAD_PATH is defined as the path of libpthread.so
+//pthread_so_path.def is dynamically generated during compilation
+//For details, see Makefile
+#include "pthread_so_path.def"
 
 //Load original pthread functions
 static void myth_get_pthread_funcs(void)
@@ -56,14 +56,16 @@ static void myth_get_pthread_funcs(void)
 	LOAD_FN(calloc);
 	LOAD_FN(free);
 	LOAD_FN(realloc);
-#ifdef MYTH_WRAP_MALLOC_RUNTIME
-	LOAD_FN(posix_memalign);
-	LOAD_FN(valloc);
-	char * e = getenv(ENV_MYTH_DONT_WRAP_MALLOC);
-	if (!e || e[0] != '1') g_wrap_malloc = 1;
-	g_wrap_malloc_completed = 1;
-#endif
 	LOAD_FN(sched_yield);
+	//At first, check pthread functions can be loaded using RTLD_NEXT
+	if (dlsym(RTLD_NEXT,"pthread_create")){
+		s_pthread_handle=RTLD_NEXT;
+	}
+	else{
+		//pthread functions are not available in RTLD_NEXT. Load by myself
+		s_pthread_handle=dlopen(LIBPTHREAD_PATH,RTLD_LAZY);
+		assert(s_pthread_handle);
+	}
 
 	//Basic operation
 	LOAD_PTHREAD_FN(create);LOAD_PTHREAD_FN(join);LOAD_PTHREAD_FN(self);
@@ -89,6 +91,10 @@ static void myth_get_pthread_funcs(void)
 
 static void myth_free_pthread_funcs(void)
 {
+	if (s_pthread_handle!=RTLD_NEXT){
+		//Unload libpthread.so
+		dlclose(s_pthread_handle);
+	}
 }
 
 //I/O function pointers

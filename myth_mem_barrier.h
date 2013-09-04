@@ -34,19 +34,11 @@
 //W->W orderings are guaranteed by x86[_64] architecture
 #define myth_wbarrier() asm volatile("":::"memory")
 //R->W orderings are NOT guaranteed. Need to serialize by atomic or fence insns
-//the initialization y=0 is not necessary but desirable to suppress 
-//may-be-used-before-defined warning by icc
 #define myth_rwbarrier() {\
-	int x,y;\
-	asm volatile("xchgl %0,%1":"=r"(x),"=m"(y)::"memory");\
+	int x=0,y;\
+	asm volatile("xchgl %0,%1":"=r"(x):"m"(y),"0"(x):"memory");\
 }
 //#define myth_rwbarrier() asm volatile("mfence":::"memory")
-#elif defined MYTH_BARRIER_INTRINSIC
-
-#define myth_rbarrier() __sync_synchronize()
-#define myth_wbarrier() __sync_synchronize()
-#define myth_rwbarrier() __sync_synchronize()
-
 #else
 #error "Choose memory barrier"
 #endif

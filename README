@@ -10,7 +10,7 @@ CPU              : x86_64
 Operating system : Linux (>=2.6)
 C compiler       : GCC (>=4.4.1)
 
-It can also work on x86, SPARC64IXfx, and XeonPhi, but not tested well.
+It can also work on x86 and SPARC(experimental), but not tested well.
 
 [1] How to compile
 
@@ -20,8 +20,6 @@ $ export PREFIX=[directory to install]
 $ ./configure --prefix=$PREFIX
 $ make
 $ make install
-
-More details about system requirements and installation can be found at docs/install.txt .
 
 [2] Compile-time configuration
 
