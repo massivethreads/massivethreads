@@ -10,6 +10,8 @@
 #include "myth_io_func.h"
 #include "myth_tls_func.h"
 
+#include "myth_eco.h"
+
 //Initialize specifying the number of worker threads
 //If specified less than 1, MYTH_WORKER_NUM or the number of CPU cores used instead.
 int myth_init_ex_body(int worker_num, size_t def_stack_size)
@@ -51,6 +53,9 @@ int myth_init_ex_body(int worker_num, size_t def_stack_size)
 	g_envs=myth_malloc(sizeof(myth_running_env)*nthreads);
 	//Initialize TLS for worker thread descriptor
 	myth_env_init();
+#ifdef MYTH_ECO_MODE
+	myth_eco_init();
+#endif
 	return nthreads;
 }
 
@@ -365,6 +370,7 @@ void myth_fini_body(void)
 //Tell all the worker threads to terminate
 //Worker threads initialized by "myth_startpoint_init_ex" is NOT terminated by this function
 //To terminate them, call "myth_startpoint_exit_ex" from the context that "myth_startpoint_init_ex" called
+#ifndef MYTH_ECO_MODE
 void myth_notify_workers_exit(void)
 {
 	int i;
@@ -373,3 +379,14 @@ void myth_notify_workers_exit(void)
 			g_envs[i].exit_flag=1;
 	}
 }
+#else
+void myth_notify_workers_exit(void)
+{
+	int i;
+	for (i=0;i<g_worker_thread_num;i++){
+	  //	  if (g_envs[i].exit_flag==0){
+	    g_envs[i].exit_flag=1;
+	    g_envs[i].c = FINISH;
+	}
+}
+#endif

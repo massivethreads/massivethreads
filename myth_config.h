@@ -6,6 +6,17 @@
 //Enable debug
 //#define MYTH_DEBUG
 
+//Enable eco-mode
+////#define MYTH_ECO_MODE
+
+////#define MYTH_ECO_TEIAN_STEAL
+
+//#define MYTH_ECO_TEST
+
+//#define MYTH_PAUSE
+
+//Enable debug for eco-mode
+
 //Cache line size
 #define CACHE_LINE_SIZE 64
 

@@ -25,6 +25,10 @@
 #include "myth_io.h"
 #include "myth_io_proto.h"
 
+#ifdef MYTH_ECO_MODE
+#include "myth_eco.h"
+#endif
+
 extern size_t g_default_stack_size;
 
 #ifndef PAGE_ALIGN
@@ -377,10 +381,15 @@ MYTH_CTX_CALLBACK void myth_create_1(void *arg1,void *arg2,void *arg3)
 	env->prof_data.create_cnt++;
 #endif
 	//myth_log_add(env,MYTH_LOG_USER);
-	//Call thread function
 #ifdef MYTH_ENTRY_POINT_DEBUG
 	myth_dprintf("Running thread %p(arg:%p)\n",new_thread,new_thread->arg);
 #endif
+#ifdef MYTH_ECO_MODE
+	if (sleeper > 0) {
+	  myth_wakeup_one();
+	}
+#endif
+	// Call entry point function
 	new_thread->result=(*fn)(new_thread->result);
 	//myth_log_add(new_thread->env,MYTH_LOG_INT);
 	myth_entry_point_cleanup(new_thread);
