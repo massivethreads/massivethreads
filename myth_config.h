@@ -6,10 +6,9 @@
 //Enable debug
 //#define MYTH_DEBUG
 
-//Enable eco-mode
-////#define MYTH_ECO_MODE
-
-////#define MYTH_ECO_TEIAN_STEAL
+//To enable eco-mode un-comment the following 2 macros:
+//#define MYTH_ECO_MODE
+//#define MYTH_ECO_TEIAN_STEAL
 
 //#define MYTH_ECO_TEST
 
