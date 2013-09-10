@@ -338,6 +338,7 @@ static inline void myth_startpoint_exit_ex_body(int rank)
 	myth_running_env_t env;
 	//Get current environment
 	env=myth_get_current_env();
+#ifdef MYTH_ECO_MODE
 	// Wake up all the workers
 	int i;
 	for(i = 0; i < g_worker_thread_num; i++) g_envs[i].finish_ready=1;
@@ -349,6 +350,7 @@ static inline void myth_startpoint_exit_ex_body(int rank)
 		}
 		if (i==g_worker_thread_num)break;
 	}
+#endif
 	//If running on a different worker, switch context
 	while (env->rank != rank) {
 		intptr_t rank_ = rank;
