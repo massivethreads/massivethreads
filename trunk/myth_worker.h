@@ -63,6 +63,7 @@ typedef struct myth_running_env
 #endif
 #if defined(MYTH_ECO_TEIAN_STEAL)
 	worker_cond_t c;
+	int finish_ready;
 	int knowledge;
 #endif
 	int exit_flag;

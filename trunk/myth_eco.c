@@ -108,6 +108,7 @@ myth_thread_t myth_eco_steal(int rank) {
   }
 
   if (busy_env){
+    myth_assert(busy_env!=env);
     //int ws_victim;
     //ws_victim=busy_env->rank;
     //Try to steal thread
@@ -130,7 +131,9 @@ myth_thread_t myth_eco_steal(int rank) {
       }
 #endif
       myth_sleep();
-      return myth_eco_steal(env->rank);
+      // This line seems not correct, it may occur infinite recursion
+      //return myth_eco_steal(env->rank);
+      return NULL;
     }
     else if(busy_env->c == SLEEPING) {
       MAY_BE_UNUSED int tmp = task_num;
@@ -200,7 +203,7 @@ myth_thread_t myth_eco_all_task_check(myth_running_env_t env)
 }
 
 // wait
-void myth_sleep() {
+void myth_sleep(void) {
   int s;
   int *my_sem = &(g_envs[g_worker_rank].my_sem);
   s = *my_sem = 2;
@@ -242,7 +245,7 @@ void myth_sleep_2(int num) {
   }
 }
 
-void myth_go_asleep() {
+void myth_go_asleep(void) {
   int s;
   int *my_sem = &(g_envs[g_worker_rank].my_sem);
   s = *my_sem = 2;
@@ -263,7 +266,7 @@ void myth_go_asleep() {
 #endif
 }
 
-int myth_wakeup_one() {
+int myth_wakeup_one(void) {
   int s;
   int rank;
   int *my_sem;
@@ -288,7 +291,7 @@ int myth_wakeup_one() {
   return -1;
 }
 
-void myth_wakeup_all() {
+void myth_wakeup_all(void) {
   int i;
   for(i = 0; i < g_worker_thread_num;) {
     /* int s;   if((s = myth_wakeup_one()) != -1) {
@@ -302,7 +305,18 @@ void myth_wakeup_all() {
 #endif
 }
 
-void myth_eco_init() {
+void myth_wakeup_all_force(void)
+{
+	int i;
+	for(i = 0; i < g_worker_thread_num; i++) {
+		int *my_sem=&g_envs[i].my_sem;
+		*my_sem = 0;
+		g_envs[i].isSleepy = 0;
+		futex_wakeup_one( (void *)my_sem );
+	}
+}
+
+void myth_eco_init(void) {
   int i;
   sleeper = 0;
   queue_lock = myth_malloc(sizeof(pthread_mutex_t));
@@ -324,9 +338,10 @@ void myth_eco_init() {
   task_num = 0;
   g_envs[0].c = RUNNING;
   for(i = 1; i < g_worker_thread_num; i++) g_envs[i].c = STEALING;
+  for(i = 0; i < g_worker_thread_num; i++) g_envs[i].finish_ready=0;
 #endif
 }
-void myth_eco_des() {
+void myth_eco_des(void) {
   free(queue_lock);
 }
 
@@ -372,7 +387,7 @@ int myth_sleeper_push(int *sem, int rank,int num) {
   return 0;
 }
 
-sleep_queue_t myth_sleeper_pop() {
+sleep_queue_t myth_sleeper_pop(void) {
   //lock
   (*real_pthread_mutex_lock)(queue_lock);
 

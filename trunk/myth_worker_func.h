@@ -334,12 +334,21 @@ MYTH_CTX_CALLBACK void myth_startpoint_exit_ex_1(void *arg1,void *arg2,void *arg
 //Return the context introduced by myth_startpoint_init_ex to the original pthread
 static inline void myth_startpoint_exit_ex_body(int rank)
 {
-	//Guarantee running the thread on the initial worker
+	//First, make sure that the current thread is running on the initial worker
 	myth_running_env_t env;
 	//Get current environment
 	env=myth_get_current_env();
-	//Set exit flag
-	myth_notify_workers_exit();
+	// Wake up all the workers
+	int i;
+	for(i = 0; i < g_worker_thread_num; i++) g_envs[i].finish_ready=1;
+	while (1){
+		myth_wakeup_all_force();
+		for(i = 0; i < g_worker_thread_num; i++) {
+			if (i==env->rank)continue;
+			if (g_envs[i].finish_ready!=2)break;
+		}
+		if (i==g_worker_thread_num)break;
+	}
 	//If running on a different worker, switch context
 	while (env->rank != rank) {
 		intptr_t rank_ = rank;
@@ -351,6 +360,8 @@ static inline void myth_startpoint_exit_ex_body(int rank)
 		//Obtain worker thread descriptor again, because env may be changed
 		env=th->env;
 	}
+	//Set exit flag
+	myth_notify_workers_exit();
 	//Cleanup
 	myth_cleanup_worker(rank);
 }
@@ -446,63 +457,66 @@ static void myth_eco_sched_loop(myth_running_env_t env) {
 #endif
     //If there is no runnable thread after I/O checking, try work-stealing
     if (!next_run){
-      //next_run=myth_steal_from_others(env);
-      //next_run=g_myth_steal_func(env->rank);
-      next_run=myth_eco_steal(env->rank);
+    	if (env->finish_ready==0)
+    		next_run=myth_eco_steal(env->rank);
+    	else{
+    		next_run=g_myth_steal_func(env->rank);
+    		env->finish_ready=2;
+    	}
     }
-    if ((worker_cond_t)next_run == FINISH) { //next_run == FINISH
-      if(env->rank != 0) {
-	env->this_thread=NULL;
-	return;
-      } else {
-	while(1) {
-	  MAY_BE_UNUSED int temp = 0;
-	  int j;
-	  for(j = 1; j < g_worker_thread_num; j++) {
-	    if(g_envs[j].c != EXITED) {
-	      temp = 1;
-	    }
-	  }
-	  //	  if(temp == 0) return;
+	if ((worker_cond_t) next_run == FINISH) { //next_run == FINISH
+		if (env->rank != 0) {
+			env->this_thread = NULL;
+			return;
+		} else {
+			while (1) {
+				MAY_BE_UNUSED int temp = 0;
+				int j;
+				for (j = 1; j < g_worker_thread_num; j++) {
+					if (g_envs[j].c != EXITED) {
+						temp = 1;
+					}
+				}
+				//	  if(temp == 0) return;
+			}
+		}
 	}
-      }
-    }
-    if (next_run)
-      {
-	//sanity check
-	myth_assert(next_run->status==MYTH_STATUS_READY);
-	env->this_thread=next_run;
-	next_run->env=env;
-	//Switch to runnable thread
+	if (next_run) {
+		//sanity check
+		myth_assert(next_run->status==MYTH_STATUS_READY);
+		env->this_thread = next_run;
+		next_run->env = env;
+		//Switch to runnable thread
 #ifdef MYTH_SCHED_LOOP_DEBUG
-	myth_dprintf("myth_sched_loop:switching to thread:%p\n",next_run);
+		myth_dprintf("myth_sched_loop:switching to thread:%p\n",next_run);
 #endif
-	myth_assert(next_run->status==MYTH_STATUS_READY);
-	myth_swap_context(&env->sched.context, &next_run->context);
+		myth_assert(next_run->status==MYTH_STATUS_READY);
+		myth_swap_context(&env->sched.context, &next_run->context);
 #ifdef MYTH_SCHED_LOOP_DEBUG
-	myth_dprintf("myth_sched_loop:returned from thread:%p\n",(void*)next_run);
+		myth_dprintf("myth_sched_loop:returned from thread:%p\n",(void*)next_run);
 #endif
-	env->this_thread=NULL;
-      }
-    //Check exit flag
-    if (env->exit_flag==1){
-      if(env->rank == 0)
-	while(1) {
-	  int temp = 0;
-	  int j;
-	  for(j = 1; j < g_worker_thread_num; j++) {
-	    if(g_envs[j].c != EXITED) {
-	      temp = 1;
-	    }
-	  }
-	  if(temp == 0) return;
+		env->this_thread = NULL;
 	}
-      env->this_thread=NULL;
+	//Check exit flag
+	if (env->exit_flag == 1) {
+		if (env->rank == 0)
+			while (1) {
+				int temp = 0;
+				int j;
+				for (j = 1; j < g_worker_thread_num; j++) {
+					if (g_envs[j].c != EXITED) {
+						temp = 1;
+					}
+				}
+				if (temp == 0)
+					return;
+			}
+		env->this_thread = NULL;
 #ifdef MYTH_SCHED_LOOP_DEBUG
-      myth_dprintf("env %p received exit signal,exiting\n",env);
+		myth_dprintf("env %p received exit signal,exiting\n",env);
 #endif
-      return;
-    }
+		return;
+	}
   }
 }
 #endif
