@@ -11,8 +11,13 @@
 #include "myth_worker_func.h"
 
 sleep_queue_t g_sleep_queue;
+int g_eco_mode_enabled=0;
+pthread_mutex_t *queue_lock;
+int sleeper;
+int task_num;
 
 #ifdef MYTH_ECO_MODE
+
 #ifdef MYTH_ECO_TEST
 static void myth_eco_sched_loop(myth_running_env_t env) {
   //  printf("%d\n",FINISH);
@@ -318,6 +323,11 @@ void myth_wakeup_all_force(void)
 
 void myth_eco_init(void) {
   int i;
+  char *env;
+  env=getenv("MYTH_ECO_MODE");
+  if (env){
+	  g_eco_mode_enabled=atoi(env);
+  }
   sleeper = 0;
   queue_lock = myth_malloc(sizeof(pthread_mutex_t));
   //  thread_sem = myth_malloc(sizeof(int) * g_worker_thread_num);

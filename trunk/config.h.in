@@ -43,6 +43,12 @@
 /* Default stack size */
 #undef MYTH_DEF_STACK_SIZE
 
+/* If unset, eco-mode is disabled */
+#undef MYTH_ECO_MODE
+
+/* If unset, eco-mode is disabled */
+#undef MYTH_ECO_TEIAN_STEAL
+
 /* Scheduler stack size */
 #undef MYTH_SCHED_STACK_SIZE
 

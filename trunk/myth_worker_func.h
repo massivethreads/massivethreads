@@ -225,8 +225,10 @@ static inline void myth_setup_worker(int rank)
 static inline void myth_cleanup_worker(int rank)
 {
 #ifdef MYTH_ECO_MODE
-	myth_wakeup_all();
-	g_envs[rank].c = EXITED;
+	if (g_eco_mode_enabled){
+		myth_wakeup_all();
+		g_envs[rank].c = EXITED;
+	}
 #endif
 	//synchronize
 	real_pthread_barrier_wait(&g_worker_barrier);
@@ -339,16 +341,18 @@ static inline void myth_startpoint_exit_ex_body(int rank)
 	//Get current environment
 	env=myth_get_current_env();
 #ifdef MYTH_ECO_MODE
-	// Wake up all the workers
-	int i;
-	for(i = 0; i < g_worker_thread_num; i++) g_envs[i].finish_ready=1;
-	while (1){
-		myth_wakeup_all_force();
-		for(i = 0; i < g_worker_thread_num; i++) {
-			if (i==env->rank)continue;
-			if (g_envs[i].finish_ready!=2)break;
+	if (g_eco_mode_enabled){
+		// Wake up all the workers
+		int i;
+		for(i = 0; i < g_worker_thread_num; i++) g_envs[i].finish_ready=1;
+		while (1){
+			myth_wakeup_all_force();
+			for(i = 0; i < g_worker_thread_num; i++) {
+				if (i==env->rank)continue;
+				if (g_envs[i].finish_ready!=2)break;
+			}
+			if (i==g_worker_thread_num)break;
 		}
-		if (i==g_worker_thread_num)break;
 	}
 #endif
 	//If running on a different worker, switch context
@@ -545,8 +549,11 @@ static void myth_sched_loop(void)
 	}
 #endif
 #ifdef MYTH_ECO_MODE
-	myth_eco_sched_loop(env);
-#else
+	if (g_eco_mode_enabled){
+		myth_eco_sched_loop(env);
+		return;
+	}
+#endif
 	while (1) {
 		//sched_yield();
 		myth_thread_t next_run;
@@ -595,7 +602,6 @@ static void myth_sched_loop(void)
 			return;
 		}
 	}
-#endif
 }
 
 static inline int myth_get_worker_num_body(void)

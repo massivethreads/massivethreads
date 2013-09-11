@@ -4,16 +4,16 @@ AM_INIT_AUTOMAKE([foreign -Wall -Werror])
 AC_CONFIG_MACRO_DIR([m4])
 AC_PROG_CC
 # use -O3 optimization instead of -O2
-if test "$ac_test_CFLAGS" = set; then
+if test "x$ac_test_CFLAGS" = "xset"; then
   CFLAGS=$ac_save_CFLAGS
-elif test $ac_cv_prog_cc_g = yes; then
-  if test "$GCC" = yes; then
+elif test "x$ac_cv_prog_cc_g" = "xyes"; then
+  if test "x$GCC" = "xyes"; then
     CFLAGS="-g -O3 -Wall -ftls-model=initial-exec"
   else
     CFLAGS="-g"
   fi
 else
-  if test "$GCC" = yes; then
+  if test "x$GCC" = "xyes"; then
     CFLAGS="-O3 -Wall -ftls-model=initial-exec"
   else
     CFLAGS=
@@ -36,7 +36,7 @@ AC_CHECK_SIZEOF([void*])
 #   flag controlling the behavior of malloc
 #
 
-AC_ARG_ENABLE([malloc_wrapper],
+AC_ARG_ENABLE([malloc-wrapper],
               [AS_HELP_STRING([--enable-malloc-wrapper=yes|no],
 	                      [Enable or disable malloc wrapper. "no" completely 
 			      disables it when compiling MassiveThreads. "yes" 
@@ -47,9 +47,10 @@ AC_ARG_ENABLE([malloc_wrapper],
 			      MassiveThreads bug around malloc wapper; chances are
 			      that MYTH_DONT_WRAP_MALLOC=0 at runtime or --disable-malloc 
 			      will avoid it at the cost of resorting to less scalable 
-			      malloc implementation.])])
+			      malloc implementation.])],
+			     ,[enable_malloc_wrapper="yes"])
 
-if test "x$enable_malloc_wrapper" = "xyes" ; then
+if test "x$enable_malloc_wrapper" != "xno" ; then
   AC_DEFINE_UNQUOTED([MYTH_WRAP_MALLOC],[],[If unset, we never wrap malloc])
   AC_DEFINE_UNQUOTED([MYTH_WRAP_MALLOC_RUNTIME],[],[If set, you can choose wrap malloc or not at runtime. default is to wrap.  set environment variable MYTH_DONT_WRAP_MALLOC=1 not to wrap it])
 fi
@@ -81,6 +82,27 @@ AC_ARG_WITH([sched-stack-size],
 
 AC_DEFINE_UNQUOTED([MYTH_SCHED_STACK_SIZE],[$sched_stack_size],[Scheduler stack size])
 
+#
+# --enable-eco-mode
+#   flag controlling the behavior of eco-mode scheduler
+#
+
+AC_ARG_ENABLE([eco-mode],
+              [AS_HELP_STRING([--enable-eco-mode=yes|no],
+	                      [Enable or disable eco-mode scheduler. "no" completely 
+			      disables it when compiling MassiveThreads. "yes" 
+			      enables it, but it is not activated by default.
+			      To use it you have to activate by setting environment
+			      variable MYTH_ECO_MODE=1. Default is "yes".
+			      When eco-mode scheduler is enabled, thread creation
+			      overhead might be slightly increased, whichever it is activated or not])],
+			      ,
+			     [enable_eco_mode="yes"])
+
+if test "x$enable_eco_mode" != "xno" ; then
+  AC_DEFINE_UNQUOTED([MYTH_ECO_MODE],[],[If unset, eco-mode is disabled])
+  AC_DEFINE_UNQUOTED([MYTH_ECO_TEIAN_STEAL],[],[If unset, eco-mode is disabled])
+fi
 
 # initialize libtool
 LT_INIT

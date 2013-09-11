@@ -755,6 +755,7 @@ enable_dependency_tracking
 enable_malloc_wrapper
 with_default_stack_size
 with_sched_stack_size
+enable_eco_mode
 enable_shared
 enable_static
 with_pic
@@ -1406,6 +1407,15 @@ Optional Features:
                           MYTH_DONT_WRAP_MALLOC=0 at runtime or
                           --disable-malloc will avoid it at the cost of
                           resorting to less scalable malloc implementation.
+  --enable-eco-mode=yes|no
+                          Enable or disable eco-mode scheduler. "no"
+                          completely disables it when compiling
+                          MassiveThreads. "yes" enables it, but it is not
+                          activated by default. To use it you have to activate
+                          by setting environment variable MYTH_ECO_MODE=1.
+                          Default is "yes". When eco-mode scheduler is
+                          enabled, thread creation overhead might be slightly
+                          increased, whichever it is activated or not
   --enable-shared[=PKGS]  build shared libraries [default=yes]
   --enable-static[=PKGS]  build static libraries [default=yes]
   --enable-fast-install[=PKGS]
@@ -3806,16 +3816,16 @@ fi
 
 
 # use -O3 optimization instead of -O2
-if test "$ac_test_CFLAGS" = set; then
+if test "x$ac_test_CFLAGS" = "xset"; then
   CFLAGS=$ac_save_CFLAGS
-elif test $ac_cv_prog_cc_g = yes; then
-  if test "$GCC" = yes; then
+elif test "x$ac_cv_prog_cc_g" = "xyes"; then
+  if test "x$GCC" = "xyes"; then
     CFLAGS="-g -O3 -Wall -ftls-model=initial-exec"
   else
     CFLAGS="-g"
   fi
 else
-  if test "$GCC" = yes; then
+  if test "x$GCC" = "xyes"; then
     CFLAGS="-O3 -Wall -ftls-model=initial-exec"
   else
     CFLAGS=
@@ -4565,13 +4575,15 @@ _ACEOF
 #   flag controlling the behavior of malloc
 #
 
-# Check whether --enable-malloc_wrapper was given.
+# Check whether --enable-malloc-wrapper was given.
 if test "${enable_malloc_wrapper+set}" = set; then :
   enableval=$enable_malloc_wrapper;
+else
+  enable_malloc_wrapper="yes"
 fi
 
 
-if test "x$enable_malloc_wrapper" = "xyes" ; then
+if test "x$enable_malloc_wrapper" != "xno" ; then
 
 cat >>confdefs.h <<_ACEOF
 #define MYTH_WRAP_MALLOC /**/
@@ -4622,6 +4634,31 @@ cat >>confdefs.h <<_ACEOF
 _ACEOF
 
 
+#
+# --enable-eco-mode
+#   flag controlling the behavior of eco-mode scheduler
+#
+
+# Check whether --enable-eco-mode was given.
+if test "${enable_eco_mode+set}" = set; then :
+  enableval=$enable_eco_mode;
+else
+  enable_eco_mode="yes"
+fi
+
+
+if test "x$enable_eco_mode" != "xno" ; then
+
+cat >>confdefs.h <<_ACEOF
+#define MYTH_ECO_MODE /**/
+_ACEOF
+
+
+cat >>confdefs.h <<_ACEOF
+#define MYTH_ECO_TEIAN_STEAL /**/
+_ACEOF
+
+fi
 
 # initialize libtool
 case `pwd` in
