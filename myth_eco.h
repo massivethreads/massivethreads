@@ -16,11 +16,12 @@ typedef struct sleep_queue {
 }sleep_queue,*sleep_queue_t;
 
 
-sleep_queue_t g_sleep_queue;
-pthread_mutex_t *queue_lock;
-int sleeper;
-int task_num;
+extern sleep_queue_t g_sleep_queue;
+extern pthread_mutex_t *queue_lock;
+extern int sleeper;
+extern int task_num;
 extern myth_running_env *g_envs;
+extern int g_eco_mode_enabled;
 
 #ifdef MYTH_ECO_MODE
 static void myth_eco_sched_loop(myth_running_env_t env);

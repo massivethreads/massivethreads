@@ -6,7 +6,8 @@
 //Enable debug
 //#define MYTH_DEBUG
 
-//To enable eco-mode un-comment the following 2 macros:
+// The following 2 mactos must be set by configure script.
+// So do not un-comment them. For more details see ./configure --help
 //#define MYTH_ECO_MODE
 //#define MYTH_ECO_TEIAN_STEAL
 

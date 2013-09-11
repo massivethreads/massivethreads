@@ -385,8 +385,10 @@ MYTH_CTX_CALLBACK void myth_create_1(void *arg1,void *arg2,void *arg3)
 	myth_dprintf("Running thread %p(arg:%p)\n",new_thread,new_thread->arg);
 #endif
 #ifdef MYTH_ECO_MODE
-	if (sleeper > 0) {
-	  myth_wakeup_one();
+	if (g_eco_mode_enabled){
+		if (sleeper > 0) {
+		  myth_wakeup_one();
+		}
 	}
 #endif
 	// Call entry point function

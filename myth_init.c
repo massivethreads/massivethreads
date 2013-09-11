@@ -370,23 +370,22 @@ void myth_fini_body(void)
 //Tell all the worker threads to terminate
 //Worker threads initialized by "myth_startpoint_init_ex" is NOT terminated by this function
 //To terminate them, call "myth_startpoint_exit_ex" from the context that "myth_startpoint_init_ex" called
-#ifndef MYTH_ECO_MODE
 void myth_notify_workers_exit(void)
 {
 	int i;
 	for (i=0;i<g_worker_thread_num;i++){
-		if (g_envs[i].exit_flag==0)
+#ifdef MYTH_ECO_MODE
+		if (g_eco_mode_enabled){
+			//	  if (g_envs[i].exit_flag==0){
 			g_envs[i].exit_flag=1;
-	}
-}
+			g_envs[i].c = FINISH;
+		}
 #else
-void myth_notify_workers_exit(void)
-{
-	int i;
-	for (i=0;i<g_worker_thread_num;i++){
-	  //	  if (g_envs[i].exit_flag==0){
-	    g_envs[i].exit_flag=1;
-	    g_envs[i].c = FINISH;
+		if (0){}
+#endif
+		else{
+			if (g_envs[i].exit_flag==0)
+				g_envs[i].exit_flag=1;
+		}
 	}
 }
-#endif
