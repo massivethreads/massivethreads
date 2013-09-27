@@ -172,7 +172,8 @@
 #define WS_TARGET_RANDOM
 
 //Bind each worker thread to each CPU
-#define WORKER_SET_AFFINITY
+// Do not edit. Use --configure option instead
+//#define WORKER_SET_AFFINITY
 
 //Switch to new thread immediately after it is created
 #define SWITCH_AFTER_CREATE

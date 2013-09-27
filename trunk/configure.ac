@@ -104,6 +104,25 @@ if test "x$enable_eco_mode" != "xno" ; then
   AC_DEFINE_UNQUOTED([MYTH_ECO_TEIAN_STEAL],[],[If unset, eco-mode is disabled])
 fi
 
+#
+# --enable-bind-workers
+#   flag controlling the binding of worker thread 
+#
+
+AC_ARG_ENABLE([bind-workers],
+              [AS_HELP_STRING([--enable-bind-workers=yes|no],
+	                      [Change the default behavior of worker thread binding. 
+			      "yes" enables it and each worker thread is bound to each CPU core. 
+			      This setting can be overridden by setting environmental variable
+			      MYTH_BIND_WORKERS=[1|0]])],
+			      ,
+			     [enable_bind_workers="yes"])
+
+if test "x$enable_bind_workers" != "xno" ; then
+  AC_DEFINE_UNQUOTED([MYTH_BIND_WORKERS],[],[If unset, worker thread binding is disabled]) 
+fi
+
+
 # initialize libtool
 LT_INIT
 AC_CONFIG_FILES([Makefile tests/Makefile tests/fib/Makefile])

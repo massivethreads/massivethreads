@@ -756,6 +756,7 @@ enable_malloc_wrapper
 with_default_stack_size
 with_sched_stack_size
 enable_eco_mode
+enable_bind_workers
 enable_shared
 enable_static
 with_pic
@@ -1416,6 +1417,12 @@ Optional Features:
                           Default is "yes". When eco-mode scheduler is
                           enabled, thread creation overhead might be slightly
                           increased, whichever it is activated or not
+  --enable-bind-workers=yes|no
+                          Change the default behavior of worker thread
+                          binding. "yes" enables it and each worker thread is
+                          bound to each CPU core. This setting can be
+                          overridden by setting environmental variable
+                          MYTH_BIND_WORKERS=[1|0]
   --enable-shared[=PKGS]  build shared libraries [default=yes]
   --enable-static[=PKGS]  build static libraries [default=yes]
   --enable-fast-install[=PKGS]
@@ -4659,6 +4666,28 @@ cat >>confdefs.h <<_ACEOF
 _ACEOF
 
 fi
+
+#
+# --enable-bind-workers
+#   flag controlling the binding of worker thread
+#
+
+# Check whether --enable-bind-workers was given.
+if test "${enable_bind_workers+set}" = set; then :
+  enableval=$enable_bind_workers;
+else
+  enable_bind_workers="yes"
+fi
+
+
+if test "x$enable_bind_workers" != "xno" ; then
+
+cat >>confdefs.h <<_ACEOF
+#define MYTH_BIND_WORKERS /**/
+_ACEOF
+
+fi
+
 
 # initialize libtool
 case `pwd` in
