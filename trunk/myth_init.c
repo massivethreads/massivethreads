@@ -1,4 +1,5 @@
 #include <sys/time.h>
+#include <sched.h>
 
 #include "myth_worker.h"
 #include "myth_worker_proto.h"
@@ -60,6 +61,7 @@ int myth_init_ex_body(int worker_num, size_t def_stack_size)
 }
 
 int g_myth_initialized=0;
+cpu_set_t g_proc_cpuset;
 
 //Initialize
 void myth_init_body(int worker_num,size_t def_stack_size)
@@ -67,6 +69,8 @@ void myth_init_body(int worker_num,size_t def_stack_size)
 	if (g_myth_initialized){
 		myth_fini_body();
 	}
+	// Backup affinity mask
+	sched_getaffinity(getpid(), sizeof(cpu_set_t), &g_proc_cpuset);
 	assert(g_myth_initialized==0);
 	g_myth_initialized=1;
 	myth_init_ex_body(worker_num,def_stack_size);
@@ -364,6 +368,8 @@ void myth_fini_body(void)
 		real_pthread_join(g_envs[i].worker,NULL);
 	}
 	myth_fini_ex_body();
+	// Restore affinity
+	sched_setaffinity(getpid(), sizeof(cpu_set_t), &g_proc_cpuset);
 	g_myth_initialized=0;
 }
 
