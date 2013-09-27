@@ -378,7 +378,7 @@ static inline void *myth_worker_thread_fn(void *args)
 	intptr_t rank=(intptr_t)args;
 	int bind_workers;
 	char *env;
-#ifdef WORKER_SET_AFFINITY
+#ifdef MYTH_BIND_WORKERS
 	bind_workers=1;
 #else
 	bind_workers=0;
