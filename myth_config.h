@@ -88,6 +88,9 @@
 //Use SIGIO for I/O checking
 //#define MYTH_USE_SIGIO
 
+//Call myth_fini automatically on exit
+//#define MYTH_CLEANUP_ON_EXIT
+
 //Use signal handler
 //#define MYTH_USE_SIGHANDLER
 //Use another thread

@@ -25,6 +25,8 @@ __attribute__((constructor)) static void myth_to_pthread_init(void)
 
 __attribute__((destructor)) static void myth_to_pthread_fini(void)
 {
+#ifdef MYTH_CLEANUP_ON_EXIT
 	myth_fini_body();
 	myth_free_original_funcs();
+#endif
 }
