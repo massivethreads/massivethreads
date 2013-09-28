@@ -42,7 +42,6 @@ myth_thread_t myth_default_steal_func(int rank)
 #endif
 			myth_assert(next_run->status==MYTH_STATUS_READY);
 			//Change worker thread descriptor
-			next_run->env=env;
 		}
 	}
 #ifdef MYTH_WS_PROF_DETAIL

@@ -548,6 +548,19 @@ static void myth_sched_loop(void)
 		}
 	}
 #endif
+	//get the first thread
+	myth_thread_t first_run=myth_queue_pop(&env->runnable_q);
+	real_pthread_barrier_wait(&g_worker_barrier);
+	if (first_run){
+		//sanity check
+		myth_assert(first_run->status==MYTH_STATUS_READY);
+		env->this_thread=first_run;
+		first_run->env=env;
+		//Switch to runnable thread
+		myth_assert(first_run->status==MYTH_STATUS_READY);
+		myth_swap_context(&env->sched.context, &first_run->context);
+	}
+	env->this_thread=NULL;
 #ifdef MYTH_ECO_MODE
 	if (g_eco_mode_enabled){
 		myth_eco_sched_loop(env);

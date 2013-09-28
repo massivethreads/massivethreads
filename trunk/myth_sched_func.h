@@ -898,6 +898,7 @@ static inline void myth_detach_body(myth_thread_t th)
 	myth_internal_lock_lock(&th->lock);
 	if (myth_desc_is_finished(th)){//If a thread is finished, release resource
 		myth_internal_lock_unlock(&th->lock);
+		while (th->status!=MYTH_STATUS_FREE_READY2);
 		free_myth_thread_struct_desc(myth_get_current_env(),th);
 	}
 	else{//Set a thread as detached
