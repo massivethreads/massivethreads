@@ -23,12 +23,6 @@ $ make install
 
 More details about system requirements and installation can be found at docs/install.txt .
 
-[2] Compile-time configuration
-
-By editing myth_config.h, some MassiveThreads features can be controlled.
-
-TODO
-
 [3] How to use
 
 MassiveThreads provides 3 APIs to use, native intefrace, pthread-compatible interface, and TBB-like interface.
@@ -58,7 +52,8 @@ Caution: Executing programs that depend on unsupported pthreads feature (preempt
 
 (3) TBB-like interface
 
-TODO
+ TBB-like interface provides an API compatible with task_group of Intel Threading Building Block.
+For more information, please see docs/mtbb_api.txt .
 
 [4] Runtime configuration
 
@@ -70,62 +65,13 @@ By default, MassiveThreads uses all the CPU cores in the machine.
 (2) Setting the default stack size
 Setting environmental variable MYTH_DEF_STKSIZE (in bytes), you can change the default stack size. By default, MassiveThreads uses 16KB as a default stack size.
 
-[5] Known issues
-
- * TODO
-
-[6] How to compile MassiveThreads tasking layer for Chapel
-
-Note: Now MassiveThreads tasking layer is unofficial. DO NOT ask a question about MassiveThreads tasking layer to official Chapel community. If you have any question, please send an e-mail to the address on the last of this text.
-
-1.Compile and install MassiveThreads
-
-$ export PREFIX=[directory to install]
-# Disable context switch triggered by network socket I/O, recommended
-$ mv myth_config.h myth_config.h.org
-$ sed -e "s/^#define MYTH_WRAP_SOCKIO/\/\/#define MYTH_WRAP_SOCKIO/" myth_config.h.org > myth_config.h
-$ ./configure --prefix=$PREFIX
-$ make
-$ make install
-
-2.Merge the contents in chapel-if/(version)/ to the Chapel installation directory
-
-$ cp -pr chapel-if/1.5/* $(CHPL_HOME)/
-
-3.Compile Chapel compiler and runtime
-
-$ cd $(CHPL_HOME) # move to the directory Chapel installed
-# Set environmental variables
-$ export CHPL_TASKS=myth
-$ export CHPL_THREADS=none
-$ export MYTH_INCLUDE_DIR=$(PREFIX)/include
-$ export MYTH_LIB_DIR=$(PREFIX)/lib
-# Please set additional environmental variables here (ex: CHPL_COMM)
-$ make # compile Chapel compiler and runtime
-
-4.Compile and run application
-
-$ cd $(CHPL_HOME)
-$ export CHPL_TASKS=myth
-$ export CHPL_THREADS=none
-$ export MYTH_INCLUDE_DIR=$(PREFIX)/include
-$ export MYTH_LIB_DIR=$(PREFIX)/lib
-# Please set additional environmental variables here
-$ source util/setchplenv.bash # for bash users
-
-# compile your program
-$ chpl -o hello hello.chpl
-
-# Number of worker threads and stack size can be controlled from arguments
-$ ./hello --numThreadsPerLocale=4 --callStackSize=32768
-
-[4] Contact
+[5] Contact
 
 If you have any question, please ask the following address.
 
 Jun Nakashima : nakashima@eidos.ic.i.u-tokyo.ac.jp
 
-[5] License
+[6] License
 
 MassiveThreads is distributed under 2-clause BSD license. See COPYRIGHT for details.
 
