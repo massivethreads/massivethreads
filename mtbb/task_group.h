@@ -236,6 +236,8 @@ namespace mtbb {
 	}
 	p->n = 0;
       }
+      head = first_chunk_;
+      tail = first_chunk_;
     }
   };
 
