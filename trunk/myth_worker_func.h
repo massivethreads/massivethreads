@@ -470,7 +470,7 @@ static void myth_eco_sched_loop(myth_running_env_t env) {
     		env->finish_ready=2;
     	}
     }
-	if ((worker_cond_t) next_run == FINISH) { //next_run == FINISH
+	if ( ((intptr_t)next_run) == ((intptr_t)FINISH) ) { //next_run == FINISH
 		if (env->rank != 0) {
 			env->this_thread = NULL;
 			return;
