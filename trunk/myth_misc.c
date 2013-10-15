@@ -202,8 +202,8 @@ void myth_init_process_affinity_info(void)
 		CPU_ZERO(&worker_cpusets[i]);
 	}
 	available_cores=0;
-	if (n == 0) n = CPU_SETSIZE;
-	for (i=0;i<n;i++){
+	int sz = (n ? n : CPU_SETSIZE);
+	for (i=0;i<sz;i++){
 		if (n == 0 || CPU_ISSET(myth_cpu_list[i],&cset)){
 			CPU_SET(myth_cpu_list[i],&worker_cpusets[available_cores]);
 			available_cores++;
