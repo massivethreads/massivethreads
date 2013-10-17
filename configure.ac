@@ -3,6 +3,8 @@ AM_INIT_AUTOMAKE([foreign -Wall -Werror])
 # required when you build shared libraries, relying on libtool
 AC_CONFIG_MACRO_DIR([m4])
 AC_PROG_CC
+# set LDFLAGS
+LDFLAGS+=" -Wl,--wrap=pthread_create "
 # use -O3 optimization instead of -O2
 if test "x$ac_test_CFLAGS" = "xset"; then
   CFLAGS=$ac_save_CFLAGS

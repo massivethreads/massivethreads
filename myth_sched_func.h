@@ -25,6 +25,8 @@
 #include "myth_io.h"
 #include "myth_io_proto.h"
 
+#include "myth_ss.h"
+
 #ifdef MYTH_ECO_MODE
 #include "myth_eco.h"
 #endif
@@ -168,12 +170,21 @@ static inline myth_thread_t get_new_myth_thread_struct_desc(myth_running_env_t e
 
 // Return a new thread descriptor
 static inline void *get_new_myth_thread_struct_stack(myth_running_env_t env,
-  size_t size_in_bytes)
+  size_t size_in_bytes, myth_thread_t th)
 {
 	/*if (env!=myth_get_current_env()){
 		fprintf(stderr,"Rank error %d->%d\n",myth_get_current_env()->rank,env->rank);
 		assert(0);
 	}*/
+	{
+	char *ret;size_t s;
+	assert(__splitstack_makecontext);
+	ret = (char*)__splitstack_makecontext(size_in_bytes,&(th->context.ssctx[0]),&s);
+	ret += s - (sizeof(void*)*2);
+	uintptr_t *blk_size = (uintptr_t*)(ret + sizeof(void*));
+	*blk_size = s;//indicates default
+	return ret;
+	}
 #ifdef MYTH_SPLIT_STACK_DESC
 	void** ret;
 	//th=NULL;
@@ -308,6 +319,8 @@ static inline void free_myth_thread_struct_desc(myth_running_env_t e,myth_thread
 //Release thread descriptor
 static inline void free_myth_thread_struct_stack(myth_running_env_t e,myth_thread_t th)
 {
+	__splitstack_releasecontext(&(th->context.ssctx[0]));
+	return;
 	/*if (e!=myth_get_current_env()){
 		fprintf(stderr,"Rank error %d->%d\n",myth_get_current_env()->rank,e->rank);
 		assert(0);
@@ -359,6 +372,7 @@ MYTH_CTX_CALLBACK void myth_create_1(void *arg1,void *arg2,void *arg3)
 	myth_thread_t new_thread=arg3;
 	myth_thread_t this_thread=env->this_thread;
 	myth_func_t fn=(myth_func_t)arg2;
+	__splitstack_setcontext(&(new_thread->context.ssctx[0]));
 	t0=0;t1=0;
 #ifdef MYTH_CREATE_PROF_DETAIL
 	t1=myth_get_rdtsc();
@@ -424,7 +438,7 @@ static inline myth_thread_t myth_create_body(myth_func_t func,
 	new_thread = get_new_myth_thread_struct_desc(env);
 #ifdef MYTH_SPLIT_STACK_DESC /* default */
 	// allocate stack and get pointer
-	stk = get_new_myth_thread_struct_stack(env, stack_size);
+	stk = get_new_myth_thread_struct_stack(env, stack_size, new_thread);
 	new_thread->stack = stk;
 #else
 	stk = new_thread->stack;
@@ -523,7 +537,7 @@ static inline myth_thread_t myth_create_ex_body(myth_func_t func,
 	new_thread = get_new_myth_thread_struct_desc(env);
 #ifdef MYTH_SPLIT_STACK_DESC /* default */
 	// allocate stack and get pointer
-	stk = get_new_myth_thread_struct_stack(env, stack_size);
+	stk = get_new_myth_thread_struct_stack(env, stack_size, new_thread);
 	new_thread->stack = stk;
 #else
 	stk = new_thread->stack;
@@ -619,7 +633,7 @@ static inline myth_thread_t myth_create_nosched_body(myth_func_t func,void *arg,
 	//Allocate new thread descriptor
 	new_thread=get_new_myth_thread_struct_desc(env);
 	//allocate stack and get pointer
-	stk=get_new_myth_thread_struct_stack(env,stack_size);
+	stk=get_new_myth_thread_struct_stack(env,stack_size, new_thread);
 	new_thread->stack=stk;
 	stk_size=/*g_default_*/stack_size;
 	//Allocate custom data region on stack
