@@ -2,7 +2,7 @@
 SUBDIRS = . tests
 
 # sources (.c and .S) and flags common across the three libraries
-COMMON_SRCS = myth_log.c myth_sched.c myth_worker.c myth_malloc_wrapper.c myth_sync.c myth_init.c myth_misc.c myth_io.c myth_original_lib.c myth_tls.c myth_context.S myth_context_gvar.c myth_eco.c
+COMMON_SRCS = myth_log.c myth_sched.c myth_worker.c myth_malloc_wrapper.c myth_sync.c myth_init.c myth_misc.c myth_io.c myth_original_lib.c myth_tls.c myth_context.S myth_context_gvar.c myth_eco.c myth_ss.c
 COMMON_FLAGS = -D_GNU_SOURCE 
 
 # required when you use libtool (for building shared libs)

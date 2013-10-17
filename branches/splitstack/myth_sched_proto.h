@@ -32,7 +32,7 @@ static inline void myth_sched_prof_start_body(void);
 static inline void myth_sched_prof_pause_body(void);
 
 static inline myth_thread_t get_new_myth_thread_struct_desc(myth_running_env_t env);
-static inline void *get_new_myth_thread_struct_stack(myth_running_env_t env,size_t size_in_bytes);
+static inline void *get_new_myth_thread_struct_stack(myth_running_env_t env,size_t size_in_bytes,myth_thread_t th);
 static inline void init_myth_thread_struct(myth_running_env_t env,myth_thread_t th);
 static inline void free_myth_thread_struct_desc(myth_running_env_t e,myth_thread_t th);
 static inline void free_myth_thread_struct_stack(myth_running_env_t e,myth_thread_t th);

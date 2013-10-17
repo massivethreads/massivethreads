@@ -19,6 +19,8 @@
 
 #include "myth_io_func.h"
 
+#include "myth_ss.h"
+
 #ifdef MYTH_ECO_MODE
 #include "myth_eco.h"
 #endif
@@ -107,6 +109,8 @@ static inline void myth_setup_worker(int rank)
 	env->exit_flag=0;
 	env->tid=tid;
 	memset(&env->prof_data,0,sizeof(myth_prof_data));
+	// Initialize split stack func
+	myth_ss_init_worker(rank);
 	//Initialize allocators
 	myth_flmalloc_init_worker(rank);
 	myth_malloc_wrapper_init_worker(rank);
@@ -271,6 +275,8 @@ static inline void myth_cleanup_worker(int rank)
 	myth_malloc_wrapper_fini_worker(rank);
 	//finalize logger
 	myth_log_worker_fini(env);
+	//
+	myth_ss_fini_worker(rank);
 }
 
 //Execute worker thread scheduling loop
