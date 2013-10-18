@@ -18,6 +18,7 @@ extern void __splitstack_getcontext(void *ctx[10]) __attribute__((weak));
 extern void __splitstack_setcontext(void *ctx[10]) __attribute__((weak));
 extern void *__splitstack_makecontext(size_t stack_size, void *ctx[10],size_t *size) __attribute__((weak));
 extern void __splitstack_releasecontext(void *ctx[10]) __attribute__((weak));
+extern void __splitstack_resetcontext(void *ctx[10], size_t *s) __attribute__((weak));
 
 void myth_ss_init_worker(int rank);
 void myth_ss_fini_worker(int rank);

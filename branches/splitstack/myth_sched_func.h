@@ -177,13 +177,39 @@ static inline void *get_new_myth_thread_struct_stack(myth_running_env_t env,
 		assert(0);
 	}*/
 	{
-	char *ret;size_t s;
-	assert(__splitstack_makecontext);
-	ret = (char*)__splitstack_makecontext(size_in_bytes,&(th->context.ssctx[0]),&s);
-	ret += s - (sizeof(void*)*2);
-	uintptr_t *blk_size = (uintptr_t*)(ret + sizeof(void*));
-	*blk_size = s;//indicates default
-	return ret;
+		// non-default size stack
+		if (size_in_bytes>0 && size_in_bytes!=g_default_stack_size){
+			char *ret;size_t s;
+			assert(__splitstack_makecontext);
+			ret = (char*)__splitstack_makecontext(size_in_bytes,&(th->context.ssctx[0]),&s);
+			ret += s - (sizeof(void*)*2);
+			uintptr_t *blk_size = (uintptr_t*)(ret + sizeof(void*));
+			*blk_size = s;//indicates default
+			//fprintf(stderr,"non-default size stack\n");
+			return ret;
+		}
+		else{
+			void **ret,**ctx_ptr;
+			myth_freelist_pop(env->freelist_stack, ret);
+			if (ret){
+				//fprintf(stderr,"allocate from freelist %p\n",ret);
+				ctx_ptr=ret-10;
+				memcpy(&(th->context.ssctx[0]),ctx_ptr,sizeof(void*)*10);
+				return ret;
+			}
+			else{
+				//fprintf(stderr,"allocate from mmap\n");
+				char *ret_a;size_t s;
+				// allocate
+				size_in_bytes=g_default_stack_size;
+				ret_a = (char*)__splitstack_makecontext(size_in_bytes,&(th->context.ssctx[0]),&s);
+				ret_a += s - (sizeof(void*)*2);
+				uintptr_t *blk_size = (uintptr_t*)(ret_a + sizeof(void*));
+				*blk_size = 0;//indicates default
+				return ret_a;
+			}
+		}
+		assert(0);
 	}
 #ifdef MYTH_SPLIT_STACK_DESC
 	void** ret;
@@ -191,7 +217,7 @@ static inline void *get_new_myth_thread_struct_stack(myth_running_env_t env,
 #ifdef MYTH_ALLOC_PROF
 	env->prof_data.salloc_cnt ++;
 #endif /* MYTH_ALLOC_PROF */
-	if (size_in_bytes) {
+	if (size_in_bytes>0 && size_in_bytes!=g_default_stack_size) {
 		//Round up to 4KB
 		size_in_bytes += (1024*4 - 1);
 		size_in_bytes &= 0xFFFFF000;
@@ -319,7 +345,24 @@ static inline void free_myth_thread_struct_desc(myth_running_env_t e,myth_thread
 //Release thread descriptor
 static inline void free_myth_thread_struct_stack(myth_running_env_t e,myth_thread_t th)
 {
-	__splitstack_releasecontext(&(th->context.ssctx[0]));
+	if (th->stack){
+		void **ptr;
+		//Add to a freelist
+		ptr=(void**)th->stack;
+		uintptr_t *blk_size=(uintptr_t*)(((uint8_t*)ptr)+sizeof(void*));
+		if (*blk_size == 0) {
+			//fprintf(stderr,"push into freelist %p\n",ptr);
+			size_t sp;
+			void **ctx_bkup=ptr;
+			ctx_bkup-=10;
+			__splitstack_resetcontext(&(th->context.ssctx[0]),&sp);
+			memcpy(ctx_bkup,&(th->context.ssctx[0]),sizeof(void*)*10);
+			myth_freelist_push(e->freelist_stack,ptr);
+		} else {
+			//fprintf(stderr,"release\n");
+			__splitstack_releasecontext(&(th->context.ssctx[0]));
+		}
+	}
 	return;
 	/*if (e!=myth_get_current_env()){
 		fprintf(stderr,"Rank error %d->%d\n",myth_get_current_env()->rank,e->rank);
