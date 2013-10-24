@@ -1,0 +1,11 @@
+This directory contains a simple program to test the split stack.
+
+* How it works
+ This program calculates fib(n) by recursively creating tasks. Each task allocates large amount of memory on stack and clears after it creates the children.
+ If split stack is not used and the number of workers is more than 1, the allocation will break the childrens' stack. Then segmentation fault will occur in most cases. It can be avoided by extending the size of stack or by using the split stack.
+
+* Compilation and execution
+ (1) Edit Makefile and specify MassiveThreads installation directories in MTH_S_PREFIX(split-stack version) and MTH_N_PREFIX(normal version).
+ (2) Run make on your console.
+ (3) It generates 2 executables sstest-nn (without split stack) and sstest-ss (with split stack).
+ (4) They take 2 arguments, the index of fibonacci number to calculate and the size of memory allocated for each recursion (in KB).
