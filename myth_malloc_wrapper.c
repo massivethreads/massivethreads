@@ -6,6 +6,36 @@
 
 #include "myth_sched_func.h"
 
+/* several ways to avoid false sharing.
+   so far FIX_FALSE_SHARING1 is clearly effective
+   when we use malloc intensively (e.g., we use
+   fine grain tasks with lambda expressions).
+   FIX_FALSE_SHARING4 is effective for programs
+   allocating/deallocating small (<= 64 bytes) objects 
+   intensively (including those using lambda expressions
+   of small free variables)
+ */
+
+/* (1) set minimum size for g_myth_malloc_wrapper_fl array */
+#define FIX_FALSE_SHARING1 1
+#define MALLOC_WRAPPER_FL_MIN_SIZE 256
+
+/* (2) when calling real_malloc, request at least 
+   MYTH_WRAP_MALLOC_MIN_MALLOC_SZ bytes, chop
+   it into chunks, and put chunks into free list  */
+#define FIX_FALSE_SHARING2 1
+#define MYTH_WRAP_MALLOC_MIN_MALLOC_SZ PAGE_SIZE
+
+/* (3) do something similar to (2) upon initializing each worker
+   (so that we can hopefully do not call real_malloc
+   during the middle of computation. do it only for
+   sizes <= MYTH_WRAP_MALLOC_MIN_MALLOC_SZ, so that
+   we do not waste too much memory */
+#define FIX_FALSE_SHARING3 1
+
+/* (4) round up any request <= 64 bytes to 64 bytes */
+#define FIX_FALSE_SHARING4 1
+
 #ifdef MYTH_WRAP_MALLOC
 
 int g_alloc_hook_ok=0;
@@ -28,7 +58,55 @@ void myth_malloc_wrapper_init(int nthreads)
           if (!g_wrap_malloc) return;
 #endif
 	  assert(real_malloc);
+#if FIX_FALSE_SHARING1
+	  if (sizeof(myth_freelist_t*)*nthreads < MALLOC_WRAPPER_FL_MIN_SIZE) {
+	    g_myth_malloc_wrapper_fl=real_malloc(MALLOC_WRAPPER_FL_MIN_SIZE);
+	  } else {
+	    g_myth_malloc_wrapper_fl=real_malloc(sizeof(myth_freelist_t*)*nthreads);
+	  }
+#else
 	  g_myth_malloc_wrapper_fl=real_malloc(sizeof(myth_freelist_t*)*nthreads);
+#endif
+}
+
+/* request at least min_alloc_sz bytes to underlying malloc,
+   chop it into many chunks each chunk_sz bytes,
+   and put them into free list fl */
+
+myth_freelist_t make_chunks(size_t chunk_sz,
+			    size_t min_alloc_sz) {
+#if FIX_FALSE_SHARING4
+  chunk_sz = (chunk_sz + 63) & ~63;
+#endif
+  size_t alloc_sz = (chunk_sz <= min_alloc_sz ? min_alloc_sz : chunk_sz);
+#if 0
+  fprintf(stderr,
+	  "malloc make_chunks(chunk_sz = %ld, min_alloc_sz = %ld, alloc_sz = %ld)\n",
+	  chunk_sz, min_alloc_sz, alloc_sz);
+#endif
+#if FIX_FALSE_SHARING4
+  void * region;
+  real_posix_memalign(&region, 64, alloc_sz);
+#else
+  void * region = real_malloc(alloc_sz);
+#endif
+
+  void * fl = NULL;
+  void * tl = NULL;
+  void * p;
+  for (p = region; 
+       p + chunk_sz <= region + alloc_sz; 
+       p += chunk_sz) {
+    *((void **)p) = NULL;	/* p->next = NULL */
+    /* append p at the tail of the list */
+    if (tl) {
+      *((void **)tl) = p;	/* fl->next = NULL */
+    } else {
+      fl = p;
+    }
+    tl = p;
+  }
+  return fl;
 }
 
 void myth_malloc_wrapper_init_worker(int rank)
@@ -42,8 +120,35 @@ void myth_malloc_wrapper_init_worker(int rank)
        assert(real_malloc);
        g_myth_malloc_wrapper_fl[rank]=real_malloc(sizeof(myth_freelist_t)*FREE_LIST_NUM);
        //initialize
+#if FIX_FALSE_SHARING3
+       for (i=0;i<FREE_LIST_NUM;i++){
+	 size_t realsize=MYTH_MALLOC_INDEX_TO_RSIZE(i);
+	 size_t reqsize=realsize+sizeof(malloc_wrapper_header);
+	 if (reqsize <= MYTH_WRAP_MALLOC_MIN_MALLOC_SZ) {
+	   g_myth_malloc_wrapper_fl[rank][i] =
+	     make_chunks(reqsize,
+			 MYTH_WRAP_MALLOC_MIN_MALLOC_SZ);
+	 } else {
+	   g_myth_malloc_wrapper_fl[rank][i] = 0;
+	 }
+       }
+#else
        for (i=0;i<FREE_LIST_NUM;i++){myth_freelist_init(g_myth_malloc_wrapper_fl[rank][i]);}
+#endif
        __sync_fetch_and_add(&g_alloc_hook_ok,1);
+
+#if 0
+       printf("g_myth_malloc_wrapper_fl = %ld\n", 
+	      (long)g_myth_malloc_wrapper_fl);
+
+       printf("env[%d] = %ld\n", rank, (long)myth_get_current_env());
+       printf("g_myth_malloc_wrapper_fl[%d] = %ld\n", 
+	      rank, (long)g_myth_malloc_wrapper_fl[rank]);
+#elif 0
+       printf("0 0 %d %ld A\n", rank, (long)g_myth_malloc_wrapper_fl);
+       printf("0 0 %d %ld F\n", rank, (long)g_myth_malloc_wrapper_fl[rank]);
+       printf("0 0 %d %ld E\n", rank, (long)&g_envs[rank]);
+#endif
 }
 
 void myth_malloc_wrapper_fini()
@@ -117,6 +222,10 @@ void * sys_alloc_align(size_t alignment, size_t size) {
 
 #endif
 
+
+
+
+
 void *calloc(size_t nmemb,size_t size)
 {
 #ifdef MYTH_WRAP_MALLOC_RUNTIME
@@ -183,6 +292,17 @@ void *malloc(size_t size)
 	env=myth_get_current_env();
 	int rank=env->rank;
 	myth_freelist_pop(g_myth_malloc_wrapper_fl[rank][idx],fl_ptr);
+
+#if FIX_FALSE_SHARING2
+	if (!fl_ptr) {
+	  g_myth_malloc_wrapper_fl[rank][idx] =
+	    make_chunks(realsize+sizeof(malloc_wrapper_header),
+			MYTH_WRAP_MALLOC_MIN_MALLOC_SZ);
+	  myth_freelist_pop(g_myth_malloc_wrapper_fl[rank][idx],fl_ptr);
+	  assert(fl_ptr);
+	} 
+	ptr=(malloc_wrapper_header_t)fl_ptr;
+#else
 	if (!fl_ptr){
 		//Freelist is empty, allocate
 		ptr=real_malloc(realsize+sizeof(malloc_wrapper_header));
@@ -192,6 +312,7 @@ void *malloc(size_t size)
 	else{
 	  ptr=(malloc_wrapper_header_t)fl_ptr;
 	}
+#endif
 	ptr->s.fl_index=idx;
 	ptr->s.org_ptr=ptr;
 	return (void*)(ptr+1);
