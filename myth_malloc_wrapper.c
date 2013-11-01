@@ -27,8 +27,8 @@
 #define MYTH_WRAP_MALLOC_MIN_MALLOC_SZ PAGE_SIZE
 
 /* (3) do something similar to (2) upon initializing each worker
-   (so that we can hopefully do not call real_malloc
-   during the middle of computation. do it only for
+   (so that we hopefully do not call real_malloc
+   in the middle of computation. do it only for
    sizes <= MYTH_WRAP_MALLOC_MIN_MALLOC_SZ, so that
    we do not waste too much memory */
 #define FIX_FALSE_SHARING3 1
