@@ -8,6 +8,9 @@
 #ifndef MYTH_IF_NATIVE_H_
 #define MYTH_IF_NATIVE_H_
 
+// for size_t
+#include <stdlib.h>
+
 #ifndef MYTH_THREAD_OPTION_DEFINED
 #define MYTH_THREAD_OPTION_DEFINED
 typedef struct myth_thread_option{
