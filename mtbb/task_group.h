@@ -27,7 +27,10 @@
  */
 
 #if !defined(TO_MTHREAD) && !defined(TO_MTHREAD_NATIVE) && !defined(TO_QTHREAD) && !defined(TO_NANOX)
-#define TO_MTHREAD 1
+/* from Nov 8. 2013, native is default */
+#define TO_MTHREAD_NATIVE 1
+/* the default used to be pthread-compatible MassiveThreads */
+// #define TO_MTHREAD 1
 #endif
 
 #if TO_QTHREAD 
