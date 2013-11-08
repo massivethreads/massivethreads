@@ -3,6 +3,7 @@
 
  it supports an interface similar to TBB's parallel_reduce
  http://www.threadingbuildingblocks.org/docs/help/reference/algorithms/parallel_reduce_func.htm
+ (there seems a bug in the above page. see below)
 
 template<typename Range, typename Value, 
          typename Func, typename Reduction>
@@ -11,8 +12,18 @@ Value parallel_reduce( const Range& range, const Value& identity,
                      [, partitioner[, task_group_context& group]] );
 
 template<typename Range, typename Body> 
-void parallel_reduce( const Range& range, const Body& body
+void parallel_reduce( const Range& range, Body& body
                       [, partitioner[, task_group_context& group]] );
+
+in the above page, signature of this function is described as
+
+template<typename Range, typename Body> 
+void parallel_reduce( const Range& range, ****const**** Body& body
+                      [, partitioner[, task_group_context& group]] );
+
+but I believe this is a documentation bug, since body is supposed to
+modify its variables along the way.  tbb's implementation also does
+not have const qualifier, as a matter of fact.
 
 */
 
