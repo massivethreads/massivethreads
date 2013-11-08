@@ -54,6 +54,9 @@ include the following files.
 
 namespace mtbb {
 
+  template<typename Range, typename Body> 
+    void parallel_for( const Range& range, const Body& body );
+
   template<typename Range, typename Body>
     struct parallel_for_callable {
       const Range & range;
@@ -61,19 +64,20 @@ namespace mtbb {
     parallel_for_callable(const Range & range_, const Body & body_) :
       range(range_), body(body_) {}
       void operator() () {
-    parallel_for(range, body);
+	parallel_for(range, body);
       }
     };
   
   template<typename Range, typename Body> 
     void parallel_for( const Range& range, const Body& body ) {
-    if (range.empty()) return;
-    if (!range.is_divisible()) {
+    if (range.empty()) {
+      return;
+    } else if (!range.is_divisible()) {
       body(range);
     } else {
       task_group tg;
       Range left(range);
-      Range right(left, tbb::split());
+      const Range right(left, tbb::split());
       tg.run(parallel_for_callable<Range,Body>(left, body));
       parallel_for(right, body);
       tg.wait();
@@ -95,6 +99,14 @@ namespace mtbb {
     };
   
   template<typename Index, typename Func>
+    Func parallel_for(Index first, Index last, Index step,
+		      const Func& f);
+  
+  template<typename Index, typename Func>
+    Func parallel_for(Index first, Index last, 
+		      const Func& f);
+
+  template<typename Index, typename Func>
     Func parallel_for_aux(Index first, 
 			  Index a, Index b, Index step,
 			  const Func& f) {
@@ -102,7 +114,7 @@ namespace mtbb {
       f(first + a * step);
     } else {
       mtbb::task_group tg;
-      Index c = a + (b - a) / 2;
+      const Index c = a + (b - a) / 2;
       tg.run(parallel_for_aux_callable<Index,Func>(first, a, c, step, f));
       parallel_for_aux(first, c, b, step, f);
       tg.wait();
