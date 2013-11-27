@@ -176,7 +176,8 @@ static inline void *get_new_myth_thread_struct_stack(myth_running_env_t env,
 		fprintf(stderr,"Rank error %d->%d\n",myth_get_current_env()->rank,env->rank);
 		assert(0);
 	}*/
-	{
+#ifdef MYTH_SPLIT_STACK
+	if (myth_is_ss_enabled()){
 		// non-default size stack
 		if (size_in_bytes>0 && size_in_bytes!=g_default_stack_size){
 			char *ret;size_t s;
@@ -211,6 +212,7 @@ static inline void *get_new_myth_thread_struct_stack(myth_running_env_t env,
 		}
 		assert(0);
 	}
+#endif
 #ifdef MYTH_SPLIT_STACK_DESC
 	void** ret;
 	//th=NULL;
@@ -345,25 +347,29 @@ static inline void free_myth_thread_struct_desc(myth_running_env_t e,myth_thread
 //Release thread descriptor
 static inline void free_myth_thread_struct_stack(myth_running_env_t e,myth_thread_t th)
 {
-	if (th->stack){
-		void **ptr;
-		//Add to a freelist
-		ptr=(void**)th->stack;
-		uintptr_t *blk_size=(uintptr_t*)(((uint8_t*)ptr)+sizeof(void*));
-		if (*blk_size == 0) {
-			//fprintf(stderr,"push into freelist %p\n",ptr);
-			size_t sp;
-			void **ctx_bkup=ptr;
-			ctx_bkup-=10;
-			__splitstack_resetcontext(&(th->context.ssctx[0]),&sp);
-			memcpy(ctx_bkup,&(th->context.ssctx[0]),sizeof(void*)*10);
-			myth_freelist_push(e->freelist_stack,ptr);
-		} else {
-			//fprintf(stderr,"release\n");
-			__splitstack_releasecontext(&(th->context.ssctx[0]));
+#ifdef MYTH_SPLIT_STACK
+	if (myth_is_ss_enabled()){
+		if (th->stack){
+			void **ptr;
+			//Add to a freelist
+			ptr=(void**)th->stack;
+			uintptr_t *blk_size=(uintptr_t*)(((uint8_t*)ptr)+sizeof(void*));
+			if (*blk_size == 0) {
+				//fprintf(stderr,"push into freelist %p\n",ptr);
+				size_t sp;
+				void **ctx_bkup=ptr;
+				ctx_bkup-=10;
+				__splitstack_resetcontext(&(th->context.ssctx[0]),&sp);
+				memcpy(ctx_bkup,&(th->context.ssctx[0]),sizeof(void*)*10);
+				myth_freelist_push(e->freelist_stack,ptr);
+			} else {
+				//fprintf(stderr,"release\n");
+				__splitstack_releasecontext(&(th->context.ssctx[0]));
+			}
 		}
+		return;
 	}
-	return;
+#endif
 	/*if (e!=myth_get_current_env()){
 		fprintf(stderr,"Rank error %d->%d\n",myth_get_current_env()->rank,e->rank);
 		assert(0);
@@ -415,7 +421,10 @@ MYTH_CTX_CALLBACK void myth_create_1(void *arg1,void *arg2,void *arg3)
 	myth_thread_t new_thread=arg3;
 	myth_thread_t this_thread=env->this_thread;
 	myth_func_t fn=(myth_func_t)arg2;
-	__splitstack_setcontext(&(new_thread->context.ssctx[0]));
+#ifdef MYTH_SPLIT_STACK
+	if (myth_is_ss_enabled())
+		__splitstack_setcontext(&(new_thread->context.ssctx[0]));
+#endif
 	t0=0;t1=0;
 #ifdef MYTH_CREATE_PROF_DETAIL
 	t1=myth_get_rdtsc();

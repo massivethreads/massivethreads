@@ -3,8 +3,6 @@ AM_INIT_AUTOMAKE([foreign -Wall -Werror])
 # required when you build shared libraries, relying on libtool
 AC_CONFIG_MACRO_DIR([m4])
 AC_PROG_CC
-# set LDFLAGS
-LDFLAGS+=" -Wl,--wrap=pthread_create "
 # use -O3 optimization instead of -O2
 if test "x$ac_test_CFLAGS" = "xset"; then
   CFLAGS=$ac_save_CFLAGS
@@ -23,6 +21,7 @@ else
 fi
 AC_PROG_AWK
 AM_PROG_AS
+AM_PROG_AR
 AC_CHECK_LIB(dl, dlopen, [], [AC_MSG_ERROR(Test for dlopen failed.)])
 AC_CHECK_LIB(pthread, pthread_create, [], [AC_MSG_ERROR(Test for libpthread failed.)])
 
@@ -39,7 +38,7 @@ AC_CHECK_SIZEOF([void*])
 #
 
 AC_ARG_ENABLE([malloc-wrapper],
-              [AS_HELP_STRING([--enable-malloc-wrapper=yes|no],
+              [AS_HELP_STRING([--enable-malloc-wrapper=[yes]|no],
 	                      [Enable or disable malloc wrapper. "no" completely 
 			      disables it when compiling MassiveThreads. "yes" 
 			      enables it, but you can still disable it at runtime 
@@ -90,12 +89,12 @@ AC_DEFINE_UNQUOTED([MYTH_SCHED_STACK_SIZE],[$sched_stack_size],[Scheduler stack 
 #
 
 AC_ARG_ENABLE([eco-mode],
-              [AS_HELP_STRING([--enable-eco-mode=yes|no],
+              [AS_HELP_STRING([--enable-eco-mode=[yes]|no],
 	                      [Enable or disable eco-mode scheduler. "no" completely 
 			      disables it when compiling MassiveThreads. "yes" 
 			      enables it, but it is not activated by default.
 			      To use it you have to activate by setting environment
-			      variable MYTH_ECO_MODE=1. Default is "yes".
+			      variable MYTH_ECO_MODE=1. 
 			      When eco-mode scheduler is enabled, thread creation
 			      overhead might be slightly increased, whichever it is activated or not])],
 			      ,
@@ -112,7 +111,7 @@ fi
 #
 
 AC_ARG_ENABLE([bind-workers],
-              [AS_HELP_STRING([--enable-bind-workers=yes|no],
+              [AS_HELP_STRING([--enable-bind-workers=[yes]|no],
 	                      [Change the default behavior of worker thread binding. 
 			      "yes" enables it and each worker thread is bound to each CPU core. 
 			      This setting can be overridden by setting environmental variable
@@ -124,6 +123,45 @@ if test "x$enable_bind_workers" != "xno" ; then
   AC_DEFINE_UNQUOTED([MYTH_BIND_WORKERS],[],[If unset, worker thread binding is disabled]) 
 fi
 
+#
+# --enable-split-stack
+#   flag controlling the support of split stack 
+#
+
+AC_ARG_ENABLE([split-stack],
+              [AS_HELP_STRING([--enable-split-stack=yes|[no]],
+	                      [Enable or disable support of programs compiled with split stack by GCC.
+			      "yes" enables it. This option only affects libmyth-native.so, and
+			      other versions do not work with this option enabled.
+			      When it is enabled, the MassiveThreads library implicitly assumes that the program
+			      is compiled with split stack. You can explicitly specify whether the program is
+			      compiled with or without split stack by setting an environment variable
+			      MYTH_SPLIT_STACK=[1|0].
+			      If these selections does not match, your program does not work.
+			      "no" completely disables split stack when compiling MassiveThreads.
+			      When split stack support is enabled, thread creation
+			      overhead might be slightly increased, whichever it is activated or not])],
+			      ,
+			     [enable_split_stack="no"])
+
+if test "x$enable_split_stack" != "xno" ; then
+  AC_DEFINE_UNQUOTED([MYTH_SPLIT_STACK],[],[If unset, split stack support is disabled]) 
+fi
+
+AC_ARG_ENABLE([split-stack-opt],
+              [AS_HELP_STRING([--enable-split-stack-opt=[yes]|no],
+	                      [Enable or disable optimization of split stack.
+	            When enabled, libmyth-native.so automatically intercepts
+	            sigprocmask and pthread_sigmask to remove system call when
+	            the stack is extended. The optimization improves performance,
+	            but you need to take more care of signal handling.
+	            Default is "yes".])],
+			      ,
+			     [enable_split_stack_opt="yes"])
+
+if test "x$enable_split_stack_opt" != "xno" ; then
+  AC_DEFINE_UNQUOTED([MYTH_SPLIT_STACK_OPT],[],[If unset, split stack optimization is disabled]) 
+fi
 
 # initialize libtool
 LT_INIT

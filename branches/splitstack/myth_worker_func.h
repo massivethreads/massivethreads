@@ -109,8 +109,10 @@ static inline void myth_setup_worker(int rank)
 	env->exit_flag=0;
 	env->tid=tid;
 	memset(&env->prof_data,0,sizeof(myth_prof_data));
+#ifdef MYTH_SPLIT_STACK
 	// Initialize split stack func
 	myth_ss_init_worker(rank);
+#endif
 	//Initialize allocators
 	myth_flmalloc_init_worker(rank);
 	myth_malloc_wrapper_init_worker(rank);
@@ -275,8 +277,9 @@ static inline void myth_cleanup_worker(int rank)
 	myth_malloc_wrapper_fini_worker(rank);
 	//finalize logger
 	myth_log_worker_fini(env);
-	//
+#ifdef MYTH_SPLIT_STACK
 	myth_ss_fini_worker(rank);
+#endif
 }
 
 //Execute worker thread scheduling loop

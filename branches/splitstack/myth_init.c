@@ -1,6 +1,8 @@
 #include <sys/time.h>
 #include <sched.h>
 
+#include "myth_config.h"
+
 #include "myth_worker.h"
 #include "myth_worker_proto.h"
 #include "myth_tls.h"
@@ -12,6 +14,7 @@
 #include "myth_tls_func.h"
 
 #include "myth_eco.h"
+#include "myth_ss.h"
 
 //Initialize specifying the number of worker threads
 //If specified less than 1, MYTH_WORKER_NUM or the number of CPU cores used instead.
@@ -56,6 +59,9 @@ int myth_init_ex_body(int worker_num, size_t def_stack_size)
 	myth_env_init();
 #ifdef MYTH_ECO_MODE
 	myth_eco_init();
+#endif
+#ifdef MYTH_SPLIT_STACK
+	myth_ss_init();
 #endif
 	return nthreads;
 }

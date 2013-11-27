@@ -55,6 +55,12 @@
 /* Scheduler stack size */
 #undef MYTH_SCHED_STACK_SIZE
 
+/* If unset, split stack support is disabled */
+#undef MYTH_SPLIT_STACK
+
+/* If unset, split stack optimization is disabled */
+#undef MYTH_SPLIT_STACK_OPT
+
 /* If unset, we never wrap malloc */
 #undef MYTH_WRAP_MALLOC
 
