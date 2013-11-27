@@ -46,9 +46,6 @@ int g_wrap_malloc_completed = 0;
 int g_wrap_malloc = 0;
 #endif
 
-int __wrap_pthread_create (pthread_t *, const pthread_attr_t *,
-			   void *(*start_routine) (void *), void *);
-
 //Load original pthread functions
 static void myth_get_pthread_funcs(void)
 {
@@ -70,7 +67,6 @@ static void myth_get_pthread_funcs(void)
 
 	//Basic operation
 	LOAD_PTHREAD_FN(create);LOAD_PTHREAD_FN(join);LOAD_PTHREAD_FN(self);
-	real_pthread_create=__wrap_pthread_create;
 	//TLS
 	LOAD_PTHREAD_FN(key_create);LOAD_PTHREAD_FN(key_delete);
 	LOAD_PTHREAD_FN(getspecific);LOAD_PTHREAD_FN(setspecific);

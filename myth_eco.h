@@ -1,6 +1,7 @@
 #ifndef _MYTH_ECO_H_
 #define _MYTH_ECO_H_
 
+#include "myth_config.h"
 #include "myth_original_lib.h"
 #include "myth_worker.h"
 #include "myth_desc.h"

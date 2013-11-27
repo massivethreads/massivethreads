@@ -6,7 +6,6 @@
 #include <stdint.h>
 
 #include "myth_config.h"
-
 #include "myth_ss.h"
 
 typedef void (*void_func_t)(void);
@@ -65,7 +64,6 @@ typedef struct myth_context
 	uint32_t esp;
 #elif defined MYTH_CONTEXT_ARCH_amd64
 	uint64_t rsp;
-	void *ssctx[10];
 #elif defined MYTH_CONTEXT_ARCH_sparc
 #ifdef MYTH_ARCH_sparc_v9
   uint64_t sp;
@@ -76,6 +74,9 @@ typedef struct myth_context
 	ucontext_t uc;
 #else
 #error "Architecture not defined"
+#endif
+#ifdef MYTH_SPLIT_STACK
+	void *ssctx[10];
 #endif
 } myth_context, *myth_context_t;
 
@@ -210,14 +211,25 @@ static void voidcall_context_ep(int pfn0, int pfn1)
 #endif /* MYTH_CONTEXT_ARCH_UNIVERSAL */
 
 #if defined MYTH_INLINE_CONTEXT
+#ifdef MYTH_SPLIT_STACK
 #define myth_set_context(ctx) \
   {myth_context_switch_hook(ctx); myth_set_context_i(ctx);}
 #define myth_swap_context(from,to) \
-  {__splitstack_getcontext(&(from)->ssctx[0]);myth_context_switch_hook(to); myth_swap_context_i(from,to);__splitstack_setcontext(&(from)->ssctx[0]);}
+  {if (myth_is_ss_enabled())__splitstack_getcontext(&(from)->ssctx[0]);myth_context_switch_hook(to); myth_swap_context_i(from,to);if (myth_is_ss_enabled())__splitstack_setcontext(&(from)->ssctx[0]);}
 #define myth_swap_context_withcall(from,to,fn,a1,a2,a3) \
-  {__splitstack_getcontext(&(from)->ssctx[0]);myth_context_switch_hook(to); myth_swap_context_withcall_i(from,to,fn,a1,a2,a3);__splitstack_setcontext(&(from)->ssctx[0]);}
+  {if (myth_is_ss_enabled())__splitstack_getcontext(&(from)->ssctx[0]);myth_context_switch_hook(to); myth_swap_context_withcall_i(from,to,fn,a1,a2,a3);if (myth_is_ss_enabled())__splitstack_setcontext(&(from)->ssctx[0]);}
 #define myth_set_context_withcall(ctx,fn,a1,a2,a3) \
   {myth_context_switch_hook(ctx); myth_set_context_withcall_i(ctx,fn,a1,a2,a3);}
+#else
+#define myth_set_context(ctx) \
+  {myth_context_switch_hook(ctx); myth_set_context_i(ctx);}
+#define myth_swap_context(from,to) \
+  {myth_context_switch_hook(to); myth_swap_context_i(from,to);}
+#define myth_swap_context_withcall(from,to,fn,a1,a2,a3) \
+  {myth_context_switch_hook(to); myth_swap_context_withcall_i(from,to,fn,a1,a2,a3);}
+#define myth_set_context_withcall(ctx,fn,a1,a2,a3) \
+  {myth_context_switch_hook(ctx); myth_set_context_withcall_i(ctx,fn,a1,a2,a3);}
+#endif
 #else /* MYTH_ASSEMBLY_CONTEXT */
 #define myth_set_context(ctx) \
   {myth_context_switch_hook(ctx); myth_set_context_s(ctx);}
