@@ -20,32 +20,44 @@
 #include <stdlib.h>
 #include <string.h>
 #include <functional>
+#include <new>
 
 
 /* 
  * 
  */
 
-#if !defined(TO_MTHREAD) && !defined(TO_MTHREAD_NATIVE) && !defined(TO_QTHREAD) && !defined(TO_NANOX)
+#if !defined(TO_SERIAL) && !defined(TO_MTHREAD) && !defined(TO_MTHREAD_NATIVE) && !defined(TO_TBB) && !defined(TO_QTHREAD) && !defined(TO_NANOX)
 /* from Nov 8. 2013, native is default */
 #define TO_MTHREAD_NATIVE 1
 /* the default used to be pthread-compatible MassiveThreads */
 // #define TO_MTHREAD 1
 #endif
 
-#if TO_QTHREAD 
-#include <qthread.h>
-#elif TO_NANOX
-#include <nanos.h>
+
+/* include files */
+#if TO_SERIAL
+
 #elif TO_MTHREAD
 #include <pthread.h>
 #elif TO_MTHREAD_NATIVE
 #include <myth.h>
+#elif TO_QTHREAD 
+#include <qthread.h>
+#elif TO_NANOX
+#include <nanos.h>
+#elif TO_TBB
+/* odd enough? simply pass through task_group to tbb's one */
+#include <tbb/task_group.h>
 #else
-#error "none of TO_QTHREAD/TO_NANOX/TO_MTHREAD/TO_MTHREAD_NATIVE defined"
+#error "none of TO_SERIAL/TO_QTHREAD/TO_NANOX/TO_MTHREAD/TO_MTHREAD_NATIVE defined"
 #endif
 
-#if TO_MTHREAD
+/* the return type of a thread-invoking function
+   (e.g., pthread_create returns void *) */
+#if TO_SERIAL
+#define th_func_ret_type void *
+#elif TO_MTHREAD
 #define th_func_ret_type void *
 #elif TO_MTHREAD_NATIVE
 #define th_func_ret_type void *
@@ -59,10 +71,14 @@
 #define TASK_GROUP_INIT_SZ 8
 #endif
 
+/* if set to one, it "serializes" task
+   creations, no matter which underlying 
+   system you use */
 #if !defined(TASK_GROUP_NULL_CREATE)
 #define TASK_GROUP_NULL_CREATE 0
 #endif
 
+/* version number. 2 is recommended */
 #if !defined(TASK_GROUP_VER)
 #define TASK_GROUP_VER 2
 #endif
@@ -73,13 +89,26 @@
 
 namespace mtbb {
 
+#if TO_TBB
+
+  typedef tbb::task task;
+  typedef tbb::task_group task_group_no_prof;
+  
+#else  /* anything but TBB */
+
+
+  /* repreesntation of a task. 
+     a subclass of a task should implement 
+     execute() method, just as in tbb */
   struct task {
 #if TASK_GROUP_VER >= 2
     virtual void * execute() = 0;
 #else
     std::function<void ()> f;
 #endif
-#if TO_MTHREAD
+#if TO_SERIAL
+    
+#elif TO_MTHREAD
     pthread_t tid;
 #elif TO_MTHREAD_NATIVE
     myth_thread_t hthread;
@@ -88,10 +117,11 @@ namespace mtbb {
 #elif TO_NANOX
     
 #else
-#error "none of TO_QTHREAD/TO_NANOX/TO_MTHREAD/TO_MTHREAD_NATIVE defined"
+#error "none of TO_SERIAL/TO_QTHREAD/TO_NANOX/TO_MTHREAD/TO_MTHREAD_NATIVE defined"
 #endif
   };
 
+  /* a wrapper that makes any callable object a task */
 #if TASK_GROUP_VER >= 2
   template<typename F>
   struct callable_task : task {
@@ -101,6 +131,9 @@ namespace mtbb {
   };
 #endif
 
+  /* an implementation of a list of tasks;
+     used inside task_group class to store 
+     outstanding tasks */
   struct task_list_node {
     task_list_node * next;
     int capacity;
@@ -159,6 +192,8 @@ namespace mtbb {
     }
   };
 
+  /* roll a memory allocator for tasks, so that
+     we call system malloc (new) only occasionally */
 #if TASK_GROUP_VER >= 2
   struct task_memory_chunk {
     char a_[TASK_MEMORY_CHUNK_SZ];
@@ -216,6 +251,10 @@ namespace mtbb {
   };
 #endif
 
+  /* receive a task object and invoke it.
+     invoke_task is the one passed to the 
+     underlying thread creation function.
+     e.g., pthread_create(invoke_task, task_obj) */
   static th_func_ret_type invoke_task(void * arg_) {
     task * arg = (task *)arg_;
 #if TASK_GROUP_VER >= 2
@@ -224,7 +263,7 @@ namespace mtbb {
     std::function<void()> f = arg->f;
     f();
 #endif
-#if TO_MTHREAD || TO_QTHREAD || TO_MTHREAD_NATIVE
+#if TO_SERIAL || TO_MTHREAD || TO_QTHREAD || TO_MTHREAD_NATIVE
     return 0;
 #elif TO_NANOX
     
@@ -262,13 +301,14 @@ namespace mtbb {
     }
   };
 #endif
-  
-  struct task_group {
+
+  /* task group object. no profiler version */
+  struct task_group_no_prof {
     task_list tasks;
 #if TASK_GROUP_VER >= 2
     task_memory_allocator mem;
 #endif
-    task_group() {
+    task_group_no_prof() {
       tasks.init();
 #if TASK_GROUP_VER >= 2
       mem.init();
@@ -288,6 +328,8 @@ namespace mtbb {
       task * t = tasks.add(f);
 #endif
 #if TASK_GROUP_NULL_CREATE
+      invoke_task((void *)t);
+#elif TO_SERIAL
       invoke_task((void *)t);
 #elif TO_MTHREAD
       pthread_create(&t->tid, NULL, invoke_task, (void*)t);
@@ -326,6 +368,7 @@ namespace mtbb {
     }
 #endif
 
+    /* run any callable object (e.g., closure) */
 #if TASK_GROUP_VER >= 2
     template<typename C>
     void run(C c) {
@@ -335,6 +378,7 @@ namespace mtbb {
     }
 #endif
 
+    /* run if x is true. otherwise call it in serial */
 #if TASK_GROUP_VER >= 2
     template<typename C>
     void run_if(bool x, C c) {
@@ -359,6 +403,8 @@ namespace mtbb {
 #endif
 
 #if TASK_GROUP_NULL_CREATE 
+	  /* noop */
+#elif TO_SERIAL
 	  /* noop */
 #elif TO_MTHREAD
 	  pthread_join(p->a[i] DOT tid, NULL);
@@ -385,6 +431,12 @@ namespace mtbb {
 #endif
     }
   };
+
+#endif	/* TO_TBB. have defined task_group_no_prof */
+
+  /* for now, mtbb::task_group = mtbb::task_group_no_prof */
+
+  typedef task_group_no_prof task_group;
 
 } /* namespace mtbb */
 

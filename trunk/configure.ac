@@ -21,10 +21,12 @@ else
 fi
 AC_PROG_AWK
 AM_PROG_AS
+
+# Essential libraries
 AC_CHECK_LIB(dl, dlopen, [], [AC_MSG_ERROR(Test for dlopen failed.)])
 AC_CHECK_LIB(pthread, pthread_create, [], [AC_MSG_ERROR(Test for libpthread failed.)])
 
-# Check size
+# Check sizes
 AC_CHECK_SIZEOF([int])
 AC_CHECK_SIZEOF([void*])
 
@@ -122,9 +124,37 @@ if test "x$enable_bind_workers" != "xno" ; then
   AC_DEFINE_UNQUOTED([MYTH_BIND_WORKERS],[],[If unset, worker thread binding is disabled]) 
 fi
 
+#
+# conditionally build test programs
+# we compile C++ test programs only when
+# C++ compiler is available.
+# we compile C++ test programs relying on C++ lambdas
+# only when C++ compiler supports them
+#
+AC_PROG_CXX
+AC_LANG_PUSH([C++])
+AC_LANG_CPLUSPLUS
+AC_MSG_CHECKING([C++ lambda expression support])
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[]], [[ [=] { }(); ]])], 
+                  [AC_MSG_RESULT([yes]); cxx_lambda_available=yes],
+		  [AC_MSG_RESULT([no]); cxx_lambda_available=no])
+AM_CONDITIONAL([CXX_AVAILABLE], [test "x$ac_cv_prog_cxx_g" = "xyes"])
+AM_CONDITIONAL([CXX_LAMBDA_AVAILABLE], [test "x$cxx_lambda_available" = "xyes"])
+AC_LANG_POP([C++])
 
 # initialize libtool
 LT_INIT
-AC_CONFIG_FILES([Makefile tests/Makefile tests/fib/Makefile])
+AC_CONFIG_FILES([
+	Makefile 
+	tests/Makefile 
+	tests/c/Makefile 
+	tests/c/fib/Makefile 
+	tests/cxx/Makefile 
+	tests/cxx/mtbb/Makefile 
+	tests/cxx/mtbb/callable/Makefile
+	tests/cxx/mtbb/callable/bin/Makefile
+	tests/cxx/mtbb/lambda/Makefile
+	tests/cxx/mtbb/lambda/bin/Makefile
+])
 AC_CONFIG_HEADERS([config.h])
 AC_OUTPUT
