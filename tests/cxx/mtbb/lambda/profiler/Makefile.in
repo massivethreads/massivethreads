@@ -33,8 +33,9 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-check_PROGRAMS = fib$(EXEEXT)
-subdir = tests/c/fib
+check_PROGRAMS = lambda_profiler_serial$(EXEEXT) \
+	lambda_profiler_mth$(EXEEXT)
+subdir = tests/cxx/mtbb/lambda/profiler
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/libtool.m4 \
@@ -47,24 +48,40 @@ mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/config.h
 CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
-am_fib_OBJECTS = fib.$(OBJEXT)
-fib_OBJECTS = $(am_fib_OBJECTS)
-fib_DEPENDENCIES = ../../../libmyth.la
+am_lambda_profiler_mth_OBJECTS =  \
+	lambda_profiler_mth-lambda_profiler.$(OBJEXT)
+lambda_profiler_mth_OBJECTS = $(am_lambda_profiler_mth_OBJECTS)
+lambda_profiler_mth_DEPENDENCIES = $(top)/profiler/libdr.la \
+	$(top)/libmyth.la
+lambda_profiler_mth_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CXXLD) \
+	$(lambda_profiler_mth_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) \
+	$(LDFLAGS) -o $@
+am_lambda_profiler_serial_OBJECTS =  \
+	lambda_profiler_serial-lambda_profiler.$(OBJEXT)
+lambda_profiler_serial_OBJECTS = $(am_lambda_profiler_serial_OBJECTS)
+lambda_profiler_serial_DEPENDENCIES = $(top)/profiler/libdr.la
+lambda_profiler_serial_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CXXLD) \
+	$(lambda_profiler_serial_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) \
+	$(LDFLAGS) -o $@
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
 am__mv = mv -f
-COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
-	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
-LTCOMPILE = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
-	--mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
-	$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
-CCLD = $(CC)
-LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
-	--mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
+CXXCOMPILE = $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
+	$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
+LTCXXCOMPILE = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
+	--mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
+	$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
+CXXLD = $(CXX)
+CXXLINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
+	--mode=link $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
-SOURCES = $(fib_SOURCES)
-DIST_SOURCES = $(fib_SOURCES)
+SOURCES = $(lambda_profiler_mth_SOURCES) \
+	$(lambda_profiler_serial_SOURCES)
+DIST_SOURCES = $(lambda_profiler_mth_SOURCES) \
+	$(lambda_profiler_serial_SOURCES)
 ETAGS = etags
 CTAGS = ctags
 am__tty_colors = \
@@ -191,13 +208,18 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-fib_SOURCES = fib.c
-fib_LDADD = ../../../libmyth.la 
+top = ../../../../..
+lambda_profiler_serial_SOURCES = lambda_profiler.cc
+lambda_profiler_mth_SOURCES = lambda_profiler.cc
+lambda_profiler_serial_CXXFLAGS = -I$(top)/mtbb -I$(top)/profiler -std=c++0x -DTO_SERIAL
+lambda_profiler_mth_CXXFLAGS = -I$(top)/mtbb -I$(top)/profiler -std=c++0x -DTO_MTHREAD_NATIVE
+lambda_profiler_serial_LDADD = $(top)/profiler/libdr.la 
+lambda_profiler_mth_LDADD = $(top)/profiler/libdr.la $(top)/libmyth.la
 TESTS = $(check_PROGRAMS)
 all: all-am
 
 .SUFFIXES:
-.SUFFIXES: .c .lo .o .obj
+.SUFFIXES: .cc .lo .o .obj
 $(srcdir)/Makefile.in:  $(srcdir)/Makefile.am  $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
@@ -207,9 +229,9 @@ $(srcdir)/Makefile.in:  $(srcdir)/Makefile.am  $(am__configure_deps)
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign tests/c/fib/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign tests/cxx/mtbb/lambda/profiler/Makefile'; \
 	$(am__cd) $(top_srcdir) && \
-	  $(AUTOMAKE) --foreign tests/c/fib/Makefile
+	  $(AUTOMAKE) --foreign tests/cxx/mtbb/lambda/profiler/Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
@@ -237,9 +259,12 @@ clean-checkPROGRAMS:
 	list=`for p in $$list; do echo "$$p"; done | sed 's/$(EXEEXT)$$//'`; \
 	echo " rm -f" $$list; \
 	rm -f $$list
-fib$(EXEEXT): $(fib_OBJECTS) $(fib_DEPENDENCIES) $(EXTRA_fib_DEPENDENCIES) 
-	@rm -f fib$(EXEEXT)
-	$(LINK) $(fib_OBJECTS) $(fib_LDADD) $(LIBS)
+lambda_profiler_mth$(EXEEXT): $(lambda_profiler_mth_OBJECTS) $(lambda_profiler_mth_DEPENDENCIES) $(EXTRA_lambda_profiler_mth_DEPENDENCIES) 
+	@rm -f lambda_profiler_mth$(EXEEXT)
+	$(lambda_profiler_mth_LINK) $(lambda_profiler_mth_OBJECTS) $(lambda_profiler_mth_LDADD) $(LIBS)
+lambda_profiler_serial$(EXEEXT): $(lambda_profiler_serial_OBJECTS) $(lambda_profiler_serial_DEPENDENCIES) $(EXTRA_lambda_profiler_serial_DEPENDENCIES) 
+	@rm -f lambda_profiler_serial$(EXEEXT)
+	$(lambda_profiler_serial_LINK) $(lambda_profiler_serial_OBJECTS) $(lambda_profiler_serial_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -247,28 +272,57 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fib.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lambda_profiler_mth-lambda_profiler.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lambda_profiler_serial-lambda_profiler.Po@am__quote@
 
-.c.o:
-@am__fastdepCC_TRUE@	$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(COMPILE) -c $<
+.cc.o:
+@am__fastdepCXX_TRUE@	$(CXXCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXXCOMPILE) -c -o $@ $<
 
-.c.obj:
-@am__fastdepCC_TRUE@	$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ `$(CYGPATH_W) '$<'`
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(COMPILE) -c `$(CYGPATH_W) '$<'`
+.cc.obj:
+@am__fastdepCXX_TRUE@	$(CXXCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ `$(CYGPATH_W) '$<'`
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXXCOMPILE) -c -o $@ `$(CYGPATH_W) '$<'`
 
-.c.lo:
-@am__fastdepCC_TRUE@	$(LTCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LTCOMPILE) -c -o $@ $<
+.cc.lo:
+@am__fastdepCXX_TRUE@	$(LTCXXCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(LTCXXCOMPILE) -c -o $@ $<
+
+lambda_profiler_mth-lambda_profiler.o: lambda_profiler.cc
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lambda_profiler_mth_CXXFLAGS) $(CXXFLAGS) -MT lambda_profiler_mth-lambda_profiler.o -MD -MP -MF $(DEPDIR)/lambda_profiler_mth-lambda_profiler.Tpo -c -o lambda_profiler_mth-lambda_profiler.o `test -f 'lambda_profiler.cc' || echo '$(srcdir)/'`lambda_profiler.cc
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/lambda_profiler_mth-lambda_profiler.Tpo $(DEPDIR)/lambda_profiler_mth-lambda_profiler.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='lambda_profiler.cc' object='lambda_profiler_mth-lambda_profiler.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lambda_profiler_mth_CXXFLAGS) $(CXXFLAGS) -c -o lambda_profiler_mth-lambda_profiler.o `test -f 'lambda_profiler.cc' || echo '$(srcdir)/'`lambda_profiler.cc
+
+lambda_profiler_mth-lambda_profiler.obj: lambda_profiler.cc
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lambda_profiler_mth_CXXFLAGS) $(CXXFLAGS) -MT lambda_profiler_mth-lambda_profiler.obj -MD -MP -MF $(DEPDIR)/lambda_profiler_mth-lambda_profiler.Tpo -c -o lambda_profiler_mth-lambda_profiler.obj `if test -f 'lambda_profiler.cc'; then $(CYGPATH_W) 'lambda_profiler.cc'; else $(CYGPATH_W) '$(srcdir)/lambda_profiler.cc'; fi`
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/lambda_profiler_mth-lambda_profiler.Tpo $(DEPDIR)/lambda_profiler_mth-lambda_profiler.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='lambda_profiler.cc' object='lambda_profiler_mth-lambda_profiler.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lambda_profiler_mth_CXXFLAGS) $(CXXFLAGS) -c -o lambda_profiler_mth-lambda_profiler.obj `if test -f 'lambda_profiler.cc'; then $(CYGPATH_W) 'lambda_profiler.cc'; else $(CYGPATH_W) '$(srcdir)/lambda_profiler.cc'; fi`
+
+lambda_profiler_serial-lambda_profiler.o: lambda_profiler.cc
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lambda_profiler_serial_CXXFLAGS) $(CXXFLAGS) -MT lambda_profiler_serial-lambda_profiler.o -MD -MP -MF $(DEPDIR)/lambda_profiler_serial-lambda_profiler.Tpo -c -o lambda_profiler_serial-lambda_profiler.o `test -f 'lambda_profiler.cc' || echo '$(srcdir)/'`lambda_profiler.cc
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/lambda_profiler_serial-lambda_profiler.Tpo $(DEPDIR)/lambda_profiler_serial-lambda_profiler.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='lambda_profiler.cc' object='lambda_profiler_serial-lambda_profiler.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lambda_profiler_serial_CXXFLAGS) $(CXXFLAGS) -c -o lambda_profiler_serial-lambda_profiler.o `test -f 'lambda_profiler.cc' || echo '$(srcdir)/'`lambda_profiler.cc
+
+lambda_profiler_serial-lambda_profiler.obj: lambda_profiler.cc
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lambda_profiler_serial_CXXFLAGS) $(CXXFLAGS) -MT lambda_profiler_serial-lambda_profiler.obj -MD -MP -MF $(DEPDIR)/lambda_profiler_serial-lambda_profiler.Tpo -c -o lambda_profiler_serial-lambda_profiler.obj `if test -f 'lambda_profiler.cc'; then $(CYGPATH_W) 'lambda_profiler.cc'; else $(CYGPATH_W) '$(srcdir)/lambda_profiler.cc'; fi`
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/lambda_profiler_serial-lambda_profiler.Tpo $(DEPDIR)/lambda_profiler_serial-lambda_profiler.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='lambda_profiler.cc' object='lambda_profiler_serial-lambda_profiler.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lambda_profiler_serial_CXXFLAGS) $(CXXFLAGS) -c -o lambda_profiler_serial-lambda_profiler.obj `if test -f 'lambda_profiler.cc'; then $(CYGPATH_W) 'lambda_profiler.cc'; else $(CYGPATH_W) '$(srcdir)/lambda_profiler.cc'; fi`
 
 mostlyclean-libtool:
 	-rm -f *.lo

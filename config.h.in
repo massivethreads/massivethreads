@@ -62,6 +62,9 @@
    set environment variable MYTH_DONT_WRAP_MALLOC=1 not to wrap it */
 #undef MYTH_WRAP_MALLOC_RUNTIME
 
+/* Define to 1 if your C compiler doesn't accept -c and -o together. */
+#undef NO_MINUS_C_MINUS_O
+
 /* Name of package */
 #undef PACKAGE
 

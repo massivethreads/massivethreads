@@ -19,8 +19,10 @@ else
     CFLAGS=
   fi
 fi
-AC_PROG_AWK
+AC_PROG_CC_C_O
+AM_PROG_CC_C_O
 AM_PROG_AS
+AC_PROG_AWK
 
 # Essential libraries
 AC_CHECK_LIB(dl, dlopen, [], [AC_MSG_ERROR(Test for dlopen failed.)])
@@ -146,15 +148,20 @@ AC_LANG_POP([C++])
 LT_INIT
 AC_CONFIG_FILES([
 	Makefile 
+	profiler/Makefile
 	tests/Makefile 
 	tests/c/Makefile 
 	tests/c/fib/Makefile 
+	tests/c/profiler/Makefile 
+	tests/c/profiler/minimum/Makefile 
 	tests/cxx/Makefile 
 	tests/cxx/mtbb/Makefile 
 	tests/cxx/mtbb/callable/Makefile
 	tests/cxx/mtbb/callable/bin/Makefile
+	tests/cxx/mtbb/callable/profiler/Makefile
 	tests/cxx/mtbb/lambda/Makefile
 	tests/cxx/mtbb/lambda/bin/Makefile
+	tests/cxx/mtbb/lambda/profiler/Makefile
 ])
 AC_CONFIG_HEADERS([config.h])
 AC_OUTPUT

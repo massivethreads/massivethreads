@@ -1,1 +1,1 @@
-SUBDIRS = fib
+SUBDIRS = fib profiler

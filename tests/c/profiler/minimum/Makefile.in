@@ -33,8 +33,8 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-check_PROGRAMS = fib$(EXEEXT)
-subdir = tests/c/fib
+check_PROGRAMS = minimum_standalone$(EXEEXT) minimum_mth$(EXEEXT)
+subdir = tests/c/profiler/minimum
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/libtool.m4 \
@@ -47,9 +47,20 @@ mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/config.h
 CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
-am_fib_OBJECTS = fib.$(OBJEXT)
-fib_OBJECTS = $(am_fib_OBJECTS)
-fib_DEPENDENCIES = ../../../libmyth.la
+am_minimum_mth_OBJECTS = minimum_mth-minimum.$(OBJEXT)
+minimum_mth_OBJECTS = $(am_minimum_mth_OBJECTS)
+minimum_mth_DEPENDENCIES = ../../../../profiler/libdr.la \
+	../../../../libmyth.la
+minimum_mth_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(minimum_mth_CFLAGS) \
+	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
+am_minimum_standalone_OBJECTS = minimum_standalone-minimum.$(OBJEXT)
+minimum_standalone_OBJECTS = $(am_minimum_standalone_OBJECTS)
+minimum_standalone_DEPENDENCIES = ../../../../profiler/libdr.la
+minimum_standalone_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CCLD) \
+	$(minimum_standalone_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
+	$(LDFLAGS) -o $@
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
@@ -63,8 +74,8 @@ CCLD = $(CC)
 LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	--mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
-SOURCES = $(fib_SOURCES)
-DIST_SOURCES = $(fib_SOURCES)
+SOURCES = $(minimum_mth_SOURCES) $(minimum_standalone_SOURCES)
+DIST_SOURCES = $(minimum_mth_SOURCES) $(minimum_standalone_SOURCES)
 ETAGS = etags
 CTAGS = ctags
 am__tty_colors = \
@@ -191,8 +202,12 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-fib_SOURCES = fib.c
-fib_LDADD = ../../../libmyth.la 
+minimum_standalone_SOURCES = minimum.c
+minimum_mth_SOURCES = minimum.c
+minimum_standalone_CFLAGS = -I../../../.. -I../../../../profiler -DSTANDALONE_TEST
+minimum_mth_CFLAGS = -I../../../.. -I../../../../profiler 
+minimum_standalone_LDADD = ../../../../profiler/libdr.la 
+minimum_mth_LDADD = ../../../../profiler/libdr.la ../../../../libmyth.la 
 TESTS = $(check_PROGRAMS)
 all: all-am
 
@@ -207,9 +222,9 @@ $(srcdir)/Makefile.in:  $(srcdir)/Makefile.am  $(am__configure_deps)
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign tests/c/fib/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign tests/c/profiler/minimum/Makefile'; \
 	$(am__cd) $(top_srcdir) && \
-	  $(AUTOMAKE) --foreign tests/c/fib/Makefile
+	  $(AUTOMAKE) --foreign tests/c/profiler/minimum/Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
@@ -237,9 +252,12 @@ clean-checkPROGRAMS:
 	list=`for p in $$list; do echo "$$p"; done | sed 's/$(EXEEXT)$$//'`; \
 	echo " rm -f" $$list; \
 	rm -f $$list
-fib$(EXEEXT): $(fib_OBJECTS) $(fib_DEPENDENCIES) $(EXTRA_fib_DEPENDENCIES) 
-	@rm -f fib$(EXEEXT)
-	$(LINK) $(fib_OBJECTS) $(fib_LDADD) $(LIBS)
+minimum_mth$(EXEEXT): $(minimum_mth_OBJECTS) $(minimum_mth_DEPENDENCIES) $(EXTRA_minimum_mth_DEPENDENCIES) 
+	@rm -f minimum_mth$(EXEEXT)
+	$(minimum_mth_LINK) $(minimum_mth_OBJECTS) $(minimum_mth_LDADD) $(LIBS)
+minimum_standalone$(EXEEXT): $(minimum_standalone_OBJECTS) $(minimum_standalone_DEPENDENCIES) $(EXTRA_minimum_standalone_DEPENDENCIES) 
+	@rm -f minimum_standalone$(EXEEXT)
+	$(minimum_standalone_LINK) $(minimum_standalone_OBJECTS) $(minimum_standalone_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -247,7 +265,8 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fib.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/minimum_mth-minimum.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/minimum_standalone-minimum.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
@@ -269,6 +288,34 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LTCOMPILE) -c -o $@ $<
+
+minimum_mth-minimum.o: minimum.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(minimum_mth_CFLAGS) $(CFLAGS) -MT minimum_mth-minimum.o -MD -MP -MF $(DEPDIR)/minimum_mth-minimum.Tpo -c -o minimum_mth-minimum.o `test -f 'minimum.c' || echo '$(srcdir)/'`minimum.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/minimum_mth-minimum.Tpo $(DEPDIR)/minimum_mth-minimum.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='minimum.c' object='minimum_mth-minimum.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(minimum_mth_CFLAGS) $(CFLAGS) -c -o minimum_mth-minimum.o `test -f 'minimum.c' || echo '$(srcdir)/'`minimum.c
+
+minimum_mth-minimum.obj: minimum.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(minimum_mth_CFLAGS) $(CFLAGS) -MT minimum_mth-minimum.obj -MD -MP -MF $(DEPDIR)/minimum_mth-minimum.Tpo -c -o minimum_mth-minimum.obj `if test -f 'minimum.c'; then $(CYGPATH_W) 'minimum.c'; else $(CYGPATH_W) '$(srcdir)/minimum.c'; fi`
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/minimum_mth-minimum.Tpo $(DEPDIR)/minimum_mth-minimum.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='minimum.c' object='minimum_mth-minimum.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(minimum_mth_CFLAGS) $(CFLAGS) -c -o minimum_mth-minimum.obj `if test -f 'minimum.c'; then $(CYGPATH_W) 'minimum.c'; else $(CYGPATH_W) '$(srcdir)/minimum.c'; fi`
+
+minimum_standalone-minimum.o: minimum.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(minimum_standalone_CFLAGS) $(CFLAGS) -MT minimum_standalone-minimum.o -MD -MP -MF $(DEPDIR)/minimum_standalone-minimum.Tpo -c -o minimum_standalone-minimum.o `test -f 'minimum.c' || echo '$(srcdir)/'`minimum.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/minimum_standalone-minimum.Tpo $(DEPDIR)/minimum_standalone-minimum.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='minimum.c' object='minimum_standalone-minimum.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(minimum_standalone_CFLAGS) $(CFLAGS) -c -o minimum_standalone-minimum.o `test -f 'minimum.c' || echo '$(srcdir)/'`minimum.c
+
+minimum_standalone-minimum.obj: minimum.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(minimum_standalone_CFLAGS) $(CFLAGS) -MT minimum_standalone-minimum.obj -MD -MP -MF $(DEPDIR)/minimum_standalone-minimum.Tpo -c -o minimum_standalone-minimum.obj `if test -f 'minimum.c'; then $(CYGPATH_W) 'minimum.c'; else $(CYGPATH_W) '$(srcdir)/minimum.c'; fi`
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/minimum_standalone-minimum.Tpo $(DEPDIR)/minimum_standalone-minimum.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='minimum.c' object='minimum_standalone-minimum.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(minimum_standalone_CFLAGS) $(CFLAGS) -c -o minimum_standalone-minimum.obj `if test -f 'minimum.c'; then $(CYGPATH_W) 'minimum.c'; else $(CYGPATH_W) '$(srcdir)/minimum.c'; fi`
 
 mostlyclean-libtool:
 	-rm -f *.lo
