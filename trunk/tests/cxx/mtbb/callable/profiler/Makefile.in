@@ -33,8 +33,9 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-check_PROGRAMS = fib$(EXEEXT)
-subdir = tests/c/fib
+check_PROGRAMS = callable_profiler_serial$(EXEEXT) \
+	callable_profiler_mth$(EXEEXT)
+subdir = tests/cxx/mtbb/callable/profiler
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/libtool.m4 \
@@ -47,24 +48,41 @@ mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/config.h
 CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
-am_fib_OBJECTS = fib.$(OBJEXT)
-fib_OBJECTS = $(am_fib_OBJECTS)
-fib_DEPENDENCIES = ../../../libmyth.la
+am_callable_profiler_mth_OBJECTS =  \
+	callable_profiler_mth-callable_profiler.$(OBJEXT)
+callable_profiler_mth_OBJECTS = $(am_callable_profiler_mth_OBJECTS)
+callable_profiler_mth_DEPENDENCIES = $(top)/profiler/libdr.la \
+	$(top)/libmyth.la
+callable_profiler_mth_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CXXLD) \
+	$(callable_profiler_mth_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) \
+	$(LDFLAGS) -o $@
+am_callable_profiler_serial_OBJECTS =  \
+	callable_profiler_serial-callable_profiler.$(OBJEXT)
+callable_profiler_serial_OBJECTS =  \
+	$(am_callable_profiler_serial_OBJECTS)
+callable_profiler_serial_DEPENDENCIES = $(top)/profiler/libdr.la
+callable_profiler_serial_LINK = $(LIBTOOL) --tag=CXX \
+	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CXXLD) \
+	$(callable_profiler_serial_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) \
+	$(LDFLAGS) -o $@
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
 am__mv = mv -f
-COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
-	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
-LTCOMPILE = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
-	--mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
-	$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
-CCLD = $(CC)
-LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
-	--mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
+CXXCOMPILE = $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
+	$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
+LTCXXCOMPILE = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
+	--mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
+	$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
+CXXLD = $(CXX)
+CXXLINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
+	--mode=link $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
-SOURCES = $(fib_SOURCES)
-DIST_SOURCES = $(fib_SOURCES)
+SOURCES = $(callable_profiler_mth_SOURCES) \
+	$(callable_profiler_serial_SOURCES)
+DIST_SOURCES = $(callable_profiler_mth_SOURCES) \
+	$(callable_profiler_serial_SOURCES)
 ETAGS = etags
 CTAGS = ctags
 am__tty_colors = \
@@ -191,13 +209,18 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-fib_SOURCES = fib.c
-fib_LDADD = ../../../libmyth.la 
+top = ../../../../..
+callable_profiler_serial_SOURCES = callable_profiler.cc
+callable_profiler_mth_SOURCES = callable_profiler.cc
+callable_profiler_serial_CXXFLAGS = -I$(top)/profiler -DTO_SERIAL
+callable_profiler_mth_CXXFLAGS = -I$(top)/profiler -I$(top)/mtbb -DTO_MTHREAD_NATIVE
+callable_profiler_serial_LDADD = $(top)/profiler/libdr.la
+callable_profiler_mth_LDADD = $(top)/profiler/libdr.la $(top)/libmyth.la 
 TESTS = $(check_PROGRAMS)
 all: all-am
 
 .SUFFIXES:
-.SUFFIXES: .c .lo .o .obj
+.SUFFIXES: .cc .lo .o .obj
 $(srcdir)/Makefile.in:  $(srcdir)/Makefile.am  $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
@@ -207,9 +230,9 @@ $(srcdir)/Makefile.in:  $(srcdir)/Makefile.am  $(am__configure_deps)
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign tests/c/fib/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign tests/cxx/mtbb/callable/profiler/Makefile'; \
 	$(am__cd) $(top_srcdir) && \
-	  $(AUTOMAKE) --foreign tests/c/fib/Makefile
+	  $(AUTOMAKE) --foreign tests/cxx/mtbb/callable/profiler/Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
@@ -237,9 +260,12 @@ clean-checkPROGRAMS:
 	list=`for p in $$list; do echo "$$p"; done | sed 's/$(EXEEXT)$$//'`; \
 	echo " rm -f" $$list; \
 	rm -f $$list
-fib$(EXEEXT): $(fib_OBJECTS) $(fib_DEPENDENCIES) $(EXTRA_fib_DEPENDENCIES) 
-	@rm -f fib$(EXEEXT)
-	$(LINK) $(fib_OBJECTS) $(fib_LDADD) $(LIBS)
+callable_profiler_mth$(EXEEXT): $(callable_profiler_mth_OBJECTS) $(callable_profiler_mth_DEPENDENCIES) $(EXTRA_callable_profiler_mth_DEPENDENCIES) 
+	@rm -f callable_profiler_mth$(EXEEXT)
+	$(callable_profiler_mth_LINK) $(callable_profiler_mth_OBJECTS) $(callable_profiler_mth_LDADD) $(LIBS)
+callable_profiler_serial$(EXEEXT): $(callable_profiler_serial_OBJECTS) $(callable_profiler_serial_DEPENDENCIES) $(EXTRA_callable_profiler_serial_DEPENDENCIES) 
+	@rm -f callable_profiler_serial$(EXEEXT)
+	$(callable_profiler_serial_LINK) $(callable_profiler_serial_OBJECTS) $(callable_profiler_serial_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -247,28 +273,57 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fib.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/callable_profiler_mth-callable_profiler.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/callable_profiler_serial-callable_profiler.Po@am__quote@
 
-.c.o:
-@am__fastdepCC_TRUE@	$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(COMPILE) -c $<
+.cc.o:
+@am__fastdepCXX_TRUE@	$(CXXCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXXCOMPILE) -c -o $@ $<
 
-.c.obj:
-@am__fastdepCC_TRUE@	$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ `$(CYGPATH_W) '$<'`
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(COMPILE) -c `$(CYGPATH_W) '$<'`
+.cc.obj:
+@am__fastdepCXX_TRUE@	$(CXXCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ `$(CYGPATH_W) '$<'`
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXXCOMPILE) -c -o $@ `$(CYGPATH_W) '$<'`
 
-.c.lo:
-@am__fastdepCC_TRUE@	$(LTCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LTCOMPILE) -c -o $@ $<
+.cc.lo:
+@am__fastdepCXX_TRUE@	$(LTCXXCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(LTCXXCOMPILE) -c -o $@ $<
+
+callable_profiler_mth-callable_profiler.o: callable_profiler.cc
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(callable_profiler_mth_CXXFLAGS) $(CXXFLAGS) -MT callable_profiler_mth-callable_profiler.o -MD -MP -MF $(DEPDIR)/callable_profiler_mth-callable_profiler.Tpo -c -o callable_profiler_mth-callable_profiler.o `test -f 'callable_profiler.cc' || echo '$(srcdir)/'`callable_profiler.cc
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/callable_profiler_mth-callable_profiler.Tpo $(DEPDIR)/callable_profiler_mth-callable_profiler.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='callable_profiler.cc' object='callable_profiler_mth-callable_profiler.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(callable_profiler_mth_CXXFLAGS) $(CXXFLAGS) -c -o callable_profiler_mth-callable_profiler.o `test -f 'callable_profiler.cc' || echo '$(srcdir)/'`callable_profiler.cc
+
+callable_profiler_mth-callable_profiler.obj: callable_profiler.cc
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(callable_profiler_mth_CXXFLAGS) $(CXXFLAGS) -MT callable_profiler_mth-callable_profiler.obj -MD -MP -MF $(DEPDIR)/callable_profiler_mth-callable_profiler.Tpo -c -o callable_profiler_mth-callable_profiler.obj `if test -f 'callable_profiler.cc'; then $(CYGPATH_W) 'callable_profiler.cc'; else $(CYGPATH_W) '$(srcdir)/callable_profiler.cc'; fi`
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/callable_profiler_mth-callable_profiler.Tpo $(DEPDIR)/callable_profiler_mth-callable_profiler.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='callable_profiler.cc' object='callable_profiler_mth-callable_profiler.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(callable_profiler_mth_CXXFLAGS) $(CXXFLAGS) -c -o callable_profiler_mth-callable_profiler.obj `if test -f 'callable_profiler.cc'; then $(CYGPATH_W) 'callable_profiler.cc'; else $(CYGPATH_W) '$(srcdir)/callable_profiler.cc'; fi`
+
+callable_profiler_serial-callable_profiler.o: callable_profiler.cc
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(callable_profiler_serial_CXXFLAGS) $(CXXFLAGS) -MT callable_profiler_serial-callable_profiler.o -MD -MP -MF $(DEPDIR)/callable_profiler_serial-callable_profiler.Tpo -c -o callable_profiler_serial-callable_profiler.o `test -f 'callable_profiler.cc' || echo '$(srcdir)/'`callable_profiler.cc
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/callable_profiler_serial-callable_profiler.Tpo $(DEPDIR)/callable_profiler_serial-callable_profiler.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='callable_profiler.cc' object='callable_profiler_serial-callable_profiler.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(callable_profiler_serial_CXXFLAGS) $(CXXFLAGS) -c -o callable_profiler_serial-callable_profiler.o `test -f 'callable_profiler.cc' || echo '$(srcdir)/'`callable_profiler.cc
+
+callable_profiler_serial-callable_profiler.obj: callable_profiler.cc
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(callable_profiler_serial_CXXFLAGS) $(CXXFLAGS) -MT callable_profiler_serial-callable_profiler.obj -MD -MP -MF $(DEPDIR)/callable_profiler_serial-callable_profiler.Tpo -c -o callable_profiler_serial-callable_profiler.obj `if test -f 'callable_profiler.cc'; then $(CYGPATH_W) 'callable_profiler.cc'; else $(CYGPATH_W) '$(srcdir)/callable_profiler.cc'; fi`
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/callable_profiler_serial-callable_profiler.Tpo $(DEPDIR)/callable_profiler_serial-callable_profiler.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='callable_profiler.cc' object='callable_profiler_serial-callable_profiler.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(callable_profiler_serial_CXXFLAGS) $(CXXFLAGS) -c -o callable_profiler_serial-callable_profiler.obj `if test -f 'callable_profiler.cc'; then $(CYGPATH_W) 'callable_profiler.cc'; else $(CYGPATH_W) '$(srcdir)/callable_profiler.cc'; fi`
 
 mostlyclean-libtool:
 	-rm -f *.lo
