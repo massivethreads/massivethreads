@@ -47,14 +47,14 @@ long bin(int n) {
   }
 }
 
-int main() {
-  int n = 10;
+int main(int argc, char ** argv) {
+  int n = (argc > 1 ? atoi(argv[1]) : 5);
   dr_start(0);
   long x = bin(n);
   dr_stop();
   printf("bin(%d) = %ld\n", n, x);
-   //dr_print_task_graph(0);
-  //dr_gen_dot_task_graph(0);
+  // dr_print_task_graph(0);
+  dr_gen_dot_task_graph(0);
   return 0;
 }
 
