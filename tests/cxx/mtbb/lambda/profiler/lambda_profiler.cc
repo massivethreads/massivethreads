@@ -36,12 +36,9 @@ long bin(int n) {
   }
 }
 
-int main(int argc, char ** argv) {
-  int n = (argc > 1 ? atoi(argv[1]) : 10);
-  dr_options opts[1];
-  dr_options_default(opts);
-  opts->collapse = 0;
-  dr_start(opts);
+int main() {
+  int n = 10;
+  dr_start(0);
   long x = bin(n);
   dr_stop();
   printf("bin(%d) = %ld\n", n, x);
