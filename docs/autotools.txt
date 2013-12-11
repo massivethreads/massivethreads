@@ -47,3 +47,84 @@ http://www.lrde.epita.fr/~adl/dl/autotools-handout-4.pdf
 (available from http://www.lrde.epita.fr/~adl/autotools.html )
 is the best tutorial about GNU autotools.
 
+= some tips to remember =
+
+== add test programs ==
+
+(1) make a folder under tests (e.g., tests/c/hoge)
+(2) make a Makefile.am there (tests/c/hoge/Makefile.am)
+(3) (DON'T FORGET) add the new folder in SUBDIRS definition in Makefile.am in 
+    the parent one directory. for example, edit 
+    tests/c/Makefile.am and add
+(4) (DON'T FORGET) add tests/c/hoge/Makefile to the list
+    of AC_CONFIG_FILES at the end of configure.ac
+
+SUBDIRS += hoge 
+
+(5) add the following in the new Makefile.am
+
+--------------
+check_PROGRAMS = ...
+
+...
+
+TESTS = $(check_PROGRAMS)
+--------------
+
+see Makefile.am of sibling directories.
+
+Then, 
+
+- autoreconf will generate Makefile.in as usual
+- ./configure will generate Makefile as usual
+- make check will try to build and run programs listed in TESTS
+
+== make some part of the test/libraries optional ==
+
+MassiveThreads is primarily a C library.  
+Under mtbb, we have TBB-like C++ classes, 
+task_group, parallel_for, and parallel_reduce.
+Under tests/mtbb, we have test programs for them.
+
+We like to build and test these programs only when
+users have C++ compiler, so that those who don't
+won't be annoyed by configure-time errors. 
+
+Here is how to write such cases in configure.ac and Makefile.am
+
+(1) in configure.ac
+
+write a test case checking if C++ compilers and certain features
+are available.  Here is a snipet checking if lambda closures
+are supported by the C++ compiler.
+
+AC_MSG_CHECKING([C++ lambda expression support])
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[]], [[ [=] { }(); ]])], 
+                  [AC_MSG_RESULT([yes]); cxx_lambda_available=yes],
+		  [AC_MSG_RESULT([no]); cxx_lambda_available=no])
+
+(2) in configure.ac
+
+you use AM_CONDITIONAL to make test results avaiable in Makefile.am.
+you write something like this.
+
+AM_CONDITIONAL([CXX_AVAILABLE], [test "x$ac_cv_prog_cxx_g" = "xyes"])
+AM_CONDITIONAL([CXX_LAMBDA_AVAILABLE], [test "x$cxx_lambda_available" = "xyes"])
+
+
+(3) in Makefile.am
+
+you can write something like:
+
+if CXX_LAMBDA_AVAILABLE
+  ...
+endif
+
+to conditionally execute things.  in MassiveThreads, we write
+
+if CXX_LAMBDA_AVAILABLE
+SUBDIRS += lambda
+endif
+
+to run check programs relying on lambda expressions only when
+lambda is available.
