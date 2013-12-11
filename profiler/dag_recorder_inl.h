@@ -208,7 +208,7 @@ extern "C" {
 
 #if defined(__x86_64__)
 
-  static inline unsigned long long rdtsc() {
+  static inline unsigned long long dr_rdtsc() {
     unsigned long long u;
     asm volatile ("rdtsc;shlq $32,%%rdx;orq %%rdx,%%rax":"=a"(u)::"%rdx");
     return u;
@@ -216,7 +216,7 @@ extern "C" {
   
 #elif defined(__sparc__) && defined(__arch64__)
   
-  static inline unsigned long long rdtsc(void) {
+  static inline unsigned long long dr_rdtsc(void) {
     unsigned long long u;
     asm volatile("rd %%tick, %0" : "=r" (u));
     return u;
@@ -224,7 +224,7 @@ extern "C" {
 
 #else
   
-  static inline unsigned long long rdtsc() {
+  static inline unsigned long long dr_rdtsc() {
     unsigned long long u;
     asm volatile ("rdtsc" : "=A" (u));
     return u;
@@ -234,7 +234,7 @@ extern "C" {
 
   static inline dr_clock_t 
   dr_get_tsc() {
-    return rdtsc();
+    return dr_rdtsc();
   }
 
   static inline dr_dag_node * 
