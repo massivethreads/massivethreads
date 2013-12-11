@@ -87,6 +87,20 @@
 #define TASK_MEMORY_CHUNK_SZ 256
 #endif
 
+#if !defined(DAG_RECORDER)
+#define DAG_RECORDER_VER 0	/* old version */
+#endif
+
+#if DAG_RECORDER>=2
+#ifdef __cplusplus
+extern "C" {
+#endif
+#include <dag_recorder.h>
+#ifdef __cplusplus
+}
+#endif
+#endif
+
 namespace mtbb {
 
 #if TO_TBB
@@ -434,9 +448,52 @@ namespace mtbb {
 
 #endif	/* TO_TBB. have defined task_group_no_prof */
 
-  /* for now, mtbb::task_group = mtbb::task_group_no_prof */
+
+#if DAG_RECORDER>=2
+  /* task_group with dag profiler*/
+
+  template<typename Callable>
+    struct dr_wrap_callable {
+      Callable c;
+      dr_dag_node * parent_interval;
+    dr_wrap_callable(Callable c_, dr_dag_node * parent_interval_) :
+      c(c_), parent_interval(parent_interval_) {}
+      
+      void operator() () {
+	dr_start_task(parent_interval);
+	c();
+	dr_end_task();
+      }
+    };
+
+  struct task_group_with_prof : task_group_no_prof {
+    task_group_with_prof() {
+      dr_dag_node * t = dr_enter_task_group();
+      task_group_no_prof();
+      dr_return_from_task_group(t);
+    }
+
+    template <typename Callable>
+      void run(Callable c) {
+      dr_dag_node * ci;
+      dr_dag_node * t = dr_enter_create_task(&ci);
+      task_group_no_prof::run(dr_wrap_callable<Callable>(c, ci));
+      dr_return_from_create_task(t);
+    }
+
+    void wait() {
+      dr_dag_node * t = dr_enter_wait_tasks();
+      task_group_no_prof::wait();
+      dr_return_from_wait_tasks(t);
+    }
+  };
+  typedef task_group_with_prof task_group;
+
+#else
 
   typedef task_group_no_prof task_group;
+
+#endif
 
 } /* namespace mtbb */
 
