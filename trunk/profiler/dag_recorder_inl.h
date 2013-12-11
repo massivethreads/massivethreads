@@ -602,15 +602,18 @@ extern "C" {
 	    dr_dag_node * c = x->child;
 	    assert(c);
 	    assert(c->kind == dr_dag_node_kind_task);
-	    assert(!c->subgraphs);
+	    assert(c->subgraphs);
+	    assert(dr_dag_node_list_empty(c->subgraphs));
+	    dr_free(c->subgraphs, sizeof(dr_dag_node_list));
 	    dr_free(c, sizeof(dr_dag_node));
 	  } else if (x->kind == dr_dag_node_kind_section) {
-	    assert(!x->subgraphs); /* ??? */
+	    assert(x->subgraphs);
+	    assert(dr_dag_node_list_empty(x->subgraphs));
+	    dr_free(x->subgraphs, sizeof(dr_dag_node_list));
 	  }
 	}
       }
-      dr_dag_node_list_destroy(s->subgraphs);
-      s->subgraphs = 0;
+      dr_dag_node_list_clear(s->subgraphs);
     }
   }
 
@@ -689,7 +692,7 @@ extern "C" {
     dr_dag_node * c;
     dr_return_from_task_group(t);
     t = dr_enter_create_task(&c);
-    dr_start_task(dr_task_last_section_or_create(t));
+    dr_start_task(c);
     dr_end_task();
     dr_return_from_create_task(t);
     t = dr_enter_wait_tasks();

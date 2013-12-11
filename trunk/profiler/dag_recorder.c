@@ -70,51 +70,47 @@ dr_print_dag(dr_dag_node * g, dr_clock_t start_clock,
 	   || K == dr_dag_node_kind_task);
     for (i = 0; i < indent; i++) fprintf(wp, " ");
     if (GS.opts.collapse) {
-      fprintf(wp, "%s(%llu-%llu,est=%llu,W=%llu/%llu,sz=%ld/%ld by %d on %d @%p", 
+      fprintf(wp, "%s(%llu-%llu,est=%llu,W=%llu/%llu,sz=%ld/%ld by %d on %d collapsed=%d @%p", 
 	      dr_node_kind_str(g->kind), 
 	      g->start - start_clock, 
 	      g->end - start_clock, 
 	      g->est, 
 	      g->t_1, g->t_inf,
 	      g->n_nodes, g->n_edges, g->worker, g->cpu,
+	      g->collapsed,
 	      g);
     } else {
       fprintf(wp, "%s(@%p", dr_node_kind_str(g->kind), g);
     }
-    if (g->collapsed) {
-      assert(g->subgraphs == 0);
-      fprintf(wp, ")\n");
-    } else {
-      assert(g->subgraphs);
-      dr_dag_node_chunk * head = g->subgraphs->head;
-      dr_dag_node_chunk * tail = g->subgraphs->tail;
-      dr_dag_node_chunk * ch;
-      for (ch = head; ch; ch = ch->next) {
-	for (i = 0; i < ch->n; i++) {
-	  dr_dag_node_kind_t k = ch->a[i].kind;
-	  if (K == dr_dag_node_kind_section) {
-	    if (ch == head && i == 0) {
-	      assert(k == dr_dag_node_kind_task_group);
-	    } else if (g->done && ch == tail && i == ch->n - 1) {
-	      assert(k == dr_dag_node_kind_wait_tasks);
-	    } else {
-	      assert(k == dr_dag_node_kind_create_task 
-		     || k == dr_dag_node_kind_section);
-	    }
+    assert(g->subgraphs);
+    dr_dag_node_chunk * head = g->subgraphs->head;
+    dr_dag_node_chunk * tail = g->subgraphs->tail;
+    dr_dag_node_chunk * ch;
+    for (ch = head; ch; ch = ch->next) {
+      for (i = 0; i < ch->n; i++) {
+	dr_dag_node_kind_t k = ch->a[i].kind;
+	if (K == dr_dag_node_kind_section) {
+	  if (ch == head && i == 0) {
+	    assert(k == dr_dag_node_kind_task_group);
+	  } else if (g->done && ch == tail && i == ch->n - 1) {
+	    assert(k == dr_dag_node_kind_wait_tasks);
 	  } else {
-	    assert(K == dr_dag_node_kind_task);
-	    if (g->done && ch == tail && i == ch->n - 1) {
-	      assert(k == dr_dag_node_kind_end_task);
-	    } else {
-	      assert(k == dr_dag_node_kind_section);
-	    }
+	    assert(k == dr_dag_node_kind_create_task 
+		   || k == dr_dag_node_kind_section);
 	  }
-	  dr_print_dag(&ch->a[i], start_clock, wp, indent + 1);
+	} else {
+	  assert(K == dr_dag_node_kind_task);
+	  if (g->done && ch == tail && i == ch->n - 1) {
+	    assert(k == dr_dag_node_kind_end_task);
+	  } else {
+	    assert(k == dr_dag_node_kind_section);
+	  }
 	}
+	dr_print_dag(&ch->a[i], start_clock, wp, indent + 1);
       }
-      for (i = 0; i < indent; i++) fprintf(wp, " ");
-      fprintf(wp, ")\n");
     }
+    for (i = 0; i < indent; i++) fprintf(wp, " ");
+    fprintf(wp, ")\n");
   }
 }
 
@@ -275,7 +271,7 @@ int getenv_int(const char * v, int * y) {
   return 1;
 } 
 
-int getenv_str(const char * v, int * y) {
+int getenv_str(const char * v, const char ** y) {
   char * x = getenv(v);
   if (!x) return 0;
   *y = strdup(x);
