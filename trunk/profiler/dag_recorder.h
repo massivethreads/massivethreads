@@ -19,9 +19,20 @@ extern "C" {
  */
 
   typedef struct dr_options {
-    int dbg_level;
-    int collapse;
+    int dbg_level;		/* level of checks during run */
+    int collapse;		/* collapse nodes if set */
+    const char * log_file;	/* filename of the log */
+    int dump_on_stop;		/* when set, dr_stop dumps the log */
   } dr_options;
+
+  /* default values. written here for documentation purpose */
+  __attribute__ ((unused))
+  static dr_options dr_options_default_values = { 
+    0,
+    1,
+    "000dag_recorder.log",
+    1
+  };
 
   typedef struct dr_dag_node dr_dag_node;
 

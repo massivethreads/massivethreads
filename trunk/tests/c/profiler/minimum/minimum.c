@@ -42,13 +42,12 @@ static int bin(int n) {
 }
 
 int main() {
-  dr_options opts[1];
-  dr_options_default(opts);
-  opts->collapse = 0;
-  dr_start(opts);
-  bin(5);
+  int n = 10;
+  dr_start(0);
+  long x = bin(n);
   dr_stop();
-  //dr_print_task_graph(0);	/* stdout */
+  printf("bin(%d) = %ld\n", n, x);
+  //dr_print_task_graph(0);
   //dr_gen_dot_task_graph(0);
   return 0;
 }
