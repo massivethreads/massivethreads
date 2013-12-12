@@ -17,12 +17,19 @@ extern "C" {
    task    ::= section* end
    section ::= task_group (section|create)* wait
  */
+  typedef enum { 
+    dr_model_serial,
+    dr_model_omp,
+    dr_model_cilk,
+    dr_model_tbb,
+  } dr_model_t;
 
   typedef struct dr_options {
     int dbg_level;		/* level of checks during run */
     int collapse;		/* collapse nodes if set */
     const char * log_file;	/* filename of the log */
     int dump_on_stop;		/* when set, dr_stop dumps the log */
+    dr_model_t model;
   } dr_options;
 
   /* default values. written here for documentation purpose */
@@ -31,7 +38,8 @@ extern "C" {
     0,
     1,
     "000dag_recorder.log",
-    1
+    1,
+    dr_model_omp,
   };
 
   typedef struct dr_dag_node dr_dag_node;

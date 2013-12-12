@@ -1,5 +1,5 @@
 # build this directory first and then tests
-SUBDIRS = . profiler tests
+SUBDIRS = . profiler mtbb tpswitch tests
 
 # sources (.c and .S) and flags common across the three libraries
 COMMON_SRCS = myth_log.c myth_sched.c myth_worker.c myth_malloc_wrapper.c myth_sync.c myth_init.c myth_misc.c myth_io.c myth_original_lib.c myth_tls.c myth_context.S myth_context_gvar.c myth_eco.c
@@ -10,7 +10,15 @@ ACLOCAL_AMFLAGS = -I m4
 
 lib_LTLIBRARIES = libmyth.la libmyth-compat.la libmyth-native.la
 include_HEADERS = myth.h myth_if_native.h 
-nobase_include_HEADERS = mtbb/task_group.h mtbb/parallel_for.h mtbb/parallel_reduce.h
+nobase_include_HEADERS = \
+	mtbb/task_group.h \
+	mtbb/parallel_for.h \
+	mtbb/parallel_reduce.h \
+	tpswtich/cilk_dr.h \
+	tpswtich/omp_dr.h \
+	tpswtich/serial_dr.h \
+	tpswtich/tbb_dr.h \
+	tpswtich/tpswitch.h
 
 libmyth_la_SOURCES        = $(COMMON_SRCS) myth_if_native.c myth_if_pthread.c myth_constructor.c
 libmyth_native_la_SOURCES = $(COMMON_SRCS) myth_if_native.c                   myth_constructor.c

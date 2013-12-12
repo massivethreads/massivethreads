@@ -396,7 +396,7 @@ extern "C" {
   */
 
   static void 
-  dr_start_task(dr_dag_node * p) {
+  dr_start_task_(dr_dag_node * p) {
     /* make a task, section, and interval */
     dr_dag_node * nt = dr_mk_dag_node_task();
     if (GS.opts.dbg_level>=2) {
@@ -417,7 +417,6 @@ extern "C" {
     nt->start = dr_get_tsc();
   }
 
-
   /* end current interval and start task_group
   
      task    ::= section* end 
@@ -429,7 +428,7 @@ extern "C" {
   */
 
   static dr_dag_node *
-  dr_enter_task_group() {
+  dr_enter_task_group_() {
     /* get clock as early as possible */
     dr_clock_t end = dr_get_tsc();
     /* get current task (set by start_task or end_*) */
@@ -460,7 +459,7 @@ extern "C" {
   */
 
   static void 
-  dr_return_from_task_group(dr_dag_node * t) {
+  dr_return_from_task_group_(dr_dag_node * t) {
     /* get the current (unfinished) section of the task */
     dr_dag_node * s = dr_task_active_node(t);
     assert(s->kind == dr_dag_node_kind_section);
@@ -485,7 +484,7 @@ extern "C" {
 
   */
   static dr_dag_node * 
-  dr_enter_create_task(dr_dag_node ** c) {
+  dr_enter_create_task_(dr_dag_node ** c) {
     dr_clock_t end = dr_get_tsc();
     dr_dag_node * t = dr_get_cur_task();
     /* get the current (unfinished) section of the task */
@@ -504,7 +503,7 @@ extern "C" {
      section ::= task_group (section|create)* wait
   */
   static void 
-  dr_return_from_create_task(dr_dag_node * t) {
+  dr_return_from_create_task_(dr_dag_node * t) {
     dr_dag_node * ct = dr_task_last_section_or_create(t);
     if (GS.opts.dbg_level>=2) {
       printf("end_create_task(task=%p) by %d interval=%p\n", 
@@ -520,7 +519,7 @@ extern "C" {
      section ::= task_group (section|create)* wait
   */
   static dr_dag_node *
-  dr_enter_wait_tasks() {
+  dr_enter_wait_tasks_() {
     dr_clock_t end = dr_get_tsc();
     dr_dag_node * t = dr_get_cur_task();
     dr_dag_node * s = dr_task_active_node(t);
@@ -624,7 +623,7 @@ extern "C" {
 
   */
   static void 
-  dr_return_from_wait_tasks(dr_dag_node * t) {
+  dr_return_from_wait_tasks_(dr_dag_node * t) {
     /* get the section that finished last */
     dr_dag_node * s = dr_task_last_section_or_create(t);
     assert(s->kind == dr_dag_node_kind_section);
@@ -657,7 +656,7 @@ extern "C" {
   }
 
   static void 
-  dr_end_task() {
+  dr_end_task_() {
     dr_clock_t end = dr_get_tsc();
     dr_dag_node * t = dr_get_cur_task();
     dr_dag_node * s = dr_task_active_node(t);
@@ -672,6 +671,71 @@ extern "C" {
     assert(t->done == 0);
     t->done = 1;
     if (GS.opts.collapse) dr_collapse_section_or_task(t);
+  }
+
+  /*  */
+
+  static int is_omp_like(dr_model_t o) {
+    switch (o) {
+    case dr_model_omp:
+    case dr_model_cilk:
+      return 1;
+    case dr_model_tbb:
+    case dr_model_serial:
+      return 0;
+    default:
+      assert(0);
+      return 0;
+    }
+  }
+
+  static void 
+  dr_start_task(dr_dag_node * p) {
+    dr_start_task_(p);
+    if (is_omp_like(GS.opts.model)) {
+      dr_return_from_task_group_(dr_enter_task_group_());
+    }
+  }
+
+  static dr_dag_node *
+  dr_enter_task_group() {
+    return dr_enter_task_group_();
+  }
+
+  static void
+  dr_return_from_task_group(dr_dag_node * t) {
+    dr_return_from_task_group_(t);
+  }
+
+  static dr_dag_node * 
+  dr_enter_create_task(dr_dag_node ** c) {
+    return dr_enter_create_task_(c);
+  }
+
+  static void 
+  dr_return_from_create_task(dr_dag_node * t) {
+    dr_return_from_create_task_(t);
+  }
+
+  static dr_dag_node *
+  dr_enter_wait_tasks() {
+    return dr_enter_wait_tasks_();
+  }
+
+  static void 
+  dr_return_from_wait_tasks(dr_dag_node * t) {
+    dr_return_from_wait_tasks_(t);
+    if (is_omp_like(GS.opts.model)) {
+      dr_return_from_task_group_(dr_enter_task_group_());
+    }
+  }
+
+  static void 
+  dr_end_task() {
+    if (is_omp_like(GS.opts.model)) {
+      dr_return_from_wait_tasks_(dr_enter_wait_tasks_());
+    }
+    dr_end_task_();
   }
 
   void dr_free_dag_recursively(dr_dag_node * g);
