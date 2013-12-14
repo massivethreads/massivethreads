@@ -17,29 +17,30 @@ extern "C" {
    task    ::= section* end
    section ::= task_group (section|create)* wait
  */
-  typedef enum { 
-    dr_model_serial,
-    dr_model_omp,
-    dr_model_cilk,
-    dr_model_tbb,
-  } dr_model_t;
-
   typedef struct dr_options {
     int dbg_level;		/* level of checks during run */
     int collapse;		/* collapse nodes if set */
-    const char * log_file;	/* filename of the log */
     int dump_on_stop;		/* when set, dr_stop dumps the log */
-    dr_model_t model;
+    const char * log_file;	/* filename of the log */
+    const char * dot_file;	/* filename of the log */
   } dr_options;
 
-  /* default values. written here for documentation purpose */
+  /* default values. written here for documentation purpose.
+     there are two ways to overwrite them.
+     (1) explicitly pass options to dr_start();
+     dr_options opts; dr_options_default(&opts);
+     opts.dbg_level = 2; dr_start(&opts);
+     (2) set corresponding environment variables when
+     you run the program. e.g.,
+     DAG_RECORDER_DBG_LEVEL=2 ./a.out
+  */
   __attribute__ ((unused))
   static dr_options dr_options_default_values = { 
-    0,
-    1,
-    "000dag_recorder.log",
-    1,
-    dr_model_omp,
+    0,				/* dbg_level */
+    1,				/* collapse */
+    0,				/* dump_on_stop */
+    (const char *)0,		/* log_file */
+    (const char *)0,		/* dot_file */
   };
 
   typedef struct dr_dag_node dr_dag_node;

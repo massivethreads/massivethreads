@@ -1,12 +1,24 @@
-check_PROGRAMS = minimum_standalone minimum_mth
+check_PROGRAMS = \
+	minimum_tbblike_standalone \
+	minimum_tbblike_mth \
+	minimum_omplike_standalone \
+	minimum_omplike_mth
 
-minimum_standalone_SOURCES = minimum.c
-minimum_mth_SOURCES        = minimum.c
+top = ../../../..
 
-minimum_standalone_CFLAGS = -I../../../.. -I../../../../profiler -DSTANDALONE_TEST
-minimum_mth_CFLAGS        = -I../../../.. -I../../../../profiler 
+minimum_tbblike_standalone_SOURCES = minimum_tbblike.c
+minimum_tbblike_mth_SOURCES        = minimum_tbblike.c
+minimum_omplike_standalone_SOURCES = minimum_omplike.c
+minimum_omplike_mth_SOURCES        = minimum_omplike.c
 
-minimum_standalone_LDADD  = ../../../../profiler/libdr.la 
-minimum_mth_LDADD         = ../../../../profiler/libdr.la ../../../../libmyth.la 
+minimum_tbblike_standalone_CFLAGS = -I$(top) -I$(top)/profiler -DSTANDALONE_TEST
+minimum_tbblike_mth_CFLAGS        = -I$(top) -I$(top)/profiler 
+minimum_omplike_standalone_CFLAGS = -I$(top) -I$(top)/profiler -DSTANDALONE_TEST
+minimum_omplike_mth_CFLAGS        = -I$(top) -I$(top)/profiler 
+
+minimum_tbblike_standalone_LDADD = $(top)/profiler/libdr.la
+minimum_tbblike_mth_LDADD        = $(top)/profiler/libdr.la $(top)/libmyth.la
+minimum_omplike_standalone_LDADD = $(top)/profiler/libdr.la
+minimum_omplike_mth_LDADD        = $(top)/profiler/libdr.la $(top)/libmyth.la
 
 TESTS = $(check_PROGRAMS)
