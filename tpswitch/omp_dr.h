@@ -6,11 +6,13 @@
 #include <dag_recorder.h>
 
 #define do_pragma(x)               _Pragma( #x )
-//#define pragma_omp(x)              do_pragma(omp x)
-#define pragma_omp(x)
+#define pragma_omp(x)              do_pragma(omp x)
 
 #define pragma_omp_task_no_prof(options, statement) \
   pragma_omp(task options) do { statement; } while(0)
+
+#define pragma_omp_taskc_no_prof(options, callable) \
+  pragma_omp_task_no_prof(options, callable())
 
 #define pragma_omp_taskwait_no_prof pragma_omp(taskwait)
 
@@ -24,6 +26,9 @@
     } while(0);						   \
     dr_return_from_create_task(__t__);			   \
   } while (0)
+
+#define pragma_omp_taskc_with_prof(options, callable) \
+  pragma_omp_task_with_prof(options, callable())
 
 #define pragma_omp_taskwait_with_prof do {		       \
     dr_dag_node * __t__ = dr_enter_wait_tasks();	       \
