@@ -53,8 +53,6 @@ int main(int argc, char ** argv) {
   long x = bin(n);
   dr_stop();
   printf("bin(%d) = %ld\n", n, x);
-  // dr_print_task_graph(0);
-  dr_gen_dot_task_graph(0);
   return 0;
 }
 

@@ -4,16 +4,21 @@
 
 #pragma once
 
-#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+/* 
+     task ::= section* end
+     section ::= task_group (section|create)* wait 
+
+ */
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-  /* they must be provide by the underlying
+  /* they must be provided by the underlying
      system (or by the user) */
   int dr_get_worker();
   int dr_get_num_workers();
@@ -85,6 +90,8 @@ extern "C" {
     dr_options opts;
   } dr_global_state;
 
+#define dr_check(x) if (!(x)) { fprintf(stderr, "%s:%d:%s: dag recorder check failed : %s\n", __FILE__, __LINE__, __func__, #x); exit(1); }
+
   extern dr_thread_specific_state * TS;
   extern dr_global_state GS;
 
@@ -103,7 +110,7 @@ extern "C" {
       if (GS.opts.dbg_level>=1) memset(a, 222, sz);
       free(a);
     } else {
-      assert(sz == 0);
+      dr_check(sz == 0);
     }
   }
 
@@ -117,20 +124,20 @@ extern "C" {
 
   static inline dr_dag_node * 
   dr_dag_node_chunk_last(dr_dag_node_chunk * ch) {
-    assert(ch->n > 0);
+    dr_check(ch->n > 0);
     return &ch->a[ch->n - 1];
   }
 
   static inline dr_dag_node * 
   dr_dag_node_chunk_first(dr_dag_node_chunk * ch) {
-    assert(ch->n > 0);
+    dr_check(ch->n > 0);
     return &ch->a[0];
   }
 
   static inline dr_dag_node * 
   dr_dag_node_chunk_push_back(dr_dag_node_chunk * ch) {
     int n = ch->n;
-    assert(n < dr_dag_node_chunk_sz);
+    dr_check(n < dr_dag_node_chunk_sz);
     ch->n = n + 1;
     return &ch->a[n];
   }
@@ -185,7 +192,7 @@ extern "C" {
     if (tail->n == dr_dag_node_chunk_sz) {
       tail = dr_dag_node_list_add_chunk(l);
     }
-    assert(tail->n < dr_dag_node_chunk_sz);
+    dr_check(tail->n < dr_dag_node_chunk_sz);
     return dr_dag_node_chunk_push_back(tail);
   }
 
@@ -261,7 +268,7 @@ extern "C" {
   static inline void 
   dr_dag_node_init_section_or_task(dr_dag_node * n,
 				   dr_dag_node_kind_t kind) {
-    assert(kind >= dr_dag_node_kind_section);
+    dr_check(kind >= dr_dag_node_kind_section);
     n->kind = kind;
     n->done = 0;
     n->collapsed = 0;
@@ -282,7 +289,7 @@ extern "C" {
   dr_end_interval(dr_dag_node * dn, dr_clock_t start, 
 		  dr_clock_t est, dr_clock_t end, 
 		  dr_dag_node_kind_t kind) {
-    assert(kind < dr_dag_node_kind_section);
+    dr_check(kind < dr_dag_node_kind_section);
     dn->kind = kind;
     dn->start = start;
     dn->est = est;
@@ -316,7 +323,7 @@ extern "C" {
 
   static inline dr_dag_node * 
   dr_task_active_node(dr_dag_node * t) {
-    assert(t->kind == dr_dag_node_kind_task);
+    dr_check(t->kind == dr_dag_node_kind_task);
     dr_dag_node * s = t;
     while (1) {
       if (dr_dag_node_list_empty(s->subgraphs)) {
@@ -333,7 +340,7 @@ extern "C" {
       if (c->kind < dr_dag_node_kind_section) return s;
       /* something is broken if we have a task node 
 	 as a child! */
-      assert(c->kind == dr_dag_node_kind_section);
+      dr_check(c->kind == dr_dag_node_kind_section);
       /* the rightmost child is a section that has finished 
 	 -> no active sections under s */
       if (c->done) return s;
@@ -345,10 +352,10 @@ extern "C" {
 
   static inline dr_dag_node * 
   dr_task_last_section_or_create(dr_dag_node * t) {
-    assert(t->kind == dr_dag_node_kind_task);
+    dr_check(t->kind == dr_dag_node_kind_task);
     dr_dag_node * s = dr_task_active_node(t);
     dr_dag_node * i = dr_dag_node_list_last(s->subgraphs);
-    assert(i->kind == dr_dag_node_kind_section
+    dr_check(i->kind == dr_dag_node_kind_section
 	   || i->kind == dr_dag_node_kind_create_task);
     return i;
   }
@@ -364,6 +371,13 @@ extern "C" {
   static inline dr_dag_node * 
   dr_task_add_create(dr_dag_node * t) {
     dr_dag_node * s = dr_task_active_node(t);
+    dr_check(s->kind >= dr_dag_node_kind_section);
+    if (dr_dag_node_list_empty(s->subgraphs)
+	|| (dr_dag_node_list_last(s->subgraphs)->kind 
+	    == dr_dag_node_kind_section)) {
+      s = dr_dag_node_list_push_back(s->subgraphs);
+      dr_dag_node_init_section_or_task(s, dr_dag_node_kind_section);
+    }
     dr_dag_node * i = dr_dag_node_list_push_back(s->subgraphs);
     i->kind = dr_dag_node_kind_create_task;
     i->child = 0;
@@ -405,8 +419,8 @@ extern "C" {
     }
     /* register this task as the child of p */
     if (p) {
-      assert(p->kind == dr_dag_node_kind_create_task);
-      assert(p->child == 0);
+      dr_check(p->kind == dr_dag_node_kind_create_task);
+      dr_check(p->child == 0);
       p->child = nt;
       nt->est = p->est + p->t_inf;
     } else {
@@ -462,9 +476,9 @@ extern "C" {
   dr_return_from_task_group_(dr_dag_node * t) {
     /* get the current (unfinished) section of the task */
     dr_dag_node * s = dr_task_active_node(t);
-    assert(s->kind == dr_dag_node_kind_section);
-    assert(s->subgraphs->tail == s->subgraphs->head);
-    assert(s->subgraphs->tail->n == 1);
+    dr_check(s->kind == dr_dag_node_kind_section);
+    dr_check(s->subgraphs->tail == s->subgraphs->head);
+    dr_check(s->subgraphs->tail->n == 1);
     dr_dag_node * p = dr_dag_node_list_last(s->subgraphs);
     if (GS.opts.dbg_level>=2) {
       printf("end_task_group(task=%p) by %d pred=%p\n", 
@@ -509,7 +523,7 @@ extern "C" {
       printf("end_create_task(task=%p) by %d interval=%p\n", 
 	     t, dr_get_worker(), ct);
     }
-    assert(ct->kind == dr_dag_node_kind_create_task);
+    dr_check(ct->kind == dr_dag_node_kind_create_task);
     dr_set_cur_task(t);
     t->est = ct->est + ct->t_inf;
     t->start = dr_get_tsc();
@@ -529,7 +543,7 @@ extern "C" {
 	     "section=%p, new interval=%p\n", 
 	     dr_get_worker(), t, s, i);
     }
-    assert(s->done == 0);
+    dr_check(s->done == 0);
     s->done = 1;
     dr_end_interval(i, t->start, t->est, end, 
 		    dr_dag_node_kind_wait_tasks);
@@ -540,8 +554,8 @@ extern "C" {
      if it is collapsable, collapse it */
   static void 
   dr_collapse_section_or_task(dr_dag_node * s) {
-    assert(s->kind >= dr_dag_node_kind_section);
-    assert(!dr_dag_node_list_empty(s->subgraphs));
+    dr_check(s->kind >= dr_dag_node_kind_section);
+    dr_check(!dr_dag_node_list_empty(s->subgraphs));
     dr_dag_node * first = dr_dag_node_list_first(s->subgraphs);
     dr_dag_node * last = dr_dag_node_list_last(s->subgraphs);
     /* initialize the result */
@@ -571,13 +585,13 @@ extern "C" {
 	if (s->cpu    != x->cpu)    s->cpu    = -1;
 	if (x->kind == dr_dag_node_kind_create_task) {
 	  dr_dag_node * y = x->child;
-	  assert(y);
+	  dr_check(y);
 	  if (y->end > s->end) s->end = y->end;
 	  s->t_1     += y->t_1;
 	  if (s->t_inf + y->t_inf > t_inf) 
 	    t_inf = s->t_inf + y->t_inf;
 	  s->n_nodes += y->n_nodes;
-	  assert((ch != head) || i);
+	  // dr_check((ch != head) || i);
 	  s->n_edges += y->n_edges + 2;
 	  if (s->worker != y->worker) s->worker = -1;
 	  if (s->cpu    != y->cpu)    s->cpu    = -1;
@@ -591,23 +605,24 @@ extern "C" {
 	 was executed on a single worker */
       s->collapsed = 1;
       /* free the graph of its children */
+      dr_dag_node_chunk * head = s->subgraphs->head;
       dr_dag_node_chunk * ch;
-      for (ch = s->subgraphs->head; ch; ch = ch->next) {
+      for (ch = head; ch; ch = ch->next) {
 	int i;
 	for (i = 0; i < ch->n; i++) {
 	  dr_dag_node * x = &ch->a[i];
 	  if (x->kind == dr_dag_node_kind_create_task) {
 	    /* children must have been collapsed */
 	    dr_dag_node * c = x->child;
-	    assert(c);
-	    assert(c->kind == dr_dag_node_kind_task);
-	    assert(c->subgraphs);
-	    assert(dr_dag_node_list_empty(c->subgraphs));
+	    dr_check(c);
+	    dr_check(c->kind == dr_dag_node_kind_task);
+	    dr_check(c->subgraphs);
+	    dr_check(dr_dag_node_list_empty(c->subgraphs));
 	    dr_free(c->subgraphs, sizeof(dr_dag_node_list));
 	    dr_free(c, sizeof(dr_dag_node));
 	  } else if (x->kind == dr_dag_node_kind_section) {
-	    assert(x->subgraphs);
-	    assert(dr_dag_node_list_empty(x->subgraphs));
+	    dr_check(x->subgraphs);
+	    dr_check(dr_dag_node_list_empty(x->subgraphs));
 	    dr_free(x->subgraphs, sizeof(dr_dag_node_list));
 	  }
 	}
@@ -626,23 +641,24 @@ extern "C" {
   dr_return_from_wait_tasks_(dr_dag_node * t) {
     /* get the section that finished last */
     dr_dag_node * s = dr_task_last_section_or_create(t);
-    assert(s->kind == dr_dag_node_kind_section);
+    dr_check(s->kind == dr_dag_node_kind_section);
     dr_dag_node * p = dr_dag_node_list_last(s->subgraphs);
-    assert(p->kind == dr_dag_node_kind_wait_tasks);
+    dr_check(p->kind == dr_dag_node_kind_wait_tasks);
     if (GS.opts.dbg_level>=2) {
       printf("end_wait_tasks(task=%p) by %d section=%p, pred=%p\n", 
 	     t, dr_get_worker(), s, p);
     }
     /* calc EST of the interval to start */
     dr_clock_t est = p->est + p->t_inf;
+    dr_dag_node_chunk * head = s->subgraphs->head;
     dr_dag_node_chunk * ch;
-    for (ch = s->subgraphs->head; ch; ch = ch->next) {
+    for (ch = head; ch; ch = ch->next) {
       int i;
       for (i = 0; i < ch->n; i++) {
 	dr_dag_node * sc = &ch->a[i];
-	assert(sc->kind < dr_dag_node_kind_task); 
+	dr_check(sc->kind < dr_dag_node_kind_task); 
 	if (sc->kind == dr_dag_node_kind_create_task) {
-	  assert(sc->child);
+	  dr_check(sc->child);
 	  dr_dag_node * ct = sc->child;
 	  dr_clock_t x = ct->est + ct->t_inf;
 	  if (est < x) est = x;
@@ -668,33 +684,16 @@ extern "C" {
     }
     dr_end_interval(i, t->start, t->est, end, 
 		    dr_dag_node_kind_end_task);
-    assert(t->done == 0);
+    dr_check(t->done == 0);
     t->done = 1;
     if (GS.opts.collapse) dr_collapse_section_or_task(t);
   }
 
   /*  */
 
-  static int is_omp_like(dr_model_t o) {
-    switch (o) {
-    case dr_model_omp:
-    case dr_model_cilk:
-      return 1;
-    case dr_model_tbb:
-    case dr_model_serial:
-      return 0;
-    default:
-      assert(0);
-      return 0;
-    }
-  }
-
   static void 
   dr_start_task(dr_dag_node * p) {
     dr_start_task_(p);
-    if (is_omp_like(GS.opts.model)) {
-      dr_return_from_task_group_(dr_enter_task_group_());
-    }
   }
 
   static dr_dag_node *
@@ -709,6 +708,7 @@ extern "C" {
 
   static dr_dag_node * 
   dr_enter_create_task(dr_dag_node ** c) {
+
     return dr_enter_create_task_(c);
   }
 
@@ -725,16 +725,10 @@ extern "C" {
   static void 
   dr_return_from_wait_tasks(dr_dag_node * t) {
     dr_return_from_wait_tasks_(t);
-    if (is_omp_like(GS.opts.model)) {
-      dr_return_from_task_group_(dr_enter_task_group_());
-    }
   }
 
   static void 
   dr_end_task() {
-    if (is_omp_like(GS.opts.model)) {
-      dr_return_from_wait_tasks_(dr_enter_wait_tasks_());
-    }
     dr_end_task_();
   }
 

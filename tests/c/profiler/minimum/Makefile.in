@@ -33,7 +33,10 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-check_PROGRAMS = minimum_standalone$(EXEEXT) minimum_mth$(EXEEXT)
+check_PROGRAMS = minimum_tbblike_standalone$(EXEEXT) \
+	minimum_tbblike_mth$(EXEEXT) \
+	minimum_omplike_standalone$(EXEEXT) \
+	minimum_omplike_mth$(EXEEXT)
 subdir = tests/c/profiler/minimum
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -47,19 +50,41 @@ mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/config.h
 CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
-am_minimum_mth_OBJECTS = minimum_mth-minimum.$(OBJEXT)
-minimum_mth_OBJECTS = $(am_minimum_mth_OBJECTS)
-minimum_mth_DEPENDENCIES = ../../../../profiler/libdr.la \
-	../../../../libmyth.la
-minimum_mth_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
-	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(minimum_mth_CFLAGS) \
-	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
-am_minimum_standalone_OBJECTS = minimum_standalone-minimum.$(OBJEXT)
-minimum_standalone_OBJECTS = $(am_minimum_standalone_OBJECTS)
-minimum_standalone_DEPENDENCIES = ../../../../profiler/libdr.la
-minimum_standalone_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
+am_minimum_omplike_mth_OBJECTS =  \
+	minimum_omplike_mth-minimum_omplike.$(OBJEXT)
+minimum_omplike_mth_OBJECTS = $(am_minimum_omplike_mth_OBJECTS)
+minimum_omplike_mth_DEPENDENCIES = $(top)/profiler/libdr.la \
+	$(top)/libmyth.la
+minimum_omplike_mth_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) \
-	$(minimum_standalone_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
+	$(minimum_omplike_mth_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
+	$(LDFLAGS) -o $@
+am_minimum_omplike_standalone_OBJECTS =  \
+	minimum_omplike_standalone-minimum_omplike.$(OBJEXT)
+minimum_omplike_standalone_OBJECTS =  \
+	$(am_minimum_omplike_standalone_OBJECTS)
+minimum_omplike_standalone_DEPENDENCIES = $(top)/profiler/libdr.la
+minimum_omplike_standalone_LINK = $(LIBTOOL) --tag=CC \
+	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
+	$(minimum_omplike_standalone_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
+	$(LDFLAGS) -o $@
+am_minimum_tbblike_mth_OBJECTS =  \
+	minimum_tbblike_mth-minimum_tbblike.$(OBJEXT)
+minimum_tbblike_mth_OBJECTS = $(am_minimum_tbblike_mth_OBJECTS)
+minimum_tbblike_mth_DEPENDENCIES = $(top)/profiler/libdr.la \
+	$(top)/libmyth.la
+minimum_tbblike_mth_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CCLD) \
+	$(minimum_tbblike_mth_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
+	$(LDFLAGS) -o $@
+am_minimum_tbblike_standalone_OBJECTS =  \
+	minimum_tbblike_standalone-minimum_tbblike.$(OBJEXT)
+minimum_tbblike_standalone_OBJECTS =  \
+	$(am_minimum_tbblike_standalone_OBJECTS)
+minimum_tbblike_standalone_DEPENDENCIES = $(top)/profiler/libdr.la
+minimum_tbblike_standalone_LINK = $(LIBTOOL) --tag=CC \
+	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
+	$(minimum_tbblike_standalone_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
@@ -74,8 +99,14 @@ CCLD = $(CC)
 LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	--mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
-SOURCES = $(minimum_mth_SOURCES) $(minimum_standalone_SOURCES)
-DIST_SOURCES = $(minimum_mth_SOURCES) $(minimum_standalone_SOURCES)
+SOURCES = $(minimum_omplike_mth_SOURCES) \
+	$(minimum_omplike_standalone_SOURCES) \
+	$(minimum_tbblike_mth_SOURCES) \
+	$(minimum_tbblike_standalone_SOURCES)
+DIST_SOURCES = $(minimum_omplike_mth_SOURCES) \
+	$(minimum_omplike_standalone_SOURCES) \
+	$(minimum_tbblike_mth_SOURCES) \
+	$(minimum_tbblike_standalone_SOURCES)
 ETAGS = etags
 CTAGS = ctags
 am__tty_colors = \
@@ -202,12 +233,19 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-minimum_standalone_SOURCES = minimum.c
-minimum_mth_SOURCES = minimum.c
-minimum_standalone_CFLAGS = -I../../../.. -I../../../../profiler -DSTANDALONE_TEST
-minimum_mth_CFLAGS = -I../../../.. -I../../../../profiler 
-minimum_standalone_LDADD = ../../../../profiler/libdr.la 
-minimum_mth_LDADD = ../../../../profiler/libdr.la ../../../../libmyth.la 
+top = ../../../..
+minimum_tbblike_standalone_SOURCES = minimum_tbblike.c
+minimum_tbblike_mth_SOURCES = minimum_tbblike.c
+minimum_omplike_standalone_SOURCES = minimum_omplike.c
+minimum_omplike_mth_SOURCES = minimum_omplike.c
+minimum_tbblike_standalone_CFLAGS = -I$(top) -I$(top)/profiler -DSTANDALONE_TEST
+minimum_tbblike_mth_CFLAGS = -I$(top) -I$(top)/profiler 
+minimum_omplike_standalone_CFLAGS = -I$(top) -I$(top)/profiler -DSTANDALONE_TEST
+minimum_omplike_mth_CFLAGS = -I$(top) -I$(top)/profiler 
+minimum_tbblike_standalone_LDADD = $(top)/profiler/libdr.la
+minimum_tbblike_mth_LDADD = $(top)/profiler/libdr.la $(top)/libmyth.la
+minimum_omplike_standalone_LDADD = $(top)/profiler/libdr.la
+minimum_omplike_mth_LDADD = $(top)/profiler/libdr.la $(top)/libmyth.la
 TESTS = $(check_PROGRAMS)
 all: all-am
 
@@ -252,12 +290,18 @@ clean-checkPROGRAMS:
 	list=`for p in $$list; do echo "$$p"; done | sed 's/$(EXEEXT)$$//'`; \
 	echo " rm -f" $$list; \
 	rm -f $$list
-minimum_mth$(EXEEXT): $(minimum_mth_OBJECTS) $(minimum_mth_DEPENDENCIES) $(EXTRA_minimum_mth_DEPENDENCIES) 
-	@rm -f minimum_mth$(EXEEXT)
-	$(minimum_mth_LINK) $(minimum_mth_OBJECTS) $(minimum_mth_LDADD) $(LIBS)
-minimum_standalone$(EXEEXT): $(minimum_standalone_OBJECTS) $(minimum_standalone_DEPENDENCIES) $(EXTRA_minimum_standalone_DEPENDENCIES) 
-	@rm -f minimum_standalone$(EXEEXT)
-	$(minimum_standalone_LINK) $(minimum_standalone_OBJECTS) $(minimum_standalone_LDADD) $(LIBS)
+minimum_omplike_mth$(EXEEXT): $(minimum_omplike_mth_OBJECTS) $(minimum_omplike_mth_DEPENDENCIES) $(EXTRA_minimum_omplike_mth_DEPENDENCIES) 
+	@rm -f minimum_omplike_mth$(EXEEXT)
+	$(minimum_omplike_mth_LINK) $(minimum_omplike_mth_OBJECTS) $(minimum_omplike_mth_LDADD) $(LIBS)
+minimum_omplike_standalone$(EXEEXT): $(minimum_omplike_standalone_OBJECTS) $(minimum_omplike_standalone_DEPENDENCIES) $(EXTRA_minimum_omplike_standalone_DEPENDENCIES) 
+	@rm -f minimum_omplike_standalone$(EXEEXT)
+	$(minimum_omplike_standalone_LINK) $(minimum_omplike_standalone_OBJECTS) $(minimum_omplike_standalone_LDADD) $(LIBS)
+minimum_tbblike_mth$(EXEEXT): $(minimum_tbblike_mth_OBJECTS) $(minimum_tbblike_mth_DEPENDENCIES) $(EXTRA_minimum_tbblike_mth_DEPENDENCIES) 
+	@rm -f minimum_tbblike_mth$(EXEEXT)
+	$(minimum_tbblike_mth_LINK) $(minimum_tbblike_mth_OBJECTS) $(minimum_tbblike_mth_LDADD) $(LIBS)
+minimum_tbblike_standalone$(EXEEXT): $(minimum_tbblike_standalone_OBJECTS) $(minimum_tbblike_standalone_DEPENDENCIES) $(EXTRA_minimum_tbblike_standalone_DEPENDENCIES) 
+	@rm -f minimum_tbblike_standalone$(EXEEXT)
+	$(minimum_tbblike_standalone_LINK) $(minimum_tbblike_standalone_OBJECTS) $(minimum_tbblike_standalone_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -265,8 +309,10 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/minimum_mth-minimum.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/minimum_standalone-minimum.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/minimum_omplike_mth-minimum_omplike.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/minimum_omplike_standalone-minimum_omplike.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/minimum_tbblike_mth-minimum_tbblike.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/minimum_tbblike_standalone-minimum_tbblike.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
@@ -289,33 +335,61 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LTCOMPILE) -c -o $@ $<
 
-minimum_mth-minimum.o: minimum.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(minimum_mth_CFLAGS) $(CFLAGS) -MT minimum_mth-minimum.o -MD -MP -MF $(DEPDIR)/minimum_mth-minimum.Tpo -c -o minimum_mth-minimum.o `test -f 'minimum.c' || echo '$(srcdir)/'`minimum.c
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/minimum_mth-minimum.Tpo $(DEPDIR)/minimum_mth-minimum.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='minimum.c' object='minimum_mth-minimum.o' libtool=no @AMDEPBACKSLASH@
+minimum_omplike_mth-minimum_omplike.o: minimum_omplike.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(minimum_omplike_mth_CFLAGS) $(CFLAGS) -MT minimum_omplike_mth-minimum_omplike.o -MD -MP -MF $(DEPDIR)/minimum_omplike_mth-minimum_omplike.Tpo -c -o minimum_omplike_mth-minimum_omplike.o `test -f 'minimum_omplike.c' || echo '$(srcdir)/'`minimum_omplike.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/minimum_omplike_mth-minimum_omplike.Tpo $(DEPDIR)/minimum_omplike_mth-minimum_omplike.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='minimum_omplike.c' object='minimum_omplike_mth-minimum_omplike.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(minimum_mth_CFLAGS) $(CFLAGS) -c -o minimum_mth-minimum.o `test -f 'minimum.c' || echo '$(srcdir)/'`minimum.c
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(minimum_omplike_mth_CFLAGS) $(CFLAGS) -c -o minimum_omplike_mth-minimum_omplike.o `test -f 'minimum_omplike.c' || echo '$(srcdir)/'`minimum_omplike.c
 
-minimum_mth-minimum.obj: minimum.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(minimum_mth_CFLAGS) $(CFLAGS) -MT minimum_mth-minimum.obj -MD -MP -MF $(DEPDIR)/minimum_mth-minimum.Tpo -c -o minimum_mth-minimum.obj `if test -f 'minimum.c'; then $(CYGPATH_W) 'minimum.c'; else $(CYGPATH_W) '$(srcdir)/minimum.c'; fi`
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/minimum_mth-minimum.Tpo $(DEPDIR)/minimum_mth-minimum.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='minimum.c' object='minimum_mth-minimum.obj' libtool=no @AMDEPBACKSLASH@
+minimum_omplike_mth-minimum_omplike.obj: minimum_omplike.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(minimum_omplike_mth_CFLAGS) $(CFLAGS) -MT minimum_omplike_mth-minimum_omplike.obj -MD -MP -MF $(DEPDIR)/minimum_omplike_mth-minimum_omplike.Tpo -c -o minimum_omplike_mth-minimum_omplike.obj `if test -f 'minimum_omplike.c'; then $(CYGPATH_W) 'minimum_omplike.c'; else $(CYGPATH_W) '$(srcdir)/minimum_omplike.c'; fi`
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/minimum_omplike_mth-minimum_omplike.Tpo $(DEPDIR)/minimum_omplike_mth-minimum_omplike.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='minimum_omplike.c' object='minimum_omplike_mth-minimum_omplike.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(minimum_mth_CFLAGS) $(CFLAGS) -c -o minimum_mth-minimum.obj `if test -f 'minimum.c'; then $(CYGPATH_W) 'minimum.c'; else $(CYGPATH_W) '$(srcdir)/minimum.c'; fi`
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(minimum_omplike_mth_CFLAGS) $(CFLAGS) -c -o minimum_omplike_mth-minimum_omplike.obj `if test -f 'minimum_omplike.c'; then $(CYGPATH_W) 'minimum_omplike.c'; else $(CYGPATH_W) '$(srcdir)/minimum_omplike.c'; fi`
 
-minimum_standalone-minimum.o: minimum.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(minimum_standalone_CFLAGS) $(CFLAGS) -MT minimum_standalone-minimum.o -MD -MP -MF $(DEPDIR)/minimum_standalone-minimum.Tpo -c -o minimum_standalone-minimum.o `test -f 'minimum.c' || echo '$(srcdir)/'`minimum.c
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/minimum_standalone-minimum.Tpo $(DEPDIR)/minimum_standalone-minimum.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='minimum.c' object='minimum_standalone-minimum.o' libtool=no @AMDEPBACKSLASH@
+minimum_omplike_standalone-minimum_omplike.o: minimum_omplike.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(minimum_omplike_standalone_CFLAGS) $(CFLAGS) -MT minimum_omplike_standalone-minimum_omplike.o -MD -MP -MF $(DEPDIR)/minimum_omplike_standalone-minimum_omplike.Tpo -c -o minimum_omplike_standalone-minimum_omplike.o `test -f 'minimum_omplike.c' || echo '$(srcdir)/'`minimum_omplike.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/minimum_omplike_standalone-minimum_omplike.Tpo $(DEPDIR)/minimum_omplike_standalone-minimum_omplike.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='minimum_omplike.c' object='minimum_omplike_standalone-minimum_omplike.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(minimum_standalone_CFLAGS) $(CFLAGS) -c -o minimum_standalone-minimum.o `test -f 'minimum.c' || echo '$(srcdir)/'`minimum.c
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(minimum_omplike_standalone_CFLAGS) $(CFLAGS) -c -o minimum_omplike_standalone-minimum_omplike.o `test -f 'minimum_omplike.c' || echo '$(srcdir)/'`minimum_omplike.c
 
-minimum_standalone-minimum.obj: minimum.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(minimum_standalone_CFLAGS) $(CFLAGS) -MT minimum_standalone-minimum.obj -MD -MP -MF $(DEPDIR)/minimum_standalone-minimum.Tpo -c -o minimum_standalone-minimum.obj `if test -f 'minimum.c'; then $(CYGPATH_W) 'minimum.c'; else $(CYGPATH_W) '$(srcdir)/minimum.c'; fi`
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/minimum_standalone-minimum.Tpo $(DEPDIR)/minimum_standalone-minimum.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='minimum.c' object='minimum_standalone-minimum.obj' libtool=no @AMDEPBACKSLASH@
+minimum_omplike_standalone-minimum_omplike.obj: minimum_omplike.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(minimum_omplike_standalone_CFLAGS) $(CFLAGS) -MT minimum_omplike_standalone-minimum_omplike.obj -MD -MP -MF $(DEPDIR)/minimum_omplike_standalone-minimum_omplike.Tpo -c -o minimum_omplike_standalone-minimum_omplike.obj `if test -f 'minimum_omplike.c'; then $(CYGPATH_W) 'minimum_omplike.c'; else $(CYGPATH_W) '$(srcdir)/minimum_omplike.c'; fi`
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/minimum_omplike_standalone-minimum_omplike.Tpo $(DEPDIR)/minimum_omplike_standalone-minimum_omplike.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='minimum_omplike.c' object='minimum_omplike_standalone-minimum_omplike.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(minimum_standalone_CFLAGS) $(CFLAGS) -c -o minimum_standalone-minimum.obj `if test -f 'minimum.c'; then $(CYGPATH_W) 'minimum.c'; else $(CYGPATH_W) '$(srcdir)/minimum.c'; fi`
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(minimum_omplike_standalone_CFLAGS) $(CFLAGS) -c -o minimum_omplike_standalone-minimum_omplike.obj `if test -f 'minimum_omplike.c'; then $(CYGPATH_W) 'minimum_omplike.c'; else $(CYGPATH_W) '$(srcdir)/minimum_omplike.c'; fi`
+
+minimum_tbblike_mth-minimum_tbblike.o: minimum_tbblike.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(minimum_tbblike_mth_CFLAGS) $(CFLAGS) -MT minimum_tbblike_mth-minimum_tbblike.o -MD -MP -MF $(DEPDIR)/minimum_tbblike_mth-minimum_tbblike.Tpo -c -o minimum_tbblike_mth-minimum_tbblike.o `test -f 'minimum_tbblike.c' || echo '$(srcdir)/'`minimum_tbblike.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/minimum_tbblike_mth-minimum_tbblike.Tpo $(DEPDIR)/minimum_tbblike_mth-minimum_tbblike.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='minimum_tbblike.c' object='minimum_tbblike_mth-minimum_tbblike.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(minimum_tbblike_mth_CFLAGS) $(CFLAGS) -c -o minimum_tbblike_mth-minimum_tbblike.o `test -f 'minimum_tbblike.c' || echo '$(srcdir)/'`minimum_tbblike.c
+
+minimum_tbblike_mth-minimum_tbblike.obj: minimum_tbblike.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(minimum_tbblike_mth_CFLAGS) $(CFLAGS) -MT minimum_tbblike_mth-minimum_tbblike.obj -MD -MP -MF $(DEPDIR)/minimum_tbblike_mth-minimum_tbblike.Tpo -c -o minimum_tbblike_mth-minimum_tbblike.obj `if test -f 'minimum_tbblike.c'; then $(CYGPATH_W) 'minimum_tbblike.c'; else $(CYGPATH_W) '$(srcdir)/minimum_tbblike.c'; fi`
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/minimum_tbblike_mth-minimum_tbblike.Tpo $(DEPDIR)/minimum_tbblike_mth-minimum_tbblike.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='minimum_tbblike.c' object='minimum_tbblike_mth-minimum_tbblike.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(minimum_tbblike_mth_CFLAGS) $(CFLAGS) -c -o minimum_tbblike_mth-minimum_tbblike.obj `if test -f 'minimum_tbblike.c'; then $(CYGPATH_W) 'minimum_tbblike.c'; else $(CYGPATH_W) '$(srcdir)/minimum_tbblike.c'; fi`
+
+minimum_tbblike_standalone-minimum_tbblike.o: minimum_tbblike.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(minimum_tbblike_standalone_CFLAGS) $(CFLAGS) -MT minimum_tbblike_standalone-minimum_tbblike.o -MD -MP -MF $(DEPDIR)/minimum_tbblike_standalone-minimum_tbblike.Tpo -c -o minimum_tbblike_standalone-minimum_tbblike.o `test -f 'minimum_tbblike.c' || echo '$(srcdir)/'`minimum_tbblike.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/minimum_tbblike_standalone-minimum_tbblike.Tpo $(DEPDIR)/minimum_tbblike_standalone-minimum_tbblike.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='minimum_tbblike.c' object='minimum_tbblike_standalone-minimum_tbblike.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(minimum_tbblike_standalone_CFLAGS) $(CFLAGS) -c -o minimum_tbblike_standalone-minimum_tbblike.o `test -f 'minimum_tbblike.c' || echo '$(srcdir)/'`minimum_tbblike.c
+
+minimum_tbblike_standalone-minimum_tbblike.obj: minimum_tbblike.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(minimum_tbblike_standalone_CFLAGS) $(CFLAGS) -MT minimum_tbblike_standalone-minimum_tbblike.obj -MD -MP -MF $(DEPDIR)/minimum_tbblike_standalone-minimum_tbblike.Tpo -c -o minimum_tbblike_standalone-minimum_tbblike.obj `if test -f 'minimum_tbblike.c'; then $(CYGPATH_W) 'minimum_tbblike.c'; else $(CYGPATH_W) '$(srcdir)/minimum_tbblike.c'; fi`
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/minimum_tbblike_standalone-minimum_tbblike.Tpo $(DEPDIR)/minimum_tbblike_standalone-minimum_tbblike.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='minimum_tbblike.c' object='minimum_tbblike_standalone-minimum_tbblike.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(minimum_tbblike_standalone_CFLAGS) $(CFLAGS) -c -o minimum_tbblike_standalone-minimum_tbblike.obj `if test -f 'minimum_tbblike.c'; then $(CYGPATH_W) 'minimum_tbblike.c'; else $(CYGPATH_W) '$(srcdir)/minimum_tbblike.c'; fi`
 
 mostlyclean-libtool:
 	-rm -f *.lo
