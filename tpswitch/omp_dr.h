@@ -40,12 +40,16 @@
 
 #define pragma_omp_task(options, statement)	\
   pragma_omp_task_with_prof(options, statement)
+#define pragma_omp_taskc(options, callable)	\
+  pragma_omp_taskc_with_prof(options, callable)
 #define pragma_omp_taskwait pragma_omp_taskwait_with_prof
 
 #else
 
 #define pragma_omp_task(options, statement)	\
   pragma_omp_task_no_prof(options, statement)
+#define pragma_omp_taskc(options, callable)	\
+  pragma_omp_taskc_no_prof(options, callable)
 #define pragma_omp_taskwait pragma_omp_taskwait_no_prof
 
 

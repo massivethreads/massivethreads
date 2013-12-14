@@ -16,6 +16,8 @@
   pragma_omp_task(shared(s0), statement)
 #define create_task2(s0,s1,statement)		\
   pragma_omp_task(shared(s0,s1), statement)
+#define create_taskc(callable)			\
+  pragma_omp_taskc(,callable)
 #define create_taskA(statement)			\
   pragma_omp_task(default(shared),statement)
 #define wait_tasks pragma_omp_taskwait
