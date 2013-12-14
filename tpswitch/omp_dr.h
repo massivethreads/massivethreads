@@ -2,6 +2,47 @@
  * OpenMP + dag_recorder
  */
 
+/* 
+   this file provides macros with which users can
+   easily turn on/off dag recorder for your OpenMP
+   task parallel programs.
+
+   provided macros are:
+
+   (i) pragma_omp_task(option, statement)
+   (ii) pragma_omp_taskc(option, callable)
+   (iii) pragma_omp_taskwait
+
+   they are respectively translated into
+   #pragma omp task option
+     statement
+
+   #pragma omp task option
+     callable()
+
+   #pragma omp taskwait
+
+   when DAG_RECORDER is set to a number >= 2,
+   they insert instrumentation code for dag
+   recorder.
+
+   ideally we like to instrument OpenMP 
+   programs written with the regular 
+   pragma's, but I don't know how to do 
+   it.  so we ask the programmer to write
+   OpenMP fragment such as 
+
+   #pragma omp task shared(x)
+     x = foo();
+
+   as
+   
+   pragma_omp_task(shared(x),
+     x = foo());
+
+ */
+
+
 #pragma once
 #include <dag_recorder.h>
 
