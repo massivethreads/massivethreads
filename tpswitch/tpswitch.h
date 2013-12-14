@@ -77,7 +77,8 @@
   do { call_taskc(callable); wait_tasks; } while(0)
 
 /* OpenMP */
-#if TO_OMP
+#elif TO_OMP
+
 #include <tpswitch/omp_dr.h>
 #define mk_task_group 
 #define create_task0(statement)			\
@@ -101,7 +102,8 @@
 #define wait_tasks pragma_omp_taskwait
 
 /* TBB, MassiveThredhads, Qthreads, Nanos++ */
-#if TO_TBB || TO_MTHREAD || TO_MTHREAD_NATIVE || TO_QTHREAD || TO_NANOX
+#elif TO_TBB || TO_MTHREAD || TO_MTHREAD_NATIVE || TO_QTHREAD || TO_NANOX
+
 #include <mtbb/task_group.h>
 
 #define mk_task_group mtbb::task_group __tg__
@@ -134,7 +136,7 @@
 #define wait_tasks __tg__.wait()
 
 /* Cilk (not implemented yet) */
-#if TO_CILK
+#elif TO_CILK
 #include <tpswitch/cilk_dr.h>
 
 #else
