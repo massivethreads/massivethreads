@@ -1,5 +1,26 @@
 /* 
- * OpenMP + dag_recorder
+ * Serial + dag_recorder
+ */
+
+/* 
+   this file provides macros with which users can
+   easily turn on/off dag recorder for your serial
+   programs (of course, there is real no point in 
+   using dag recorder for serial programs, but it
+   is still useful for analyzing programs work,
+   critical path, etc.)
+
+   provided macros are:
+
+   mk_task_group;
+   create_task(statement);
+   create_taskc(callable);
+   wait_tasks;
+
+   when DAG_RECORDER is set to a number >= 2,
+   they insert instrumentation code for dag
+   recorder.
+
  */
 
 #pragma once
