@@ -45,18 +45,28 @@ extern "C" {
 
   typedef struct dr_dag_node dr_dag_node;
 
-  static void          dr_start_task(dr_dag_node * parent);
-  static dr_dag_node * dr_enter_task_group();
-  static void          dr_return_from_task_group(dr_dag_node * task);
-  static dr_dag_node * dr_enter_create_task(dr_dag_node ** create);
-  static void          dr_return_from_create_task(dr_dag_node * task);
-  static dr_dag_node * dr_enter_wait_tasks();
-  static void          dr_return_from_wait_tasks(dr_dag_node * task);
-  static void          dr_end_task();
+  static void          dr_start_task_(dr_dag_node * parent, int worker);
+#define                dr_start_task(parent) dr_start_task_(parent, dr_get_worker()) 
+  static dr_dag_node * dr_enter_task_group_(int worker);
+#define                dr_enter_task_group() dr_enter_task_group_(dr_get_worker())
+  static void          dr_return_from_task_group_(dr_dag_node * task, int worker);
+#define                dr_return_from_task_group(task) dr_return_from_task_group_(task, dr_get_worker())
+  static dr_dag_node * dr_enter_create_task_(dr_dag_node ** create, int worker);
+#define                dr_enter_create_task(create) dr_enter_create_task_(create, dr_get_worker())
+  static void          dr_return_from_create_task_(dr_dag_node * task, int worker);
+#define                dr_return_from_create_task(task) dr_return_from_create_task_(task, dr_get_worker())
+  static dr_dag_node * dr_enter_wait_tasks_(int worker);
+#define                dr_enter_wait_tasks() dr_enter_wait_tasks_(dr_get_worker())
+  static void          dr_return_from_wait_tasks_(dr_dag_node * task, int worker);
+#define                dr_return_from_wait_tasks(task) dr_return_from_wait_tasks_(task, dr_get_worker())
+  static void          dr_end_task_(int worker);
+#define                dr_end_task() dr_end_task_(dr_get_worker())
 
   void dr_options_default(dr_options * opts);
-  void dr_start(dr_options * opts);
-  void dr_stop();
+  void dr_start_(dr_options * opts, int worker, int num_workers);
+#define dr_start(opts) dr_start_(opts, dr_get_worker(), dr_get_num_workers())
+  void dr_stop_(int worker);
+#define dr_stop() dr_stop_(dr_get_worker())
 
 #ifdef __cplusplus
 }

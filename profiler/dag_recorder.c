@@ -293,7 +293,7 @@ void dr_options_default(dr_options * opts) {
   getenv_str("DAG_RECORDER_DOT_FILE",      &opts->dot_file);
 }
 
-void dr_start(dr_options * opts) {
+void dr_start_(dr_options * opts, int worker, int num_workers) {
   dr_options opts_[1];
   if (!opts) {
     opts = opts_;
@@ -301,15 +301,15 @@ void dr_start(dr_options * opts) {
   }
   TS = (dr_thread_specific_state *)
     dr_malloc(sizeof(dr_thread_specific_state) 
-	      * dr_get_num_workers());
+	      * num_workers);
   GS.opts = *opts;
   GS.start_clock = dr_get_tsc();
-  dr_start_task(0);
-  GS.root = dr_get_cur_task();
+  dr_start_task_(0, worker);
+  GS.root = dr_get_cur_task_(worker);
 }
 
-void dr_stop() {
-  dr_end_task();
+void dr_stop_(int worker) {
+  dr_end_task_(worker);
   if (GS.opts.dump_on_stop) {
     dr_print_task_graph(GS.opts.log_file);
     dr_gen_dot_task_graph(GS.opts.dot_file);
