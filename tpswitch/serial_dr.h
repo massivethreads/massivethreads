@@ -31,7 +31,8 @@
 #define create_taskc_no_prof(callable) create_task_no_prof(callable())
 #define wait_tasks_no_prof
 
-#define mk_task_group_with_prof
+#define mk_task_group_with_prof \
+  dr_return_from_task_group(dr_enter_task_group())
 
 #define create_task_with_prof(statement) do { \
     dr_dag_node * __c__;				   \
