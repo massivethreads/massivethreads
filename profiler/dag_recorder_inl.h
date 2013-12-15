@@ -150,7 +150,7 @@ extern "C" {
     l->tail = l->head;
   }
 
-  dr_dag_node_list * 
+  static inline dr_dag_node_list * 
   dr_mk_dag_node_list() {
     dr_dag_node_list * l 
       = (dr_dag_node_list *)dr_malloc(sizeof(dr_dag_node_list));
