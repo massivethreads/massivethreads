@@ -5,7 +5,7 @@
 #include <dag_recorder.h>
 
 dr_global_state GS;
-dr_thread_specific_state * TS;
+dr_thread_specific_state * TS = 0;
 
 /* --------------------- free dag ------------------- */
 
@@ -31,7 +31,6 @@ void dr_free_dag_recursively(dr_dag_node * g) {
 static const char * 
 dr_node_kind_str(dr_dag_node_kind_t kind) {
   switch (kind) {
-  case dr_dag_node_kind_task_group:  return "task_group";
   case dr_dag_node_kind_create_task: return "create_task";
   case dr_dag_node_kind_wait_tasks:  return "wait_tasks";
   case dr_dag_node_kind_end_task:    return "end_task";
@@ -39,6 +38,7 @@ dr_node_kind_str(dr_dag_node_kind_t kind) {
   case dr_dag_node_kind_task:        return "task";
   default : dr_check(0);
   }
+  return (const char *)0;
 }
 
 static void 
@@ -95,11 +95,7 @@ dr_print_dag(dr_dag_node * g, dr_clock_t start_clock,
 	    dr_check(k == dr_dag_node_kind_wait_tasks);
 	  } else {
 	    dr_check(k == dr_dag_node_kind_create_task 
-		     || k == dr_dag_node_kind_section
-		     || k == dr_dag_node_kind_task_group);
-	    if (k == dr_dag_node_kind_task_group) {
-	      assert(ch == head && i == 0);
-	    }
+		     || k == dr_dag_node_kind_section);
 	  }
 	} else {
 	  dr_check(K == dr_dag_node_kind_task);
@@ -205,11 +201,7 @@ dr_gen_dot_dag(dr_dag_node * g, dr_clock_t start_clock, FILE * wp) {
 	    dr_check(k == dr_dag_node_kind_wait_tasks);
 	  } else {
 	    dr_check(k == dr_dag_node_kind_create_task 
-		     || k == dr_dag_node_kind_section
-		     || k == dr_dag_node_kind_task_group);
-	    if (k == dr_dag_node_kind_task_group) {
-	      dr_check(ch == head && i == 0);
-	    }	      
+		     || k == dr_dag_node_kind_section);
 	  }
 	} else {
 	  dr_check(K == dr_dag_node_kind_task);
@@ -236,24 +228,44 @@ dr_gen_dot_dag(dr_dag_node * g, dr_clock_t start_clock, FILE * wp) {
 
 void dr_print_task_graph(const char * filename) {
   if (GS.root) {
-    FILE * wp = (filename ? fopen(filename, "wb") : stdout);
-    if (!wp) { perror("fopen"); exit(1); }
-    dr_print_dag(GS.root, GS.start_clock, stdout, 0);
+    if (GS.opts.dbg_level>=1) {
+      if (filename) {
+	fprintf(stderr, "generating log file to \"%s\"\n", 
+		filename);
+      } else {
+	fprintf(stderr, "generating log file to stdout\n");
+      }
+    }
+    {
+      FILE * wp = (filename ? fopen(filename, "wb") : stdout);
+      if (!wp) { perror("fopen"); exit(1); }
+      dr_print_dag(GS.root, GS.start_clock, wp, 0);
+    }
   } else {
-    printf("no task graph to print!\n");
+    fprintf(stderr, "dr_print_task_graph: no task graph to print!\n");
   }
 }
 
 void dr_gen_dot_task_graph(const char * filename) {
   if (GS.root) {
-    FILE * wp = (filename ? fopen(filename, "wb") : stdout);
-    if (!wp) { perror("fopen"); exit(1); }
-    fprintf(wp, "digraph G {\n");
-    dr_gen_dot_dag(GS.root, GS.start_clock, wp);
-    fprintf(wp, "}\n");
-    fclose(wp);
+    if (GS.opts.dbg_level>=1) {
+      if (filename) {
+	fprintf(stderr, "generating dot file to \"%s\"\n", 
+		filename);
+      } else {
+	fprintf(stderr, "generating dot file to stdout\n");
+      }
+    }
+    {
+      FILE * wp = (filename ? fopen(filename, "wb") : stdout);
+      if (!wp) { perror("fopen"); exit(1); }
+      fprintf(wp, "digraph G {\n");
+      dr_gen_dot_dag(GS.root, GS.start_clock, wp);
+      fprintf(wp, "}\n");
+      fclose(wp);
+    }
   } else {
-    printf("no task graph to dot!\n");
+    fprintf(stderr, "dr_gen_dot_task_graph: no task graph to dot!\n");
   }
 }
 

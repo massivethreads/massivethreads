@@ -76,6 +76,10 @@
 #define create_taskc_and_wait(callable)			\
   do { call_taskc(callable); wait_tasks; } while(0)
 
+#define cilk_proc_start       int __dummy_cilk_proc_start__ __attribute__((unused)) = 0
+#define cilk_proc_return(x)   return x
+#define cilk_proc_void_return return
+
 /* OpenMP */
 #elif TO_OMP
 
@@ -100,6 +104,10 @@
 #define create_taskc_and_wait(C)		\
   do { create_taskc(C); wait_tasks; } while(0)
 #define wait_tasks pragma_omp_taskwait
+
+#define cilk_proc_start       int __dummy_cilk_proc_start__ __attribute__((unused)) = 0
+#define cilk_proc_return(x)   return x
+#define cilk_proc_void_return return
 
 /* TBB, MassiveThredhads, Qthreads, Nanos++ */
 #elif TO_TBB || TO_MTHREAD || TO_MTHREAD_NATIVE || TO_QTHREAD || TO_NANOX
@@ -135,9 +143,28 @@
 #endif
 #define wait_tasks __tg__.wait()
 
-/* Cilk (not implemented yet) */
+#define cilk_proc_start       int __dummy_cilk_proc_start__ __attribute__((unused)) = 0
+#define cilk_proc_return(x)   return x
+#define cilk_proc_void_return return
+
+/* Cilk */
 #elif TO_CILK
 #include <tpswitch/cilk_dr.h>
+
+#define mk_task_group int __mk_task_group__ __attribute__((unused)) = 0
+#define create_task0(function_call)       spawn_(function_call)
+#define create_task1(s0,function_call)    spawn_(function_call)
+#define create_task2(s0,s1,function_call) spawn_(function_call)
+#define create_taskA(function_call)       spawn_(function_call)
+#define create_taskc(callable)            spawn_(callable())
+#define create_task_and_wait(function_call)			\
+  do { create_taskA(function_call); wait_tasks; } while(0)
+#define create_taskc_and_wait(callable)			\
+  do { create_taskc(callable); wait_tasks; } while(0)
+#define call_task(function_call)          create_task_and_wait(function_call)
+#define call_taskc(callable)              create_taskc_and_wait(callable)   
+
+#define wait_tasks sync_
 
 #else
 #error "neither TO_SERIAL, TO_OMP, TO_TBB, TO_CILK, TO_CILKPLUS, TO_MTHREAD, TO_MTHREAD_NATIVE, TO_QTHREAD, nor TO_NANOX defined"
