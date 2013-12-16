@@ -466,15 +466,23 @@ namespace mtbb {
       }
     };
 
-  struct task_group_with_prof : task_group_no_prof {
+  struct task_group_with_prof : public task_group_no_prof {
+    int n_outstanding_children;
     task_group_with_prof() {
+#if 0
       dr_dag_node * t = dr_enter_task_group();
+#endif
       task_group_no_prof();
+#if 0
       dr_return_from_task_group(t);
+#endif
+      n_outstanding_children = 0;
     }
 
     template <typename Callable>
       void run(Callable c) {
+      if (n_outstanding_children == 0) dr_begin_section();
+      n_outstanding_children++;
       dr_dag_node * ci;
       dr_dag_node * t = dr_enter_create_task(&ci);
       task_group_no_prof::run(dr_wrap_callable<Callable>(c, ci));
@@ -484,6 +492,7 @@ namespace mtbb {
     void wait() {
       dr_dag_node * t = dr_enter_wait_tasks();
       task_group_no_prof::wait();
+      n_outstanding_children--;
       dr_return_from_wait_tasks(t);
     }
   };
