@@ -36,7 +36,7 @@ dr_node_kind_str(dr_dag_node_kind_t kind) {
   case dr_dag_node_kind_end_task:    return "end_task";
   case dr_dag_node_kind_section:     return "section";
   case dr_dag_node_kind_task:        return "task";
-  default : dr_check(0);
+  default : (void)dr_check(0);
   }
   return (const char *)0;
 }
@@ -45,8 +45,11 @@ static void
 dr_print_dag(dr_dag_node * g, dr_clock_t start_clock,
 	     FILE * wp, int indent) {
   int i;
+  int real_indent = indent;
+  if (real_indent > 10) real_indent = 10;
+
   if (g->kind < dr_dag_node_kind_section) {
-    for (i = 0; i < indent; i++) fprintf(wp, " ");
+    for (i = 0; i < real_indent; i++) fputc(' ', wp);
     fprintf(wp, 
 	    "%s[%llu-%llu,est=%llu,W=%llu/%llu,sz=%ld/%ld by %d on %d @%p]",
 	    dr_node_kind_str(g->kind),
@@ -59,16 +62,16 @@ dr_print_dag(dr_dag_node * g, dr_clock_t start_clock,
     if (g->kind == dr_dag_node_kind_create_task && g->child) {
       fprintf(wp, " {\n");
       dr_print_dag(g->child, start_clock, wp, indent + 1);
-      for (i = 0; i < indent; i++) fprintf(wp, " ");
+      for (i = 0; i < real_indent; i++) fputc(' ', wp);
       fprintf(wp, "}\n");
     } else {
       fprintf(wp, "\n");
     }
   } else {
     dr_dag_node_kind_t K = g->kind;
-    dr_check(K == dr_dag_node_kind_section
-	   || K == dr_dag_node_kind_task);
-    for (i = 0; i < indent; i++) fprintf(wp, " ");
+    (void)dr_check(K == dr_dag_node_kind_section
+		   || K == dr_dag_node_kind_task);
+    for (i = 0; i < real_indent; i++) fputc(' ', wp);
     if (GS.opts.collapse) {
       fprintf(wp, "%s(%llu-%llu,est=%llu,W=%llu/%llu,sz=%ld/%ld by %d on %d collapsed=%d @%p", 
 	      dr_node_kind_str(g->kind), 
@@ -82,7 +85,7 @@ dr_print_dag(dr_dag_node * g, dr_clock_t start_clock,
     } else {
       fprintf(wp, "%s(@%p", dr_node_kind_str(g->kind), g);
     }
-    dr_check(g->subgraphs);
+    (void)dr_check(g->subgraphs);
     dr_dag_node_chunk * head = g->subgraphs->head;
     dr_dag_node_chunk * tail = g->subgraphs->tail;
     dr_dag_node_chunk * ch;
@@ -92,23 +95,23 @@ dr_print_dag(dr_dag_node * g, dr_clock_t start_clock,
 	/* the entire if expression for checks */
 	if (K == dr_dag_node_kind_section) {
 	  if (g->done && ch == tail && i == ch->n - 1) {
-	    dr_check(k == dr_dag_node_kind_wait_tasks);
+	    (void)dr_check(k == dr_dag_node_kind_wait_tasks);
 	  } else {
-	    dr_check(k == dr_dag_node_kind_create_task 
-		     || k == dr_dag_node_kind_section);
+	    (void)dr_check(k == dr_dag_node_kind_create_task 
+			   || k == dr_dag_node_kind_section);
 	  }
 	} else {
-	  dr_check(K == dr_dag_node_kind_task);
+	  (void)dr_check(K == dr_dag_node_kind_task);
 	  if (g->done && ch == tail && i == ch->n - 1) {
-	    dr_check(k == dr_dag_node_kind_end_task);
+	    (void)dr_check(k == dr_dag_node_kind_end_task);
 	  } else {
-	    dr_check(k == dr_dag_node_kind_section);
+	    (void)dr_check(k == dr_dag_node_kind_section);
 	  }
 	}
 	dr_print_dag(&ch->a[i], start_clock, wp, indent + 1);
       }
     }
-    for (i = 0; i < indent; i++) fprintf(wp, " ");
+    for (i = 0; i < real_indent; i++) fputc(' ', wp);
     fprintf(wp, ")\n");
   }
 }
@@ -120,8 +123,8 @@ dr_first_interval(dr_dag_node * t) {
   dr_dag_node * s = t;
   while (s->kind >= dr_dag_node_kind_section) {
     if (dr_dag_node_list_empty(s->subgraphs)) {
-      dr_check(GS.opts.collapse);
-      dr_check(s->collapsed);
+      (void)dr_check(GS.opts.collapse);
+      (void)dr_check(s->collapsed);
       break;
     }
     s = &s->subgraphs->head->a[0];
@@ -134,8 +137,8 @@ dr_last_interval(dr_dag_node * t) {
   dr_dag_node * s = t;
   while (s->kind >= dr_dag_node_kind_section) {
     if (dr_dag_node_list_empty(s->subgraphs)) {
-      dr_check(GS.opts.collapse);
-      dr_check(s->collapsed);
+      (void)dr_check(GS.opts.collapse);
+      (void)dr_check(s->collapsed);
       break;
     }
     dr_dag_node_chunk * tail = s->subgraphs->tail;
@@ -154,7 +157,7 @@ dr_gen_dot_edge_i_i(dr_dag_node * A, dr_dag_node * B, FILE * wp) {
    last node in S to B. */
 static void 
 dr_gen_dot_edges_s_i(dr_dag_node * A, dr_dag_node * B, FILE * wp) {
-  dr_check(A->kind >= dr_dag_node_kind_section);
+  (void)dr_check(A->kind >= dr_dag_node_kind_section);
   dr_dag_node_chunk * ch;
   for (ch = A->subgraphs->head; ch; ch = ch->next) {
     int i;
@@ -198,17 +201,17 @@ dr_gen_dot_dag(dr_dag_node * g, dr_clock_t start_clock, FILE * wp) {
 	/* the entire if expression is just for sanity check */
 	if (K == dr_dag_node_kind_section) {
 	  if (g->done && ch == tail && i == ch->n - 1) {
-	    dr_check(k == dr_dag_node_kind_wait_tasks);
+	    (void)dr_check(k == dr_dag_node_kind_wait_tasks);
 	  } else {
-	    dr_check(k == dr_dag_node_kind_create_task 
-		     || k == dr_dag_node_kind_section);
+	    (void)dr_check(k == dr_dag_node_kind_create_task 
+			   || k == dr_dag_node_kind_section);
 	  }
 	} else {
-	  dr_check(K == dr_dag_node_kind_task);
+	  (void)dr_check(K == dr_dag_node_kind_task);
 	  if (g->done && ch == tail && i == ch->n - 1) {
-	    dr_check(k == dr_dag_node_kind_end_task);
+	    (void)dr_check(k == dr_dag_node_kind_end_task);
 	  } else {
-	    dr_check(k == dr_dag_node_kind_section);
+	    (void)dr_check(k == dr_dag_node_kind_section);
 	  }
 	}
 	/* here is the real body */
@@ -269,7 +272,7 @@ void dr_gen_dot_task_graph(const char * filename) {
   }
 }
 
-int getenv_bool(const char * v, int * y) {
+int getenv_bool(const char * v, char * y) {
   char * x = getenv(v);
   if (!x) return 0;
   if (strcasecmp(x, "true") == 0
@@ -288,6 +291,13 @@ int getenv_int(const char * v, int * y) {
   return 1;
 } 
 
+int getenv_byte(const char * v, char * y) {
+  char * x = getenv(v);
+  if (!x) return 0;
+  *y = atoi(x);
+  return 1;
+} 
+
 int getenv_str(const char * v, const char ** y) {
   char * x = getenv(v);
   if (!x) return 0;
@@ -298,7 +308,7 @@ int getenv_str(const char * v, const char ** y) {
 void dr_options_default(dr_options * opts) {
   * opts = dr_options_default_values;
 
-  getenv_int("DAG_RECORDER_DBG_LEVEL",     &opts->dbg_level);
+  getenv_byte("DAG_RECORDER_DBG_LEVEL",    &opts->dbg_level);
   getenv_bool("DAG_RECORDER_COLLAPSE",     &opts->collapse);
   getenv_bool("DAG_RECORDER_DUMP_ON_STOP", &opts->dump_on_stop);
   getenv_str("DAG_RECORDER_LOG_FILE",      &opts->log_file);

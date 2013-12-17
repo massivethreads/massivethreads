@@ -18,11 +18,13 @@ extern "C" {
    section ::= task_group (section|create)* wait
  */
   typedef struct dr_options {
-    int dbg_level;		/* level of checks during run */
-    int collapse;		/* collapse nodes if set */
-    int dump_on_stop;		/* when set, dr_stop dumps the log */
     const char * log_file;	/* filename of the log */
     const char * dot_file;	/* filename of the log */
+    char dbg_level;		/* level of debugging features */
+    char verbose_level;		/* level of verbosity */
+    char chk_level;		/* level of checks during run */
+    char collapse;		/* collapse nodes if set */
+    char dump_on_stop;		/* when set, dr_stop dumps the log */
   } dr_options;
 
   /* default values. written here for documentation purpose.
@@ -34,12 +36,15 @@ extern "C" {
      you run the program. e.g.,
      DAG_RECORDER_DBG_LEVEL=2 ./a.out
   */
-  static dr_options dr_options_default_values __attribute__ ((unused)) = { 
-    0,				/* dbg_level */
-    1,				/* collapse */
-    0,				/* dump_on_stop */
+  static dr_options 
+  dr_options_default_values __attribute__ ((unused)) = { 
     (const char *)0,		/* log_file */
     (const char *)0,		/* dot_file */
+    0,				/* dbg_level */
+    1,				/* verbose_level */
+    1,				/* chk_level */
+    1,				/* collapse */
+    0,				/* dump_on_stop */
   };
 
   typedef struct dr_dag_node dr_dag_node;

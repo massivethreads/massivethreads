@@ -14,6 +14,18 @@
 
  */
 
+#if !defined(DAG_RECORDER_VERBOSE_LEVEL)
+#define DAG_RECORDER_VERBOSE_LEVEL GS.opts.verbose_level
+#endif
+
+#if !defined(DAG_RECORDER_DBG_LEVEL)
+#define DAG_RECORDER_DBG_LEVEL GS.opts.dbg_level
+#endif
+
+#if !defined(DAG_RECORDER_CHK_LEVEL)
+#define DAG_RECORDER_CHK_LEVEL GS.opts.chk_level
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -87,7 +99,8 @@ extern "C" {
   } dr_global_state;
 
   static int dr_check_(int condition, const char * condition_s, 
-		       const char * __file__, int __line__, const char * func) {
+		       const char * __file__, int __line__, 
+		       const char * func) {
     if (!condition) {
       fprintf(stderr, "%s:%d:%s: dag recorder check failed : %s\n", 
 	      __file__, __line__, func, condition_s); 
@@ -96,7 +109,7 @@ extern "C" {
     return 1;
   }
 
-#define dr_check(x) dr_check_(((x) ? 1 : 0), #x, __FILE__, __LINE__, __func__)
+#define dr_check(x) (!DAG_RECORDER_CHK_LEVEL || dr_check_(((x)?1:0), #x, __FILE__, __LINE__, __func__))
 
   extern dr_thread_specific_state * TS;
   extern dr_global_state GS;
@@ -113,10 +126,10 @@ extern "C" {
   static void
   dr_free(void * a, size_t sz) {
     if (a) {
-      if (GS.opts.dbg_level>=1) memset(a, 222, sz);
+      if (DAG_RECORDER_DBG_LEVEL>=1) memset(a, 222, sz);
       free(a);
     } else {
-      dr_check(sz == 0);
+      (void)dr_check(sz == 0);
     }
   }
 
@@ -130,20 +143,20 @@ extern "C" {
 
   static inline dr_dag_node * 
   dr_dag_node_chunk_last(dr_dag_node_chunk * ch) {
-    dr_check(ch->n > 0);
+    (void)dr_check(ch->n > 0);
     return &ch->a[ch->n - 1];
   }
 
   static inline dr_dag_node * 
   dr_dag_node_chunk_first(dr_dag_node_chunk * ch) {
-    dr_check(ch->n > 0);
+    (void)dr_check(ch->n > 0);
     return &ch->a[0];
   }
 
   static inline dr_dag_node * 
   dr_dag_node_chunk_push_back(dr_dag_node_chunk * ch) {
     int n = ch->n;
-    dr_check(n < dr_dag_node_chunk_sz);
+    (void)dr_check(n < dr_dag_node_chunk_sz);
     ch->n = n + 1;
     return &ch->a[n];
   }
@@ -198,7 +211,7 @@ extern "C" {
     if (tail->n == dr_dag_node_chunk_sz) {
       tail = dr_dag_node_list_add_chunk(l);
     }
-    dr_check(tail->n < dr_dag_node_chunk_sz);
+    (void)dr_check(tail->n < dr_dag_node_chunk_sz);
     return dr_dag_node_chunk_push_back(tail);
   }
 
@@ -264,7 +277,7 @@ extern "C" {
   static inline void 
   dr_dag_node_init_section_or_task(dr_dag_node * n,
 				   dr_dag_node_kind_t kind) {
-    dr_check(kind >= dr_dag_node_kind_section);
+    (void)dr_check(kind >= dr_dag_node_kind_section);
     n->kind = kind;
     n->done = 0;
     n->collapsed = 0;
@@ -297,7 +310,7 @@ extern "C" {
   dr_end_interval_(dr_dag_node * dn, int worker, dr_clock_t start, 
 		   dr_clock_t est, dr_clock_t end, 
 		   dr_dag_node_kind_t kind) {
-    dr_check(kind < dr_dag_node_kind_section);
+    (void)dr_check(kind < dr_dag_node_kind_section);
     dn->kind = kind;
     dn->start = start;
     dn->est = est;
@@ -332,7 +345,7 @@ extern "C" {
   static inline dr_dag_node * 
   dr_task_active_node(dr_dag_node * t) {
     dr_dag_node * s = t;
-    dr_check(t->kind == dr_dag_node_kind_task);
+    (void)dr_check(t->kind == dr_dag_node_kind_task);
     while (1) {
       if (dr_dag_node_list_empty(s->subgraphs)) {
 	/* no subsection in s 
@@ -348,7 +361,7 @@ extern "C" {
 	if (c->kind < dr_dag_node_kind_section) return s;
 	/* something is broken if we have a task node 
 	   as a child! */
-	dr_check(c->kind == dr_dag_node_kind_section);
+	(void)dr_check(c->kind == dr_dag_node_kind_section);
 	/* the rightmost child is a section that has finished 
 	   -> no active sections under s */
 	if (c->done) return s;
@@ -358,7 +371,7 @@ extern "C" {
       }
     }
     /* never reach. suppress cilkc warning */
-    dr_check(0);
+    (void)dr_check(0);
     return 0;
   }
 
@@ -367,8 +380,8 @@ extern "C" {
     if (dr_check(t->kind == dr_dag_node_kind_task)) {
       dr_dag_node * s = dr_task_active_node(t);
       dr_dag_node * i = dr_dag_node_list_last(s->subgraphs);
-      dr_check(i->kind == dr_dag_node_kind_section
-	       || i->kind == dr_dag_node_kind_create_task);
+      (void)dr_check(i->kind == dr_dag_node_kind_section
+		     || i->kind == dr_dag_node_kind_create_task);
       return i;
     } else {
       return 0;
@@ -381,7 +394,7 @@ extern "C" {
     if (s->kind == dr_dag_node_kind_task) {
       s = dr_push_back_section(s);
     }
-    dr_check(s->kind == dr_dag_node_kind_section);
+    (void)dr_check(s->kind == dr_dag_node_kind_section);
     return s;
   }
 
@@ -415,14 +428,14 @@ extern "C" {
     if (TS) {
       /* make a task, section, and interval */
       dr_dag_node * nt = dr_mk_dag_node_task();
-      if (GS.opts.dbg_level>=2) {
+      if (DAG_RECORDER_VERBOSE_LEVEL>=2) {
 	printf("dr_start_task(parent=%p) by %d new task=%p\n", 
 	       p, worker, nt);
       }
       /* register this task as the child of p */
       if (p) {
-	dr_check(p->kind == dr_dag_node_kind_create_task);
-	dr_check(p->child == 0);
+	(void)dr_check(p->kind == dr_dag_node_kind_create_task);
+	(void)dr_check(p->child == 0);
 	p->child = nt;
 	nt->est = p->est + p->t_inf;
       } else {
@@ -444,9 +457,11 @@ extern "C" {
 
   static void
   dr_begin_section_(int worker) {
-    dr_dag_node * t = dr_get_cur_task_(worker);
-    dr_dag_node * s = dr_task_active_node(t);
-    dr_push_back_section(s);
+    if (TS) {
+      dr_dag_node * t = dr_get_cur_task_(worker);
+      dr_dag_node * s = dr_task_active_node(t);
+      dr_push_back_section(s);
+    }
   }
 
 
@@ -468,7 +483,7 @@ extern "C" {
       ct->kind = dr_dag_node_kind_create_task;
       ct->child = 0;
       // dr_dag_node * ct = dr_task_add_create(t);
-      if (GS.opts.dbg_level>=2) {
+      if (DAG_RECORDER_VERBOSE_LEVEL>=2) {
 	printf("dr_enter_create_task() by %d task=%p, new interval=%p\n", 
 	       worker, t, ct);
       }
@@ -497,11 +512,11 @@ extern "C" {
   dr_return_from_create_task_(dr_dag_node * t, int worker) {
     if (TS) {
       dr_dag_node * ct = dr_task_last_section_or_create(t);
-      if (GS.opts.dbg_level>=2) {
+      if (DAG_RECORDER_VERBOSE_LEVEL>=2) {
 	printf("dr_return_from_create_task(task=%p) by %d interval=%p\n", 
 	       t, worker, ct);
       }
-      dr_check(ct->kind == dr_dag_node_kind_create_task);
+      (void)dr_check(ct->kind == dr_dag_node_kind_create_task);
       dr_set_cur_task_(worker, t);
       t->est = ct->est + ct->t_inf;
       t->start = dr_get_tsc();
@@ -518,12 +533,12 @@ extern "C" {
       dr_dag_node * t = dr_get_cur_task_(worker);
       dr_dag_node * s = dr_task_ensure_session(t);
       dr_dag_node * i = dr_dag_node_list_push_back(s->subgraphs);
-      if (GS.opts.dbg_level>=2) {
+      if (DAG_RECORDER_VERBOSE_LEVEL>=2) {
 	printf("dr_enter_wait_tasks() by %d task=%p, "
 	       "section=%p, new interval=%p\n", 
 	       worker, t, s, i);
       }
-      dr_check(s->done == 0);
+      (void)dr_check(s->done == 0);
       s->done = 1;
       dr_end_interval_(i, worker, t->start, t->est, end, 
 		       dr_dag_node_kind_wait_tasks);
@@ -569,7 +584,7 @@ extern "C" {
 	    if (s->cpu    != x->cpu)    s->cpu    = -1;
 	    if (x->kind == dr_dag_node_kind_create_task) {
 	      dr_dag_node * y = x->child;
-	      dr_check(y);
+	      (void)dr_check(y);
 	      if (y->end > s->end) s->end = y->end;
 	      s->t_1     += y->t_1;
 	      if (s->t_inf + y->t_inf > t_inf) 
@@ -599,15 +614,15 @@ extern "C" {
 	    if (x->kind == dr_dag_node_kind_create_task) {
 	      /* children must have been collapsed */
 	      dr_dag_node * c = x->child;
-	      dr_check(c);
-	      dr_check(c->kind == dr_dag_node_kind_task);
-	      dr_check(c->subgraphs);
-	      dr_check(dr_dag_node_list_empty(c->subgraphs));
+	      (void)dr_check(c);
+	      (void)dr_check(c->kind == dr_dag_node_kind_task);
+	      (void)dr_check(c->subgraphs);
+	      (void)dr_check(dr_dag_node_list_empty(c->subgraphs));
 	      dr_free(c->subgraphs, sizeof(dr_dag_node_list));
 	      dr_free(c, sizeof(dr_dag_node));
 	    } else if (x->kind == dr_dag_node_kind_section) {
-	      dr_check(x->subgraphs);
-	      dr_check(dr_dag_node_list_empty(x->subgraphs));
+	      (void)dr_check(x->subgraphs);
+	      (void)dr_check(dr_dag_node_list_empty(x->subgraphs));
 	      dr_free(x->subgraphs, sizeof(dr_dag_node_list));
 	    }
 	  }
@@ -630,8 +645,8 @@ extern "C" {
       dr_dag_node * s = dr_task_last_section_or_create(t);
       if (dr_check(s->kind == dr_dag_node_kind_section)) {
 	dr_dag_node * p = dr_dag_node_list_last(s->subgraphs);
-	dr_check(p->kind == dr_dag_node_kind_wait_tasks);
-	if (GS.opts.dbg_level>=2) {
+	(void)dr_check(p->kind == dr_dag_node_kind_wait_tasks);
+	if (DAG_RECORDER_VERBOSE_LEVEL>=2) {
 	  printf("dr_return_from_wait_tasks(task=%p) by %d section=%p, pred=%p\n", 
 		 t, worker, s, p);
 	}
@@ -644,7 +659,7 @@ extern "C" {
 	    int i;
 	    for (i = 0; i < ch->n; i++) {
 	      dr_dag_node * sc = &ch->a[i];
-	      dr_check(sc->kind < dr_dag_node_kind_task); 
+	      (void)dr_check(sc->kind < dr_dag_node_kind_task); 
 	      if (sc->kind == dr_dag_node_kind_create_task) {
 		dr_dag_node * ct = sc->child;
 		if (dr_check(ct)) {
@@ -670,14 +685,14 @@ extern "C" {
       dr_dag_node * t = dr_get_cur_task_(worker);
       dr_dag_node * s = dr_task_active_node(t);
       dr_dag_node * i = dr_dag_node_list_push_back(s->subgraphs);
-      if (GS.opts.dbg_level>=2) {
+      if (DAG_RECORDER_VERBOSE_LEVEL>=2) {
 	printf("dr_end_task() by %d task=%p, section=%p, "
 	       "new interval=%p\n", 
 	       worker, t, s, i);
       }
       dr_end_interval_(i, worker, t->start, t->est, end, 
 		       dr_dag_node_kind_end_task);
-      dr_check(t->done == 0);
+      (void)dr_check(t->done == 0);
       t->done = 1;
       if (GS.opts.collapse) dr_collapse_section_or_task(t);
     }
