@@ -7,13 +7,13 @@
 #include <stdio.h>
 
 extern "C" {
+  int sched_getcpu();
 #if TO_SERIAL
   int dr_get_worker() { return 0; }
   int dr_get_cpu() { return 0; }
   int dr_get_num_workers() { return 1; }
 #else  /* with MassiveThreads */
 #include <myth.h>
-  int sched_getcpu();
   int dr_get_worker() { return myth_get_worker_num(); }
   int dr_get_cpu() { return sched_getcpu(); }
   int dr_get_num_workers() { return myth_get_num_workers(); }
@@ -36,8 +36,8 @@ long bin(int n) {
   }
 }
 
-int main() {
-  int n = 10;
+int main(int argc, char ** argv) {
+  int n = (argc > 1 ? atoi(argv[1]) : 10);
   dr_start(0);
   long x = bin(n);
   dr_stop();
