@@ -19,21 +19,30 @@ static int bin(int n) {
   if (n == 0) {
     return 1;
   } else {
-    dr_begin_section();
     /* sandwich create_task */
-    dr_dag_node * c;
-    dr_dag_node * t = dr_enter_create_task(&c);
-    int x;
+    dr_dag_node * c1;
+    dr_dag_node * t1 = dr_enter_create_task(&c1);
+    int x, y;
     { 
       /* inside task. sandwich entire task */
-      dr_start_task(c);
+      dr_start_task(c1);
       x = bin(n - 1);
       dr_end_task();
     }
-    dr_return_from_create_task(t);
-    int y = bin(n - 1);
+    dr_return_from_create_task(t1);
+
+    dr_dag_node * c2;
+    dr_dag_node * t2 = dr_enter_create_task(&c2);
+    { 
+      /* inside task. sandwich entire task */
+      dr_start_task(c2);
+      y = bin(n - 1);
+      dr_end_task();
+    }
+    dr_return_from_create_task(t2);
+
     /* sandwich wait_tasks */
-    t = dr_enter_wait_tasks();
+    dr_dag_node * t = dr_enter_wait_tasks();
     dr_return_from_wait_tasks(t);
     return x + y;
   }
