@@ -46,6 +46,7 @@ extern "C" {
   /* a node of the dag */
   struct dr_dag_node {
     dr_dag_node_kind_t kind;
+    dr_dag_node_kind_t last_node_kind;
     dr_clock_t start; 
     dr_clock_t est;
     dr_clock_t end; 
@@ -312,6 +313,7 @@ extern "C" {
 		   dr_dag_node_kind_t kind) {
     (void)dr_check(kind < dr_dag_node_kind_section);
     dn->kind = kind;
+    dn->last_node_kind = kind;
     dn->start = start;
     dn->est = est;
     dn->n_nodes = 1;
@@ -551,7 +553,7 @@ extern "C" {
   /* look at subgraphs of s.
      if it is collapsable, collapse it */
   static void 
-  dr_collapse_section_or_task(dr_dag_node * s) {
+  dr_summarize_section_or_task(dr_dag_node * s) {
     if (dr_check(s->kind >= dr_dag_node_kind_section)
 	&& dr_check(!dr_dag_node_list_empty(s->subgraphs))) {
       dr_dag_node * first = dr_dag_node_list_first(s->subgraphs);
@@ -560,6 +562,7 @@ extern "C" {
       s->start   = first->start;
       s->est     = first->est;
       s->end     = last->end;
+      s->last_node_kind = last->last_node_kind;
       s->t_1     = 0;
       s->t_inf   = 0;
       s->n_nodes = 0;
@@ -585,7 +588,10 @@ extern "C" {
 	    if (x->kind == dr_dag_node_kind_create_task) {
 	      dr_dag_node * y = x->child;
 	      (void)dr_check(y);
-	      if (y->end > s->end) s->end = y->end;
+	      if (y->end > s->end) {
+		s->end = y->end;
+		s->last_node_kind = y->last_node_kind;
+	      }
 	      s->t_1     += y->t_1;
 	      if (s->t_inf + y->t_inf > t_inf) 
 		t_inf = s->t_inf + y->t_inf;
@@ -617,17 +623,21 @@ extern "C" {
 	      (void)dr_check(c);
 	      (void)dr_check(c->kind == dr_dag_node_kind_task);
 	      (void)dr_check(c->subgraphs);
-	      (void)dr_check(dr_dag_node_list_empty(c->subgraphs));
-	      dr_free(c->subgraphs, sizeof(dr_dag_node_list));
-	      dr_free(c, sizeof(dr_dag_node));
+	      if (GS.opts.collapse) {
+		(void)dr_check(dr_dag_node_list_empty(c->subgraphs));
+		dr_free(c->subgraphs, sizeof(dr_dag_node_list));
+		dr_free(c, sizeof(dr_dag_node));
+	      }
 	    } else if (x->kind == dr_dag_node_kind_section) {
 	      (void)dr_check(x->subgraphs);
-	      (void)dr_check(dr_dag_node_list_empty(x->subgraphs));
-	      dr_free(x->subgraphs, sizeof(dr_dag_node_list));
+	      if (GS.opts.collapse) {
+		(void)dr_check(dr_dag_node_list_empty(x->subgraphs));
+		dr_free(x->subgraphs, sizeof(dr_dag_node_list));
+	      }
 	    }
 	  }
 	}
-	dr_dag_node_list_clear(s->subgraphs);
+	if (GS.opts.collapse) dr_dag_node_list_clear(s->subgraphs);
       }
     }
   }
@@ -669,7 +679,7 @@ extern "C" {
 	      }
 	    }
 	  }
-	  if (GS.opts.collapse) dr_collapse_section_or_task(s);
+	  dr_summarize_section_or_task(s);
 	  dr_set_cur_task_(worker, t);
 	  t->est = est;
 	  t->start = dr_get_tsc();
@@ -694,7 +704,7 @@ extern "C" {
 		       dr_dag_node_kind_end_task);
       (void)dr_check(t->done == 0);
       t->done = 1;
-      if (GS.opts.collapse) dr_collapse_section_or_task(t);
+      dr_summarize_section_or_task(t);
     }
   }
 
