@@ -41,9 +41,176 @@ dr_node_kind_str(dr_dag_node_kind_t kind) {
   return (const char *)0;
 }
 
+/* print or dump dag, without recursion */
+
+typedef struct dr_dag_node_stack_node {
+  struct dr_dag_node_stack_node * next;
+  dr_dag_node * node;
+  const char * str;
+} dr_dag_node_stack_node;
+
+typedef struct dr_dag_node_stack {
+  dr_dag_node_stack_node * free;
+  dr_dag_node_stack_node * top;
+} dr_dag_node_stack;
+
+static void 
+dr_dag_node_stack_init(dr_dag_node_stack * s) {
+  s->free = 0;
+  s->top = 0;
+}
+
+static dr_dag_node_stack_node * 
+ensure_free(dr_dag_node_stack * s) {
+  dr_dag_node_stack_node * f = s->free;
+  if (f == 0) {
+    int n = 100;
+    f = (dr_dag_node_stack_node *)
+      dr_malloc(sizeof(dr_dag_node_stack_node) * n);
+    int i;
+    for (i = 0; i < n - 1; i++) {
+      f[i].next = &f[i + 1];
+    }
+    f[n - 1].next = 0;
+    s->free = f;
+  }
+  return f;
+}
+
+static void 
+dr_dag_node_stack_push_node(dr_dag_node_stack * s, 
+			    dr_dag_node * node) {
+  dr_dag_node_stack_node * f = ensure_free(s);
+  f->node = node;
+  f->str = (const char *)0;
+  s->free = f->next;
+  f->next = s->top;
+  s->top = f;
+}
+
+static void 
+dr_dag_node_stack_push_string(dr_dag_node_stack * s, 
+			      const char * str) {
+  dr_dag_node_stack_node * f = ensure_free(s);
+  f->node = (dr_dag_node *)0;
+  f->str = str;
+  s->free = f->next;
+  f->next = s->top;
+  s->top = f;
+}
+
+static void
+dr_dag_node_stack_pop_node_or_string(dr_dag_node_stack * s,
+				     dr_dag_node ** xp,
+				     const char ** strp) {
+  dr_dag_node_stack_node * top = s->top;
+  dr_check(top);
+  s->top = top->next;
+  top->next = s->free;
+  s->free = top;
+  assert(top->node || top->str);
+  assert(!top->node || !top->str);
+  *xp = top->node;
+  *strp = top->str;
+}
+
+static void
+dr_dag_node_stack_push_children(dr_dag_node_stack * s, 
+				dr_dag_node * g) {
+  (void)dr_check(g->subgraphs);
+  dr_dag_node_chunk * head = g->subgraphs->head;
+  dr_dag_node_chunk * tail = g->subgraphs->tail;
+  dr_dag_node_chunk * ch;
+  int n_children = 0;
+  for (ch = head; ch; ch = ch->next) {
+    n_children += ch->n;
+  }
+  dr_dag_node ** children
+    = (dr_dag_node **)dr_malloc(sizeof(dr_dag_node *) * n_children);
+  int idx = 0;
+  dr_dag_node_kind_t K = g->kind;
+  for (ch = head; ch; ch = ch->next) {
+    int i;
+    for (i = 0; i < ch->n; i++) {
+      dr_dag_node_kind_t k = ch->a[i].kind;
+      /* the entire if expression for checks */
+      if (DAG_RECORDER_CHK_LEVEL) {
+	if (K == dr_dag_node_kind_section) {
+	  if (g->done && ch == tail && i == ch->n - 1) {
+	    (void)dr_check(k == dr_dag_node_kind_wait_tasks);
+	  } else {
+	    (void)dr_check(k == dr_dag_node_kind_create_task 
+			   || k == dr_dag_node_kind_section);
+	  }
+	} else {
+	  (void)dr_check(K == dr_dag_node_kind_task);
+	  if (g->done && ch == tail && i == ch->n - 1) {
+	    (void)dr_check(k == dr_dag_node_kind_end_task);
+	  } else {
+	    (void)dr_check(k == dr_dag_node_kind_section);
+	  }
+	}
+      }
+      children[idx++] = &ch->a[i];
+    }
+  }
+  for (idx = n_children - 1; idx >= 0; idx--) {
+    dr_dag_node_stack_push_node(s, children[idx]);
+  }
+  dr_free(children, sizeof(dr_dag_node *) * n_children);
+}
+
+static void 
+dr_print_dag(dr_dag_node * g, dr_clock_t start_clock, FILE * wp);
+
+static void 
+dr_print_dag_1(dr_dag_node * g, dr_clock_t start_clock, FILE * wp) {
+  fprintf(wp, 
+	  "%s %s %llu - %llu, est=%llu, T1/Tinf=%llu/%llu, nodes/edges=%ld/%ld by %d on %d @%p",
+	  dr_node_kind_str(g->kind),
+	  dr_node_kind_str(g->last_node_kind),
+	  g->start - start_clock, 
+	  g->end - start_clock, 
+	  g->est, 
+	  g->t_1, g->t_inf,
+	  g->n_nodes, g->n_edges, g->worker, g->cpu,
+	  g);
+}
+
 static void 
 dr_print_dag(dr_dag_node * g, dr_clock_t start_clock,
-	     FILE * wp, int indent) {
+	     FILE * wp) {
+  dr_dag_node_stack s[1];
+  dr_dag_node_stack_init(s);
+  dr_dag_node_stack_push_node(s, g);
+  while (s->top) {
+    dr_dag_node * x = 0;
+    const char * str = 0;
+    dr_dag_node_stack_pop_node_or_string(s, &x, &str);
+    if (str) {
+      fprintf(wp, "%s", str);
+    } else {
+      dr_print_dag_1(x, start_clock, wp);
+      if (x->kind < dr_dag_node_kind_section) {
+	if (x->kind == dr_dag_node_kind_create_task && x->child) {
+	  fprintf(wp, " {\n");
+	  dr_dag_node_stack_push_string(s, "}\n");
+	  dr_dag_node_stack_push_node(s, x->child);
+	} else {
+	  fprintf(wp, "\n");
+	}
+      } else {
+	fprintf(wp, " (\n");
+	dr_dag_node_stack_push_string(s, ")\n");
+	dr_dag_node_stack_push_children(s, x);
+      }
+    }
+  }
+}
+
+static void 
+dr_print_dag_rec(dr_dag_node * g, dr_clock_t start_clock,
+		 FILE * wp, int indent) {
   int i;
   int real_indent = indent;
   if (real_indent > 10) real_indent = 10;
@@ -61,7 +228,7 @@ dr_print_dag(dr_dag_node * g, dr_clock_t start_clock,
 	    g);
     if (g->kind == dr_dag_node_kind_create_task && g->child) {
       fprintf(wp, " {\n");
-      dr_print_dag(g->child, start_clock, wp, indent + 1);
+      dr_print_dag_rec(g->child, start_clock, wp, indent + 1);
       for (i = 0; i < real_indent; i++) fputc(' ', wp);
       fprintf(wp, "}\n");
     } else {
@@ -108,7 +275,7 @@ dr_print_dag(dr_dag_node * g, dr_clock_t start_clock,
 	    (void)dr_check(k == dr_dag_node_kind_section);
 	  }
 	}
-	dr_print_dag(&ch->a[i], start_clock, wp, indent + 1);
+	dr_print_dag_rec(&ch->a[i], start_clock, wp, indent + 1);
       }
     }
     for (i = 0; i < real_indent; i++) fputc(' ', wp);
@@ -242,7 +409,7 @@ void dr_print_task_graph(const char * filename) {
     {
       FILE * wp = (filename ? fopen(filename, "wb") : stdout);
       if (!wp) { perror("fopen"); exit(1); }
-      dr_print_dag(GS.root, GS.start_clock, wp, 0);
+      dr_print_dag(GS.root, GS.start_clock, wp);
     }
   } else {
     fprintf(stderr, "dr_print_task_graph: no task graph to print!\n");
@@ -316,25 +483,28 @@ void dr_options_default(dr_options * opts) {
 }
 
 void dr_start_(dr_options * opts, int worker, int num_workers) {
-  dr_options opts_[1];
-  if (!opts) {
-    opts = opts_;
-    dr_options_default(opts);
+  const char * dag_recorder = getenv("DAG_RECORDER");
+  if (!dag_recorder || atoi(dag_recorder)) {
+    dr_options opts_[1];
+    if (!opts) {
+      opts = opts_;
+      dr_options_default(opts);
+    }
+    TS = (dr_thread_specific_state *)
+      dr_malloc(sizeof(dr_thread_specific_state) 
+		* num_workers);
+    GS.opts = *opts;
+    GS.start_clock = dr_get_tsc();
+    dr_start_task_(0, worker);
+    GS.root = dr_get_cur_task_(worker);
   }
-  TS = (dr_thread_specific_state *)
-    dr_malloc(sizeof(dr_thread_specific_state) 
-	      * num_workers);
-  GS.opts = *opts;
-  GS.start_clock = dr_get_tsc();
-  dr_start_task_(0, worker);
-  GS.root = dr_get_cur_task_(worker);
 }
 
 void dr_stop_(int worker) {
   dr_end_task_(worker);
   if (GS.opts.dump_on_stop) {
     dr_print_task_graph(GS.opts.log_file);
-    dr_gen_dot_task_graph(GS.opts.dot_file);
+    //dr_gen_dot_task_graph(GS.opts.dot_file);
   }
 }
 
