@@ -4,13 +4,11 @@
 
 #if STANDALONE_TEST
 int dr_get_worker() { return 0; }
-int dr_get_cpu() { return 0; }
-int dr_get_num_workers() { return 1; }
+int dr_get_max_workers() { return 1; }
 #else  /* with MassiveThreads */
 #include <myth.h>
 int dr_get_worker() { return myth_get_worker_num(); }
-int dr_get_cpu() { return sched_getcpu(); }
-int dr_get_num_workers() { return myth_get_num_workers(); }
+int dr_get_max_workers() { return myth_get_num_workers(); }
 #endif
 
 #include <dag_recorder.h>

@@ -19,7 +19,9 @@ extern "C" {
  */
   typedef struct dr_options {
     const char * log_file;	/* filename of the log */
-    const char * dot_file;	/* filename of the log */
+    const char * dot_file;	/* filename of the dot */
+    const char * gpl_file;	/* filename of the gpl */
+    int gpl_sz;			/* size of gpl file */
     char dbg_level;		/* level of debugging features */
     char verbose_level;		/* level of verbosity */
     char chk_level;		/* level of checks during run */
@@ -40,6 +42,8 @@ extern "C" {
   dr_options_default_values __attribute__ ((unused)) = { 
     (const char *)0,		/* log_file */
     (const char *)0,		/* dot_file */
+    (const char *)0,		/* gpl_file */
+    4000,			/* gpl_sz */
     0,				/* dbg_level */
     1,				/* verbose_level */
     1,				/* chk_level */
@@ -61,6 +65,7 @@ extern "C" {
   void dr_options_default(dr_options * opts);
   void dr_start_(dr_options * opts, int worker, int num_workers);
   void dr_stop_(int worker);
+  void dr_dump();
 
 #define dr_start_task(parent) \
   dr_start_task_(parent, dr_get_worker()) 
@@ -90,7 +95,7 @@ extern "C" {
   dr_end_task_(dr_get_worker())
 
 #define dr_start(opts) \
-  dr_start_(opts, dr_get_worker(), dr_get_num_workers())
+  dr_start_(opts, dr_get_worker(), dr_get_max_workers())
 #define dr_stop() \
   dr_stop_(dr_get_worker())
 

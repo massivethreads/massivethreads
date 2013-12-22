@@ -6,25 +6,14 @@
 
 #include <stdio.h>
 
-extern "C" {
-  int sched_getcpu();
-#if TO_SERIAL
-  int dr_get_worker() { return 0; }
-  int dr_get_cpu() { return 0; }
-  int dr_get_num_workers() { return 1; }
-#else  /* with MassiveThreads */
-#include <myth.h>
-  int dr_get_worker() { return myth_get_worker_num(); }
-  int dr_get_cpu() { return sched_getcpu(); }
-  int dr_get_num_workers() { return myth_get_num_workers(); }
-#endif
-}
-
 #define DAG_RECORDER 2
 #include <mtbb/task_group.h>
 
+#include <unistd.h>
+
 long bin(int n) {
   if (n == 0) {
+    //usleep(1000);
     return 1;
   } else {
     mtbb::task_group tg;
@@ -40,8 +29,8 @@ int main(int argc, char ** argv) {
   int n = (argc > 1 ? atoi(argv[1]) : 10);
   dr_start(0);
   long x = bin(n);
-  dr_stop();
   printf("bin(%d) = %ld\n", n, x);
+  dr_stop();
   return 0;
 }
 

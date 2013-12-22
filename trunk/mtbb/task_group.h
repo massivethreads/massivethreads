@@ -452,6 +452,26 @@ namespace mtbb {
 #if DAG_RECORDER>=2
   /* task_group with dag profiler*/
 
+#define dr_get_max_workers() 1024
+
+#if defined(dr_get_worker)
+/* you have your own dr_get_worker */
+#elif TASK_GROUP_NULL_CREATE 
+#define dr_get_worker() 0
+#elif TO_SERIAL
+#define dr_get_worker() 0
+#elif TO_MTHREAD
+#define dr_get_worker() myth_get_worker_num()
+#elif TO_MTHREAD_NATIVE
+#define dr_get_worker() myth_get_worker_num()
+#elif TO_QTHREAD
+#define dr_get_worker() qthread_worker(NULL)
+#elif TO_TBB || TO_NANOX
+#define dr_get_worker() dr_get_worker_by_pthread_key()
+#else
+#error "DAG_RECORDER==2 requires a definition of dr_get_worker(). define one, or use predefined one by defining one of TO_SERIAL, TO_MTHREAD, TO_MTHREAD_NATIVE, TO_QTHREAD, TO_TBB, TO_NANOX"
+#endif
+
   template<typename Callable>
     struct dr_wrap_callable {
       Callable c;
@@ -469,13 +489,7 @@ namespace mtbb {
   struct task_group_with_prof : public task_group_no_prof {
     int n_outstanding_children;
     task_group_with_prof() {
-#if 0
-      dr_dag_node * t = dr_enter_task_group();
-#endif
       task_group_no_prof();
-#if 0
-      dr_return_from_task_group(t);
-#endif
       n_outstanding_children = 0;
     }
 

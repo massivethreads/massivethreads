@@ -6,20 +6,6 @@
 
 #include <stdio.h>
 
-extern "C" {
-  int sched_getcpu();
-#if TO_SERIAL
-  int dr_get_worker() { return 0; }
-  int dr_get_cpu() { return 0; }
-  int dr_get_num_workers() { return 1; }
-#else  /* with MassiveThreads */
-#include <myth.h>
-  int dr_get_worker() { return myth_get_worker_num(); }
-  int dr_get_cpu() { return sched_getcpu(); }
-  int dr_get_num_workers() { return myth_get_num_workers(); }
-#endif
-}
-
 #define DAG_RECORDER 2
 #include <mtbb/task_group.h>
 
