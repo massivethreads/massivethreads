@@ -58,7 +58,7 @@
 #define pragma_omp_taskwait_no_prof pragma_omp(taskwait)
 
 #define pragma_omp_task_with_prof(options, statement) do { \
-    dr_dag_node * __c__;				   \
+    dr_dag_node * __c__ = 0;				   \
     dr_dag_node * __t__ = dr_enter_create_task(&__c__);	   \
     pragma_omp(task options) do {			   \
       dr_start_task(__c__);				   \
@@ -84,6 +84,9 @@
 #define pragma_omp_taskc(options, callable)	\
   pragma_omp_taskc_with_prof(options, callable)
 #define pragma_omp_taskwait pragma_omp_taskwait_with_prof
+
+#define dr_get_max_workers() (omp_in_parallel() ? omp_get_num_threads() : omp_get_max_threads())
+#define dr_get_worker()      omp_get_thread_num()
 
 #else
 

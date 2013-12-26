@@ -43,6 +43,7 @@ typedef enum {
   dr_node_state_create,
   dr_node_state_create_cont,
   dr_node_state_wait_cont,
+  dr_node_state_end_cont,
   dr_node_state_max,
 } dr_node_state_t;
 
@@ -126,6 +127,7 @@ dr_para_prof_write_to_file(dr_para_prof * pp, FILE * wp) {
 	  ", \"-\" u 1:2:3 w filledcurves title \"create\""
 	  ", \"-\" u 1:2:3 w filledcurves title \"create cont\""
 	  ", \"-\" u 1:2:3 w filledcurves title \"wait cont\""
+	  ", \"-\" u 1:2:3 w filledcurves title \"end cont\""
 	  "\n"
 	  );
   for (k = 0; k < dr_node_state_max; k++) {
@@ -153,6 +155,8 @@ dr_para_prof_write_to_file(dr_para_prof * pp, FILE * wp) {
 
 static dr_node_state_t 
 calc_node_state(dr_pi_dag_node * pred, dr_edge_kind_t ek) {
+  /* no predecessor. 
+     i.e. root node. treat as if it is created */
   if (!pred) return dr_node_state_create;
   switch (ek) {
   case dr_edge_kind_cont:
@@ -162,6 +166,7 @@ calc_node_state(dr_pi_dag_node * pred, dr_edge_kind_t ek) {
     case dr_dag_node_kind_wait_tasks:
       return dr_node_state_wait_cont;
     case dr_dag_node_kind_end_task:
+      return dr_node_state_end_cont;
     default:
       (void)dr_check(0);
     }
