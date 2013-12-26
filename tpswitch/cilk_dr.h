@@ -40,6 +40,14 @@
 #define spawn_(function_call)    spawn_with_prof(function_call)
 #define sync_                    sync_with_prof
 
+#if __CILK__ 			/* MIT Cilk */
+#define dr_get_max_workers()     Cilk_active_size
+#define dr_get_worker()          Self
+#else
+#define dr_get_max_workers()     __cilkrts_get_nworkers()
+#define dr_get_worker()          __cilkrts_get_worker_number()
+#endif
+
 #else
 
 #define cilk_proc_start          int __dummy_cilk_proc_start__ = 0

@@ -61,27 +61,8 @@
 
 #pragma once
 
-/* serial */
-#if TO_SERIAL
-#include <tpswitch/serial_dr.h>
-
-#define create_task0(statement)       create_task(statement)
-#define create_task1(s0,statement)    create_task(statement)
-#define create_task2(s0,s1,statement) create_task(statement)
-#define create_taskA(statement)       create_task(statement)
-#define call_task(statement)          do { statement; } while(0)
-#define call_taskc(callable)          callable()
-#define create_task_and_wait(statement)			\
-  do { call_taskA(statement); wait_tasks; } while(0)
-#define create_taskc_and_wait(callable)			\
-  do { call_taskc(callable); wait_tasks; } while(0)
-
-#define cilk_proc_start       int __dummy_cilk_proc_start__ __attribute__((unused)) = 0
-#define cilk_proc_return(x)   return x
-#define cilk_proc_void_return return
-
 /* OpenMP */
-#elif TO_OMP
+#if TO_OMP
 
 #include <tpswitch/omp_dr.h>
 #define mk_task_group 
@@ -110,7 +91,7 @@
 #define cilk_proc_void_return return
 
 /* TBB, MassiveThredhads, Qthreads, Nanos++ */
-#elif TO_TBB || TO_MTHREAD || TO_MTHREAD_NATIVE || TO_QTHREAD || TO_NANOX
+#elif defined(__cplusplus) && (TO_TBB || TO_MTHREAD || TO_MTHREAD_NATIVE || TO_QTHREAD || TO_NANOX)
 
 #include <mtbb/task_group.h>
 
@@ -147,6 +128,35 @@
 #define cilk_proc_return(x)   return x
 #define cilk_proc_void_return return
 
+
+/* serial */
+#elif TO_SERIAL || TO_TBB || TO_MTHREAD || TO_MTHREAD_NATIVE || TO_QTHREAD || TO_NANOX
+
+#if TO_TBB || TO_MTHREAD || TO_MTHREAD_NATIVE || TO_QTHREAD || TO_NANOX
+#warning "you define either TO_TBB, TO_MTHREAD, TO_MTHREAD_NATIVE, TO_QTHREAD, or TO_NANOX in your C program. create_task and other task parallel primitives are IGNORED in this file"
+#endif
+
+#include <tpswitch/serial_dr.h>
+
+#define create_task0(statement)       create_task(statement)
+#define create_task1(s0,statement)    create_task(statement)
+#define create_task2(s0,s1,statement) create_task(statement)
+#define create_taskA(statement)       create_task(statement)
+#define call_task(statement)          do { statement; } while(0)
+#define call_taskc(callable)          callable()
+#define create_task_and_wait(statement)			\
+  do { call_taskA(statement); wait_tasks; } while(0)
+#define create_taskc_and_wait(callable)			\
+  do { call_taskc(callable); wait_tasks; } while(0)
+
+#define cilk_proc_start       int __dummy_cilk_proc_start__ __attribute__((unused)) = 0
+#define cilk_proc_return(x)   return x
+#define cilk_proc_void_return return
+
+
+
+
+
 /* Cilk */
 #elif TO_CILK
 #include <tpswitch/cilk_dr.h>
@@ -165,6 +175,7 @@
 #define call_taskc(callable)              create_taskc_and_wait(callable)   
 
 #define wait_tasks sync_
+
 
 #else
 #error "neither TO_SERIAL, TO_OMP, TO_TBB, TO_CILK, TO_CILKPLUS, TO_MTHREAD, TO_MTHREAD_NATIVE, TO_QTHREAD, nor TO_NANOX defined"

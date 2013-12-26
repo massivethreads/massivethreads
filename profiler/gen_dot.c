@@ -19,16 +19,52 @@ dr_node_kind_str(dr_dag_node_kind_t kind) {
   return (const char *)0;
 }
 
+static const char * 
+dr_node_attr(dr_dag_node * g) {
+  switch (g->info.kind) {
+  case dr_dag_node_kind_create_task:
+    return "shape=\"box\",color=\"blue\"";
+  case dr_dag_node_kind_wait_tasks:
+    return "shape=\"box\",color=\"red\"";
+  case dr_dag_node_kind_end_task:
+    return "shape=\"box\"";
+  case dr_dag_node_kind_section:
+    return "shape=\"hexagon\"";
+  case dr_dag_node_kind_task:
+    return "shape=\"octagon\"";
+  default:
+    (void)dr_check(0);
+  }
+  return 0;
+}
+
+static const char * 
+dr_edge_color(dr_edge_kind_t k) {
+  switch (k) {
+  case dr_edge_kind_cont:
+    return "black";
+  case dr_edge_kind_create:
+    return "blue";
+  case dr_edge_kind_end:
+    return "red";
+  default:
+    (void)dr_check(0);
+  }
+  return 0;
+}
+
 static void 
 dr_pi_dag_node_gen_dot(dr_pi_dag_node * g, dr_pi_dag * G, FILE * wp) {
   fprintf(wp, 
 	  "/* node: %ld edges: %ld-%ld */\n"
-	  "T%lu [label=\"%s\\n"
+	  "T%lu [%s, label=\"%s (%s)\\n"
 	  "%llu-%llu est=%llu\\n"
 	  "W=%llu/%llu,nodes=%ld/%ld/%ld,edges=%ld by %d on %d\"];\n",
 	  g - G->T, g->edges_begin, g->edges_end,
 	  g - G->T,
+	  dr_node_attr(g),
 	  dr_node_kind_str(g->info.kind),
+	  dr_node_kind_str(g->info.last_node_kind),
 	  g->info.start, 
 	  g->info.end, 
 	  g->info.est, 
@@ -42,7 +78,8 @@ dr_pi_dag_node_gen_dot(dr_pi_dag_node * g, dr_pi_dag * G, FILE * wp) {
 
 static void
 dr_pi_dag_edge_gen_dot(dr_pi_dag_edge * e, FILE * wp) {
-  fprintf(wp, "T%lu -> T%lu;\n", e->u, e->v);
+  fprintf(wp, "T%lu -> T%lu [color=\"%s\"];\n", 
+	  e->u, e->v, dr_edge_color(e->kind));
 }
 
 static void 

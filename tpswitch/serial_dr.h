@@ -53,6 +53,8 @@
 #define create_task(s)  create_task_with_prof(s)
 #define create_taskc(c) create_taskc_with_prof(c)
 #define wait_tasks      wait_tasks_with_prof
+#define dr_get_max_workers() 1
+#define dr_get_worker()      0
 
 #else
 

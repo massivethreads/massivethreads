@@ -70,6 +70,7 @@ dr_event_queue_ensure(dr_event_queue * q, long sz) {
     memcpy(evts, q->events, sizeof(dr_event) * q->sz);
     dr_free(q->events, sizeof(dr_event) * q->sz);
     q->events = evts;
+    q->sz = new_sz;
   }
   dr_event_queue_heap_check(q);
 }
