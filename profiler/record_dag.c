@@ -545,8 +545,8 @@ void dr_start_(dr_options * opts, int worker, int num_workers) {
   }
 }
 
-void dr_gen_dot(dr_pi_dag * G);
-void dr_gen_gpl(dr_pi_dag * G);
+int dr_gen_dot(dr_pi_dag * G);
+int dr_gen_gpl(dr_pi_dag * G);
 
 void dr_dump() {
   dr_pi_dag G[1];

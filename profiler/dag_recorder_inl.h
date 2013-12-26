@@ -32,7 +32,10 @@
 extern "C" {
 #endif
 
-  /* a kind of nodes */
+  /* a kind of nodes.
+     in many places the code assumes
+     k < dr_dag_node_kind_section
+     iff k is a primitive node */
   typedef enum {
     dr_dag_node_kind_create_task,
     dr_dag_node_kind_wait_tasks,
@@ -46,17 +49,17 @@ extern "C" {
   typedef unsigned long long dr_clock_t;
 
   typedef struct dr_dag_node_info {
-    dr_dag_node_kind_t kind;
-    dr_dag_node_kind_t last_node_kind;
     dr_clock_t start; 
     dr_clock_t est;
     dr_clock_t end; 
     dr_clock_t t_1;
     dr_clock_t t_inf;
-    long n_nodes; 
+    long nodes[dr_dag_node_kind_section]; 
     long n_edges; 
     int worker;
     int cpu;
+    dr_dag_node_kind_t kind;
+    dr_dag_node_kind_t last_node_kind;
   } dr_dag_node_info;
 
   typedef struct dr_pi_dag_node dr_pi_dag_node;
@@ -79,6 +82,8 @@ extern "C" {
     };
   };
 
+  /* list of dr_dag_node, used to dynamically
+     grow the subgraphs of section/task */
   enum { dr_dag_node_chunk_sz = 5 };
   typedef struct dr_dag_node_chunk {
     struct dr_dag_node_chunk * next;
@@ -374,12 +379,15 @@ extern "C" {
   dr_end_interval_(dr_dag_node * dn, int worker, dr_clock_t start, 
 		   dr_clock_t est, dr_clock_t end, 
 		   dr_dag_node_kind_t kind) {
+    int k;
     (void)dr_check(kind < dr_dag_node_kind_section);
     dn->info.kind = kind;
     dn->info.last_node_kind = kind;
     dn->info.start = start;
     dn->info.est = est;
-    dn->info.n_nodes = 1;
+    for (k = 0; k < dr_dag_node_kind_section; k++) {
+      dn->info.nodes[k] = 0;
+    }
     dn->info.n_edges = 0;
     dn->info.worker = worker;
     dn->info.cpu = sched_getcpu();
@@ -621,6 +629,7 @@ extern "C" {
 	&& dr_check(!dr_dag_node_list_empty(s->subgraphs))) {
       dr_dag_node * first = dr_dag_node_list_first(s->subgraphs);
       dr_dag_node * last = dr_dag_node_list_last(s->subgraphs);
+      int i;
       /* initialize the result */
       s->info.start   = first->info.start;
       s->info.est     = first->info.est;
@@ -628,7 +637,9 @@ extern "C" {
       s->info.last_node_kind = last->info.last_node_kind;
       s->info.t_1     = 0;
       s->info.t_inf   = 0;
-      s->info.n_nodes = 0;
+      for (i = 0; i < dr_dag_node_kind_section; i++) {
+	s->info.nodes[i] = 0;
+      }
       s->info.n_edges = 0;
       s->info.worker  = first->info.worker;
       s->info.cpu     = first->info.cpu;
@@ -642,9 +653,12 @@ extern "C" {
 	  int i;
 	  for (i = 0; i < ch->n; i++) {
 	    dr_dag_node * x = &ch->a[i];
+	    int k;
 	    s->info.t_1     += x->info.t_1;
 	    s->info.t_inf   += x->info.t_inf;
-	    s->info.n_nodes += x->info.n_nodes;
+	    for (k = 0; k < dr_dag_node_kind_section; k++) {
+	      s->info.nodes[k] += x->info.nodes[k];
+	    }
 	    s->info.n_edges += x->info.n_edges 
 	      + ((ch != head || i) ? 1 : 0);
 	    if (s->info.worker != x->info.worker) s->info.worker = -1;
@@ -659,7 +673,9 @@ extern "C" {
 	      s->info.t_1     += y->info.t_1;
 	      if (s->info.t_inf + y->info.t_inf > t_inf) 
 		t_inf = s->info.t_inf + y->info.t_inf;
-	      s->info.n_nodes += y->info.n_nodes;
+	      for (k = 0; k < dr_dag_node_kind_section; k++) {
+		s->info.nodes[k] += y->info.nodes[k];
+	      }
 	      // dr_check((ch != head) || i);
 	      s->info.n_edges += y->info.n_edges + 2;
 	      if (s->info.worker != y->info.worker) 
