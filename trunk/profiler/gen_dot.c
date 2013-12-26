@@ -25,7 +25,7 @@ dr_pi_dag_node_gen_dot(dr_pi_dag_node * g, dr_pi_dag * G, FILE * wp) {
 	  "/* node: %ld edges: %ld-%ld */\n"
 	  "T%lu [label=\"%s\\n"
 	  "%llu-%llu est=%llu\\n"
-	  "W=%llu/%llu,sz=%ld/%ld by %d on %d\"];\n",
+	  "W=%llu/%llu,nodes=%ld/%ld/%ld,edges=%ld by %d on %d\"];\n",
 	  g - G->T, g->edges_begin, g->edges_end,
 	  g - G->T,
 	  dr_node_kind_str(g->info.kind),
@@ -33,7 +33,10 @@ dr_pi_dag_node_gen_dot(dr_pi_dag_node * g, dr_pi_dag * G, FILE * wp) {
 	  g->info.end, 
 	  g->info.est, 
 	  g->info.t_1, g->info.t_inf,
-	  g->info.n_nodes, g->info.n_edges, 
+	  g->info.nodes[dr_dag_node_kind_create_task],
+	  g->info.nodes[dr_dag_node_kind_wait_tasks],
+	  g->info.nodes[dr_dag_node_kind_end_task],
+	  g->info.n_edges, 
 	  g->info.worker, g->info.cpu);
 }
 
@@ -69,8 +72,10 @@ int dr_gen_dot(dr_pi_dag * G) {
   const char * filename = GS.opts.dot_file;
   if (filename) {
     if (strcmp(filename, "-") == 0) {
+      fprintf(stderr, "writing dot to stdout\n");
       wp = stdout;
     } else {
+      fprintf(stderr, "writing dot to %s\n", filename);
       wp = fopen(filename, "wb");
       if (!wp) { 
 	fprintf(stderr, "fopen: %s (%s)\n", strerror(errno), filename); 
@@ -78,10 +83,13 @@ int dr_gen_dot(dr_pi_dag * G) {
       }
       must_close = 1;
     }
+  } else {
+    fprintf(stderr, "not writing dot\n");
   }
   if (wp) {
     dr_pi_dag_gen_dot(G, wp);
   }
   if (must_close) fclose(wp);
+  return 1;
 }
 

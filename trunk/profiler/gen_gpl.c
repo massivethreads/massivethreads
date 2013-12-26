@@ -6,6 +6,37 @@
 #include <string.h>
 #include "dag_recorder_impl.h"
 
+/* 
+   this file calculates a time series
+   of the number of running and ready
+   tasks and generates a gnuplot file.
+ */
+
+/* the state of a node.
+   a node is either 
+   (i) not ready,
+   (ii) ready but not running, 
+   (iii) running, or 
+   (iv) finished
+   we do not explicitly count (i) or (iv).
+   ready tasks (category (ii)) are further
+   classified by the event that made them
+   ready.
+
+   create : a task created a task and the
+   node is the first node the create task
+   create_cont : a task created a task and the
+   node is the first in the parent task after 
+   create_task
+   end : a task issued a wait_task at one
+   point, when one of the waited children
+   has not yet finished. later the last
+   child finished and the task is now ready.
+   the node is the first node after wait_tasks
+   wait_cont : a task issued a wait_task,
+   when all waited children have finished.
+   the node is the first node after wait_tasks
+ */
 typedef enum {
   dr_node_state_running,
   dr_node_state_end,
@@ -15,10 +46,10 @@ typedef enum {
   dr_node_state_max,
 } dr_node_state_t;
 
+/* an entry in the parallelism profile. */
 typedef struct {
-  /* a[0] : running */
-  dr_clock_t t;
-  int a[dr_node_state_max];
+  dr_clock_t t;			/* time */
+  int a[dr_node_state_max];	/* count of nodes in each state */
 } dr_para_prof_history_entry;
 
 typedef struct {
@@ -141,6 +172,8 @@ calc_node_state(dr_pi_dag_node * pred, dr_edge_kind_t ek) {
   default:
     (void)dr_check(0);
   }
+  (void)dr_check(0);
+  return dr_node_state_create;
 }
 
 static void 
@@ -169,15 +202,17 @@ dr_para_prof_process_event(chronological_traverser * pp_, dr_event ev) {
   dr_para_prof_add_hist(pp, ev.t);
 }
 
-void 
+int 
 dr_gen_gpl(dr_pi_dag * G) {
   FILE * wp = NULL;
   int must_close = 0;
   const char * filename = GS.opts.gpl_file;
   if (filename) {
     if (strcmp(filename, "-") == 0) {
+      fprintf(stderr, "writing gnuplot to stdout\n");
       wp = stdout;
     } else {
+      fprintf(stderr, "writing gnuplot to %s\n", filename);
       wp = fopen(filename, "wb");
       if (!wp) { 
 	fprintf(stderr, "fopen: %s (%s)\n", strerror(errno), filename); 
@@ -185,13 +220,18 @@ dr_gen_gpl(dr_pi_dag * G) {
       }
       must_close = 1;
     }
+  } else {
+    fprintf(stderr, "not writing gnuplot\n");
   }
   dr_pi_dag_node * last = dr_pi_dag_node_last(G->T, G);
   dr_para_prof pp[1];
   dr_para_prof_init(pp, GS.opts.gpl_sz, last->info.end);
   dr_pi_dag_chronological_traverse(G, (chronological_traverser *)pp);
   dr_para_prof_check(pp);
-  dr_para_prof_write_to_file(pp, wp);
-  if (filename) fclose(wp);
+  if (wp) {
+    dr_para_prof_write_to_file(pp, wp);
+  }
+  if (must_close) fclose(wp);
+  return 1;
 }
 
