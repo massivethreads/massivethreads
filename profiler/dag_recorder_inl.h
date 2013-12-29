@@ -152,25 +152,25 @@ extern "C" {
 
   /* chunk */
 
-  static inline void
+  static void
   dr_dag_node_chunk_init(dr_dag_node_chunk * ch) {
     ch->next = 0;
     ch->n = 0;
   }
 
-  static inline dr_dag_node * 
+  static dr_dag_node * 
   dr_dag_node_chunk_last(dr_dag_node_chunk * ch) {
     (void)dr_check(ch->n > 0);
     return &ch->a[ch->n - 1];
   }
 
-  static inline dr_dag_node * 
+  static dr_dag_node * 
   dr_dag_node_chunk_first(dr_dag_node_chunk * ch) {
     (void)dr_check(ch->n > 0);
     return &ch->a[0];
   }
 
-  static inline dr_dag_node * 
+  static dr_dag_node * 
   dr_dag_node_chunk_push_back(dr_dag_node_chunk * ch) {
     int n = ch->n;
     (void)dr_check(n < dr_dag_node_chunk_sz);
@@ -180,13 +180,13 @@ extern "C" {
 
   /* list */
 
-  static inline void 
+  static void 
   dr_dag_node_list_init(dr_dag_node_list * l) {
     dr_dag_node_chunk_init(l->head);
     l->tail = l->head;
   }
 
-  static inline dr_dag_node_list * 
+  static dr_dag_node_list * 
   dr_mk_dag_node_list() {
     dr_dag_node_list * l 
       = (dr_dag_node_list *)dr_malloc(sizeof(dr_dag_node_list));
@@ -194,24 +194,24 @@ extern "C" {
     return l;
   }
 
-  static inline int
+  static int
   dr_dag_node_list_empty(dr_dag_node_list * l) {
     if (l->head != l->tail) return 0;
     if (l->head->n) return 0;
     return 1;
   }
 
-  static inline dr_dag_node *
+  static dr_dag_node *
   dr_dag_node_list_first(dr_dag_node_list * l) {
     return dr_dag_node_chunk_first(l->head);
   }
 
-  static inline dr_dag_node *
+  static dr_dag_node *
   dr_dag_node_list_last(dr_dag_node_list * l) {
     return dr_dag_node_chunk_last(l->tail);
   }
 
-  static inline dr_dag_node_chunk *
+  static dr_dag_node_chunk *
   dr_dag_node_list_add_chunk(dr_dag_node_list * l) {
     dr_dag_node_chunk * ch 
       = (dr_dag_node_chunk *)dr_malloc(sizeof(dr_dag_node_chunk));
@@ -222,7 +222,7 @@ extern "C" {
     return ch;
   }
 
-  static inline dr_dag_node *
+  static dr_dag_node *
   dr_dag_node_list_push_back(dr_dag_node_list * l) {
     dr_dag_node_chunk * tail = l->tail;
     if (tail->n == dr_dag_node_chunk_sz) {
@@ -232,7 +232,7 @@ extern "C" {
     return dr_dag_node_chunk_push_back(tail);
   }
 
-  static inline void 
+  static void 
   dr_dag_node_list_clear(dr_dag_node_list * l) {
     dr_dag_node_chunk * ch;
     dr_dag_node_chunk * next;
@@ -243,7 +243,7 @@ extern "C" {
     dr_dag_node_list_init(l);
   }
 
-  static inline void 
+  static void 
   dr_dag_node_list_destroy(dr_dag_node_list * l) {
     dr_dag_node_list_clear(l);
     dr_free(l, sizeof(dr_dag_node_list));
@@ -251,7 +251,7 @@ extern "C" {
 
 #if defined(__x86_64__)
 
-  static inline unsigned long long dr_rdtsc() {
+  static unsigned long long dr_rdtsc() {
     unsigned long long u;
     asm volatile ("rdtsc;shlq $32,%%rdx;orq %%rdx,%%rax":"=a"(u)::"%rdx");
     return u;
@@ -259,7 +259,7 @@ extern "C" {
   
 #elif defined(__sparc__) && defined(__arch64__)
   
-  static inline unsigned long long dr_rdtsc(void) {
+  static unsigned long long dr_rdtsc(void) {
     unsigned long long u;
     asm volatile("rd %%tick, %0" : "=r" (u));
     return u;
@@ -267,7 +267,7 @@ extern "C" {
 
 #else
   
-  static inline unsigned long long dr_rdtsc() {
+  static unsigned long long dr_rdtsc() {
     unsigned long long u;
     asm volatile ("rdtsc" : "=A" (u));
     return u;
@@ -275,7 +275,7 @@ extern "C" {
   
 #endif
 
-  static inline dr_clock_t 
+  static dr_clock_t 
   dr_get_tsc() {
     return dr_rdtsc();
   }
@@ -293,7 +293,7 @@ extern "C" {
   
   extern dr_get_worker_key_struct dr_gwks;
   
-  static inline pthread_key_t dr_get_worker_key() {
+  static pthread_key_t dr_get_worker_key() {
     if (dr_gwks.worker_key_state == 2) return dr_gwks.worker_key;
     if (__sync_bool_compare_and_swap(&dr_gwks.worker_key_state, 0, 1)) {
       pthread_key_create(&dr_gwks.worker_key, NULL);
@@ -304,11 +304,11 @@ extern "C" {
     return dr_gwks.worker_key;
   }
   
-  static inline int worker_counter_get_next() {
+  static int worker_counter_get_next() {
     return __sync_fetch_and_add(&dr_gwks.worker_counter, 1);
   }
   
-  static inline int dr_get_worker_by_pthread_key() {
+  static int dr_get_worker_by_pthread_key() {
     pthread_key_t wk = dr_get_worker_key();
     void * x = pthread_getspecific(wk);
     if (x) {
@@ -322,18 +322,18 @@ extern "C" {
     }
   }
 
-  static inline dr_dag_node * 
+  static dr_dag_node * 
   dr_get_cur_task_(int worker) {
     return TS[worker].task;
   }
 
-  static inline void 
+  static void 
   dr_set_cur_task_(int worker, dr_dag_node * t) {
     TS[worker].task = t;
   }
 
   /* initialize dag node n to become a section- or a task-type node */
-  static inline void 
+  static void 
   dr_dag_node_init_section_or_task(dr_dag_node * n,
 				   dr_dag_node_kind_t kind) {
     (void)dr_check(kind >= dr_dag_node_kind_section);
@@ -344,7 +344,7 @@ extern "C" {
   }
 
   /* add a new section as a child of s (either a section or task) */
-  static inline dr_dag_node *
+  static dr_dag_node *
   dr_push_back_section(dr_dag_node * g) {
     if (dr_check(g->info.kind >= dr_dag_node_kind_section)) {
       dr_dag_node * s = dr_dag_node_list_push_back(g->subgraphs);
@@ -356,7 +356,7 @@ extern "C" {
   }
 
   /* allocate a new dag node of a task type */
-  static inline dr_dag_node * 
+  static dr_dag_node * 
   dr_mk_dag_node_task() {
     dr_dag_node * t = (dr_dag_node *)dr_malloc(sizeof(dr_dag_node));
     dr_dag_node_init_section_or_task(t, dr_dag_node_kind_task);
@@ -373,7 +373,7 @@ extern "C" {
 
   /* end an interval, 
      called by start_{task_group,create_task,wait_tasks} */
-  static inline void 
+  static void 
   dr_end_interval_(dr_dag_node * dn, int worker, dr_clock_t start, 
 		   dr_clock_t est, dr_clock_t end, 
 		   dr_dag_node_kind_t kind) {
@@ -413,7 +413,7 @@ extern "C" {
      not an unfinished section.
   */
 
-  static inline dr_dag_node * 
+  static dr_dag_node * 
   dr_task_active_node(dr_dag_node * t) {
     dr_dag_node * s = t;
     (void)dr_check(t->info.kind == dr_dag_node_kind_task);
@@ -446,7 +446,7 @@ extern "C" {
     return 0;
   }
 
-  static inline dr_dag_node * 
+  static dr_dag_node * 
   dr_task_last_section_or_create(dr_dag_node * t) {
     if (dr_check(t->info.kind == dr_dag_node_kind_task)) {
       dr_dag_node * s = dr_task_active_node(t);
@@ -459,7 +459,7 @@ extern "C" {
     }
   }
 
-  static inline dr_dag_node * 
+  static dr_dag_node * 
   dr_task_ensure_session(dr_dag_node * t) {
     dr_dag_node * s = dr_task_active_node(t);
     if (s->info.kind == dr_dag_node_kind_task) {
