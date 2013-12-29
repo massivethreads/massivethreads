@@ -497,7 +497,7 @@ namespace mtbb {
       void run(Callable c) {
       if (n_outstanding_children == 0) dr_begin_section();
       n_outstanding_children++;
-      dr_dag_node * ci;
+      dr_dag_node * ci = 0;
       dr_dag_node * t = dr_enter_create_task(&ci);
       task_group_no_prof::run(dr_wrap_callable<Callable>(c, ci));
       dr_return_from_create_task(t);
