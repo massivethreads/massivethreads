@@ -17,16 +17,18 @@ extern "C" {
    task    ::= section* end
    section ::= task_group (section|create)* wait
  */
+
+  typedef unsigned long long dr_clock_t;
+
   typedef struct dr_options {
     const char * log_file;	/* filename of the log */
     const char * dot_file;	/* filename of the dot */
     const char * gpl_file;	/* filename of the gpl */
+    dr_clock_t collapse_max;	/* collapse nodes if set */
     int gpl_sz;			/* size of gpl file */
     char dbg_level;		/* level of debugging features */
     char verbose_level;		/* level of verbosity */
     char chk_level;		/* level of checks during run */
-    char collapse;		/* collapse nodes if set */
-    char dump_on_stop;		/* when set, dr_stop dumps the log */
   } dr_options;
 
   /* default values. written here for documentation purpose.
@@ -43,12 +45,11 @@ extern "C" {
     (const char *)0,		/* log_file */
     (const char *)0,		/* dot_file */
     (const char *)0,		/* gpl_file */
+    (1L << 60),			/* collapse */
     4000,			/* gpl_sz */
     0,				/* dbg_level */
     1,				/* verbose_level */
     1,				/* chk_level */
-    1,				/* collapse */
-    0,				/* dump_on_stop */
   };
 
   typedef struct dr_dag_node dr_dag_node;
