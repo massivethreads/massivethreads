@@ -46,8 +46,6 @@ extern "C" {
   
   typedef struct dr_dag_node_list dr_dag_node_list;
 
-  typedef unsigned long long dr_clock_t;
-
   typedef struct dr_dag_node_info {
     dr_clock_t start; 
     dr_clock_t est;
@@ -688,7 +686,8 @@ extern "C" {
 	}
       }
       /* now check if we can collapse it */
-      if (s->info.worker != -1) {
+      if (s->info.worker != -1
+	  && s->info.end - s->info.start < GS.opts.collapse_max) {
 	/* free the graph of its children */
 	dr_dag_node_chunk * head = s->subgraphs->head;
 	dr_dag_node_chunk * ch;
@@ -705,22 +704,20 @@ extern "C" {
 	      (void)dr_check(c);
 	      (void)dr_check(c->info.kind == dr_dag_node_kind_task);
 	      (void)dr_check(c->subgraphs);
-	      if (GS.opts.collapse) {
-		(void)dr_check(dr_dag_node_list_empty(c->subgraphs));
-		dr_free(c->subgraphs, sizeof(dr_dag_node_list));
-		dr_free(c, sizeof(dr_dag_node));
-	      }
+	      /* free subgraphs */
+	      (void)dr_check(dr_dag_node_list_empty(c->subgraphs));
+	      dr_free(c->subgraphs, sizeof(dr_dag_node_list));
+	      dr_free(c, sizeof(dr_dag_node));
+
 	    } else if (x->info.kind == dr_dag_node_kind_section) {
 	      (void)dr_check(x->subgraphs);
-	      if (GS.opts.collapse) {
-		(void)dr_check(dr_dag_node_list_empty(x->subgraphs));
-		dr_free(x->subgraphs, sizeof(dr_dag_node_list));
-	      }
+	      /* free subgraphs */
+	      (void)dr_check(dr_dag_node_list_empty(x->subgraphs));
+	      dr_free(x->subgraphs, sizeof(dr_dag_node_list));
 	    }
 	  }
 	}
-	if (GS.opts.collapse) 
-	  dr_dag_node_list_clear(s->subgraphs);
+	dr_dag_node_list_clear(s->subgraphs);
       }
     }
   }

@@ -6,7 +6,12 @@
 #include <string.h>
 #include "dag_recorder_impl.h"
 
-dr_global_state GS;
+dr_global_state GS = {
+  0,				/* root */
+  0,				/* start_clock */
+};
+
+
 dr_thread_specific_state * TS = 0;
 
 /* --------------------- dr_get_worker ------------------- */
@@ -470,6 +475,8 @@ dr_make_pi_dag(dr_pi_dag * G,
 
 /* initialization */
 
+
+#if 0
 static int 
 getenv_bool(const char * v, char * y) {
   char * x = getenv(v);
@@ -482,6 +489,7 @@ getenv_bool(const char * v, char * y) {
   } 
   return 1;
 } 
+#endif
 
 static int 
 getenv_byte(const char * v, char * y) {
@@ -496,6 +504,15 @@ getenv_int(const char * v, int * y) {
   char * x = getenv(v);
   if (!x) return 0;
   *y = atoi(x);
+  return 1;
+} 
+
+static int 
+getenv_ull(const char * v, unsigned long long * y) {
+  char * x = getenv(v);
+  if (!x) return 0;
+  long long z = atoll(x);
+  *y = (unsigned long long)z;
   return 1;
 } 
 
@@ -518,13 +535,10 @@ void dr_options_default(dr_options * opts) {
       || getenv_str("DR_GPL",                &opts->gpl_file)) {}
   if (getenv_int("DAG_RECORDER_GPL_SIZE",    &opts->gpl_sz)
       || getenv_int("DR_GPL_SZ",             &opts->gpl_sz)) {}
-
   if (getenv_byte("DAG_RECORDER_DBG_LEVEL",  &opts->dbg_level)
       || getenv_byte("DR_DBG",               &opts->dbg_level)) {}
-  if (getenv_bool("DAG_RECORDER_COLLAPSE",   &opts->collapse)
-      || getenv_bool("DR_COLLAPSE",          &opts->collapse)) {}
-  if (getenv_bool("DAG_RECORDER_DUMP_ON_STOP", &opts->dump_on_stop)
-      || getenv_bool("DR_DUMP",              &opts->dump_on_stop)) {}
+  if (getenv_ull("DAG_RECORDER_COLLAPSE_MAX", &opts->collapse_max)
+      || getenv_ull("DR_COLLAPSE_MAX",        &opts->collapse_max)) {}
 }
 
 void dr_start_(dr_options * opts, int worker, int num_workers) {
@@ -535,6 +549,7 @@ void dr_start_(dr_options * opts, int worker, int num_workers) {
       opts = opts_;
       dr_options_default(opts);
     }
+    if (GS.root) dr_free_dag_recursively(GS.root); 
     TS = (dr_thread_specific_state *)
       dr_malloc(sizeof(dr_thread_specific_state) 
 		* num_workers);
@@ -549,18 +564,16 @@ int dr_gen_dot(dr_pi_dag * G);
 int dr_gen_gpl(dr_pi_dag * G);
 
 void dr_dump() {
-  dr_pi_dag G[1];
-  dr_make_pi_dag(G, GS.root, GS.start_clock);
-  dr_free_dag_recursively(GS.root); GS.root = NULL;
-  dr_gen_dot(G);
-  dr_gen_gpl(G);
+  if (GS.root) {
+    dr_pi_dag G[1];
+    dr_make_pi_dag(G, GS.root, GS.start_clock);
+    dr_gen_dot(G);
+    dr_gen_gpl(G);
+  }
 }
 
 void dr_stop_(int worker) {
   dr_end_task_(worker);
-  if (GS.opts.dump_on_stop) {
-    dr_dump();
-  }
 }
 
 
