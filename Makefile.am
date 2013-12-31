@@ -8,6 +8,7 @@ COMMON_FLAGS = -D_GNU_SOURCE
 # required when you use libtool (for building shared libs)
 ACLOCAL_AMFLAGS = -I m4
 
+
 lib_LTLIBRARIES = libmyth.la libmyth-compat.la libmyth-native.la
 include_HEADERS = myth.h myth_if_native.h 
 nobase_include_HEADERS = \
