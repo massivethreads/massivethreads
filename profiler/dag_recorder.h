@@ -13,6 +13,16 @@
 extern "C" {
 #endif
 
+#if !defined(DAG_RECORDER_INLINE_PROFILE)
+#define DAG_RECORDER_INLINE_PROFILE 1
+#endif
+
+#if DAG_RECORDER_INLINE_PROFILE
+#define static_if_inline static
+#else
+#define static_if_inline
+#endif
+
 /* 
    task    ::= section* end
    section ::= task_group (section|create)* wait
@@ -54,15 +64,15 @@ extern "C" {
 
   typedef struct dr_dag_node dr_dag_node;
 
-  static void          dr_start_task_(dr_dag_node * parent, int worker);
-  static int           dr_start_cilk_proc_(int worker);
-  static void          dr_begin_section_(int worker);
-  static dr_dag_node * dr_enter_create_task_(dr_dag_node ** create, int worker);
-  static dr_dag_node * dr_enter_create_cilk_proc_task_(int worker);
-  static void          dr_return_from_create_task_(dr_dag_node * task, int worker);
-  static dr_dag_node * dr_enter_wait_tasks_(int worker);
-  static void          dr_return_from_wait_tasks_(dr_dag_node * task, int worker);
-  static void          dr_end_task_(int worker);
+  static_if_inline void          dr_start_task_(dr_dag_node * parent, int worker);
+  static_if_inline int           dr_start_cilk_proc_(int worker);
+  static_if_inline void          dr_begin_section_(int worker);
+  static_if_inline dr_dag_node * dr_enter_create_task_(dr_dag_node ** create, int worker);
+  static_if_inline dr_dag_node * dr_enter_create_cilk_proc_task_(int worker);
+  static_if_inline void          dr_return_from_create_task_(dr_dag_node * task, int worker);
+  static_if_inline dr_dag_node * dr_enter_wait_tasks_(int worker);
+  static_if_inline void          dr_return_from_wait_tasks_(dr_dag_node * task, int worker);
+  static_if_inline void          dr_end_task_(int worker);
   void dr_options_default(dr_options * opts);
   void dr_start_(dr_options * opts, int worker, int num_workers);
   void dr_stop_(int worker);
@@ -109,5 +119,8 @@ extern "C" {
    all the above external functions are defined in 
    dag_recorder.c
  */
+#if DAG_RECORDER_INLINE_PROFILE
 #include <dag_recorder_inl.h>
+#endif
+
 
