@@ -4,6 +4,8 @@
 
 #pragma once
 
+#define ACTIVE_SECTION_OPT 1
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -76,6 +78,10 @@ extern "C" {
 	dr_dag_node_list * subgraphs;
 	int done;
 	int collapsed;
+#if ACTIVE_SECTION_OPT
+	dr_dag_node * parent_section; /* enclosing section or task */
+	dr_dag_node * active_section;
+#endif
       };
     };
   };
@@ -335,21 +341,33 @@ extern "C" {
   /* initialize dag node n to become a section- or a task-type node */
   static void 
   dr_dag_node_init_section_or_task(dr_dag_node * n,
-				   dr_dag_node_kind_t kind) {
+				   dr_dag_node_kind_t kind,
+				   dr_dag_node * p) {
     (void)dr_check(kind >= dr_dag_node_kind_section);
     n->info.kind = kind;
     n->done = 0;
     n->collapsed = 0;
     n->subgraphs = dr_mk_dag_node_list();
+#if ACTIVE_SECTION_OPT
+    n->parent_section = p;
+    n->active_section = 0; 	/* task will override this */
+#endif
   }
+
+  static dr_dag_node * 
+  dr_task_active_node(dr_dag_node * t);
 
   /* add a new section as a child of s (either a section or task) */
   static dr_dag_node *
-  dr_push_back_section(dr_dag_node * g) {
-    if (dr_check(g->info.kind >= dr_dag_node_kind_section)) {
-      dr_dag_node * s = dr_dag_node_list_push_back(g->subgraphs);
-      dr_dag_node_init_section_or_task(s, dr_dag_node_kind_section);
-      return s;
+  dr_push_back_section(dr_dag_node * t, dr_dag_node * s) {
+    if (dr_check(s->info.kind >= dr_dag_node_kind_section)) {
+      dr_dag_node * new_s = dr_dag_node_list_push_back(s->subgraphs);
+      dr_dag_node_init_section_or_task(new_s, dr_dag_node_kind_section, s);
+#if ACTIVE_SECTION_OPT
+      t->active_section = new_s;
+      (void)dr_check(dr_task_active_node(t) == t->active_section);
+#endif
+      return new_s;
     } else {
       return (dr_dag_node *)0;
     }
@@ -359,7 +377,8 @@ extern "C" {
   static dr_dag_node * 
   dr_mk_dag_node_task() {
     dr_dag_node * t = (dr_dag_node *)dr_malloc(sizeof(dr_dag_node));
-    dr_dag_node_init_section_or_task(t, dr_dag_node_kind_task);
+    dr_dag_node_init_section_or_task(t, dr_dag_node_kind_task, 0);
+    t->active_section = t;
     return t;
   }
 
@@ -415,6 +434,10 @@ extern "C" {
 
   static dr_dag_node * 
   dr_task_active_node(dr_dag_node * t) {
+#if ACTIVE_SECTION_OPT
+    return t->active_section;
+#endif
+
     dr_dag_node * s = t;
     (void)dr_check(t->info.kind == dr_dag_node_kind_task);
     while (1) {
@@ -422,6 +445,9 @@ extern "C" {
 	/* no subsection in s 
 	   -> no active sections under s
 	   -> return s */
+#if ACTIVE_SECTION_OPT
+	(void)dr_check(t->active_section == s);
+#endif
 	return s;
       } else {
 	/* look at the rightmost child */
@@ -429,13 +455,23 @@ extern "C" {
 	/* the rightmost child is a leaf
 	   -> it means it has finished
 	   -> no active sections under s */
-	if (c->info.kind < dr_dag_node_kind_section) return s;
+	if (c->info.kind < dr_dag_node_kind_section) {
+#if ACTIVE_SECTION_OPT
+	  (void)dr_check(t->active_section == s);
+#endif
+	  return s;
+	}
 	/* something is broken if we have a task node 
 	   as a child! */
 	(void)dr_check(c->info.kind == dr_dag_node_kind_section);
 	/* the rightmost child is a section that has finished 
 	   -> no active sections under s */
-	if (c->done) return s;
+	if (c->done) {
+#if ACTIVE_SECTION_OPT
+	  (void)dr_check(t->active_section == s);
+#endif
+	  return s;
+	}
 	/* the rightmost child is an unfinished section.
 	   -> descend */
 	s = c;
@@ -463,7 +499,7 @@ extern "C" {
   dr_task_ensure_session(dr_dag_node * t) {
     dr_dag_node * s = dr_task_active_node(t);
     if (s->info.kind == dr_dag_node_kind_task) {
-      s = dr_push_back_section(s);
+      s = dr_push_back_section(t, s);
     }
     (void)dr_check(s->info.kind == dr_dag_node_kind_section);
     return s;
@@ -494,7 +530,7 @@ extern "C" {
      about the opening interval in t
   */
 
-  static void 
+  static_if_inline void 
   dr_start_task_(dr_dag_node * p, int worker) {
     if (TS) {
       /* make a task, section, and interval */
@@ -518,7 +554,7 @@ extern "C" {
     }
   }
   
-  static int 
+  static_if_inline int 
   dr_start_cilk_proc_(int worker) {
     if (TS) {
       dr_start_task_(TS[worker].parent, worker);
@@ -526,12 +562,12 @@ extern "C" {
     return 0;
   }
 
-  static void
+  static_if_inline void
   dr_begin_section_(int worker) {
     if (TS) {
       dr_dag_node * t = dr_get_cur_task_(worker);
       dr_dag_node * s = dr_task_active_node(t);
-      dr_push_back_section(s);
+      dr_push_back_section(t, s);
     }
   }
 
@@ -542,7 +578,7 @@ extern "C" {
      section ::= task_group (section|create)* wait
 
   */
-  static dr_dag_node * 
+  static_if_inline dr_dag_node * 
   dr_enter_create_task_(dr_dag_node ** c, int worker) {
     if (TS) {
       dr_clock_t end = dr_get_tsc();
@@ -567,7 +603,7 @@ extern "C" {
     }
   }
 
-  static dr_dag_node *
+  static_if_inline dr_dag_node *
   dr_enter_create_cilk_proc_task_(int worker) {
     if (TS) {
       return dr_enter_create_task_(&TS[worker].parent, worker);
@@ -579,7 +615,7 @@ extern "C" {
   /* resume from create_task 
      section ::= task_group (section|create)* wait
   */
-  static void 
+  static_if_inline void 
   dr_return_from_create_task_(dr_dag_node * t, int worker) {
     if (TS) {
       dr_dag_node * ct = dr_task_last_section_or_create(t);
@@ -597,7 +633,7 @@ extern "C" {
   /* end current interval and start wait_tasks 
      section ::= task_group (section|create)* wait
   */
-  static dr_dag_node *
+  static_if_inline dr_dag_node *
   dr_enter_wait_tasks_(int worker) {
     if (TS) {
       dr_clock_t end = dr_get_tsc();
@@ -611,6 +647,10 @@ extern "C" {
       }
       (void)dr_check(s->done == 0);
       s->done = 1;
+#if ACTIVE_SECTION_OPT
+      t->active_section = s->parent_section;
+      (void)dr_check(dr_task_active_node(t) == t->active_section);
+#endif
       dr_end_interval_(i, worker, t->info.start, t->info.est, end, 
 		       dr_dag_node_kind_wait_tasks);
       return t;
@@ -728,7 +768,7 @@ extern "C" {
      section ::= task_group (section|create)* wait
 
   */
-  static void 
+  static_if_inline void 
   dr_return_from_wait_tasks_(dr_dag_node * t, int worker) {
     if (TS) {
       /* get the section that finished last */
@@ -769,7 +809,7 @@ extern "C" {
     }
   }
 
-  static void 
+  static_if_inline void 
   dr_end_task_(int worker) {
     if (TS) {
       dr_clock_t end = dr_get_tsc();

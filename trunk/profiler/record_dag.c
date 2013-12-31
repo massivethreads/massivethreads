@@ -4,6 +4,7 @@
 
 #include <errno.h>
 #include <string.h>
+
 #include "dag_recorder_impl.h"
 
 dr_global_state GS = {
@@ -527,16 +528,20 @@ getenv_str(const char * v, const char ** y) {
 void dr_options_default(dr_options * opts) {
   * opts = dr_options_default_values;
 
-  if (getenv_str("DAG_RECORDER_LOG_FILE",    &opts->log_file)
-      || getenv_str("DR_LOG_FILE",           &opts->log_file)) {}
-  if (getenv_str("DAG_RECORDER_DOT_FILE",    &opts->dot_file)
-      || getenv_str("DR_DOT",                &opts->dot_file)) {}
-  if (getenv_str("DAG_RECORDER_GPL_FILE",    &opts->gpl_file)
-      || getenv_str("DR_GPL",                &opts->gpl_file)) {}
-  if (getenv_int("DAG_RECORDER_GPL_SIZE",    &opts->gpl_sz)
-      || getenv_int("DR_GPL_SZ",             &opts->gpl_sz)) {}
-  if (getenv_byte("DAG_RECORDER_DBG_LEVEL",  &opts->dbg_level)
-      || getenv_byte("DR_DBG",               &opts->dbg_level)) {}
+  if (getenv_str("DAG_RECORDER_LOG_FILE",     &opts->log_file)
+      || getenv_str("DR_LOG_FILE",            &opts->log_file)) {}
+  if (getenv_str("DAG_RECORDER_DOT_FILE",     &opts->dot_file)
+      || getenv_str("DR_DOT",                 &opts->dot_file)) {}
+  if (getenv_str("DAG_RECORDER_GPL_FILE",     &opts->gpl_file)
+      || getenv_str("DR_GPL",                 &opts->gpl_file)) {}
+  if (getenv_int("DAG_RECORDER_GPL_SIZE",     &opts->gpl_sz)
+      || getenv_int("DR_GPL_SZ",              &opts->gpl_sz)) {}
+  if (getenv_byte("DAG_RECORDER_DBG_LEVEL",   &opts->dbg_level)
+      || getenv_byte("DR_DBG",                &opts->dbg_level)) {}
+  if (getenv_byte("DAG_RECORDER_VERBOSE_LEVEL",  &opts->verbose_level)
+      || getenv_byte("DR_VERBOSE",               &opts->verbose_level)) {}
+  if (getenv_byte("DAG_RECORDER_CHK_LEVEL",   &opts->chk_level)
+      || getenv_byte("DR_CHK",                &opts->chk_level)) {}
   if (getenv_ull("DAG_RECORDER_COLLAPSE_MAX", &opts->collapse_max)
       || getenv_ull("DR_COLLAPSE_MAX",        &opts->collapse_max)) {}
 }

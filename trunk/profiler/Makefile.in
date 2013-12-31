@@ -79,7 +79,8 @@ am__uninstall_files_from_dir = { \
 am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(includedir)"
 LTLIBRARIES = $(lib_LTLIBRARIES)
 libdr_la_LIBADD =
-am_libdr_la_OBJECTS = libdr_la-record_dag.lo libdr_la-chronological.lo \
+am_libdr_la_OBJECTS = libdr_la-record_dag.lo \
+	libdr_la-dag_recorder_api.lo libdr_la-chronological.lo \
 	libdr_la-gen_dot.lo libdr_la-gen_gpl.lo
 libdr_la_OBJECTS = $(am_libdr_la_OBJECTS)
 libdr_la_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
@@ -230,7 +231,7 @@ top_srcdir = @top_srcdir@
 ACLOCAL_AMFLAGS = -I m4
 lib_LTLIBRARIES = libdr.la
 include_HEADERS = dag_recorder.h dag_recorder_inl.h
-libdr_la_SOURCES = record_dag.c chronological.c gen_dot.c gen_gpl.c
+libdr_la_SOURCES = record_dag.c dag_recorder_api.c chronological.c gen_dot.c gen_gpl.c
 libdr_la_CFLAGS = $(CFLAGS)
 all: all-am
 
@@ -307,6 +308,7 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libdr_la-chronological.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libdr_la-dag_recorder_api.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libdr_la-gen_dot.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libdr_la-gen_gpl.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libdr_la-record_dag.Plo@am__quote@
@@ -338,6 +340,13 @@ libdr_la-record_dag.lo: record_dag.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='record_dag.c' object='libdr_la-record_dag.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdr_la_CFLAGS) $(CFLAGS) -c -o libdr_la-record_dag.lo `test -f 'record_dag.c' || echo '$(srcdir)/'`record_dag.c
+
+libdr_la-dag_recorder_api.lo: dag_recorder_api.c
+@am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdr_la_CFLAGS) $(CFLAGS) -MT libdr_la-dag_recorder_api.lo -MD -MP -MF $(DEPDIR)/libdr_la-dag_recorder_api.Tpo -c -o libdr_la-dag_recorder_api.lo `test -f 'dag_recorder_api.c' || echo '$(srcdir)/'`dag_recorder_api.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/libdr_la-dag_recorder_api.Tpo $(DEPDIR)/libdr_la-dag_recorder_api.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='dag_recorder_api.c' object='libdr_la-dag_recorder_api.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdr_la_CFLAGS) $(CFLAGS) -c -o libdr_la-dag_recorder_api.lo `test -f 'dag_recorder_api.c' || echo '$(srcdir)/'`dag_recorder_api.c
 
 libdr_la-chronological.lo: chronological.c
 @am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdr_la_CFLAGS) $(CFLAGS) -MT libdr_la-chronological.lo -MD -MP -MF $(DEPDIR)/libdr_la-chronological.Tpo -c -o libdr_la-chronological.lo `test -f 'chronological.c' || echo '$(srcdir)/'`chronological.c
