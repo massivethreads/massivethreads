@@ -23,25 +23,39 @@ into the repository, so (1) SHOULD just work.
 
 Currently, however, even if you follow the path (1), make may start
 regenerating Makefile.in from Makefile.am using automake, which will
-fail in environments that lack it.
+fail in environments that lack it.  A typical error message is this
 
-This happens because the automatically generated Makefile describe
-dependencies:
+     $ make 
+      cd . && /bin/bash /home/tau/parallel2/sys/src/mth/massivethreads/missing --run automake-1.11 --foreign
+      configure.ac:23: required file `./compile' not found
+      configure.ac:23:   `automake --add-missing' can install `compile'
+
+This happens because, essentially, the automatically generated
+Makefile has the following rules
 
   Makefile.in : ... Makefile.am ...
+
+         ...missing --run automake-1.11
 
 and, after you check out from the repository, there is no guarantee
 Makefile.in happens to be newer than those prerequisites.
 
-To avoid this, you can simply 
+To avoid this, 
+
+(a) you could simply 
 
    touch Makefile.in
    touch config.h.in
 
 right after you check out.
 
-I don't know if there is a smarter way to avoid this...
+(b) but this requires a user's work. I resorted to 
+including the "compile" script into the respository.
+(when you run "automake --add-missing", it adds a 
+_symlink_ to /usr/share/automake-1.11/compile. I
+replaced it to a copy of it)
 
+I don't know if there is a smarter way to avoid this...
 
 = info about autotools.txt =
 
