@@ -30,6 +30,10 @@
 #define DAG_RECORDER_CHK_LEVEL GS.opts.chk_level
 #endif
 
+#if !defined(DAG_RECORDER_GETCPU)
+#define DAG_RECORDER_GETCPU 0
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -48,6 +52,7 @@ extern "C" {
   
   typedef struct dr_dag_node_list dr_dag_node_list;
 
+  /* size = 88 bytes? */
   typedef struct dr_dag_node_info {
     dr_clock_t start; 
     dr_clock_t est;
@@ -65,6 +70,7 @@ extern "C" {
   typedef struct dr_pi_dag_node dr_pi_dag_node;
 
   /* a node of the in-memory, growing/shrinking dag */
+  /* size = 128 bytes? */
   struct dr_dag_node {
     dr_dag_node_info info;
     dr_pi_dag_node * forward;
@@ -88,11 +94,12 @@ extern "C" {
 
   /* list of dr_dag_node, used to dynamically
      grow the subgraphs of section/task */
-  enum { dr_dag_node_chunk_sz = 5 };
+  enum { dr_dag_node_chunk_sz = 3 };
+  /* 16 + 128 * 7 */
   typedef struct dr_dag_node_chunk {
     struct dr_dag_node_chunk * next;
-    dr_dag_node a[dr_dag_node_chunk_sz];
     int n;
+    dr_dag_node a[dr_dag_node_chunk_sz];
   } dr_dag_node_chunk;
 
   struct dr_dag_node_list {
@@ -142,17 +149,23 @@ extern "C" {
   static void * 
   dr_malloc(size_t sz) {
     void * a = malloc(sz);
-    if (!a) { perror("malloc"); exit(1); }
+    if (DAG_RECORDER_CHK_LEVEL) {
+      if (!a) { perror("malloc"); exit(1); }
+    }
     return a;
   }
 
   static void
   dr_free(void * a, size_t sz) {
-    if (a) {
-      if (DAG_RECORDER_DBG_LEVEL>=1) memset(a, 222, sz);
-      free(a);
+    if (DAG_RECORDER_CHK_LEVEL) {
+      if (a) {
+	if (DAG_RECORDER_DBG_LEVEL>=1) memset(a, 222, sz);
+	free(a);
+      } else {
+	(void)dr_check(sz == 0);
+      }
     } else {
-      (void)dr_check(sz == 0);
+      free(a);
     }
   }
 
@@ -299,7 +312,7 @@ extern "C" {
   
   extern dr_get_worker_key_struct dr_gwks;
   
-  static pthread_key_t dr_get_worker_key() {
+  static inline pthread_key_t dr_get_worker_key() {
     if (dr_gwks.worker_key_state == 2) return dr_gwks.worker_key;
     if (__sync_bool_compare_and_swap(&dr_gwks.worker_key_state, 0, 1)) {
       pthread_key_create(&dr_gwks.worker_key, NULL);
@@ -314,7 +327,7 @@ extern "C" {
     return __sync_fetch_and_add(&dr_gwks.worker_counter, 1);
   }
   
-  static int dr_get_worker_by_pthread_key() {
+  static inline int dr_get_worker_by_pthread_key() {
     pthread_key_t wk = dr_get_worker_key();
     void * x = pthread_getspecific(wk);
     if (x) {
@@ -390,6 +403,14 @@ extern "C" {
   }
 #endif
 
+  static int dr_getcpu() {
+#if DAG_RECORDER_GETCPU
+    return sched_getcpu();
+#else
+    return 0;
+#endif
+  }
+
   /* end an interval, 
      called by start_{task_group,create_task,wait_tasks} */
   static void 
@@ -407,7 +428,7 @@ extern "C" {
     }
     dn->info.n_edges = 0;
     dn->info.worker = worker;
-    dn->info.cpu = sched_getcpu();
+    dn->info.cpu = dr_getcpu();
     dn->info.end = end;
     dn->info.t_inf = dn->info.t_1 = dn->info.end - dn->info.start;
   }
@@ -486,6 +507,7 @@ extern "C" {
   dr_task_last_section_or_create(dr_dag_node * t) {
     if (dr_check(t->info.kind == dr_dag_node_kind_task)) {
       dr_dag_node * s = dr_task_active_node(t);
+      (void)dr_check(s->subgraphs);
       dr_dag_node * i = dr_dag_node_list_last(s->subgraphs);
       (void)dr_check(i->info.kind == dr_dag_node_kind_section
 		     || i->info.kind == dr_dag_node_kind_create_task);
@@ -496,9 +518,10 @@ extern "C" {
   }
 
   static dr_dag_node * 
-  dr_task_ensure_session(dr_dag_node * t) {
+  dr_task_ensure_section(dr_dag_node * t) {
     dr_dag_node * s = dr_task_active_node(t);
-    if (s->info.kind == dr_dag_node_kind_task) {
+    if (s == t) {
+      (void)dr_check(s->info.kind == dr_dag_node_kind_task);
       s = dr_push_back_section(t, s);
     }
     (void)dr_check(s->info.kind == dr_dag_node_kind_section);
@@ -584,7 +607,7 @@ extern "C" {
       dr_clock_t end = dr_get_tsc();
       dr_dag_node * t = dr_get_cur_task_(worker);
       /* ensure t has a session */
-      dr_dag_node * s = dr_task_ensure_session(t);
+      dr_dag_node * s = dr_task_ensure_section(t);
       /* add a new node to s */
       dr_dag_node * ct = dr_dag_node_list_push_back(s->subgraphs);
       ct->info.kind = dr_dag_node_kind_create_task;
@@ -638,7 +661,7 @@ extern "C" {
     if (TS) {
       dr_clock_t end = dr_get_tsc();
       dr_dag_node * t = dr_get_cur_task_(worker);
-      dr_dag_node * s = dr_task_ensure_session(t);
+      dr_dag_node * s = dr_task_ensure_section(t);
       dr_dag_node * i = dr_dag_node_list_push_back(s->subgraphs);
       if (DAG_RECORDER_VERBOSE_LEVEL>=2) {
 	printf("dr_enter_wait_tasks() by %d task=%p, "
@@ -748,7 +771,7 @@ extern "C" {
 	      (void)dr_check(dr_dag_node_list_empty(c->subgraphs));
 	      dr_free(c->subgraphs, sizeof(dr_dag_node_list));
 	      dr_free(c, sizeof(dr_dag_node));
-
+	      
 	    } else if (x->info.kind == dr_dag_node_kind_section) {
 	      (void)dr_check(x->subgraphs);
 	      /* free subgraphs */

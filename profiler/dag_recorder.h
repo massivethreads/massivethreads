@@ -58,8 +58,8 @@ extern "C" {
     (1L << 60),			/* collapse */
     4000,			/* gpl_sz */
     0,				/* dbg_level */
-    1,				/* verbose_level */
-    1,				/* chk_level */
+    0,				/* verbose_level */
+    0,				/* chk_level */
   };
 
   typedef struct dr_dag_node dr_dag_node;
