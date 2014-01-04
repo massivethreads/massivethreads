@@ -20,7 +20,7 @@ dr_node_kind_str(dr_dag_node_kind_t kind) {
 }
 
 static const char * 
-dr_node_attr(dr_dag_node * g) {
+dr_node_attr(dr_pi_dag_node * g) {
   switch (g->info.kind) {
   case dr_dag_node_kind_create_task:
     return "shape=\"box\",color=\"blue\"";
