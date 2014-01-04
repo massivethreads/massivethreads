@@ -21,6 +21,12 @@ dr_get_worker_key_struct dr_gwks = { 0, 0, 0 };
 
 /* --------------------- free dag ------------------- */
 
+static void 
+dr_dag_node_list_destroy(dr_dag_node_list * l) {
+  dr_dag_node_list_clear(l);
+  dr_free(l, sizeof(dr_dag_node_list));
+}
+
 void dr_free_dag_recursively(dr_dag_node * g) {
   if (g->info.kind == dr_dag_node_kind_create_task) {
     dr_free_dag_recursively(g->child);
@@ -151,18 +157,20 @@ dr_dag_node_stack_push_children(dr_dag_node_stack * s,
 	/* the entire if expression for checks */
 	if (DAG_RECORDER_CHK_LEVEL>=1) {
 	  if (K == dr_dag_node_kind_section) {
-	    if (g->done && ch == tail && i == ch->n - 1) {
-	      (void)dr_check(k == dr_dag_node_kind_wait_tasks);
-	    } else {
-	      (void)dr_check(k == dr_dag_node_kind_create_task 
-			     || k == dr_dag_node_kind_section);
+	    (void)dr_check(k == dr_dag_node_kind_create_task 
+			   || k == dr_dag_node_kind_section
+			   || k == dr_dag_node_kind_wait_tasks);
+	    if (k == dr_dag_node_kind_wait_tasks) {
+	      (void)dr_check(ch == tail);
+	      (void)dr_check(i == ch->n - 1);
 	    }
 	  } else {
 	    (void)dr_check(K == dr_dag_node_kind_task);
-	    if (g->done && ch == tail && i == ch->n - 1) {
-	      (void)dr_check(k == dr_dag_node_kind_end_task);
-	    } else {
-	      (void)dr_check(k == dr_dag_node_kind_section);
+	    (void)dr_check(k == dr_dag_node_kind_section
+			   || k == dr_dag_node_kind_end_task);
+	    if (k == dr_dag_node_kind_end_task) {
+	      (void)dr_check(ch == tail);
+	      (void)dr_check(i == ch->n - 1);
 	    }
 	  }
 	}
@@ -219,12 +227,6 @@ dr_pi_dag_copy_children(dr_dag_node * g,
     dr_dag_node_chunk * head = g->subgraphs->head;
     dr_dag_node_chunk * tail = g->subgraphs->tail;
     dr_dag_node_chunk * ch;
-    if (DAG_RECORDER_CHK_LEVEL>=1) {
-      if (head == tail && head->n == 0) {
-	/* empty. the node must have been collapsed */
-	(void)dr_check(g->collapsed);
-      }
-    }
     g_pi->subgraphs_begin_offset = p - g_pi;
     for (ch = head; ch; ch = ch->next) {
       int i;
@@ -234,11 +236,6 @@ dr_pi_dag_copy_children(dr_dag_node * g,
       }
     }
     g_pi->subgraphs_end_offset = p - g_pi;
-    if (DAG_RECORDER_CHK_LEVEL>=1) {
-      if (g_pi->subgraphs_begin_offset == g_pi->subgraphs_end_offset) {
-	(void)dr_check(g->collapsed);
-      }
-    }
   }
   return p;
 }

@@ -145,9 +145,9 @@
 #define call_task(statement)          do { statement; } while(0)
 #define call_taskc(callable)          callable()
 #define create_task_and_wait(statement)			\
-  do { call_taskA(statement); wait_tasks; } while(0)
+  do { create_taskA(statement); wait_tasks; } while(0)
 #define create_taskc_and_wait(callable)			\
-  do { call_taskc(callable); wait_tasks; } while(0)
+  do { create_taskc(callable); wait_tasks; } while(0)
 
 #define cilk_proc_start       int __dummy_cilk_proc_start__ __attribute__((unused)) = 0
 #define cilk_proc_return(x)   return x

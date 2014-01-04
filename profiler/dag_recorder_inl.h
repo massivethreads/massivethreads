@@ -82,8 +82,6 @@ extern "C" {
       dr_dag_node * child;		/* kind == create_task */
       struct {				/* kind == section/task */
 	dr_dag_node_list * subgraphs;
-	int done;
-	int collapsed;
 #if ACTIVE_SECTION_OPT
 	dr_dag_node * parent_section; /* enclosing section or task */
 	dr_dag_node * active_section;
@@ -262,12 +260,6 @@ extern "C" {
     dr_dag_node_list_init(l);
   }
 
-  static void 
-  dr_dag_node_list_destroy(dr_dag_node_list * l) {
-    dr_dag_node_list_clear(l);
-    dr_free(l, sizeof(dr_dag_node_list));
-  }
-
 #if defined(__x86_64__)
 
   static unsigned long long dr_rdtsc() {
@@ -358,8 +350,6 @@ extern "C" {
 				   dr_dag_node * p) {
     (void)dr_check(kind >= dr_dag_node_kind_section);
     n->info.kind = kind;
-    n->done = 0;
-    n->collapsed = 0;
     n->subgraphs = dr_mk_dag_node_list();
 #if ACTIVE_SECTION_OPT
     n->parent_section = p;
@@ -426,6 +416,7 @@ extern "C" {
     for (k = 0; k < dr_dag_node_kind_section; k++) {
       dn->info.nodes[k] = 0;
     }
+    dn->info.nodes[kind] = 1;
     dn->info.n_edges = 0;
     dn->info.worker = worker;
     dn->info.cpu = dr_getcpu();
@@ -457,8 +448,7 @@ extern "C" {
   dr_task_active_node(dr_dag_node * t) {
 #if ACTIVE_SECTION_OPT
     return t->active_section;
-#endif
-
+#else
     dr_dag_node * s = t;
     (void)dr_check(t->info.kind == dr_dag_node_kind_task);
     while (1) {
@@ -466,9 +456,7 @@ extern "C" {
 	/* no subsection in s 
 	   -> no active sections under s
 	   -> return s */
-#if ACTIVE_SECTION_OPT
 	(void)dr_check(t->active_section == s);
-#endif
 	return s;
       } else {
 	/* look at the rightmost child */
@@ -477,9 +465,7 @@ extern "C" {
 	   -> it means it has finished
 	   -> no active sections under s */
 	if (c->info.kind < dr_dag_node_kind_section) {
-#if ACTIVE_SECTION_OPT
 	  (void)dr_check(t->active_section == s);
-#endif
 	  return s;
 	}
 	/* something is broken if we have a task node 
@@ -488,9 +474,7 @@ extern "C" {
 	/* the rightmost child is a section that has finished 
 	   -> no active sections under s */
 	if (c->done) {
-#if ACTIVE_SECTION_OPT
 	  (void)dr_check(t->active_section == s);
-#endif
 	  return s;
 	}
 	/* the rightmost child is an unfinished section.
@@ -501,6 +485,7 @@ extern "C" {
     /* never reach. suppress cilkc warning */
     (void)dr_check(0);
     return 0;
+#endif
   }
 
   static dr_dag_node * 
@@ -668,8 +653,6 @@ extern "C" {
 	       "section=%p, new interval=%p\n", 
 	       worker, t, s, i);
       }
-      (void)dr_check(s->done == 0);
-      s->done = 1;
 #if ACTIVE_SECTION_OPT
       t->active_section = s->parent_section;
       (void)dr_check(dr_task_active_node(t) == t->active_section);
@@ -690,20 +673,21 @@ extern "C" {
 	&& dr_check(!dr_dag_node_list_empty(s->subgraphs))) {
       dr_dag_node * first = dr_dag_node_list_first(s->subgraphs);
       dr_dag_node * last = dr_dag_node_list_last(s->subgraphs);
+      dr_dag_node_info info;
       int i;
       /* initialize the result */
-      s->info.start   = first->info.start;
-      s->info.est     = first->info.est;
-      s->info.end     = last->info.end;
-      s->info.last_node_kind = last->info.last_node_kind;
-      s->info.t_1     = 0;
-      s->info.t_inf   = 0;
+      info.start   = first->info.start;
+      info.est     = first->info.est;
+      info.end     = last->info.end;
+      info.last_node_kind = last->info.last_node_kind;
+      info.t_1     = 0;
+      info.t_inf   = 0;
       for (i = 0; i < dr_dag_node_kind_section; i++) {
-	s->info.nodes[i] = 0;
+	info.nodes[i] = 0;
       }
-      s->info.n_edges = 0;
-      s->info.worker  = first->info.worker;
-      s->info.cpu     = first->info.cpu;
+      info.n_edges = 0;
+      info.worker  = first->info.worker;
+      info.cpu     = first->info.cpu;
 
       {
 	/* look through all chunks */
@@ -715,48 +699,43 @@ extern "C" {
 	  for (i = 0; i < ch->n; i++) {
 	    dr_dag_node * x = &ch->a[i];
 	    int k;
-	    s->info.t_1     += x->info.t_1;
-	    s->info.t_inf   += x->info.t_inf;
+	    info.t_1     += x->info.t_1;
+	    info.t_inf   += x->info.t_inf;
 	    for (k = 0; k < dr_dag_node_kind_section; k++) {
-	      s->info.nodes[k] += x->info.nodes[k];
+	      info.nodes[k] += x->info.nodes[k];
 	    }
-	    s->info.n_edges += x->info.n_edges 
+	    info.n_edges += x->info.n_edges 
 	      + ((ch != head || i) ? 1 : 0);
-	    if (s->info.worker != x->info.worker) s->info.worker = -1;
-	    if (s->info.cpu    != x->info.cpu)    s->info.cpu    = -1;
+	    info.worker = (info.worker == x->info.worker ? info.worker : -1);
+	    info.cpu = (info.cpu == x->info.cpu ? info.cpu : -1);
 	    if (x->info.kind == dr_dag_node_kind_create_task) {
 	      dr_dag_node * y = x->child;
 	      (void)dr_check(y);
-	      if (y->info.end > s->info.end) {
-		s->info.end = y->info.end;
-		s->info.last_node_kind = y->info.last_node_kind;
-	      }
-	      s->info.t_1     += y->info.t_1;
-	      if (s->info.t_inf + y->info.t_inf > t_inf) 
-		t_inf = s->info.t_inf + y->info.t_inf;
+	      info.end = (y->info.end > info.end ? y->info.end : info.end);
+	      info.last_node_kind 
+		= (y->info.end > info.end ? y->info.last_node_kind : info.last_node_kind);
+	      info.t_1     += y->info.t_1;
+	      t_inf = (info.t_inf + y->info.t_inf > t_inf ? info.t_inf + y->info.t_inf : t_inf);
 	      for (k = 0; k < dr_dag_node_kind_section; k++) {
-		s->info.nodes[k] += y->info.nodes[k];
+		info.nodes[k] += y->info.nodes[k];
 	      }
-	      // dr_check((ch != head) || i);
-	      s->info.n_edges += y->info.n_edges + 2;
-	      if (s->info.worker != y->info.worker) 
-		s->info.worker = -1;
-	      if (s->info.cpu    != y->info.cpu) 
-		s->info.cpu    = -1;
+	      info.n_edges += y->info.n_edges + 2;
+	      info.worker = (info.worker == y->info.worker ? info.worker : -1);
+	      info.cpu = (info.cpu == y->info.cpu ? info.cpu : -1);
 	    }
 	  }
-	  if (t_inf > s->info.t_inf) s->info.t_inf = t_inf;
 	}
+	info.t_inf = (t_inf > info.t_inf ? t_inf : info.t_inf);
       }
+      s->info = info;
       /* now check if we can collapse it */
-      if (s->info.worker != -1
-	  && s->info.end - s->info.start < GS.opts.collapse_max) {
+      if (info.worker != -1
+	  && info.end - info.start < GS.opts.collapse_max) {
 	/* free the graph of its children */
 	dr_dag_node_chunk * head = s->subgraphs->head;
 	dr_dag_node_chunk * ch;
 	/* for now, we collapse it if it 
 	   was executed on a single worker */
-	s->collapsed = 1;
 	for (ch = head; ch; ch = ch->next) {
 	  int i;
 	  for (i = 0; i < ch->n; i++) {
@@ -784,6 +763,7 @@ extern "C" {
       }
     }
   }
+
 
   /* resume from wait_tasks 
 
@@ -846,8 +826,6 @@ extern "C" {
       }
       dr_end_interval_(i, worker, t->info.start, t->info.est, end, 
 		       dr_dag_node_kind_end_task);
-      (void)dr_check(t->done == 0);
-      t->done = 1;
       dr_summarize_section_or_task(t);
     }
   }
