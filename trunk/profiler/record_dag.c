@@ -8,41 +8,16 @@
 #include "dag_recorder_impl.h"
 
 dr_global_state GS = {
+  0,				/* initialized */
   0,				/* root */
   0,				/* start_clock */
+  0,				/* thread_specific */
+  0,				/* ts */
 };
-
-
-dr_thread_specific_state * TS = 0;
 
 /* --------------------- dr_get_worker ------------------- */
 
 dr_get_worker_key_struct dr_gwks = { 0, 0, 0 };
-
-/* --------------------- free dag ------------------- */
-
-static void 
-dr_dag_node_list_destroy(dr_dag_node_list * l) {
-  dr_dag_node_list_clear(l);
-  dr_free(l, sizeof(dr_dag_node_list));
-}
-
-void dr_free_dag_recursively(dr_dag_node * g) {
-  if (g->info.kind == dr_dag_node_kind_create_task) {
-    dr_free_dag_recursively(g->child);
-    dr_free(g->child, sizeof(dr_dag_node));
-  } else if (g->info.kind >= dr_dag_node_kind_section) {
-    dr_dag_node_chunk * ch;
-    for (ch = g->subgraphs->head; ch; ch = ch->next) {
-      int i;
-      for (i = 0; i < ch->n; i++) {
-	dr_free_dag_recursively(&ch->a[i]);
-      }
-    }
-    dr_dag_node_list_destroy(g->subgraphs);
-    g->subgraphs = 0;
-  }
-}
 
 /* --------------- depth first traverse a graph ------------ */
 
@@ -59,6 +34,18 @@ typedef struct dr_dag_node_stack_cell {
   dr_dag_node * node;		/* this is a node */
 } dr_dag_node_stack_cell;
 
+/* TODO:
+   probably we should make it larger, so that
+   we don't call malloc too many times.
+   to do so, we explictly need to maintain
+   the set of addresses obtained from malloc.
+   currently there are no track of them.
+   in the end we simply call free for individual
+   cells (see dr_dag_node_stack_fini), and
+   it is wrong when dr_dag_node_stack_cell_sz > 1
+ */
+enum { dr_dag_node_stack_cell_sz = 1 };
+
 typedef struct dr_dag_node_stack {
   /* free list (recycle popped cells) */
   dr_dag_node_stack_cell * freelist;
@@ -73,14 +60,25 @@ dr_dag_node_stack_init(dr_dag_node_stack * s) {
   s->top = 0;
 }
 
+static void 
+dr_dag_node_stack_fini(dr_dag_node_stack * s) {
+  dr_check(!s->top);
+  dr_dag_node_stack_cell * cell;
+  dr_dag_node_stack_cell * next;
+  for (cell = s->freelist; cell; cell = next) {
+    next = cell->next;
+    dr_free(cell, sizeof(dr_dag_node_stack_cell) * dr_dag_node_stack_cell_sz);
+  }
+}
+
 /* ensure the free list is not empty.
    get memory via malloc and fill the free list.
    return a pointer to a cell */
 static dr_dag_node_stack_cell * 
 ensure_freelist(dr_dag_node_stack * s) {
   dr_dag_node_stack_cell * f = s->freelist;
-  if (f == 0) {
-    int n = 100;
+  if (!f) {
+    int n = dr_dag_node_stack_cell_sz;
     f = (dr_dag_node_stack_cell *)
       dr_malloc(sizeof(dr_dag_node_stack_cell) * n);
     int i;
@@ -261,8 +259,34 @@ dr_dag_count_nodes(dr_dag_node * g) {
       dr_dag_node_stack_push_children(s, x);
     }
   }
+  dr_dag_node_stack_fini(s);
   return n;
 }
+
+/* --- free dag --- */
+
+static void 
+dr_free_dag_recursively(dr_dag_node * g, dr_dag_node_list * fl) {
+  dr_dag_node_stack s[1];
+  dr_dag_node_stack_init(s);
+  dr_dag_node_stack_push(s, g);
+  while (s->top) {
+    dr_dag_node * x = dr_dag_node_stack_pop(s);
+    if (x->info.kind < dr_dag_node_kind_section) {
+      if (x->info.kind == dr_dag_node_kind_create_task 
+	  && x->child) {
+	dr_dag_node_stack_push(s, x->child);
+      }
+      dr_dag_node_list_clear(x->subgraphs, fl);
+    } else {
+      dr_dag_node_stack_push_children(s, x);
+      dr_dag_node_list_clear(x->subgraphs, fl);
+    }
+    dr_free(x, sizeof(dr_dag_node));
+  }
+  dr_dag_node_stack_fini(s);
+}
+
 
 /* --- make position independent copy of g --- */
 
@@ -296,6 +320,7 @@ dr_pi_dag_enum_nodes(dr_pi_dag * G,
   //dr_dag_node_stack_clear(s);
   G->n = n;
   G->T = T;
+  dr_dag_node_stack_fini(s);
 }
 
 /* --------------------- enumurate edges ------------------- */
@@ -543,19 +568,100 @@ void dr_options_default(dr_options * opts) {
       || getenv_ull("DR_COLLAPSE_MAX",        &opts->collapse_max)) {}
 }
 
-void dr_start_(dr_options * opts, int worker, int num_workers) {
-  const char * dag_recorder = getenv("DAG_RECORDER");
-  if (!dag_recorder || atoi(dag_recorder)) {
-    dr_options opts_[1];
-    if (!opts) {
-      opts = opts_;
-      dr_options_default(opts);
-    }
-    if (GS.root) dr_free_dag_recursively(GS.root); 
-    TS = (dr_thread_specific_state *)
-      dr_malloc(sizeof(dr_thread_specific_state) 
+
+static dr_thread_specific_state *
+dr_make_thread_specific_state(int num_workers) {
+  dr_thread_specific_state * ts 
+    = dr_malloc(sizeof(dr_thread_specific_state) 
 		* num_workers);
-    GS.opts = *opts;
+  int i;
+  for (i = 0; i < num_workers; i++) {
+    dr_dag_node_list_init(ts[i].freelist);
+  }
+  return ts;
+}
+
+static dr_thread_specific_state *
+dr_free_thread_specific_state(int num_workers) {
+  dr_free(GS.thread_specific, 
+	  sizeof(dr_thread_specific_state) * num_workers);
+  GS.thread_specific = 0;
+  GS.ts = 0;
+}
+
+/* initialize dag recorder, when called 
+   for the first time.
+   second or later invocations have no effects
+ */
+static void 
+dr_init_(dr_options * opts, int worker, int num_workers) {
+  if (!GS.initialized) {
+    GS.initialized = 1;
+    const char * dag_recorder = getenv("DAG_RECORDER");
+    if (!dag_recorder || atoi(dag_recorder)) {
+      dr_options opts_[1];
+      if (!opts) {
+	opts = opts_;
+	dr_options_default(opts);
+      }
+      GS.opts = *opts;
+      GS.thread_specific = dr_make_thread_specific_state(num_workers);
+      GS.ts = 0;
+    }  
+  }
+}
+
+/* stop profiling */
+void dr_stop_(int worker) {
+  dr_end_task_(worker);
+  GS.ts = 0;
+}
+
+/* --------------------- free dag ------------------- */
+
+static void 
+dr_free_freelist(dr_dag_node_list * fl) {
+  dr_dag_node_chunk * head = fl->head;
+  dr_dag_node_chunk * ch;
+  dr_dag_node_chunk * next;
+  for (ch = head; ch; ch = next) {
+    next = ch->next;
+    dr_free(ch, sizeof(dr_dag_node_chunk));
+  }
+}
+
+static void 
+dr_free_freelists(int num_workers) {
+  int i;
+  for (i = 0; i < num_workers; i++) {
+    dr_free_freelist(GS.thread_specific[i].freelist);
+  }
+}
+
+/* completely uninitialize */
+void dr_cleanup_(int worker, int num_workers) {
+  if (GS.initialized) {
+    if (GS.ts) dr_stop_(worker);
+    /* get dag tree back into the free list of the calling worker */
+    dr_free_dag_recursively(GS.root, GS.thread_specific[worker].freelist); 
+    GS.root = 0;
+    /* get everybody's freelists back into the underlying malloc */
+    dr_free_freelists(num_workers);
+    /* free thread specific data structure */
+    dr_free_thread_specific_state(num_workers);
+    GS.initialized = 0;
+  }
+}
+
+/* initialize when called for the first time;
+   and start profiling */
+void dr_start_(dr_options * opts, int worker, int num_workers) {
+  dr_init_(opts, worker, num_workers);
+  if (GS.thread_specific) {
+    if (GS.root) {
+      dr_free_dag_recursively(GS.root, GS.thread_specific[worker].freelist); 
+    }
+    GS.ts = GS.thread_specific;
     GS.start_clock = dr_get_tsc();
     dr_start_task_(0, worker);
     GS.root = dr_get_cur_task_(worker);
@@ -572,10 +678,6 @@ void dr_dump() {
     dr_gen_dot(G);
     dr_gen_gpl(G);
   }
-}
-
-void dr_stop_(int worker) {
-  dr_end_task_(worker);
 }
 
 
