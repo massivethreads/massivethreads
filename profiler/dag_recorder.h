@@ -77,6 +77,7 @@ extern "C" {
   void dr_start_(dr_options * opts, int worker, int num_workers);
   void dr_stop_(int worker);
   void dr_dump();
+  void dr_cleanup_(int worker, int num_workers);
 
 #define dr_start_task(parent) \
   dr_start_task_(parent, dr_get_worker()) 
@@ -109,6 +110,8 @@ extern "C" {
   dr_start_(opts, dr_get_worker(), dr_get_max_workers())
 #define dr_stop() \
   dr_stop_(dr_get_worker())
+#define dr_cleanup() \
+  dr_cleanup_(dr_get_worker(), dr_get_max_workers())
 
 #ifdef __cplusplus
 }

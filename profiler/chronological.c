@@ -224,6 +224,6 @@ dr_pi_dag_chronological_traverse(dr_pi_dag * G,
       break;
     }
   }
-  dr_free(ready_count, sizeof(long) * G->n);
+  dr_free(ready_count, sizeof(int) * G->n);
 }
 
