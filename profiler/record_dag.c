@@ -272,17 +272,22 @@ dr_free_dag_recursively(dr_dag_node * g, dr_dag_node_list * fl) {
   dr_dag_node_stack_push(s, g);
   while (s->top) {
     dr_dag_node * x = dr_dag_node_stack_pop(s);
-    if (x->info.kind < dr_dag_node_kind_section) {
-      if (x->info.kind == dr_dag_node_kind_create_task 
-	  && x->child) {
+    if (x->info.kind == dr_dag_node_kind_create_task) {
+      if (x->child) {
 	dr_dag_node_stack_push(s, x->child);
       }
-      dr_dag_node_list_clear(x->subgraphs, fl);
-    } else {
+    } else if (x->info.kind >= dr_dag_node_kind_section) {
       dr_dag_node_stack_push_children(s, x);
       dr_dag_node_list_clear(x->subgraphs, fl);
+      /* TODO: since task node is individually
+	 allocated by dr_malloc (in dr_mk_dag_node_task),
+	 we free it here.
+	 other kinds of nodes are allocated inside
+	 a subgraphs list of their parents */
+      if (x->info.kind == dr_dag_node_kind_task) {
+	dr_free(x, sizeof(dr_dag_node));
+      }
     }
-    dr_free(x, sizeof(dr_dag_node));
   }
   dr_dag_node_stack_fini(s);
 }
