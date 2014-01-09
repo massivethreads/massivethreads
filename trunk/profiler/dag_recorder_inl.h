@@ -4,8 +4,6 @@
 
 #pragma once
 
-#define EMBED_SUBGRAPHS 1
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -58,14 +56,6 @@ extern "C" {
     dr_dag_node_chunk * tail;
   };
 
-#if 0
-  typedef struct {
-    dr_dag_node_chunk * top;
-    dr_dag_node_chunk * bot;
-    long n;
-  } dr_dag_node_chunk_freelist;
-#endif
-
   /* size = 88 bytes? */
   typedef struct dr_dag_node_info {
     dr_clock_t start; 
@@ -87,6 +77,9 @@ extern "C" {
   /* size = 128 bytes? */
   struct dr_dag_node {
     dr_dag_node_info info;
+    /* a pointer used to recursively
+       convert the graph into the 
+       position independent format */
     dr_pi_dag_node * forward;
     /* todo: done and collapsed are actually redundant.
        done is used only for sanity checks
@@ -106,7 +99,7 @@ extern "C" {
 
   /* list of dr_dag_node, used to dynamically
      grow the subgraphs of section/task */
-  enum { dr_dag_node_chunk_sz = 3 };
+  enum { dr_dag_node_chunk_sz = 1 };
   /* 16 + 128 * 7 */
   typedef struct dr_dag_node_chunk {
     struct dr_dag_node_chunk * next;
@@ -185,18 +178,6 @@ extern "C" {
       free(a);
     }
   }
-
-#if 0
-  static void
-  dr_dag_node_chunk_freelist_destroy(dr_dag_node_chunk_freelist * fl) {
-    dr_dag_node_chunk * ch;
-    dr_dag_node_chunk * next = 0;
-    for (ch = fl->top; ch; ch = next) {
-      next = ch->next;
-      dr_free(ch, sizeof(dr_dag_node_chunk));
-    }
-  }
-#endif
 
   static dr_dag_node_chunk *
   dr_dag_node_chunk_alloc(dr_dag_node_list * fl) {
@@ -290,6 +271,8 @@ extern "C" {
     return ch;
   }
 
+  /* extend l by one element and return a point
+     to the new element */
   static dr_dag_node *
   dr_dag_node_list_push_back(dr_dag_node_list * l,
 			     dr_dag_node_list * fl) {
@@ -309,9 +292,10 @@ extern "C" {
       (void)dr_check(l->tail);
       (void)dr_check(!l->tail->next);
       l->tail->next = fl->head;
+      if (!fl->head)
+	fl->tail = l->tail;
       fl->head = l->head;
       dr_dag_node_list_init(l);
-      return;
     } else {
       (void)dr_check(!l->tail);
     }
@@ -425,7 +409,8 @@ extern "C" {
   dr_push_back_section(dr_dag_node * t, dr_dag_node * s, 
 		       dr_dag_node_list * fl) {
     if (dr_check(s->info.kind >= dr_dag_node_kind_section)) {
-      dr_dag_node * new_s = dr_dag_node_list_push_back(s->subgraphs, fl);
+      dr_dag_node * new_s 
+	= dr_dag_node_list_push_back(s->subgraphs, fl);
       dr_dag_node_init_section_or_task(new_s, dr_dag_node_kind_section, s);
       t->active_section = new_s;
       (void)dr_check(dr_task_active_node(t) == t->active_section);
