@@ -32,7 +32,7 @@
 #define create_task_with_prof(statement) do {			\
     if (__mk_task_group_n_children__ == 0) dr_begin_section(); \
     __mk_task_group_n_children__++;				\
-    dr_dag_node * __c__;				   \
+    dr_dag_node * __c__ = 0;				   \
     dr_dag_node * __t__ = dr_enter_create_task(&__c__);	   \
     dr_start_task(__c__);				   \
     statement;						   \
