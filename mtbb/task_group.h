@@ -504,9 +504,10 @@ namespace mtbb {
     }
 
     void wait() {
+      if (n_outstanding_children == 0) dr_begin_section();
       dr_dag_node * t = dr_enter_wait_tasks();
       task_group_no_prof::wait();
-      n_outstanding_children--;
+      n_outstanding_children = 0;
       dr_return_from_wait_tasks(t);
     }
   };
