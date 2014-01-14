@@ -181,3 +181,20 @@
 #error "neither TO_SERIAL, TO_OMP, TO_TBB, TO_CILK, TO_CILKPLUS, TO_MTHREAD, TO_MTHREAD_NATIVE, TO_QTHREAD, nor TO_NANOX defined"
 #endif
 
+
+/* common once we define create_taskXX etc. */
+
+#define create_task0_if(X,E) \
+do { if (X) { create_task0(E); } else { call_task(E); } } while(0)
+#define create_task1_if(X,s0,E) \
+do { if (X) { create_task1(s0,E); } else { call_task(E); } } while(0)
+#define create_task2_if(X,s0,s1,E) \
+do { if (X) { create_task2(s0,s1,E); } else { call_task(E); } } while(0)
+#define create_taskA_if(X,E) \
+do { if (X) { create_taskA(E); } else { call_task(E); } } while(0)
+#define create_taskc_if(X,E) \
+do { if (X) { create_taskc(E); } else { call_taskc(E); } } while(0)
+#define create_task_and_wait_if(X,E) \
+do { if (X) { create_task_and_wait(E); } else { call_task(E); } } while(0)
+#define create_taskc_and_wait_if(X,E) \
+do { if (X) { create_taskc_and_wait(E); } else { call_taskc(E); } } while(0)
