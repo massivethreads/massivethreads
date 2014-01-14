@@ -62,7 +62,7 @@ dr_dag_node_stack_init(dr_dag_node_stack * s) {
 
 static void 
 dr_dag_node_stack_fini(dr_dag_node_stack * s) {
-  dr_check(!s->top);
+  (void)dr_check(!s->top);
   dr_dag_node_stack_cell * cell;
   dr_dag_node_stack_cell * next;
   for (cell = s->freelist; cell; cell = next) {
@@ -223,7 +223,7 @@ dr_pi_dag_copy_children(dr_dag_node * g,
     }
   } else {
     dr_dag_node_chunk * head = g->subgraphs->head;
-    dr_dag_node_chunk * tail = g->subgraphs->tail;
+    //dr_dag_node_chunk * tail = g->subgraphs->tail;
     dr_dag_node_chunk * ch;
     g_pi->subgraphs_begin_offset = p - g_pi;
     for (ch = head; ch; ch = ch->next) {
@@ -586,7 +586,7 @@ dr_make_thread_specific_state(int num_workers) {
   return ts;
 }
 
-static dr_thread_specific_state *
+static void
 dr_free_thread_specific_state(int num_workers) {
   dr_free(GS.thread_specific, 
 	  sizeof(dr_thread_specific_state) * num_workers);
