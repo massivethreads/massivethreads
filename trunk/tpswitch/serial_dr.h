@@ -43,6 +43,7 @@
 #define create_taskc_with_prof(callable) create_task_with_prof(callable())
 
 #define wait_tasks_with_prof do {			\
+  if (__mk_task_group_n_children__ == 0) dr_begin_section(); \
   dr_return_from_wait_tasks(dr_enter_wait_tasks());	\
   __mk_task_group_n_children__ = 0;			\
 } while(0)
