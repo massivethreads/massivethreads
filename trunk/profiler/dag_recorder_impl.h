@@ -8,11 +8,18 @@
 
 /* a node of the dag, position independent */
 struct dr_pi_dag_node {
+  /* misc. information about this node */
   dr_dag_node_info info;
-  long edges_begin;
+  /* two indexes in the edges array, pointing to 
+     the begining and the end of edges from this node */
+  long edges_begin;	 
   long edges_end;
   union {
+    /* valid when this node is a create node.
+       index of its child */
     long child_offset;
+    /* valid when this node is a section or task node
+       begin/end indexes of its subgraphs */
     struct {
       long subgraphs_begin_offset;
       long subgraphs_end_offset;
@@ -32,11 +39,12 @@ typedef struct dr_pi_dag_edge {
   long v;
 } dr_pi_dag_edge;
 
+/* the toplevel structure of a position-independent dag */
 typedef struct dr_pi_dag {
-  long n;			/* length of n */
-  dr_pi_dag_node * T;		/* all nodes */
-  long m;
-  dr_pi_dag_edge * E;
+  long n;			/* length of T */
+  long m;			/* length of E */
+  dr_pi_dag_node * T;		/* all nodes in a contiguous array */
+  dr_pi_dag_edge * E;		/* all edges in a contiguous array */
 } dr_pi_dag;
 
 typedef enum {
