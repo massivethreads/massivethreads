@@ -54,19 +54,22 @@ dr_edge_color(dr_edge_kind_t k) {
 }
 
 static void 
-dr_pi_dag_node_gen_dot(dr_pi_dag_node * g, dr_pi_dag * G, FILE * wp) {
+dr_pi_dag_node_gen_dot(dr_pi_dag_node * g, 
+		       dr_pi_dag * G, FILE * wp) {
   fprintf(wp, 
-	  "/* node: %ld edges: %ld-%ld */\n"
-	  "T%lu [%s, label=\"%s (%s)\\n"
-	  "%llu-%llu est=%llu\\n"
+	  "/* node %ld : edges: %ld-%ld */\n"
+	  "T%lu [%s, label=\"[%ld] %s (%s)\\n"
+	  "%llu-%llu (%llu) est=%llu\\n"
 	  "W=%llu/%llu,nodes=%ld/%ld/%ld,edges=%ld by %d on %d\"];\n",
 	  g - G->T, g->edges_begin, g->edges_end,
 	  g - G->T,
 	  dr_node_attr(g),
+	  g - G->T,
 	  dr_node_kind_str(g->info.kind),
 	  dr_node_kind_str(g->info.last_node_kind),
 	  g->info.start, 
 	  g->info.end, 
+	  g->info.end - g->info.start, 
 	  g->info.est, 
 	  g->info.t_1, g->info.t_inf,
 	  g->info.nodes[dr_dag_node_kind_create_task],

@@ -183,25 +183,25 @@ dr_pi_dag_chronological_traverse(dr_pi_dag * G,
   while (F->n) {
     dr_event ev = dr_event_queue_deq(F);
     dr_pi_dag_node * u = ev.u;
-    ct->process_event(ct, ev);
+    //ct->process_event(ct, ev);
     switch (ev.kind) {
     case dr_event_kind_ready: {
       if (GS.opts.dbg_level>=2) {
-	printf("node %ld ready at %llu\n", u - G->T, ev.t);
+	printf("%llu : node %ld ready\n", ev.t, u - G->T);
       }
       dr_event_queue_enq(F, dr_mk_event(u->info.start, dr_event_kind_start, u, ev.pred, ev.edge_kind));
       break;
     }
     case dr_event_kind_start: {
       if (GS.opts.dbg_level>=2) {
-	printf("node %ld start at %llu\n", u - G->T, ev.t);
+	printf("%llu : node %ld start\n", ev.t, u - G->T);
       }
       dr_event_queue_enq(F, dr_mk_event(u->info.end, dr_event_kind_end, u, ev.pred, ev.edge_kind));
       break;
     }
     case dr_event_kind_end: {
       if (GS.opts.dbg_level>=2) {
-	printf("node %ld end at %llu\n", u - G->T, ev.t);
+	printf("%llu : node %ld end\n", ev.t, u - G->T);
       }
       dr_pi_dag_edge * e_begin = G->E + u->edges_begin;
       dr_pi_dag_edge * e_end = G->E + u->edges_end;
@@ -209,7 +209,7 @@ dr_pi_dag_chronological_traverse(dr_pi_dag * G,
       for (e = e_begin; e < e_end; e++) {
 	assert(G->T + e->u == u);
 	if (GS.opts.dbg_level>=2) {
-	  printf("node %ld count %d -> %d\n", 
+	  printf(" node %ld ready counter %d -> %d\n", 
 		 e->v, ready_count[e->v], ready_count[e->v] - 1);
 	}
 	ready_count[e->v]--;
@@ -223,6 +223,7 @@ dr_pi_dag_chronological_traverse(dr_pi_dag * G,
     default:
       break;
     }
+    ct->process_event(ct, ev);
   }
   dr_free(ready_count, sizeof(int) * G->n);
 }
