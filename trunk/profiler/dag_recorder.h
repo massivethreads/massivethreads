@@ -77,6 +77,7 @@ extern "C" {
   void dr_start_(dr_options * opts, int worker, int num_workers);
   void dr_stop_(int worker);
   void dr_dump();
+  int dr_read_and_analyze_dag(const char * filename);
   void dr_cleanup_(int worker, int num_workers);
 
 #define dr_start_task(parent) \

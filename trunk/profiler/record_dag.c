@@ -537,7 +537,7 @@ int dr_gen_pi_dag(dr_pi_dag * G) {
       must_close = 1;
     }
   } else {
-    fprintf(stderr, "not writing dot\n");
+    fprintf(stderr, "not writing dag\n");
   }
   if (wp) {
     dr_pi_dag_dump(G, wp, filename);
@@ -641,6 +641,15 @@ dr_free_thread_specific_state(int num_workers) {
   GS.ts = 0;
 }
 
+void dr_opts_init(dr_options * opts) {
+  dr_options opts_[1];
+  if (!opts) {
+    opts = opts_;
+    dr_options_default(opts);
+  }
+  GS.opts = *opts;
+}
+
 /* initialize dag recorder, when called 
    for the first time.
    second or later invocations have no effects
@@ -651,12 +660,7 @@ dr_init_(dr_options * opts, int worker, int num_workers) {
     GS.initialized = 1;
     const char * dag_recorder = getenv("DAG_RECORDER");
     if (!dag_recorder || atoi(dag_recorder)) {
-      dr_options opts_[1];
-      if (!opts) {
-	opts = opts_;
-	dr_options_default(opts);
-      }
-      GS.opts = *opts;
+      dr_opts_init(opts);
       GS.thread_specific = dr_make_thread_specific_state(num_workers);
       GS.ts = 0;
     }  
