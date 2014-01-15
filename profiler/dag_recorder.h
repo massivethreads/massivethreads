@@ -31,7 +31,7 @@ extern "C" {
   typedef unsigned long long dr_clock_t;
 
   typedef struct dr_options {
-    const char * log_file;	/* filename of the log */
+    const char * dag_file;	/* filename of the dag */
     const char * dot_file;	/* filename of the dot */
     const char * gpl_file;	/* filename of the gpl */
     dr_clock_t collapse_max;	/* collapse nodes if set */
@@ -52,7 +52,7 @@ extern "C" {
   */
   static dr_options 
   dr_options_default_values __attribute__ ((unused)) = { 
-    (const char *)0,		/* log_file */
+    (const char *)0,		/* dag_file */
     (const char *)0,		/* dot_file */
     (const char *)0,		/* gpl_file */
     (1L << 60),			/* collapse */

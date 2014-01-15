@@ -490,6 +490,9 @@ dr_pi_dag_set_edge_ptrs(dr_pi_dag * G) {
   T[n - 1].edges_end = m;
 }
 
+/* convert pointer-based dag structure (g)
+   into a "position-independent" format (G)
+   suitable for dumping into disk */
 static void
 dr_make_pi_dag(dr_pi_dag * G,
 	       dr_dag_node * g, dr_clock_t start_clock) {
@@ -499,6 +502,50 @@ dr_make_pi_dag(dr_pi_dag * G,
   dr_pi_dag_sort_edges(G);
   dr_pi_dag_set_edge_ptrs(G);
 }
+
+static int 
+dr_pi_dag_dump(dr_pi_dag * G, FILE * wp, 
+	       const char * filename) {
+  if (fwrite(&G->n, sizeof(long), 1, wp) != 1
+      || fwrite(&G->m, sizeof(long), 1, wp) != 1
+      || fwrite(G->T, sizeof(dr_pi_dag_node), G->n, wp) != G->n
+      || fwrite(G->E, sizeof(dr_pi_dag_edge), G->m, wp) != G->m) {
+    fprintf(stderr, "fwrite: %s (%s)\n", 
+	    strerror(errno), filename);
+    return 0;
+  } else {
+    return 1;
+  }
+}
+
+/* dump the position-independent dag into a file */
+int dr_gen_pi_dag(dr_pi_dag * G) {
+  FILE * wp = NULL;
+  int must_close = 0;
+  const char * filename = GS.opts.dag_file;
+  if (filename) {
+    if (strcmp(filename, "-") == 0) {
+      fprintf(stderr, "writing dag to stdout\n");
+      wp = stdout;
+    } else {
+      fprintf(stderr, "writing dag to %s\n", filename);
+      wp = fopen(filename, "wb");
+      if (!wp) { 
+	fprintf(stderr, "fopen: %s (%s)\n", strerror(errno), filename); 
+	return 0;
+      }
+      must_close = 1;
+    }
+  } else {
+    fprintf(stderr, "not writing dot\n");
+  }
+  if (wp) {
+    dr_pi_dag_dump(G, wp, filename);
+  }
+  if (must_close) fclose(wp);
+  return 1;
+}
+
 
 
 /* initialization */
@@ -555,8 +602,8 @@ getenv_str(const char * v, const char ** y) {
 void dr_options_default(dr_options * opts) {
   * opts = dr_options_default_values;
 
-  if (getenv_str("DAG_RECORDER_LOG_FILE",     &opts->log_file)
-      || getenv_str("DR_LOG_FILE",            &opts->log_file)) {}
+  if (getenv_str("DAG_RECORDER_DAG_FILE",     &opts->dag_file)
+      || getenv_str("DR_DAG",                 &opts->dag_file)) {}
   if (getenv_str("DAG_RECORDER_DOT_FILE",     &opts->dot_file)
       || getenv_str("DR_DOT",                 &opts->dot_file)) {}
   if (getenv_str("DAG_RECORDER_GPL_FILE",     &opts->gpl_file)
@@ -680,6 +727,7 @@ void dr_dump() {
   if (GS.root) {
     dr_pi_dag G[1];
     dr_make_pi_dag(G, GS.root, GS.start_clock);
+    dr_gen_pi_dag(G);
     dr_gen_dot(G);
     dr_gen_gpl(G);
   }
