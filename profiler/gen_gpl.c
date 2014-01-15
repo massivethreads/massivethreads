@@ -86,7 +86,9 @@ dr_para_prof_add_hist(dr_para_prof * pp, dr_clock_t t) {
   long n = pp->n_hists;
   dr_para_prof_history_entry * hist = pp->history;
   long last_t = (n ? hist[n-1].t : 0);
-  if (last_t + (t - last_t) * (sz - n) >= pp->last_time) {
+  // (last_t + (t - last_t) * (sz - n) >= pp->last_time)
+
+  if (t / (double)pp->last_time >= n / (double)sz) {
     int i;
     dr_para_prof_history_entry * h = &hist[n];
     assert(n < sz);
@@ -132,16 +134,30 @@ dr_para_prof_write_to_file(dr_para_prof * pp, FILE * wp) {
 	  );
   for (k = 0; k < dr_node_state_max; k++) {
     for (i = 0; i < n; i++) {
+      /* we transit from
+	 (t_prev, y_prev) -> (t, y), we draw
+	 the following *******
+
+	         y           *-----+
+		             *
+		 y0   +*******
+                      |      
+                      |
+                     t0      t
+      */
       int j;
+      int y_prev = 0;
       int y = 0;
-      if (i > 0) {
-	int y_prev = 0;
+
+      if (i == 0) {
+	fprintf(wp, "%d %d %d\n", 0, 0, 0);
+	fprintf(wp, "%llu %d %d\n", h[0].t, 0, 0);
+      } else {
 	for (j = 0; j < k; j++) {
 	  y_prev += h[i-1].a[j];
 	}
-	fprintf(wp, "%llu %d %d\n", h[i].t, y_prev, y_prev + h[i-1].a[k]);
-      } else {
-	fprintf(wp, "%llu %d %d\n", h[i].t, 0, 0);
+	fprintf(wp, "%llu %d %d\n", 
+		h[i].t, y_prev, y_prev + h[i-1].a[k]);
       }
       for (j = 0; j < k; j++) {
 	y += h[i].a[j];
@@ -182,6 +198,16 @@ calc_node_state(dr_pi_dag_node * pred, dr_edge_kind_t ek) {
 }
 
 static void 
+dr_para_prof_show_counts(dr_para_prof * pp) {
+  int k;
+  printf(" node states:");
+  for (k = 0; k < dr_node_state_max; k++) {
+    printf(" %d", pp->counts[k]);
+  }  
+  printf("\n");
+}
+
+static void 
 dr_para_prof_process_event(chronological_traverser * pp_, dr_event ev) {
   dr_para_prof * pp = (dr_para_prof *)pp_;
   switch (ev.kind) {
@@ -203,6 +229,9 @@ dr_para_prof_process_event(chronological_traverser * pp_, dr_event ev) {
   default:
     assert(0);
     break;
+  }
+  if (GS.opts.dbg_level>=2) {
+    dr_para_prof_show_counts(pp);
   }
   dr_para_prof_add_hist(pp, ev.t);
 }
