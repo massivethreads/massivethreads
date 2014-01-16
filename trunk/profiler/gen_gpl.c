@@ -85,7 +85,7 @@ dr_para_prof_add_hist(dr_para_prof * pp, dr_clock_t t) {
   long sz = pp->hist_sz;
   long n = pp->n_hists;
   dr_para_prof_history_entry * hist = pp->history;
-  long last_t = (n ? hist[n-1].t : 0);
+  //long last_t = (n ? hist[n-1].t : 0);
   // (last_t + (t - last_t) * (sz - n) >= pp->last_time)
 
   if (t / (double)pp->last_time > n / (double)sz) {
@@ -241,7 +241,7 @@ dr_gen_gpl(dr_pi_dag * G) {
   FILE * wp = NULL;
   int must_close = 0;
   const char * filename = GS.opts.gpl_file;
-  if (filename) {
+  if (filename && strcmp(filename, "") != 0) {
     if (strcmp(filename, "-") == 0) {
       fprintf(stderr, "writing gnuplot to stdout\n");
       wp = stdout;
@@ -256,15 +256,14 @@ dr_gen_gpl(dr_pi_dag * G) {
     }
   } else {
     fprintf(stderr, "not writing gnuplot\n");
+    return 1;
   }
   dr_pi_dag_node * last = dr_pi_dag_node_last(G->T, G);
   dr_para_prof pp[1];
   dr_para_prof_init(pp, GS.opts.gpl_sz, last->info.end);
   dr_pi_dag_chronological_traverse(G, (chronological_traverser *)pp);
   dr_para_prof_check(pp);
-  if (wp) {
-    dr_para_prof_write_to_file(pp, wp);
-  }
+  dr_para_prof_write_to_file(pp, wp);
   if (must_close) fclose(wp);
   return 1;
 }

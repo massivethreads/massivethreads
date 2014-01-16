@@ -110,7 +110,7 @@ int dr_gen_dot(dr_pi_dag * G) {
   FILE * wp = NULL;
   int must_close = 0;
   const char * filename = GS.opts.dot_file;
-  if (filename) {
+  if (filename && strcmp(filename, "") != 0) {
     if (strcmp(filename, "-") == 0) {
       fprintf(stderr, "writing dot to stdout\n");
       wp = stdout;
@@ -125,10 +125,9 @@ int dr_gen_dot(dr_pi_dag * G) {
     }
   } else {
     fprintf(stderr, "not writing dot\n");
+    return 1;
   }
-  if (wp) {
-    dr_pi_dag_gen_dot(G, wp);
-  }
+  dr_pi_dag_gen_dot(G, wp);
   if (must_close) fclose(wp);
   return 1;
 }

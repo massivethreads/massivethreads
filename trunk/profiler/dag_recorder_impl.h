@@ -39,10 +39,13 @@ typedef struct dr_pi_dag_edge {
   long v;
 } dr_pi_dag_edge;
 
-/* the toplevel structure of a position-independent dag */
+/* the toplevel structure of a position-independent dag.
+   when dumped into a file, we make sure each integer 
+   fields occupies 8 bytes */
 typedef struct dr_pi_dag {
   long n;			/* length of T */
   long m;			/* length of E */
+  long num_workers;		/* number of workers */
   dr_pi_dag_node * T;		/* all nodes in a contiguous array */
   dr_pi_dag_edge * E;		/* all edges in a contiguous array */
 } dr_pi_dag;
@@ -83,3 +86,8 @@ dr_pi_dag_node_first(dr_pi_dag_node * g, dr_pi_dag * G);
 
 dr_pi_dag_node *
 dr_pi_dag_node_last(dr_pi_dag_node * g, dr_pi_dag * G);
+
+int dr_gen_dot(dr_pi_dag * G);
+int dr_gen_gpl(dr_pi_dag * G);
+int dr_gen_basic_stat(dr_pi_dag * G);
+
