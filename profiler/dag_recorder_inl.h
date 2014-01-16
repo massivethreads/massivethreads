@@ -123,6 +123,7 @@ extern "C" {
 
   typedef struct dr_global_state {
     int initialized;
+    int num_workers;
     /* root of the task graph. 
        used (only) by print_task_graph */
     dr_dag_node * root;
@@ -372,6 +373,34 @@ extern "C" {
       int w = c;
       return w;
     }
+  }
+
+  static int 
+  dr_get_num_workers_env(const char * v) {
+    char * s = getenv(v);
+    int x;
+    if (!s) {
+      fprintf(stderr, 
+	      "error: could not get number of workers\n"
+	      "set environment variable %s\n", v);
+      return 0;
+    }
+    x = atoi(s);
+    if (x <= 0) {
+      fprintf(stderr, 
+	      "error: invalid value in environment varible %s (%s)\n"
+	      "set a positive integer\n", v, s);
+      return 0;
+    }
+    return x;
+  } 
+
+  static inline int dr_tbb_num_workers() {
+    return dr_get_num_workers_env("TBB_NTHREADS");
+  }
+
+  static inline int dr_nanox_num_workers() {
+    return dr_get_num_workers_env("NX_PES");
   }
 
   static dr_dag_node * 

@@ -495,7 +495,8 @@ dr_pi_dag_set_edge_ptrs(dr_pi_dag * G) {
    suitable for dumping into disk */
 static void
 dr_make_pi_dag(dr_pi_dag * G,
-	       dr_dag_node * g, dr_clock_t start_clock) {
+	       dr_dag_node * g, dr_clock_t start_clock, int num_workers) {
+  G->num_workers = num_workers;
   dr_pi_dag_init(G);
   dr_pi_dag_enum_nodes(G, g, start_clock);
   dr_pi_dag_enum_edges(G);
@@ -506,8 +507,9 @@ dr_make_pi_dag(dr_pi_dag * G,
 static int 
 dr_pi_dag_dump(dr_pi_dag * G, FILE * wp, 
 	       const char * filename) {
-  if (fwrite(&G->n, sizeof(long), 1, wp) != 1
-      || fwrite(&G->m, sizeof(long), 1, wp) != 1
+  if (fwrite(&G->n, sizeof(G->n), 1, wp) != 1
+      || fwrite(&G->m, sizeof(G->m), 1, wp) != 1
+      || fwrite(&G->num_workers, sizeof(G->num_workers), 1, wp) != 1
       || fwrite(G->T, sizeof(dr_pi_dag_node), G->n, wp) != G->n
       || fwrite(G->E, sizeof(dr_pi_dag_edge), G->m, wp) != G->m) {
     fprintf(stderr, "fwrite: %s (%s)\n", 
@@ -523,7 +525,7 @@ int dr_gen_pi_dag(dr_pi_dag * G) {
   FILE * wp = NULL;
   int must_close = 0;
   const char * filename = GS.opts.dag_file;
-  if (filename) {
+  if (filename && strcmp(filename, "") != 0) {
     if (strcmp(filename, "-") == 0) {
       fprintf(stderr, "writing dag to stdout\n");
       wp = stdout;
@@ -604,6 +606,8 @@ void dr_options_default(dr_options * opts) {
 
   if (getenv_str("DAG_RECORDER_DAG_FILE",     &opts->dag_file)
       || getenv_str("DR_DAG",                 &opts->dag_file)) {}
+  if (getenv_str("DAG_RECORDER_STAT_FILE",    &opts->stat_file)
+      || getenv_str("DR_STAT",                &opts->stat_file)) {}
   if (getenv_str("DAG_RECORDER_DOT_FILE",     &opts->dot_file)
       || getenv_str("DR_DOT",                 &opts->dot_file)) {}
   if (getenv_str("DAG_RECORDER_GPL_FILE",     &opts->gpl_file)
@@ -619,7 +623,6 @@ void dr_options_default(dr_options * opts) {
   if (getenv_ull("DAG_RECORDER_COLLAPSE_MAX", &opts->collapse_max)
       || getenv_ull("DR_COLLAPSE_MAX",        &opts->collapse_max)) {}
 }
-
 
 static dr_thread_specific_state *
 dr_make_thread_specific_state(int num_workers) {
@@ -658,6 +661,7 @@ static void
 dr_init_(dr_options * opts, int worker, int num_workers) {
   if (!GS.initialized) {
     GS.initialized = 1;
+    GS.num_workers = num_workers;
     const char * dag_recorder = getenv("DAG_RECORDER");
     if (!dag_recorder || atoi(dag_recorder)) {
       dr_opts_init(opts);
@@ -724,14 +728,12 @@ void dr_start_(dr_options * opts, int worker, int num_workers) {
   }
 }
 
-int dr_gen_dot(dr_pi_dag * G);
-int dr_gen_gpl(dr_pi_dag * G);
-
 void dr_dump() {
   if (GS.root) {
     dr_pi_dag G[1];
-    dr_make_pi_dag(G, GS.root, GS.start_clock);
+    dr_make_pi_dag(G, GS.root, GS.start_clock, GS.num_workers);
     dr_gen_pi_dag(G);
+    dr_gen_basic_stat(G);
     dr_gen_dot(G);
     dr_gen_gpl(G);
   }

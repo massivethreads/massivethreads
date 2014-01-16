@@ -14,16 +14,16 @@
 static dr_pi_dag * 
 dr_read_dag(const char * filename) {
   int fd = open(filename, O_RDONLY);
-  long n, m;
   void * a;
-  dr_pi_dag * G;
+  dr_pi_dag * G = dr_malloc(sizeof(dr_pi_dag));
   if (fd == -1) {
     fprintf(stderr, "open: %s (%s)\n", 
 	    strerror(errno), filename);
     return 0;
   }
-  if (read(fd, &n, sizeof(n)) != sizeof(n)
-      || read(fd, &m, sizeof(m)) != sizeof(m)) {
+  if (read(fd, &G->n, sizeof(G->n)) != sizeof(G->n)
+      || read(fd, &G->m, sizeof(G->m)) != sizeof(G->m)
+      || read(fd, &G->num_workers, sizeof(G->num_workers)) != sizeof(G->num_workers)) {
     const char * err = strerror(errno);
     fprintf(stderr, "read: %s (%s) offset %ld\n", 
 	    err, filename, lseek(fd, 0, SEEK_CUR));
@@ -31,29 +31,25 @@ dr_read_dag(const char * filename) {
     return 0;
   }
   off_t real_sz = lseek(fd, 0, SEEK_END);
-  off_t expected_sz = sizeof(n) + sizeof(m) 
-    + sizeof(dr_pi_dag_node) * n
-    + sizeof(dr_pi_dag_edge) * m;
+  off_t header_sz = sizeof(G->n) + sizeof(G->m) + sizeof(G->num_workers);
+  off_t expected_sz = header_sz 
+    + sizeof(dr_pi_dag_node) * G->n
+    + sizeof(dr_pi_dag_edge) * G->m;
   if (expected_sz != real_sz) {
     fprintf(stderr, "error: file %s may be corrupted; it has %ld nodes and %ld edges; we expected %ld bytes, but the file is %ld bytes\n", 
-	    filename, n, m, expected_sz, real_sz);
+	    filename, G->n, G->m, expected_sz, real_sz);
     close(fd);
     return 0;
   }
-  a = mmap(NULL, 
-	   sizeof(dr_pi_dag_node) * n
-	   + sizeof(dr_pi_dag_edge) * m, PROT_READ | PROT_WRITE,
+  a = mmap(NULL, expected_sz, PROT_READ | PROT_WRITE,
 	   MAP_PRIVATE, fd, 0);
   if (a == MAP_FAILED) {
     fprintf(stderr, "mmap: %s (%s)\n", strerror(errno), filename);
     close(fd);
     return 0;
   }
-  G = dr_malloc(sizeof(dr_pi_dag));
-  G->n = n;
-  G->m = m;
-  G->T = (dr_pi_dag_node *)(a + sizeof(n) + sizeof(m));
-  G->E = (dr_pi_dag_edge *)&G->T[n];
+  G->T = (dr_pi_dag_node *)(a + header_sz);
+  G->E = (dr_pi_dag_edge *)&G->T[G->n];
   close(fd);
   return G;
 }

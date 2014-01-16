@@ -32,6 +32,7 @@ extern "C" {
 
   typedef struct dr_options {
     const char * dag_file;	/* filename of the dag */
+    const char * stat_file;	/* filename of the dag */
     const char * dot_file;	/* filename of the dot */
     const char * gpl_file;	/* filename of the gpl */
     dr_clock_t collapse_max;	/* collapse nodes if set */
@@ -52,9 +53,10 @@ extern "C" {
   */
   static dr_options 
   dr_options_default_values __attribute__ ((unused)) = { 
-    (const char *)0,		/* dag_file */
-    (const char *)0,		/* dot_file */
-    (const char *)0,		/* gpl_file */
+    (const char *)"00dr.dag",  /* dag_file */
+    (const char *)"00dr.stat", /* stat_file */
+    (const char *)"00dr.dot",  /* dot_file */
+    (const char *)"00dr.gpl",  /* gpl_file */
     (1L << 60),			/* collapse */
     4000,			/* gpl_sz */
     0,				/* dbg_level */
