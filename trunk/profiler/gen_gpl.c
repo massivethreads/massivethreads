@@ -88,7 +88,7 @@ dr_para_prof_add_hist(dr_para_prof * pp, dr_clock_t t) {
   long last_t = (n ? hist[n-1].t : 0);
   // (last_t + (t - last_t) * (sz - n) >= pp->last_time)
 
-  if (t / (double)pp->last_time >= n / (double)sz) {
+  if (t / (double)pp->last_time > n / (double)sz) {
     int i;
     dr_para_prof_history_entry * h = &hist[n];
     assert(n < sz);
