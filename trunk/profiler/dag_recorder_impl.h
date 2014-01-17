@@ -27,14 +27,8 @@ struct dr_pi_dag_node {
   };
 };
 
-typedef enum {
-  dr_edge_kind_cont,
-  dr_edge_kind_create,
-  dr_edge_kind_end,
-} dr_edge_kind_t;
-
 typedef struct dr_pi_dag_edge {
-  dr_edge_kind_t kind;
+  dr_dag_edge_kind_t kind;
   long u;
   long v;
 } dr_pi_dag_edge;
@@ -61,7 +55,7 @@ typedef struct {
   dr_event_kind_t kind;		/* ready, start, or end */
   dr_pi_dag_node * u;		/* the node of the event */
   dr_pi_dag_node * pred;	/* the last predecessor */
-  dr_edge_kind_t edge_kind;	/* kind of edges from pred -> this node */
+  dr_dag_edge_kind_t edge_kind;	/* kind of edges from pred -> this node */
 } dr_event;
 
 dr_event 
@@ -69,7 +63,7 @@ dr_mk_event(dr_clock_t t,
 	    dr_event_kind_t kind, 
 	    dr_pi_dag_node * u,
 	    dr_pi_dag_node * pred,
-	    dr_edge_kind_t edge_kind);
+	    dr_dag_edge_kind_t edge_kind);
 
 typedef struct chronological_traverser chronological_traverser;
 struct chronological_traverser {

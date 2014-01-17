@@ -12,40 +12,15 @@
    tasks and generates a gnuplot file.
  */
 
-/* the state of a node.
-   a node is either 
-   (i) not ready,
-   (ii) ready but not running, 
-   (iii) running, or 
-   (iv) finished
-   we do not explicitly count (i) or (iv).
-   ready tasks (category (ii)) are further
-   classified by the event that made them
-   ready.
-
-   create : a task created a task and the
-   node is the first node the create task
-   create_cont : a task created a task and the
-   node is the first in the parent task after 
-   create_task
-   end : a task issued a wait_task at one
-   point, when one of the waited children
-   has not yet finished. later the last
-   child finished and the task is now ready.
-   the node is the first node after wait_tasks
-   wait_cont : a task issued a wait_task,
-   when all waited children have finished.
-   the node is the first node after wait_tasks
- */
 typedef enum {
   dr_node_state_running,
-  dr_node_state_end,
-  dr_node_state_create,
-  dr_node_state_create_cont,
-  dr_node_state_wait_cont,
-  dr_node_state_end_cont,
+  dr_node_state_ready_end,
+  dr_node_state_ready_create,
+  dr_node_state_ready_create_cont,
+  dr_node_state_ready_wait_cont,
   dr_node_state_max,
 } dr_node_state_t;
+
 
 /* an entry in the parallelism profile. */
 typedef struct {
@@ -116,10 +91,13 @@ dr_para_prof_write_to_file(dr_para_prof * pp, FILE * wp) {
   int k;
   /* 
      dr_node_state_running,
-     dr_node_state_end,
-     dr_node_state_create,
-     dr_node_state_create_cont,
-     dr_node_state_wait_cont,
+     dr_node_state_ready_end,
+     dr_node_state_ready_create,
+     dr_node_state_ready_create_cont,
+     dr_node_state_ready_wait_cont,
+
+     the following must match the definition
+     of dr_node_state_t
   */
 
   fprintf(wp,
@@ -129,7 +107,6 @@ dr_para_prof_write_to_file(dr_para_prof * pp, FILE * wp) {
 	  ", \"-\" u 1:2:3 w filledcurves title \"create\""
 	  ", \"-\" u 1:2:3 w filledcurves title \"create cont\""
 	  ", \"-\" u 1:2:3 w filledcurves title \"wait cont\""
-	  ", \"-\" u 1:2:3 w filledcurves title \"end cont\""
 	  "\n"
 	  );
   for (k = 0; k < dr_node_state_max; k++) {
@@ -170,31 +147,25 @@ dr_para_prof_write_to_file(dr_para_prof * pp, FILE * wp) {
 }
 
 static dr_node_state_t 
-calc_node_state(dr_pi_dag_node * pred, dr_edge_kind_t ek) {
+calc_node_state(dr_pi_dag_node * pred, dr_dag_edge_kind_t ek) {
   /* no predecessor. 
      i.e. root node. treat as if it is created */
-  if (!pred) return dr_node_state_create;
+  if (!pred) 
+    return dr_node_state_ready_create;
   switch (ek) {
-  case dr_edge_kind_cont:
-    switch (pred->info.last_node_kind) {
-    case dr_dag_node_kind_create_task:
-      return dr_node_state_create_cont;
-    case dr_dag_node_kind_wait_tasks:
-      return dr_node_state_wait_cont;
-    case dr_dag_node_kind_end_task:
-      return dr_node_state_end_cont;
-    default:
-      (void)dr_check(0);
-    }
-  case dr_edge_kind_create:
-    return dr_node_state_create;
-  case dr_edge_kind_end:
-    return dr_node_state_end;
+  case dr_dag_edge_kind_end:
+    return dr_node_state_ready_end;
+  case dr_dag_edge_kind_create:
+    return dr_node_state_ready_create;
+  case dr_dag_edge_kind_create_cont:
+    return dr_node_state_ready_create_cont;
+  case dr_dag_edge_kind_wait_cont:
+    return dr_node_state_ready_wait_cont;
   default:
     (void)dr_check(0);
   }
   (void)dr_check(0);
-  return dr_node_state_create;
+  return dr_node_state_running;
 }
 
 static void 
