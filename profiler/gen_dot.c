@@ -39,14 +39,16 @@ dr_node_attr(dr_pi_dag_node * g) {
 }
 
 static const char * 
-dr_edge_color(dr_edge_kind_t k) {
+dr_edge_color(dr_dag_edge_kind_t k) {
   switch (k) {
-  case dr_edge_kind_cont:
-    return "black";
-  case dr_edge_kind_create:
+  case dr_dag_edge_kind_end:
+    return "green";
+  case dr_dag_edge_kind_create:
     return "blue";
-  case dr_edge_kind_end:
-    return "red";
+  case dr_dag_edge_kind_create_cont:
+    return "pink";
+  case dr_dag_edge_kind_wait_cont:
+    return "black";
   default:
     (void)dr_check(0);
   }
@@ -60,7 +62,7 @@ dr_pi_dag_node_gen_dot(dr_pi_dag_node * g,
 	  "/* node %ld : edges: %ld-%ld */\n"
 	  "T%lu [%s, label=\"[%ld] %s (%s)\\n"
 	  "%llu-%llu (%llu) est=%llu\\n"
-	  "W=%llu/%llu,nodes=%ld/%ld/%ld,edges=%ld by %d on %d\"];\n",
+	  "W=%llu/%llu,nodes=%ld/%ld/%ld,edges=%ld/%ld/%ld/%ld by %d on %d\"];\n",
 	  g - G->T, g->edges_begin, g->edges_end,
 	  g - G->T,
 	  dr_node_attr(g),
@@ -72,10 +74,13 @@ dr_pi_dag_node_gen_dot(dr_pi_dag_node * g,
 	  g->info.end - g->info.start, 
 	  g->info.est, 
 	  g->info.t_1, g->info.t_inf,
-	  g->info.nodes[dr_dag_node_kind_create_task],
-	  g->info.nodes[dr_dag_node_kind_wait_tasks],
-	  g->info.nodes[dr_dag_node_kind_end_task],
-	  g->info.n_edges, 
+	  g->info.node_counts[dr_dag_node_kind_create_task],
+	  g->info.node_counts[dr_dag_node_kind_wait_tasks],
+	  g->info.node_counts[dr_dag_node_kind_end_task],
+	  g->info.edge_counts[dr_dag_edge_kind_end],
+	  g->info.edge_counts[dr_dag_edge_kind_create],
+	  g->info.edge_counts[dr_dag_edge_kind_create_cont],
+	  g->info.edge_counts[dr_dag_edge_kind_wait_cont],
 	  g->info.worker, g->info.cpu);
 }
 

@@ -17,6 +17,7 @@ typedef struct {
   long n_workers;
   dr_clock_t total_elapsed;
   dr_clock_t total_t_1;
+  long * edge_counts;		/* kind,u,v */
 } dr_basic_stat;
 
 static void 
@@ -50,6 +51,49 @@ dr_calc_inner_delay(dr_basic_stat * bs, dr_pi_dag * G) {
   bs->total_elapsed = total_elapsed;
   bs->total_t_1 = total_t_1;
 }
+
+static void
+dr_calc_edges(dr_basic_stat * bs, dr_pi_dag * G) {
+  long n = G->n;
+  long m = G->m;
+  long nw = G->num_workers;
+  long * C_ = (long *)dr_malloc(sizeof(long) * dr_dag_edge_kind_max * nw * nw);
+#define EDGE_COUNTS(k,i,j) C_[k*nw*nw+i*nw+j]
+  dr_dag_edge_kind_t k;
+  int i, j;
+  for (k = 0; k < dr_dag_edge_kind_max; k++) {
+    for (i = 0; i < nw; i++) {
+      for (j = 0; j < nw; j++) {
+	EDGE_COUNTS(k,i,j) = 0;
+      }
+    }
+  }
+  for (i = 0; i < n; i++) {
+    dr_pi_dag_node * t = &G->T[i];
+    if (t->info.kind < dr_dag_node_kind_section
+	|| t->subgraphs_begin_offset == t->subgraphs_end_offset) {
+      for (k = 0; k < dr_dag_edge_kind_max; k++) {
+	int w = t->info.worker;
+	(void)dr_check(w >= 0);
+	(void)dr_check(w < nw);
+	EDGE_COUNTS(k, w, w) += t->info.edge_counts[k];
+      }
+    }    
+  }
+  for (i = 0; i < m; i++) {
+    dr_pi_dag_edge * e = &G->E[i];
+    int uw = G->T[e->u].info.worker;
+    int vw = G->T[e->v].info.worker;
+    (void)dr_check(uw >= 0);
+    (void)dr_check(uw < nw);
+    (void)dr_check(vw >= 0);
+    (void)dr_check(vw < nw);
+    EDGE_COUNTS(e->kind, uw, vw)++;
+  }
+#undef EDGE_COUNTS
+  bs->edge_counts = C_;
+}
+
 
 static void 
 dr_basic_stat_init(dr_basic_stat * bs, dr_pi_dag * G) {
@@ -119,12 +163,48 @@ dr_basic_stat_process_event(chronological_traverser * ct,
 }
 
 static void
+dr_write_edge_counts(dr_basic_stat * bs, FILE * wp) {
+  dr_dag_edge_kind_t k;
+  int i, j;
+  int nw = bs->n_workers;
+  long * C_ = bs->edge_counts;
+#define EDGE_COUNTS(k,i,j) C_[k*nw*nw+i*nw+j]
+  for (k = 0; k < dr_dag_edge_kind_max; k++) {
+    switch (k) {
+    case dr_dag_edge_kind_end:
+      fprintf(wp, "end-parent edges:\n");
+      break;
+    case dr_dag_edge_kind_create:
+      fprintf(wp, "create-child edges:\n");
+      break;
+    case dr_dag_edge_kind_create_cont:
+      fprintf(wp, "create-cont edges:\n");
+      break;
+    case dr_dag_edge_kind_wait_cont:
+      fprintf(wp, "wait-cont edges:\n");
+      break;
+    default:
+      (void)dr_check(0);
+      break;
+    }
+    for (i = 0; i < nw; i++) {
+      for (j = 0; j < nw; j++) {
+	long c = EDGE_COUNTS(k,i,j);
+	fprintf(wp, " %ld", c);
+      }
+      fprintf(wp, "\n");
+    }
+  }
+}
+
+
+static void
 dr_basic_stat_write_to_file(dr_basic_stat * bs, FILE * wp) {
   dr_pi_dag * G = bs->G;
-  long * nodes = G->T[0].info.nodes;
-  long n_tasks = nodes[dr_dag_node_kind_create_task];
-  long n_waits = nodes[dr_dag_node_kind_wait_tasks];
-  long n_ends = nodes[dr_dag_node_kind_end_task];
+  long * nc = G->T[0].info.node_counts;
+  long n_tasks = nc[dr_dag_node_kind_create_task];
+  long n_waits = nc[dr_dag_node_kind_wait_tasks];
+  long n_ends = nc[dr_dag_node_kind_end_task];
   long n_nodes = n_tasks + n_waits + n_ends;
   dr_clock_t t_inf = G->T[0].info.t_inf;
   dr_clock_t work = bs->total_t_1;
@@ -168,6 +248,7 @@ dr_basic_stat_write_to_file(dr_basic_stat * bs, FILE * wp) {
 	  bs->cum_running/(double)n_tasks);
   fprintf(wp, "node granularity      = %.3f\n", 
 	  bs->cum_running/(double)n_nodes);
+  dr_write_edge_counts(bs, wp);
 }
 
 int 
@@ -195,6 +276,7 @@ dr_gen_basic_stat(dr_pi_dag * G) {
   dr_basic_stat bs[1];
   dr_basic_stat_init(bs, G);
   dr_calc_inner_delay(bs, G);
+  dr_calc_edges(bs, G);
   dr_pi_dag_chronological_traverse(G, (chronological_traverser *)bs);
   dr_basic_stat_write_to_file(bs, wp);
   if (must_close) fclose(wp);

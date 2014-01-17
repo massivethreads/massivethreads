@@ -9,7 +9,7 @@ dr_mk_event(dr_clock_t t,
 	    dr_event_kind_t kind, 
 	    dr_pi_dag_node * u,
 	    dr_pi_dag_node * pred,
-	    dr_edge_kind_t edge_kind) {
+	    dr_dag_edge_kind_t edge_kind) {
   dr_event e = { t, kind, u, pred, edge_kind };
   return e;
 }
@@ -179,7 +179,8 @@ dr_pi_dag_chronological_traverse(dr_pi_dag * G,
     assert(G->E[i].v < G->n);
     ready_count[G->E[i].v]++;
   }
-  dr_event_queue_enq(F, dr_mk_event(0, dr_event_kind_ready, s, 0, dr_edge_kind_create));
+  dr_event_queue_enq(F, dr_mk_event(0, dr_event_kind_ready, s, 0, 
+				    dr_dag_edge_kind_create));
   while (F->n) {
     dr_event ev = dr_event_queue_deq(F);
     dr_pi_dag_node * u = ev.u;

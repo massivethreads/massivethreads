@@ -330,8 +330,9 @@ dr_pi_dag_enum_nodes(dr_pi_dag * G,
 
 /* --------------------- enumurate edges ------------------- */
 
+/* count the number of edges left uncollapsed in the memory */
 static long
-dr_pi_dag_count_edges(dr_pi_dag * G) {
+dr_pi_dag_count_edges_uncollapsed(dr_pi_dag * G) {
   long n_edges = 0;
   long i;
   for (i = 0; i < G->n; i++) {
@@ -349,6 +350,7 @@ dr_pi_dag_count_edges(dr_pi_dag * G) {
       dr_pi_dag_node * ua = u + u->subgraphs_begin_offset;
       dr_pi_dag_node * ub = u + u->subgraphs_end_offset;
       dr_pi_dag_node * x;
+      /* edges between u's i-th child to (i+1)-th child */
       n_edges += ub - ua - 1;
       if (u->info.kind == dr_dag_node_kind_section) {
 	for (x = ua; x < ub; x++) {
@@ -362,9 +364,21 @@ dr_pi_dag_count_edges(dr_pi_dag * G) {
   return n_edges;
 }
 
+/* count edges, including those that have been collapsed */
+static long
+dr_pi_dag_count_edges(dr_pi_dag * G) {
+  long n_edges = 0;
+  dr_dag_edge_kind_t k;
+  for (k = 0; k < dr_dag_edge_kind_max; k++) {
+    n_edges += G->T[0].info.edge_counts[k];
+  }
+  (void)dr_check(G->T[0].info.n_child_create_tasks == 0);
+  return n_edges;
+}
+
 static void 
 dr_pi_dag_add_edge(dr_pi_dag_edge * e, dr_pi_dag_edge * lim, 
-		   dr_edge_kind_t kind, long u, long v) {
+		   dr_dag_edge_kind_t kind, long u, long v) {
   assert(e < lim);
   e->kind = kind;
   e->u = u;
@@ -400,7 +414,7 @@ dr_pi_dag_node_last(dr_pi_dag_node * g, dr_pi_dag * G) {
 static void 
 dr_pi_dag_enum_edges(dr_pi_dag * G) {
   dr_pi_dag_node * T = G->T;
-  long m = dr_pi_dag_count_edges(G);
+  long m = dr_pi_dag_count_edges_uncollapsed(G);
   dr_pi_dag_edge * E
     = (dr_pi_dag_edge *)dr_malloc(sizeof(dr_pi_dag_edge) * m);
   dr_pi_dag_edge * e = E;
@@ -413,11 +427,20 @@ dr_pi_dag_enum_edges(dr_pi_dag * G) {
       dr_pi_dag_node * ub = u + u->subgraphs_end_offset;
       dr_pi_dag_node * x;
       for (x = ua; x < ub - 1; x++) {
-	dr_pi_dag_node * t = dr_pi_dag_node_first(x + 1, G);
 	/* x's last node -> x+1 */
 	dr_pi_dag_node * s = dr_pi_dag_node_last(x, G);
+	dr_pi_dag_node * t = dr_pi_dag_node_first(x + 1, G);
 	assert(e < E_lim);
-	dr_pi_dag_add_edge(e, E_lim, dr_edge_kind_cont, s - T, t - T);
+	switch (s->info.last_node_kind) {
+	case dr_dag_node_kind_create_task:
+	  dr_pi_dag_add_edge(e, E_lim, dr_dag_edge_kind_create_cont, s - T, t - T);
+	  break;
+	case dr_dag_node_kind_wait_tasks:
+	  dr_pi_dag_add_edge(e, E_lim, dr_dag_edge_kind_wait_cont, s - T, t - T);
+	  break;
+	default:
+	  (void)dr_check(0);
+	}
 	e++;
 	if (x->info.kind == dr_dag_node_kind_section) {
 	  dr_pi_dag_node * xa = x + x->subgraphs_begin_offset;
@@ -431,10 +454,10 @@ dr_pi_dag_enum_edges(dr_pi_dag * G) {
 	      dr_pi_dag_node * z = dr_pi_dag_node_first(c, G);
 	      dr_pi_dag_node * w = dr_pi_dag_node_last(c, G);
 	      assert(e < E_lim);
-	      dr_pi_dag_add_edge(e, E_lim, dr_edge_kind_create, y - T, z - T);
+	      dr_pi_dag_add_edge(e, E_lim, dr_dag_edge_kind_create, y - T, z - T);
 	      e++;
 	      assert(e < E_lim);
-	      dr_pi_dag_add_edge(e, E_lim, dr_edge_kind_end, w - T, t - T);
+	      dr_pi_dag_add_edge(e, E_lim, dr_dag_edge_kind_end, w - T, t - T);
 	      e++;
 	    }
 	  }
