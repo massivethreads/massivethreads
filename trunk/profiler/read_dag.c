@@ -30,18 +30,9 @@ dr_read_dag(const char * filename) {
     close(fd);
     return 0;
   }
-  off_t real_sz = lseek(fd, 0, SEEK_END);
+  off_t file_sz = lseek(fd, 0, SEEK_END);
   off_t header_sz = sizeof(G->n) + sizeof(G->m) + sizeof(G->num_workers);
-  off_t expected_sz = header_sz 
-    + sizeof(dr_pi_dag_node) * G->n
-    + sizeof(dr_pi_dag_edge) * G->m;
-  if (expected_sz != real_sz) {
-    fprintf(stderr, "error: file %s may be corrupted; it has %ld nodes and %ld edges; we expected %ld bytes, but the file is %ld bytes\n", 
-	    filename, G->n, G->m, expected_sz, real_sz);
-    close(fd);
-    return 0;
-  }
-  a = mmap(NULL, expected_sz, PROT_READ | PROT_WRITE,
+  a = mmap(NULL, file_sz, PROT_READ | PROT_WRITE,
 	   MAP_PRIVATE, fd, 0);
   if (a == MAP_FAILED) {
     fprintf(stderr, "mmap: %s (%s)\n", strerror(errno), filename);
@@ -50,6 +41,35 @@ dr_read_dag(const char * filename) {
   }
   G->T = (dr_pi_dag_node *)(a + header_sz);
   G->E = (dr_pi_dag_edge *)&G->T[G->n];
+  dr_pi_string_table * S = (dr_pi_string_table *)&G->E[G->m];
+  long st_sz = S->sz;
+
+  off_t expected_sz = header_sz 
+    + sizeof(dr_pi_dag_node) * G->n
+    + sizeof(dr_pi_dag_edge) * G->m
+    + st_sz;
+
+#if 0
+  if (expected_sz != file_sz) {
+    fprintf(stderr, "error: file %s may be corrupted; it has %ld nodes and %ld edges; we expected %ld bytes, but the file is %ld bytes\n", 
+	    filename, G->n, G->m, expected_sz, file_sz);
+    close(fd);
+    return 0;
+  }
+#endif
+
+  /* index table after the header of S */
+  S->I = (long *)&S[1];
+  /* char array after the index table */
+  S->C = (const char *)&S->I[S->n];
+  G->S = S;
+  long n = S->n;
+  long i;
+  printf("%ld strings\n", n);
+  for (i = 0; i < n; i++) {
+    printf("string %d : %s\n", i, S->C + S->I[i]);
+  }
+
   close(fd);
   return G;
 }
@@ -63,6 +83,7 @@ int dr_read_and_analyze_dag(const char * filename) {
   dr_pi_dag * G = dr_read_dag(filename);
   if (G) {
     dr_opts_init(0);
+    if (dr_gen_basic_stat(G) == 0) return 0;
     if (dr_gen_dot(G) == 0) return 0;
     if (dr_gen_gpl(G) == 0) return 0;
     return 1;
