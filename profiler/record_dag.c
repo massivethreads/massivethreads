@@ -221,7 +221,7 @@ dr_string_table_find(dr_string_table * t, const char * s) {
     if (strcmp(c->s, s) == 0) return i;
     i++;
   }
-  dr_check(i == t->n);
+  (void)dr_check(i == t->n);
   return i;
 }
 
@@ -232,10 +232,10 @@ dr_string_table_append(dr_string_table * t, const char * s) {
   c->s = s;
   c->next = 0;
   if (t->head) {
-    dr_check(t->tail);
+    (void)dr_check(t->tail);
     t->tail->next = c;
   } else {
-    dr_check(!t->tail);
+    (void)dr_check(!t->tail);
     t->head = c;
   }
   t->tail = c;
@@ -306,8 +306,8 @@ dr_string_table_flatten(dr_string_table * t) {
       p += strlen(c->s) + 1;
       i++;
     }  
-    dr_check(i == n);
-    dr_check(p == C + str_bytes);
+    (void)dr_check(i == n);
+    (void)dr_check(p == C + str_bytes);
     return h;
   }
 }
@@ -516,6 +516,7 @@ static void
 dr_pi_dag_add_edge(dr_pi_dag_edge * e, dr_pi_dag_edge * lim, 
 		   dr_dag_edge_kind_t kind, long u, long v) {
   assert(e < lim);
+  memset(e, 0, sizeof(dr_pi_dag_edge));
   e->kind = kind;
   e->u = u;
   e->v = v;

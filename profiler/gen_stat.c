@@ -60,7 +60,7 @@ dr_calc_edges(dr_basic_stat * bs, dr_pi_dag * G) {
   long * C_ = (long *)dr_malloc(sizeof(long) * dr_dag_edge_kind_max * nw * nw);
 #define EDGE_COUNTS(k,i,j) C_[k*nw*nw+i*nw+j]
   dr_dag_edge_kind_t k;
-  int i, j;
+  long i, j;
   for (k = 0; k < dr_dag_edge_kind_max; k++) {
     for (i = 0; i < nw; i++) {
       for (j = 0; j < nw; j++) {
@@ -70,13 +70,19 @@ dr_calc_edges(dr_basic_stat * bs, dr_pi_dag * G) {
   }
   for (i = 0; i < n; i++) {
     dr_pi_dag_node * t = &G->T[i];
-    if (t->info.kind < dr_dag_node_kind_section
-	|| t->subgraphs_begin_offset == t->subgraphs_end_offset) {
+    if (t->info.kind >= dr_dag_node_kind_section
+	&& t->subgraphs_begin_offset == t->subgraphs_end_offset) {
       for (k = 0; k < dr_dag_edge_kind_max; k++) {
 	int w = t->info.worker;
-	(void)dr_check(w >= 0);
-	(void)dr_check(w < nw);
-	EDGE_COUNTS(k, w, w) += t->info.edge_counts[k];
+	if (w == -1) {
+	  fprintf(stderr, 
+		  "warning: %ld (k=%d w=%d)\n",
+		  i, t->info.kind, w);
+	} else {
+	  (void)dr_check(w >= 0);
+	  (void)dr_check(w < nw);
+	  EDGE_COUNTS(k, w, w) += t->info.edge_counts[k];
+	}
       }
     }    
   }
@@ -84,11 +90,17 @@ dr_calc_edges(dr_basic_stat * bs, dr_pi_dag * G) {
     dr_pi_dag_edge * e = &G->E[i];
     int uw = G->T[e->u].info.worker;
     int vw = G->T[e->v].info.worker;
-    (void)dr_check(uw >= 0);
-    (void)dr_check(uw < nw);
-    (void)dr_check(vw >= 0);
-    (void)dr_check(vw < nw);
-    EDGE_COUNTS(e->kind, uw, vw)++;
+    if (uw == -1 || vw == -1) {
+      fprintf(stderr, "warning: %ld (k=%d w=%d) -> %ld (k=%d w=%d)\n",
+	      e->u, G->T[e->u].info.kind, uw, 
+	      e->v, G->T[e->v].info.kind, vw);
+    } else {
+      (void)dr_check(uw >= 0);
+      (void)dr_check(uw < nw);
+      (void)dr_check(vw >= 0);
+      (void)dr_check(vw < nw);
+      EDGE_COUNTS(e->kind, uw, vw)++;
+    }
   }
 #undef EDGE_COUNTS
   bs->edge_counts = C_;

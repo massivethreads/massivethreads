@@ -100,7 +100,7 @@ extern "C" {
     /* index in dr_flat_string_table. valid in dr_pi_dag_node */    
     long file_idx;
     /* line number */
-    int line;
+    long line;
   } code_pos;
 
   typedef struct {
@@ -214,6 +214,9 @@ extern "C" {
     }
     if (DAG_RECORDER_VERBOSE_LEVEL>=3) {
       printf("dr_malloc(%ld) -> %p\n", sz, a);
+    }
+    if (DAG_RECORDER_DBG_LEVEL>=2) {
+      memset(a, 255, sz);
     }
     return a;
   }
@@ -566,8 +569,8 @@ extern "C" {
     for (k = 0; k < dr_dag_edge_kind_max; k++) {
       dn->info.edge_counts[k] = 0;
     }
-    dn->info.worker = dr_meet_ints(dn->info.worker, worker);
-    dn->info.cpu = dr_meet_ints(dn->info.cpu, dr_getcpu());
+    dn->info.worker = worker;
+    dn->info.cpu = dr_getcpu();
   }
 
   /* auxiliary functions that modify or query task and section */
@@ -675,9 +678,6 @@ extern "C" {
       dr_set_cur_task_(worker, nt);
       /* record info on the point of start */
       dr_set_start_info(&nt->info.start, file, line);
-      /* worker/cpu info */
-      nt->info.worker = worker;
-      nt->info.cpu = dr_getcpu();
     }
   }
   
@@ -817,6 +817,8 @@ extern "C" {
       /* initialize the result */
       s->info.start   = first->info.start;
       s->info.end     = last->info.end;
+      s->info.worker  = first->info.worker;
+      s->info.cpu     = first->info.cpu;
       s->info.est     = first->info.est;
       s->info.last_node_kind = last->info.last_node_kind;
       s->info.t_1     = 0;
@@ -884,7 +886,7 @@ extern "C" {
 	    }
 	    case dr_dag_node_kind_wait_tasks: 
 	    case dr_dag_node_kind_end_task: {
-	      dr_check(!ch->next && i == ch->n - 1);
+	      (void)dr_check(!ch->next && i == ch->n - 1);
 	      break;
 	    }
 	    case dr_dag_node_kind_section:

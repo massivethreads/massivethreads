@@ -56,6 +56,13 @@ dr_para_prof_init(dr_para_prof * pp, long hist_sz, dr_clock_t last_time) {
 }
 
 static void 
+dr_para_prof_destroy(dr_para_prof * pp) {
+  dr_free(pp->history, 
+	  sizeof(dr_para_prof_history_entry) * pp->hist_sz);
+}
+
+
+static void 
 dr_para_prof_add_hist(dr_para_prof * pp, dr_clock_t t) {
   long sz = pp->hist_sz;
   long n = pp->n_hists;
@@ -235,6 +242,7 @@ dr_gen_gpl(dr_pi_dag * G) {
   dr_pi_dag_chronological_traverse(G, (chronological_traverser *)pp);
   dr_para_prof_check(pp);
   dr_para_prof_write_to_file(pp, wp);
+  dr_para_prof_destroy(pp);
   if (must_close) fclose(wp);
   return 1;
 }

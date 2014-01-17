@@ -47,7 +47,7 @@ typedef struct dr_pi_dag_edge {
  */
 
 typedef struct {
-  int n;			/* number of strings */
+  long n;			/* number of strings */
   long sz;			/* total bytes including headers */
   long * I;			/* index I[0] .. I[n-1] */
   const char * C;		/* char array */
