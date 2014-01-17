@@ -190,14 +190,18 @@ dr_pi_dag_chronological_traverse(dr_pi_dag * G,
       if (GS.opts.dbg_level>=2) {
 	printf("%llu : node %ld ready\n", ev.t, u - G->T);
       }
-      dr_event_queue_enq(F, dr_mk_event(u->info.start, dr_event_kind_start, u, ev.pred, ev.edge_kind));
+      dr_event_queue_enq(F, dr_mk_event(u->info.start.t, 
+					dr_event_kind_start, u, 
+					ev.pred, ev.edge_kind));
       break;
     }
     case dr_event_kind_start: {
       if (GS.opts.dbg_level>=2) {
 	printf("%llu : node %ld start\n", ev.t, u - G->T);
       }
-      dr_event_queue_enq(F, dr_mk_event(u->info.end, dr_event_kind_end, u, ev.pred, ev.edge_kind));
+      dr_event_queue_enq(F, dr_mk_event(u->info.end.t, 
+					dr_event_kind_end, u, 
+					ev.pred, ev.edge_kind));
       break;
     }
     case dr_event_kind_end: {
@@ -216,7 +220,9 @@ dr_pi_dag_chronological_traverse(dr_pi_dag * G,
 	ready_count[e->v]--;
 	if (ready_count[e->v] == 0) {
 	  dr_pi_dag_node * v = G->T + e->v;
-	  dr_event_queue_enq(F, dr_mk_event(u->info.end, dr_event_kind_ready, v, u, e->kind));
+	  dr_event_queue_enq(F, dr_mk_event(u->info.end.t, 
+					    dr_event_kind_ready, v, u, 
+					    e->kind));
 	}
       }
       break;

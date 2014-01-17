@@ -231,7 +231,7 @@ dr_gen_gpl(dr_pi_dag * G) {
   }
   dr_pi_dag_node * last = dr_pi_dag_node_last(G->T, G);
   dr_para_prof pp[1];
-  dr_para_prof_init(pp, GS.opts.gpl_sz, last->info.end);
+  dr_para_prof_init(pp, GS.opts.gpl_sz, last->info.end.t);
   dr_pi_dag_chronological_traverse(G, (chronological_traverser *)pp);
   dr_para_prof_check(pp);
   dr_para_prof_write_to_file(pp, wp);

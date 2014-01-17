@@ -500,21 +500,30 @@ namespace mtbb {
     }
 
     template <typename Callable>
-      void run(Callable c) {
+      void run_(Callable c, const char * file, int line) {
       if (n_outstanding_children == 0) dr_begin_section();
       n_outstanding_children++;
       dr_dag_node * ci = 0;
-      dr_dag_node * t = dr_enter_create_task(&ci);
+      dr_dag_node * t = dr_enter_create_task_(&ci, file, line);
       task_group_no_prof::run(dr_wrap_callable<Callable>(c, ci));
-      dr_return_from_create_task(t);
+      dr_return_from_create_task_(t, file, line);
+    }
+
+    template <typename Callable>
+      void run(Callable c) {
+      run_(c, __FILE__, __LINE__);
+    }
+
+    void wait_(const char * file, int line) {
+      if (n_outstanding_children == 0) dr_begin_section();
+      dr_dag_node * t = dr_enter_wait_tasks_(file, line);
+      task_group_no_prof::wait();
+      n_outstanding_children = 0;
+      dr_return_from_wait_tasks_(t, file, line);
     }
 
     void wait() {
-      if (n_outstanding_children == 0) dr_begin_section();
-      dr_dag_node * t = dr_enter_wait_tasks();
-      task_group_no_prof::wait();
-      n_outstanding_children = 0;
-      dr_return_from_wait_tasks(t);
+      wait_(__FILE__, __LINE__);
     }
   };
   typedef task_group_with_prof task_group;
