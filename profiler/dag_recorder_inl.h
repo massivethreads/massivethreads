@@ -28,8 +28,12 @@
 #define DAG_RECORDER_CHK_LEVEL GS.opts.chk_level
 #endif
 
-#if !defined(DAG_RECORDER_GETCPU)
-#define DAG_RECORDER_GETCPU 0
+#if !defined(DAG_RECORDER_RECORD_CPU)
+#define DAG_RECORDER_RECORD_CPU 0
+#endif
+
+#if !defined(DAG_RECORDER_RECORD_POS)
+#define DAG_RECORDER_RECORD_POS 0
 #endif
 
 #ifdef __cplusplus
@@ -84,18 +88,32 @@ extern "C" {
   typedef struct dr_dag_node_list dr_dag_node_list;
   typedef struct dr_dag_node_chunk dr_dag_node_chunk;
 
+  /* list of dag nodes */
   struct dr_dag_node_list {
     dr_dag_node_chunk * head;
     dr_dag_node_chunk * tail;
   };
 
-  /* size = 88 bytes? */
+  typedef struct {
+    /* pointer to filename. valid in dr_dag_node */
+    const char * file;
+    /* index in dr_flat_string_table. valid in dr_pi_dag_node */    
+    long file_idx;
+    /* line number */
+    int line;
+  } code_pos;
+
+  typedef struct {
+    dr_clock_t t;		/* clock */
+    code_pos pos;		/* code position */
+  } dr_clock_pos;
+
   typedef struct dr_dag_node_info {
-    dr_clock_t start; 
-    dr_clock_t est;
-    dr_clock_t end; 
-    dr_clock_t t_1;
-    dr_clock_t t_inf;
+    dr_clock_pos start; /* start clock,position */
+    dr_clock_pos end;	 /* end clock,position */
+    dr_clock_t est;	 /* earliest start time */
+    dr_clock_t t_1;	 /* work */
+    dr_clock_t t_inf;	 /* critical path */
     /* number of nodes in this subgraph */
     long node_counts[dr_dag_node_kind_section];
     /* number of edges connecting nodes in this subgraph */
@@ -504,25 +522,43 @@ extern "C" {
 #endif
 
   static int dr_getcpu() {
-#if DAG_RECORDER_GETCPU
+#if DAG_RECORDER_RECORD_CPU
     return sched_getcpu();
 #else
     return 0;
 #endif
   }
 
+  static inline dr_clock_t
+  dr_max_clock(dr_clock_t x, dr_clock_t y) {
+    return (x < y ? y : x);
+  }
+
+  static inline int
+  dr_meet_ints(int x, int y) {
+    return (x == y ? x : -1);
+  }
+
   /* end an interval, 
      called by start_{task_group,create_task,wait_tasks} */
   static void 
-  dr_end_interval_(dr_dag_node * dn, int worker, dr_clock_t start, 
-		   dr_clock_t est, dr_clock_t end, 
-		   dr_dag_node_kind_t kind) {
+  dr_end_interval_(dr_dag_node * dn, int worker, 
+		   dr_dag_node_kind_t kind,
+		   dr_clock_t end_t, 
+		   const char * file, int line,
+		   dr_clock_t est, 
+		   dr_clock_pos start) {
     int k;
     (void)dr_check(kind < dr_dag_node_kind_section);
+    dn->info.start = start;
     dn->info.kind = kind;
     dn->info.last_node_kind = kind;
-    dn->info.start = start;
     dn->info.est = est;
+    dn->info.n_child_create_tasks = 0;
+    dn->info.t_inf = dn->info.t_1 = end_t - start.t;
+    dn->info.end.t = end_t;
+    dn->info.end.pos.file = file;
+    dn->info.end.pos.line = line;
     for (k = 0; k < dr_dag_node_kind_section; k++) {
       dn->info.node_counts[k] = 0;
     }
@@ -530,11 +566,8 @@ extern "C" {
     for (k = 0; k < dr_dag_edge_kind_max; k++) {
       dn->info.edge_counts[k] = 0;
     }
-    dn->info.n_child_create_tasks = 0;
-    dn->info.worker = worker;
-    dn->info.cpu = dr_getcpu();
-    dn->info.end = end;
-    dn->info.t_inf = dn->info.t_1 = dn->info.end - dn->info.start;
+    dn->info.worker = dr_meet_ints(dn->info.worker, worker);
+    dn->info.cpu = dr_meet_ints(dn->info.cpu, dr_getcpu());
   }
 
   /* auxiliary functions that modify or query task and section */
@@ -600,6 +633,13 @@ extern "C" {
 
   /* called when we start a task */
 
+  static void
+  dr_set_start_info(dr_clock_pos * p, const char * file, int line) {
+    p->pos.file = file;
+    p->pos.line = line;
+    p->t = dr_get_tsc();
+  }
+
   /* 
      task    ::= section* end 
 
@@ -612,7 +652,9 @@ extern "C" {
   */
 
   static_if_inline void 
-  dr_start_task_(dr_dag_node * p, int worker) {
+  dr_start_task__(dr_dag_node * p, 
+		  const char * file, int line,
+		  int worker) {
     if (GS.ts) {
       /* make a task, section, and interval */
       dr_dag_node * nt = dr_mk_dag_node_task();
@@ -629,22 +671,27 @@ extern "C" {
       } else {
 	nt->info.est = 0;
       }
-      /* set current * */
+      /* set current task */
       dr_set_cur_task_(worker, nt);
-      nt->info.start = dr_get_tsc();
+      /* record info on the point of start */
+      dr_set_start_info(&nt->info.start, file, line);
+      /* worker/cpu info */
+      nt->info.worker = worker;
+      nt->info.cpu = dr_getcpu();
     }
   }
   
   static_if_inline int 
-  dr_start_cilk_proc_(int worker) {
+  dr_start_cilk_proc__(const char * file, int line,
+		       int worker) {
     if (GS.ts) {
-      dr_start_task_(GS.ts[worker].parent, worker);
+      dr_start_task__(GS.ts[worker].parent, file, line, worker);
     }
     return 0;
   }
 
   static_if_inline void
-  dr_begin_section_(int worker) {
+  dr_begin_section__(int worker) {
     if (GS.ts) {
       dr_dag_node * t = dr_get_cur_task_(worker);
       dr_dag_node * s = dr_task_active_node(t);
@@ -665,9 +712,11 @@ extern "C" {
 
   */
   static_if_inline dr_dag_node * 
-  dr_enter_create_task_(dr_dag_node ** c, int worker) {
+  dr_enter_create_task__(dr_dag_node ** c, 
+			 const char * file, int line,
+			 int worker) {
     if (GS.ts) {
-      dr_clock_t end = dr_get_tsc();
+      dr_clock_t end_t = dr_get_tsc();
       dr_dag_node * t = dr_get_cur_task_(worker);
       /* ensure t has a session */
       dr_dag_node * s = dr_task_ensure_section(t, GS.ts[worker].freelist);
@@ -681,8 +730,9 @@ extern "C" {
 	printf("dr_enter_create_task() by %d task=%p, section=%p, new interval=%p\n", 
 	       worker, t, s, ct);
       }
-      dr_end_interval_(ct, worker, t->info.start, t->info.est, end, 
-		       dr_dag_node_kind_create_task);
+      dr_end_interval_(ct, worker, dr_dag_node_kind_create_task,
+		       end_t, file, line,
+		       t->info.est, t->info.start);
       *c = ct;
       return t;
     } else {
@@ -691,9 +741,11 @@ extern "C" {
   }
 
   static_if_inline dr_dag_node *
-  dr_enter_create_cilk_proc_task_(int worker) {
+  dr_enter_create_cilk_proc_task__(const char * file, int line,
+				   int worker) {
     if (GS.ts) {
-      return dr_enter_create_task_(&GS.ts[worker].parent, worker);
+      return dr_enter_create_task__(&GS.ts[worker].parent, 
+				    file, line, worker);
     } else {
       return (dr_dag_node *)0;
     }
@@ -703,7 +755,9 @@ extern "C" {
      section ::= task_group (section|create)* wait
   */
   static_if_inline void 
-  dr_return_from_create_task_(dr_dag_node * t, int worker) {
+  dr_return_from_create_task__(dr_dag_node * t, 
+			       const char * file, int line,
+			       int worker) {
     if (GS.ts) {
       dr_dag_node * ct = dr_task_last_section_or_create(t);
       if (DAG_RECORDER_VERBOSE_LEVEL>=2) {
@@ -713,7 +767,7 @@ extern "C" {
       (void)dr_check(ct->info.kind == dr_dag_node_kind_create_task);
       dr_set_cur_task_(worker, t);
       t->info.est = ct->info.est + ct->info.t_inf;
-      t->info.start = dr_get_tsc();
+      dr_set_start_info(&t->info.start, file, line);
     }
   }
 
@@ -721,9 +775,9 @@ extern "C" {
      section ::= task_group (section|create)* wait
   */
   static_if_inline dr_dag_node *
-  dr_enter_wait_tasks_(int worker) {
+  dr_enter_wait_tasks__(const char * file, int line, int worker) {
     if (GS.ts) {
-      dr_clock_t end = dr_get_tsc();
+      dr_clock_t end_t = dr_get_tsc();
       dr_dag_node * t = dr_get_cur_task_(worker);
       dr_dag_node * s = dr_task_ensure_section(t, GS.ts[worker].freelist);
       dr_dag_node * i 
@@ -735,22 +789,13 @@ extern "C" {
       }
       t->active_section = s->parent_section;
       (void)dr_check(dr_task_active_node(t) == t->active_section);
-      dr_end_interval_(i, worker, t->info.start, t->info.est, end, 
-		       dr_dag_node_kind_wait_tasks);
+      dr_end_interval_(i, worker, dr_dag_node_kind_wait_tasks,
+		       end_t, file, line, 
+		       t->info.est, t->info.start);
       return t;
     } else {
       return (dr_dag_node *)0;
     }
-  }
-
-  static inline dr_clock_t
-  dr_max_clock(dr_clock_t x, dr_clock_t y) {
-    return (x < y ? y : x);
-  }
-
-  static inline int
-  dr_meet_ints(int x, int y) {
-    return (x == y ? x : -1);
   }
 
   /* look at subgraphs of s.
@@ -771,8 +816,8 @@ extern "C" {
       int i;
       /* initialize the result */
       s->info.start   = first->info.start;
-      s->info.est     = first->info.est;
       s->info.end     = last->info.end;
+      s->info.est     = first->info.est;
       s->info.last_node_kind = last->info.last_node_kind;
       s->info.t_1     = 0;
       s->info.t_inf   = 0;
@@ -783,8 +828,6 @@ extern "C" {
 	s->info.edge_counts[i] = 0;
       }
       s->info.n_child_create_tasks = 0;
-      s->info.worker  = first->info.worker;
-      s->info.cpu     = first->info.cpu;
 
       {
 	/* look through all chunks */
@@ -822,9 +865,9 @@ extern "C" {
 	      /* similar accumulation for x's child task */
 	      dr_dag_node * y = x->child;
 	      (void)dr_check(y);
-	      s->info.end = dr_max_clock(y->info.end, s->info.end);
+	      s->info.end.t = dr_max_clock(y->info.end.t, s->info.end.t);
 	      s->info.last_node_kind 
-		= (y->info.end > s->info.end 
+		= (y->info.end.t > s->info.end.t
 		   ? y->info.last_node_kind : s->info.last_node_kind);
 	      s->info.t_1     += y->info.t_1;
 	      t_inf = dr_max_clock(s->info.t_inf + y->info.t_inf, t_inf);
@@ -864,7 +907,7 @@ extern "C" {
 	 was executed on a single worker
 	 and it isn't too large */
       if (s->info.worker != -1
-	  && s->info.end - s->info.start < GS.opts.collapse_max) {
+	  && s->info.end.t - s->info.start.t < GS.opts.collapse_max) {
 	/* free the graph of its children */
 	dr_dag_node_chunk * head = s->subgraphs->head;
 	dr_dag_node_chunk * ch;
@@ -901,7 +944,9 @@ extern "C" {
 
   */
   static_if_inline void 
-  dr_return_from_wait_tasks_(dr_dag_node * t, int worker) {
+  dr_return_from_wait_tasks__(dr_dag_node * t, 
+			      const char * file, int line,
+			      int worker) {
     if (GS.ts) {
       /* get the section that finished last */
       dr_dag_node * s = dr_task_last_section_or_create(t);
@@ -935,16 +980,16 @@ extern "C" {
 	  dr_summarize_section_or_task(s, GS.ts[worker].freelist);
 	  dr_set_cur_task_(worker, t);
 	  t->info.est = est;
-	  t->info.start = dr_get_tsc();
+	  dr_set_start_info(&t->info.start, file, line);
 	}
       }
     }
   }
 
   static_if_inline void 
-  dr_end_task_(int worker) {
+  dr_end_task__(const char * file, int line, int worker) {
     if (GS.ts) {
-      dr_clock_t end = dr_get_tsc();
+      dr_clock_t end_t = dr_get_tsc();
       dr_dag_node * t = dr_get_cur_task_(worker);
       dr_dag_node * s = dr_task_active_node(t);
       dr_dag_node * i 
@@ -954,8 +999,9 @@ extern "C" {
 	       "new interval=%p\n", 
 	       worker, t, s, i);
       }
-      dr_end_interval_(i, worker, t->info.start, t->info.est, end, 
-		       dr_dag_node_kind_end_task);
+      dr_end_interval_(i, worker, dr_dag_node_kind_end_task,
+		       end_t, file, line, 
+		       t->info.est, t->info.start);
       dr_summarize_section_or_task(t, GS.ts[worker].freelist);
     }
   }
@@ -969,17 +1015,17 @@ extern "C" {
   static void dr_dummy_call_static_functions() {
     dr_dag_node * t;
     dr_dag_node * c;
-    dr_start_(0, 0, 1);
-    dr_begin_section_(0);
-    t = dr_enter_create_task_(&c, 0);
-    dr_enter_create_cilk_proc_task_(0);
-    dr_start_task_(c, 0);
-    dr_start_cilk_proc_(0);
-    dr_end_task_(0);
-    dr_return_from_create_task_(t, 0);
-    t = dr_enter_wait_tasks_(0);
-    dr_return_from_wait_tasks_(t, 0);
-    dr_stop_(0);
+    dr_start__(NULL, "", 1, 1, 1);
+    dr_begin_section__(1);
+    t = dr_enter_create_task__(&c, "", 1, 1);
+    dr_enter_create_cilk_proc_task__("", 1, 1);
+    dr_start_task__(c, "", 1, 1);
+    dr_start_cilk_proc__("", 1, 1);
+    dr_end_task__("", 1, 1);
+    dr_return_from_create_task__(t, "", 1, 1);
+    t = dr_enter_wait_tasks__("", 1, 1);
+    dr_return_from_wait_tasks__(t, "", 1, 1);
+    dr_stop__("", 1, 1);
     dr_free(t, sizeof(dr_dag_node));
   }
 

@@ -186,12 +186,145 @@ dr_dag_node_stack_push_children(dr_dag_node_stack * s,
 
 /* --- make a position-independent copy of a graph --- */
 
+typedef struct dr_string_table_cell {
+  struct dr_string_table_cell * next;
+  const char * s;
+} dr_string_table_cell;
+
+typedef struct {
+  dr_string_table_cell * head;
+  dr_string_table_cell * tail;
+  long n;
+} dr_string_table;
+
+static void 
+dr_string_table_init(dr_string_table * t) {
+  t->n = 0;
+  t->head = t->tail = 0;
+}
+
+static void 
+dr_string_table_destroy(dr_string_table * t) {
+  dr_string_table_cell * c;
+  dr_string_table_cell * next;
+  for (c = t->head; c; c = next) {
+    next = c->next;
+    dr_free(c, sizeof(dr_string_table_cell));
+  }
+}
+
+static long 
+dr_string_table_find(dr_string_table * t, const char * s) {
+  dr_string_table_cell * c;
+  long i = 0;
+  for (c = t->head; c; c = c->next) {
+    if (strcmp(c->s, s) == 0) return i;
+    i++;
+  }
+  dr_check(i == t->n);
+  return i;
+}
+
+static void
+dr_string_table_append(dr_string_table * t, const char * s) {
+  dr_string_table_cell * c 
+    = (dr_string_table_cell *)dr_malloc(sizeof(dr_string_table_cell));
+  c->s = s;
+  c->next = 0;
+  if (t->head) {
+    dr_check(t->tail);
+    t->tail->next = c;
+  } else {
+    dr_check(!t->tail);
+    t->head = c;
+  }
+  t->tail = c;
+  t->n++;
+}
+
+/* find s in the string table t.
+   if not found, return a new index */
+static long 
+dr_string_table_intern(dr_string_table * t, const char * s) {
+  long idx = dr_string_table_find(t, s);
+  if (idx == t->n) {
+    dr_string_table_append(t, s);
+  }
+  return idx;
+}
+
+/* given linked-list based string table t,
+   flatten it.
+   flattened table consists of
+   a flat char array contigously
+   storing all strings and an array
+   of indexes into that string array;
+   these two arrays are also stored
+   contiguously in memory.
+   there is also a header pointing to them.
+   
+   before:
+   |abc|-->|defg|-->|hi|-->|
+
+   after:
+ +-0
+ | 4 -----+            Index Array
+ | 9 -----+-----+
+ |        |     |
+ +-> abc\0defg\0hi\0   Char Array
+     0... .5... .10
+
+*/
+static dr_pi_string_table *
+dr_string_table_flatten(dr_string_table * t) {
+  long str_bytes = 0;		/* string length */
+  int n = 0;
+  dr_string_table_cell * c;
+  for (c = t->head; c; c = c->next) {
+    n++;
+    str_bytes += strlen(c->s) + 1;
+  }  
+  {
+    long header_bytes = sizeof(dr_pi_string_table);
+    long table_bytes = n * sizeof(const char *);
+    long total_bytes = header_bytes + table_bytes + str_bytes;
+    void * a = dr_malloc(total_bytes);
+    dr_pi_string_table * h = a;
+    /* index array */
+    long * I = a + header_bytes;
+    /* char array */
+    char * C = a + header_bytes + table_bytes;
+    char * p = C;
+    long i = 0;
+    h->n = n;
+    h->sz = total_bytes;
+    h->I = I;
+    h->C = C;
+    for (c = t->head; c; c = c->next) {
+      strcpy(p, c->s);
+      I[i] = p - C;
+      p += strlen(c->s) + 1;
+      i++;
+    }  
+    dr_check(i == n);
+    dr_check(p == C + str_bytes);
+    return h;
+  }
+}
+
 /* copy g into p */
 static void
 dr_pi_dag_copy_1(dr_dag_node * g, 
-		 dr_pi_dag_node * p, dr_pi_dag_node * lim) {
+		 dr_pi_dag_node * p, dr_pi_dag_node * lim,
+		 dr_string_table * st) {
   assert(p < lim);
   p->info = g->info;
+  p->info.start.pos.file = 0;
+  p->info.start.pos.file_idx
+    = dr_string_table_intern(st, g->info.start.pos.file);
+  p->info.end.pos.file = 0;
+  p->info.end.pos.file_idx
+    = dr_string_table_intern(st, g->info.end.pos.file);
   g->forward = p;		/* record g was copied to p */
 }
 
@@ -204,19 +337,20 @@ static dr_pi_dag_node *
 dr_pi_dag_copy_children(dr_dag_node * g, 
 			dr_pi_dag_node * p, 
 			dr_pi_dag_node * lim,
-			dr_clock_t start_clock) {
+			dr_clock_t start_clock,
+			dr_string_table * st) {
   /* where g has been copied */
   dr_pi_dag_node * g_pi = g->forward;
   /* sanity check. g_pi should be a copy of g */
-  assert(g_pi->info.start == g->info.start);
+  assert(g_pi->info.start.t == g->info.start.t);
   /* make the time relative */
-  g_pi->info.start -= start_clock;
-  g_pi->info.end -= start_clock;
+  g_pi->info.start.t -= start_clock;
+  g_pi->info.end.t -= start_clock;
 
   if (g_pi->info.kind < dr_dag_node_kind_section) {
     /* copy the child if it is a create_task node */
     if (g_pi->info.kind == dr_dag_node_kind_create_task) {
-      dr_pi_dag_copy_1(g->child, p, lim);
+      dr_pi_dag_copy_1(g->child, p, lim, st);
       /* install the (relative) pointer to the child */
       g_pi->child_offset = p - g_pi;
       p++;
@@ -229,7 +363,7 @@ dr_pi_dag_copy_children(dr_dag_node * g,
     for (ch = head; ch; ch = ch->next) {
       int i;
       for (i = 0; i < ch->n; i++) {
-	dr_pi_dag_copy_1(&ch->a[i], p, lim);
+	dr_pi_dag_copy_1(&ch->a[i], p, lim, st);
 	p++;
       }
     }
@@ -301,11 +435,13 @@ dr_pi_dag_init(dr_pi_dag * G) {
   G->T = 0;
   G->m = 0;
   G->E = 0;
+  G->S = 0;
 }
 
 static void
 dr_pi_dag_enum_nodes(dr_pi_dag * G,
-		     dr_dag_node * g, dr_clock_t start_clock) {
+		     dr_dag_node * g, dr_clock_t start_clock,
+		     dr_string_table * st) {
   dr_dag_node_stack s[1];
   long n = dr_dag_count_nodes(g);
   dr_pi_dag_node * T 
@@ -314,12 +450,12 @@ dr_pi_dag_enum_nodes(dr_pi_dag * G,
   dr_pi_dag_node * p = T; /* allocation pointer */
 
   dr_dag_node_stack_init(s);
-  dr_pi_dag_copy_1(g, p, lim);
+  dr_pi_dag_copy_1(g, p, lim, st);
   p++;
   dr_dag_node_stack_push(s, g);
   while (s->top) {
     dr_dag_node * x = dr_dag_node_stack_pop(s);
-    p = dr_pi_dag_copy_children(x, p, lim, start_clock);
+    p = dr_pi_dag_copy_children(x, p, lim, start_clock, st);
     dr_dag_node_stack_push_children(s, x);
   }
   //dr_dag_node_stack_clear(s);
@@ -517,15 +653,31 @@ dr_pi_dag_set_edge_ptrs(dr_pi_dag * G) {
    into a "position-independent" format (G)
    suitable for dumping into disk */
 static void
-dr_make_pi_dag(dr_pi_dag * G,
-	       dr_dag_node * g, dr_clock_t start_clock, int num_workers) {
+dr_make_pi_dag(dr_pi_dag * G, dr_dag_node * g, 
+	       dr_clock_t start_clock, int num_workers) {
+  dr_string_table st[1];
+  dr_string_table_init(st);
   G->num_workers = num_workers;
   dr_pi_dag_init(G);
-  dr_pi_dag_enum_nodes(G, g, start_clock);
+  dr_pi_dag_enum_nodes(G, g, start_clock, st);
   dr_pi_dag_enum_edges(G);
   dr_pi_dag_sort_edges(G);
   dr_pi_dag_set_edge_ptrs(G);
+  G->S = dr_string_table_flatten(st);
+  dr_string_table_destroy(st);
 }
+
+
+/* format of the dag file
+   n 
+   m 
+   num_workers
+   array of nodes
+   array of edges
+   number of strings
+   string offset table
+   flat string arrays
+ */
 
 static int 
 dr_pi_dag_dump(dr_pi_dag * G, FILE * wp, 
@@ -534,7 +686,8 @@ dr_pi_dag_dump(dr_pi_dag * G, FILE * wp,
       || fwrite(&G->m, sizeof(G->m), 1, wp) != 1
       || fwrite(&G->num_workers, sizeof(G->num_workers), 1, wp) != 1
       || fwrite(G->T, sizeof(dr_pi_dag_node), G->n, wp) != G->n
-      || fwrite(G->E, sizeof(dr_pi_dag_edge), G->m, wp) != G->m) {
+      || fwrite(G->E, sizeof(dr_pi_dag_edge), G->m, wp) != G->m
+      || fwrite(G->S, G->S->sz, 1, wp) != 1) {
     fprintf(stderr, "fwrite: %s (%s)\n", 
 	    strerror(errno), filename);
     return 0;
@@ -695,8 +848,8 @@ dr_init_(dr_options * opts, int worker, int num_workers) {
 }
 
 /* stop profiling */
-void dr_stop_(int worker) {
-  dr_end_task_(worker);
+void dr_stop__(const char * file, int line, int worker) {
+  dr_end_task__(file, line, worker);
   GS.ts = 0;
 }
 
@@ -722,9 +875,10 @@ dr_free_freelists(int num_workers) {
 }
 
 /* completely uninitialize */
-void dr_cleanup_(int worker, int num_workers) {
+void dr_cleanup__(const char * file, int line,
+		  int worker, int num_workers) {
   if (GS.initialized) {
-    if (GS.ts) dr_stop_(worker);
+    if (GS.ts) dr_stop__(file, line, worker);
     /* get dag tree back into the free list of the calling worker */
     dr_free_dag_recursively(GS.root, GS.thread_specific[worker].freelist); 
     GS.root = 0;
@@ -738,7 +892,8 @@ void dr_cleanup_(int worker, int num_workers) {
 
 /* initialize when called for the first time;
    and start profiling */
-void dr_start_(dr_options * opts, int worker, int num_workers) {
+void dr_start__(dr_options * opts, const char * file, int line,
+		int worker, int num_workers) {
   dr_init_(opts, worker, num_workers);
   if (GS.thread_specific) {
     if (GS.root) {
@@ -746,7 +901,7 @@ void dr_start_(dr_options * opts, int worker, int num_workers) {
     }
     GS.ts = GS.thread_specific;
     GS.start_clock = dr_get_tsc();
-    dr_start_task_(0, worker);
+    dr_start_task__(0, file, line, worker);
     GS.root = dr_get_cur_task_(worker);
   }
 }

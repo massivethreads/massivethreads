@@ -66,55 +66,80 @@ extern "C" {
 
   typedef struct dr_dag_node dr_dag_node;
 
-  static_if_inline void          dr_start_task_(dr_dag_node * parent, int worker);
-  static_if_inline int           dr_start_cilk_proc_(int worker);
-  static_if_inline void          dr_begin_section_(int worker);
-  static_if_inline dr_dag_node * dr_enter_create_task_(dr_dag_node ** create, int worker);
-  static_if_inline dr_dag_node * dr_enter_create_cilk_proc_task_(int worker);
-  static_if_inline void          dr_return_from_create_task_(dr_dag_node * task, int worker);
-  static_if_inline dr_dag_node * dr_enter_wait_tasks_(int worker);
-  static_if_inline void          dr_return_from_wait_tasks_(dr_dag_node * task, int worker);
-  static_if_inline void          dr_end_task_(int worker);
+  static_if_inline void          dr_start_task__(dr_dag_node * parent, const char * file, int line, int worker);
+  static_if_inline int           dr_start_cilk_proc__(const char * file, int line, int worker);
+  static_if_inline void          dr_begin_section__(int worker);
+  static_if_inline dr_dag_node * dr_enter_create_task__(dr_dag_node ** create, const char * file, int line, int worker);
+  static_if_inline dr_dag_node * dr_enter_create_cilk_proc_task__(const char * file, int line, int worker);
+  static_if_inline void          dr_return_from_create_task__(dr_dag_node * task, const char * file, int line, int worker);
+  static_if_inline dr_dag_node * dr_enter_wait_tasks__(const char * file, int line, int worker);
+  static_if_inline void          dr_return_from_wait_tasks__(dr_dag_node * task, const char * file, int line, int worker);
+  static_if_inline void          dr_end_task__(const char * file, int line, int worker);
   void dr_options_default(dr_options * opts);
-  void dr_start_(dr_options * opts, int worker, int num_workers);
-  void dr_stop_(int worker);
+  void dr_start__(dr_options * opts, const char * file, int line, 
+		  int worker, int num_workers);
+  void dr_stop__(const char * file, int line, int worker);
   void dr_dump();
   int dr_read_and_analyze_dag(const char * filename);
-  void dr_cleanup_(int worker, int num_workers);
+  void dr_cleanup__(const char * file, int line, int worker, int num_workers);
+
+#define dr_start_task_(parent, file, line)			\
+  dr_start_task__(parent, file, line, dr_get_worker())
 
 #define dr_start_task(parent) \
-  dr_start_task_(parent, dr_get_worker()) 
+  dr_start_task_(parent, __FILE__, __LINE__)
+
+#define dr_start_cilk_proc_(parent, file, line)			\
+  dr_start_cilk_proc__(file, line, dr_get_worker())
 
 #define dr_start_cilk_proc(parent) \
-  dr_start_cilk_proc_(dr_get_worker()) 
+  dr_start_cilk_proc_(__FILE__, __LINE__)
 
 #define dr_begin_section() \
-  dr_begin_section_(dr_get_worker())
+  dr_begin_section__(dr_get_worker())
+
+#define dr_enter_create_task_(create, file, line)		\
+  dr_enter_create_task__(create, file, line, dr_get_worker())
 
 #define dr_enter_create_task(create) \
-  dr_enter_create_task_(create, dr_get_worker())
+  dr_enter_create_task_(create, __FILE__, __LINE__)
 
 #define dr_enter_create_cilk_proc_task() \
-  dr_enter_create_cilk_proc_task_(dr_get_worker())
+  dr_enter_create_cilk_proc_task__(__FILE__, __LINE__, dr_get_worker())
+
+#define dr_enter_create_cilk_proc_task_(file, line)		\
+  dr_enter_create_cilk_proc_task__(file, line, dr_get_worker())
+
+#define dr_return_from_create_task_(task, file, line)	\
+  dr_return_from_create_task__(task, file, line, dr_get_worker())
 
 #define dr_return_from_create_task(task) \
-  dr_return_from_create_task_(task, dr_get_worker())
+  dr_return_from_create_task_(task, __FILE__, __LINE__)
+
+#define dr_enter_wait_tasks_(file, line)			\
+  dr_enter_wait_tasks__(file, line, dr_get_worker())
 
 #define dr_enter_wait_tasks() \
-  dr_enter_wait_tasks_(dr_get_worker())
+  dr_enter_wait_tasks_(__FILE__, __LINE__)
+
+#define dr_return_from_wait_tasks_(task, file, line)		\
+  dr_return_from_wait_tasks__(task, file, line, dr_get_worker())
 
 #define dr_return_from_wait_tasks(task) \
-  dr_return_from_wait_tasks_(task, dr_get_worker())
+  dr_return_from_wait_tasks_(task, __FILE__, __LINE__)
+
+#define dr_end_task_(file, line)			\
+  dr_end_task__(file, line, dr_get_worker())
 
 #define dr_end_task() \
-  dr_end_task_(dr_get_worker())
+  dr_end_task_(__FILE__, __LINE__)
 
 #define dr_start(opts) \
-  dr_start_(opts, dr_get_worker(), dr_get_max_workers())
+  dr_start__(opts, __FILE__, __LINE__, dr_get_worker(), dr_get_max_workers())
 #define dr_stop() \
-  dr_stop_(dr_get_worker())
+  dr_stop__(__FILE__, __LINE__, dr_get_worker())
 #define dr_cleanup() \
-  dr_cleanup_(dr_get_worker(), dr_get_max_workers())
+  dr_cleanup__(__FILE__, __LINE__, dr_get_worker(), dr_get_max_workers())
 
 #ifdef __cplusplus
 }

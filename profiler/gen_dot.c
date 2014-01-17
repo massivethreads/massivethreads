@@ -58,20 +58,25 @@ dr_edge_color(dr_dag_edge_kind_t k) {
 static void 
 dr_pi_dag_node_gen_dot(dr_pi_dag_node * g, 
 		       dr_pi_dag * G, FILE * wp) {
+  dr_pi_string_table * S = G->S;
+  const char * C = S->C;
+  long * I = S->I;
   fprintf(wp, 
 	  "/* node %ld : edges: %ld-%ld */\n"
 	  "T%lu [%s, label=\"[%ld] %s (%s)\\n"
 	  "%llu-%llu (%llu) est=%llu\\n"
-	  "W=%llu/%llu,nodes=%ld/%ld/%ld,edges=%ld/%ld/%ld/%ld by %d on %d\"];\n",
+	  "T=%llu/%llu,nodes=%ld/%ld/%ld,edges=%ld/%ld/%ld/%ld\\n"
+	  "by %d on %d\\n"
+	  "%s:%d-%s:%d\"];\n",
 	  g - G->T, g->edges_begin, g->edges_end,
 	  g - G->T,
 	  dr_node_attr(g),
 	  g - G->T,
 	  dr_node_kind_str(g->info.kind),
 	  dr_node_kind_str(g->info.last_node_kind),
-	  g->info.start, 
-	  g->info.end, 
-	  g->info.end - g->info.start, 
+	  g->info.start.t, 
+	  g->info.end.t, 
+	  g->info.end.t - g->info.start.t, 
 	  g->info.est, 
 	  g->info.t_1, g->info.t_inf,
 	  g->info.node_counts[dr_dag_node_kind_create_task],
@@ -81,7 +86,10 @@ dr_pi_dag_node_gen_dot(dr_pi_dag_node * g,
 	  g->info.edge_counts[dr_dag_edge_kind_create],
 	  g->info.edge_counts[dr_dag_edge_kind_create_cont],
 	  g->info.edge_counts[dr_dag_edge_kind_wait_cont],
-	  g->info.worker, g->info.cpu);
+	  g->info.worker, g->info.cpu,
+	  C + I[g->info.start.pos.file_idx], g->info.start.pos.line,
+	  C + I[g->info.end.pos.file_idx],   g->info.end.pos.line
+	  );
 }
 
 static void

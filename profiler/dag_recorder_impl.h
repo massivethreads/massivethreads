@@ -33,6 +33,26 @@ typedef struct dr_pi_dag_edge {
   long v;
 } dr_pi_dag_edge;
 
+/* 
+   n
+   sz
+   I ------+
+   S ------+----+
+   I[0] <--+    |
+   I[1]         |
+   ...          |
+   I[n-1]       |
+   ...  <-------+
+   
+ */
+
+typedef struct {
+  int n;			/* number of strings */
+  long sz;			/* total bytes including headers */
+  long * I;			/* index I[0] .. I[n-1] */
+  const char * C;		/* char array */
+} dr_pi_string_table;
+
 /* the toplevel structure of a position-independent dag.
    when dumped into a file, we make sure each integer 
    fields occupies 8 bytes */
@@ -42,6 +62,7 @@ typedef struct dr_pi_dag {
   long num_workers;		/* number of workers */
   dr_pi_dag_node * T;		/* all nodes in a contiguous array */
   dr_pi_dag_edge * E;		/* all edges in a contiguous array */
+  dr_pi_string_table * S;
 } dr_pi_dag;
 
 typedef enum {

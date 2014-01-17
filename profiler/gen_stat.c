@@ -35,7 +35,7 @@ dr_calc_inner_delay(dr_basic_stat * bs, dr_pi_dag * G) {
     dr_pi_dag_node * t = &T[i];
     if (t->info.kind < dr_dag_node_kind_section
 	|| t->subgraphs_begin_offset == t->subgraphs_end_offset) {
-      total_elapsed += t->info.end - t->info.start;
+      total_elapsed += t->info.end.t - t->info.start.t;
       total_t_1 += t->info.t_1;
       if (total_elapsed < total_t_1) {
 	fprintf(stderr,
@@ -43,7 +43,7 @@ dr_calc_inner_delay(dr_basic_stat * bs, dr_pi_dag * G) {
 		" inner delay (start=%llu, end=%llu,"
 		" t_1=%llu, end - start - t_1 = -%llu\n",
 		i,
-		t->info.start, t->info.end, t->info.t_1,
+		t->info.start.t, t->info.end.t, t->info.t_1,
 		total_t_1 - total_elapsed);
       }
     }
