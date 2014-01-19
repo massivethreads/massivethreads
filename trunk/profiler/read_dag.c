@@ -67,7 +67,7 @@ dr_read_dag(const char * filename) {
   long i;
   printf("%ld strings\n", n);
   for (i = 0; i < n; i++) {
-    printf("string %d : %s\n", i, S->C + S->I[i]);
+    printf("string %ld : %s\n", i, S->C + S->I[i]);
   }
 
   close(fd);

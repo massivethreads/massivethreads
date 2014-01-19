@@ -4,6 +4,8 @@
 
 #pragma once
 
+#define NO_CHUNK 1
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -86,12 +88,20 @@ extern "C" {
   } dr_dag_edge_kind_t;
 
   typedef struct dr_dag_node_list dr_dag_node_list;
+#if NO_CHUNK
+#else
   typedef struct dr_dag_node_chunk dr_dag_node_chunk;
+#endif
 
   /* list of dag nodes */
   struct dr_dag_node_list {
+#if NO_CHUNK
+    dr_dag_node * head;
+    dr_dag_node * tail;
+#else
     dr_dag_node_chunk * head;
     dr_dag_node_chunk * tail;
+#endif
   };
 
   typedef struct {
@@ -132,6 +142,9 @@ extern "C" {
   /* size = 128 bytes? */
   struct dr_dag_node {
     dr_dag_node_info info;
+#if NO_CHUNK
+    dr_dag_node * next;
+#endif
     /* a pointer used to recursively
        convert the graph into the 
        position independent format */
@@ -152,6 +165,22 @@ extern "C" {
     };
   };
 
+#if NO_CHUNK
+  typedef struct dr_dag_node_page {
+    struct dr_dag_node_page * next;
+    long sz;
+    dr_dag_node nodes[2];	/* this is the minimum size */
+  } dr_dag_node_page;
+
+  typedef struct {
+    dr_dag_node * head;
+    dr_dag_node * tail;
+    dr_dag_node_page * pages;
+  } dr_dag_node_freelist;
+#endif
+
+#if NO_CHUNK
+#else
   /* list of dr_dag_node, used to dynamically
      grow the subgraphs of section/task */
   enum { dr_dag_node_chunk_sz = 3 };
@@ -161,13 +190,17 @@ extern "C" {
     int n;
     dr_dag_node a[dr_dag_node_chunk_sz];
   } dr_dag_node_chunk;
+#endif
 
   typedef struct dr_thread_specific_state {
     union {
       struct {
 	dr_dag_node * task;		/* current task */
-	//dr_dag_node_chunk_freelist freelist[1];
+#if NO_CHUNK
+	dr_dag_node_freelist freelist[1];
+#else
 	dr_dag_node_list freelist[1];
+#endif
 	/* only used in Cilk: it holds a pointer to 
 	   the interval that just created a task */
 	dr_dag_node * parent;
@@ -238,6 +271,59 @@ extern "C" {
     }
   }
 
+#if NO_CHUNK
+  static dr_dag_node *
+  dr_dag_node_freelist_add_page(dr_dag_node_freelist * fl, size_t sz_) {
+    size_t sz = (sz_ > sizeof(dr_dag_node_page) 
+		 ? sz_ : sizeof(dr_dag_node_page));
+    dr_dag_node_page * page = (dr_dag_node_page *)dr_malloc(sz);
+    int n = (sz - sizeof(dr_dag_node_page)) / sizeof(dr_dag_node) + 2;
+    int i;
+    /* push the page to the top of the pages list */
+    page->next = fl->pages;
+    page->sz = sz;
+    fl->pages = page;
+    /* chop page into nodes */
+    (void)dr_check(n > 0);
+    /* not necessary, but just in case */
+    (void)dr_check(n > 1);
+    for (i = 0; i < n - 1; i++) {
+      page->nodes[i].next = &page->nodes[i+1];
+    }
+    page->nodes[n - 1].next = 0;
+    /* append the list of nodes to the nodes list */
+    if (fl->head) {
+      (void)dr_check(fl->tail);
+      fl->tail->next = &page->nodes[0];
+    } else {
+      fl->head = &page->nodes[0];
+    }
+    fl->tail = &page->nodes[n - 1];
+    return fl->head;
+  }
+
+  static dr_dag_node *
+  dr_dag_node_alloc(dr_dag_node_freelist * fl) {
+    dr_dag_node * head = fl->head;
+    if (!head) {
+      if (DAG_RECORDER_DBG_LEVEL>=1) {
+	fprintf(stderr, 
+		"dr_dag_node_alloc(%p) allocate page\n", fl);
+      }
+      head = dr_dag_node_freelist_add_page(fl, GS.opts.alloc_sz);
+    }
+    (void)dr_check(fl->tail);
+    dr_dag_node * next = head->next;
+    fl->head = next;
+    if (!next) fl->tail = 0;
+    if (DAG_RECORDER_VERBOSE_LEVEL>=3) {
+      printf("dr_dag_node_alloc(%p) -> %p\n", 
+	     fl, head);
+    }
+    return head;
+  }
+
+#else
   static dr_dag_node_chunk *
   dr_dag_node_chunk_alloc(dr_dag_node_list * fl) {
     dr_dag_node_chunk * head = fl->head;
@@ -284,6 +370,8 @@ extern "C" {
     return &ch->a[n];
   }
 
+#endif
+
   /* list */
 
   static void 
@@ -304,14 +392,25 @@ extern "C" {
 
   static dr_dag_node *
   dr_dag_node_list_first(dr_dag_node_list * l) {
+#if NO_CHUNK
+    return l->head;
+#else
     return dr_dag_node_chunk_first(l->head);
+#endif
   }
 
   static dr_dag_node *
   dr_dag_node_list_last(dr_dag_node_list * l) {
+#if NO_CHUNK
+    return l->tail;
+#else
     return dr_dag_node_chunk_last(l->tail);
+#endif
   }
 
+#if NO_CHUNK
+
+#else
   /* pop a chunk from fl, append it at the end of l */
   static dr_dag_node_chunk *
   dr_dag_node_list_add_chunk(dr_dag_node_list * l,
@@ -329,24 +428,61 @@ extern "C" {
     l->tail = ch;
     return ch;
   }
+#endif
 
   /* extend l by one element and return a point
      to the new element */
   static dr_dag_node *
   dr_dag_node_list_push_back(dr_dag_node_list * l,
-			     dr_dag_node_list * fl) {
+#if NO_CHUNK
+			     dr_dag_node_freelist * fl
+#else
+			     dr_dag_node_list * fl
+#endif
+			     ) {
+#if NO_CHUNK
+    dr_dag_node * n = dr_dag_node_alloc(fl);
+    n->next = 0;
+    if (l->tail) {
+      l->tail->next = n;
+    } else {
+      (void)dr_check(!l->head);
+      l->head = n;
+    }
+    l->tail = n;
+    return n;
+#else
     dr_dag_node_chunk * tail = l->tail;
     if (!tail || tail->n == dr_dag_node_chunk_sz) {
       tail = dr_dag_node_list_add_chunk(l, fl);
     }
     (void)dr_check(tail->n < dr_dag_node_chunk_sz);
     return dr_dag_node_chunk_push_back(tail);
+#endif
   }
+
+#if NO_CHUNK
+  static void 
+  dr_dag_node_free(dr_dag_node * n, 
+		   dr_dag_node_freelist * fl) {
+    (void)dr_check(!n->next);
+    n->next = fl->head;
+    if (!fl->head)
+      fl->tail = n;
+    fl->head = n;
+  }
+
+#endif
 
   /* put everything in l at the head of fl */
   static void 
   dr_dag_node_list_clear(dr_dag_node_list * l, 
-			 dr_dag_node_list * fl) {
+#if NO_CHUNK
+			 dr_dag_node_freelist * fl
+#else
+			 dr_dag_node_list * fl
+#endif
+			 ) {
     if (l->head) {
       (void)dr_check(l->tail);
       (void)dr_check(!l->tail->next);
@@ -494,7 +630,12 @@ extern "C" {
   /* add a new section as a child of s (either a section or task) */
   static dr_dag_node *
   dr_push_back_section(dr_dag_node * t, dr_dag_node * s, 
-		       dr_dag_node_list * fl) {
+#if NO_CHUNK
+		       dr_dag_node_freelist * fl
+#else
+		       dr_dag_node_list * fl
+#endif
+		       ) {
     if (dr_check(s->info.kind >= dr_dag_node_kind_section)) {
       dr_dag_node * new_s 
 	= dr_dag_node_list_push_back(s->subgraphs, fl);
@@ -508,6 +649,15 @@ extern "C" {
   }
 
   /* allocate a new dag node of a task type */
+#if NO_CHUNK
+  static dr_dag_node * 
+  dr_mk_dag_node_task(dr_dag_node_freelist * fl) {
+    dr_dag_node * t = dr_dag_node_alloc(fl);
+    dr_dag_node_init_section_or_task(t, dr_dag_node_kind_task, 0);
+    t->active_section = t;
+    return t;
+  }
+#else
   static dr_dag_node * 
   dr_mk_dag_node_task() {
     dr_dag_node * t = (dr_dag_node *)dr_malloc(sizeof(dr_dag_node));
@@ -515,6 +665,7 @@ extern "C" {
     t->active_section = t;
     return t;
   }
+#endif
 
 #if __cplusplus 
   extern "C" {
@@ -612,7 +763,13 @@ extern "C" {
   }
 
   static dr_dag_node * 
-  dr_task_ensure_section(dr_dag_node * t, dr_dag_node_list * fl) {
+  dr_task_ensure_section(dr_dag_node * t, 
+#if NO_CHUNK
+			 dr_dag_node_freelist * fl
+#else
+			 dr_dag_node_list * fl
+#endif
+			 ) {
     dr_dag_node * s = dr_task_active_node(t);
     if (s == t) {
       (void)dr_check(s->info.kind == dr_dag_node_kind_task);
@@ -660,7 +817,11 @@ extern "C" {
 		  int worker) {
     if (GS.ts) {
       /* make a task, section, and interval */
+#if NO_CHUNK
+      dr_dag_node * nt = dr_mk_dag_node_task(GS.ts[worker].freelist);
+#else
       dr_dag_node * nt = dr_mk_dag_node_task();
+#endif
       if (DAG_RECORDER_VERBOSE_LEVEL>=2) {
 	printf("dr_start_task(parent=%p) by %d new task=%p\n", 
 	       p, worker, nt);
@@ -801,7 +962,13 @@ extern "C" {
   /* look at subgraphs of s.
      if it is collapsable, collapse it */
   static void 
-  dr_summarize_section_or_task(dr_dag_node * s, dr_dag_node_list * fl) {
+  dr_summarize_section_or_task(dr_dag_node * s, 
+#if NO_CHUNK
+			       dr_dag_node_freelist * fl
+#else
+			       dr_dag_node_list * fl
+#endif
+			       ) {
     dr_dag_node * first = dr_dag_node_list_first(s->subgraphs);
     if (DAG_RECORDER_VERBOSE_LEVEL>=2) {
       if (s->info.kind == dr_dag_node_kind_section) {
@@ -834,12 +1001,21 @@ extern "C" {
       {
 	/* look through all chunks */
 	dr_clock_t t_inf = 0;
+#if NO_CHUNK
+	dr_dag_node * head = s->subgraphs->head;
+	dr_dag_node * ch;
+#else
 	dr_dag_node_chunk * head = s->subgraphs->head;
 	dr_dag_node_chunk * ch;
+#endif
 	for (ch = head; ch; ch = ch->next) {
+#if NO_CHUNK
+	  dr_dag_node * x = ch;
+#else
 	  int i;
 	  for (i = 0; i < ch->n; i++) {
 	    dr_dag_node * x = &ch->a[i];
+#endif
 	    int k;
 	    /* accumulate t_1 */
 	    s->info.t_1     += x->info.t_1;
@@ -860,7 +1036,11 @@ extern "C" {
 	    case dr_dag_node_kind_create_task: {
 	      /* besides, we need to count edges
 		 from x to its successor */
+#if NO_CHUNK
+	      (void)dr_check(x->next);
+#else
 	      (void)dr_check(ch->next || i < ch->n - 1);
+#endif
 	      s->info.edge_counts[dr_dag_edge_kind_create]++;
 	      s->info.edge_counts[dr_dag_edge_kind_create_cont]++;
 	      s->info.n_child_create_tasks++;
@@ -875,7 +1055,7 @@ extern "C" {
 	      t_inf = dr_max_clock(s->info.t_inf + y->info.t_inf, t_inf);
 	      s->info.worker = dr_meet_ints(s->info.worker, y->info.worker);
 	      s->info.cpu = dr_meet_ints(s->info.cpu, y->info.cpu);
-
+	      
 	      for (k = 0; k < dr_dag_node_kind_section; k++) {
 		s->info.node_counts[k] += y->info.node_counts[k];
 	      }
@@ -886,11 +1066,21 @@ extern "C" {
 	    }
 	    case dr_dag_node_kind_wait_tasks: 
 	    case dr_dag_node_kind_end_task: {
+#if NO_CHUNK
+	      (void)dr_check(!x->next);
+#else
 	      (void)dr_check(!ch->next && i == ch->n - 1);
+#endif
 	      break;
 	    }
 	    case dr_dag_node_kind_section:
-	      if (ch->next || i < ch->n - 1) {
+	      if (
+#if NO_CHUNK
+		  x->next
+#else
+		  ch->next || i < ch->n - 1
+#endif
+		  ) {
 		s->info.edge_counts[dr_dag_edge_kind_wait_cont]++;
 		s->info.edge_counts[dr_dag_edge_kind_end] 
 		  += x->info.n_child_create_tasks;
@@ -900,12 +1090,15 @@ extern "C" {
 	      (void)dr_check(0);
 	      break;
 	    }
+#if NO_CHUNK
+#else
 	  }
+#endif
 	}
 	s->info.t_inf = dr_max_clock(t_inf, s->info.t_inf);
       }
       /* now check if we can collapse it */
-
+      
       /* unconditionally collapse */
       if (s->info.end.t - s->info.start.t < GS.opts.uncollapse_min) {
 	s->info.worker  = first->info.worker;
@@ -918,12 +1111,21 @@ extern "C" {
       if (s->info.worker != -1
 	  && s->info.end.t - s->info.start.t < GS.opts.collapse_max) {
 	/* free the graph of its children */
+#if NO_CHUNK
+	dr_dag_node * head = s->subgraphs->head;
+	dr_dag_node * ch;
+#else
 	dr_dag_node_chunk * head = s->subgraphs->head;
 	dr_dag_node_chunk * ch;
+#endif
 	for (ch = head; ch; ch = ch->next) {
+#if NO_CHUNK
+	  dr_dag_node * x = ch;
+#else
 	  int i;
 	  for (i = 0; i < ch->n; i++) {
 	    dr_dag_node * x = &ch->a[i];
+#endif
 	    if (x->info.kind == dr_dag_node_kind_create_task) {
 	      /* children must have been collapsed */
 	      dr_dag_node * c = x->child;
@@ -932,13 +1134,20 @@ extern "C" {
 	      (void)dr_check(c->subgraphs);
 	      /* free subgraphs */
 	      (void)dr_check(dr_dag_node_list_empty(c->subgraphs));
+#if NO_CHUNK
+	      dr_dag_node_free(c, fl);
+#else
 	      dr_free(c, sizeof(dr_dag_node));
+#endif
 	    } else if (x->info.kind == dr_dag_node_kind_section) {
 	      (void)dr_check(x->subgraphs);
 	      /* free subgraphs */
 	      (void)dr_check(dr_dag_node_list_empty(x->subgraphs));
 	    }
+#if NO_CHUNK
+#else
 	  }
+#endif
 	}
 	dr_dag_node_list_clear(s->subgraphs, fl);
       }
@@ -970,12 +1179,21 @@ extern "C" {
 	{
 	  /* calc EST of the interval to start */
 	  dr_clock_t est = p->info.est + p->info.t_inf;
+#if NO_CHUNK
+	  dr_dag_node * head = s->subgraphs->head;
+	  dr_dag_node * ch;
+#else
 	  dr_dag_node_chunk * head = s->subgraphs->head;
 	  dr_dag_node_chunk * ch;
+#endif
 	  for (ch = head; ch; ch = ch->next) {
+#if NO_CHUNK
+	    dr_dag_node * sc = ch;
+#else
 	    int i;
 	    for (i = 0; i < ch->n; i++) {
 	      dr_dag_node * sc = &ch->a[i];
+#endif
 	      (void)dr_check(sc->info.kind < dr_dag_node_kind_task); 
 	      if (sc->info.kind == dr_dag_node_kind_create_task) {
 		dr_dag_node * ct = sc->child;
@@ -984,7 +1202,10 @@ extern "C" {
 		  if (est < x) est = x;
 		}
 	      }
+#if NO_CHUNK
+#else
 	    }
+#endif
 	  }
 	  dr_summarize_section_or_task(s, GS.ts[worker].freelist);
 	  dr_set_cur_task_(worker, t);
