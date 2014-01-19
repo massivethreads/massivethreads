@@ -310,7 +310,8 @@ extern "C" {
 	fprintf(stderr, 
 		"dr_dag_node_alloc(%p) allocate page\n", fl);
       }
-      head = dr_dag_node_freelist_add_page(fl, GS.opts.alloc_sz);
+      head = dr_dag_node_freelist_add_page(fl, 
+					   (GS.opts.alloc_unit_mb << 20));
     }
     (void)dr_check(fl->tail);
     dr_dag_node * next = head->next;
