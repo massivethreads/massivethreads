@@ -797,6 +797,8 @@ void dr_options_default(dr_options * opts) {
       || getenv_byte("DR_VERBOSE",               &opts->verbose_level)) {}
   if (getenv_byte("DAG_RECORDER_CHK_LEVEL",   &opts->chk_level)
       || getenv_byte("DR_CHK",                &opts->chk_level)) {}
+  if (getenv_ull("DAG_RECORDER_UNCOLLAPSE_MIN", &opts->uncollapse_min)
+      || getenv_ull("DR_UNCOLLAPSE_MIN",        &opts->uncollapse_min)) {}
   if (getenv_ull("DAG_RECORDER_COLLAPSE_MAX", &opts->collapse_max)
       || getenv_ull("DR_COLLAPSE_MAX",        &opts->collapse_max)) {}
 }

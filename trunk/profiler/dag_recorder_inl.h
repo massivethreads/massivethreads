@@ -802,6 +802,7 @@ extern "C" {
      if it is collapsable, collapse it */
   static void 
   dr_summarize_section_or_task(dr_dag_node * s, dr_dag_node_list * fl) {
+    dr_dag_node * first = dr_dag_node_list_first(s->subgraphs);
     if (DAG_RECORDER_VERBOSE_LEVEL>=2) {
       if (s->info.kind == dr_dag_node_kind_section) {
 	printf("dr_summarize_section(section=%p)\n", s);
@@ -811,7 +812,6 @@ extern "C" {
     }
     if (dr_check(s->info.kind >= dr_dag_node_kind_section)
 	&& dr_check(!dr_dag_node_list_empty(s->subgraphs))) {
-      dr_dag_node * first = dr_dag_node_list_first(s->subgraphs);
       dr_dag_node * last = dr_dag_node_list_last(s->subgraphs);
       int i;
       /* initialize the result */
@@ -905,6 +905,13 @@ extern "C" {
 	s->info.t_inf = dr_max_clock(t_inf, s->info.t_inf);
       }
       /* now check if we can collapse it */
+
+      /* unconditionally collapse */
+      if (s->info.end.t - s->info.start.t < GS.opts.uncollapse_min) {
+	s->info.worker  = first->info.worker;
+	s->info.cpu     = first->info.cpu;
+      }
+
       /* for now, we collapse it if it 
 	 was executed on a single worker
 	 and it isn't too large */
