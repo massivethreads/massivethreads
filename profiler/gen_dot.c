@@ -67,8 +67,10 @@ dr_pi_dag_node_gen_dot(dr_pi_dag_node * g,
 	  "%llu-%llu (%llu) est=%llu\\n"
 	  "T=%llu/%llu,nodes=%ld/%ld/%ld,edges=%ld/%ld/%ld/%ld\\n"
 	  "by %d on %d\\n"
-	  "%s:%d-%s:%d\"];\n",
-	  g - G->T, g->edges_begin, g->edges_end,
+	  "%s:%ld-%s:%ld\"];\n",
+	  g - G->T, 
+	  g->edges_begin, 
+	  g->edges_end,
 	  g - G->T,
 	  dr_node_attr(g),
 	  g - G->T,
@@ -78,7 +80,8 @@ dr_pi_dag_node_gen_dot(dr_pi_dag_node * g,
 	  g->info.end.t, 
 	  g->info.end.t - g->info.start.t, 
 	  g->info.est, 
-	  g->info.t_1, g->info.t_inf,
+	  g->info.t_1, 
+	  g->info.t_inf,
 	  g->info.node_counts[dr_dag_node_kind_create_task],
 	  g->info.node_counts[dr_dag_node_kind_wait_tasks],
 	  g->info.node_counts[dr_dag_node_kind_end_task],
@@ -86,9 +89,12 @@ dr_pi_dag_node_gen_dot(dr_pi_dag_node * g,
 	  g->info.edge_counts[dr_dag_edge_kind_create],
 	  g->info.edge_counts[dr_dag_edge_kind_create_cont],
 	  g->info.edge_counts[dr_dag_edge_kind_wait_cont],
-	  g->info.worker, g->info.cpu,
-	  C + I[g->info.start.pos.file_idx], g->info.start.pos.line,
-	  C + I[g->info.end.pos.file_idx],   g->info.end.pos.line
+	  g->info.worker, 
+	  g->info.cpu,
+	  C + I[g->info.start.pos.file_idx], 
+	  g->info.start.pos.line,
+	  C + I[g->info.end.pos.file_idx],   
+	  g->info.end.pos.line
 	  );
 }
 

@@ -37,6 +37,8 @@ extern "C" {
     const char * gpl_file;	/* filename of the gpl */
     dr_clock_t uncollapse_min;	/* minimum length that can be uncollapsed */
     dr_clock_t collapse_max;	/* maximum length that can be collpased */
+    long alloc_sz;              /* node allocation unit in bytes */
+    long pre_alloc;             /* pre-allocated units */
     int gpl_sz;			/* size of gpl file */
     char dbg_level;		/* level of debugging features */
     char verbose_level;		/* level of verbosity */
@@ -60,6 +62,8 @@ extern "C" {
     (const char *)"00dr.gpl",  /* gpl_file */
     0,			       /* uncollapse_min */
     (1L << 60),			/* collapse_max */
+    0,			       /* alloc_sz in bytes */
+    0,			       /* pre-alloc nodes in MB */
     4000,			/* gpl_sz */
     0,				/* dbg_level */
     0,				/* verbose_level */
