@@ -35,7 +35,8 @@ extern "C" {
     const char * stat_file;	/* filename of the dag */
     const char * dot_file;	/* filename of the dot */
     const char * gpl_file;	/* filename of the gpl */
-    dr_clock_t collapse_max;	/* collapse nodes if set */
+    dr_clock_t uncollapse_min;	/* minimum length that can be uncollapsed */
+    dr_clock_t collapse_max;	/* maximum length that can be collpased */
     int gpl_sz;			/* size of gpl file */
     char dbg_level;		/* level of debugging features */
     char verbose_level;		/* level of verbosity */
@@ -57,7 +58,8 @@ extern "C" {
     (const char *)"00dr.stat", /* stat_file */
     (const char *)"00dr.dot",  /* dot_file */
     (const char *)"00dr.gpl",  /* gpl_file */
-    (1L << 60),			/* collapse */
+    0,			       /* uncollapse_min */
+    (1L << 60),			/* collapse_max */
     4000,			/* gpl_sz */
     0,				/* dbg_level */
     0,				/* verbose_level */
