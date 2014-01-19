@@ -62,8 +62,8 @@ extern "C" {
     (const char *)"00dr.gpl",  /* gpl_file */
     0,			       /* uncollapse_min */
     (1L << 60),			/* collapse_max */
-    0,			       /* alloc_sz in bytes */
-    0,			       /* pre-alloc nodes in MB */
+    1,			       /* alloc_sz in MB */
+    0,			       /* the number of pre-allocations */
     4000,			/* gpl_sz */
     0,				/* dbg_level */
     0,				/* verbose_level */
