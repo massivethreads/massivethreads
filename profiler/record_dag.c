@@ -864,8 +864,8 @@ void dr_options_default(dr_options * opts) {
       || getenv_ull("DR_UNCOLLAPSE_MIN",        &opts->uncollapse_min)) {}
   if (getenv_ull("DAG_RECORDER_COLLAPSE_MAX", &opts->collapse_max)
       || getenv_ull("DR_COLLAPSE_MAX",        &opts->collapse_max)) {}
-  if (getenv_long("DAG_RECORDER_ALLOC_SZ",    &opts->alloc_sz)
-      || getenv_long("DR_ALLOC_SZ",           &opts->alloc_sz)) {}
+  if (getenv_long("DAG_RECORDER_ALLOC_UNIT_MB", &opts->alloc_unit_mb)
+      || getenv_long("DR_ALLOC_UNIT_MB",      &opts->alloc_unit_mb)) {}
   if (getenv_long("DAG_RECORDER_PRE_ALLOC",   &opts->pre_alloc)
       || getenv_long("DR_PRE_ALLOC",          &opts->pre_alloc)) {}
 }
@@ -883,7 +883,7 @@ dr_make_thread_specific_state(int num_workers) {
 		* num_workers);
   int i;
   long pages_total = GS.opts.pre_alloc;
-  size_t alloc_sz = GS.opts.alloc_sz;
+  size_t alloc_sz = (GS.opts.alloc_unit_mb << 20);
   long pages_per_worker = (pages_total + num_workers - 1) / num_workers;
 
   for (i = 0; i < num_workers; i++) {
