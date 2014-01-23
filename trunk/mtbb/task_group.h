@@ -105,8 +105,34 @@ namespace mtbb {
 
 #if TO_TBB
 
+  /* I don't remember why this is necessary... */
   typedef tbb::task task;
-  typedef tbb::task_group task_group_no_prof;
+
+  /* even with TBB, we still wrap the original
+     task_group class, with one that defines 
+     run_ and wait_ methods, which take extra 
+     file and line parameters.  
+     they are used only when DAG_RECORDER=2.
+     in order to simplify matters, they are
+     defined even when DAG_RECORDER!=2.
+  */
+  // typedef tbb::task_group task_group_no_prof;
+
+  struct task_group_no_prof : tbb::task_group {
+    template<typename C>
+      void run_(C c, const char * file, int line) {
+      (void)file;
+      (void)line;
+      run(c);
+    }
+
+    void wait_(const char * file, int line) {
+      (void)file;
+      (void)line;
+      wait();
+    }
+  };
+
   
 #else  /* anything but TBB */
 
@@ -140,7 +166,7 @@ namespace mtbb {
   template<typename F>
   struct callable_task : task {
     F f;
-    callable_task(F f) : f(f) {}
+    callable_task(F f_) : f(f_) {}
     void * execute() { f(); return NULL; }
   };
 #endif
@@ -181,10 +207,10 @@ namespace mtbb {
       init();
     }
     void new_node() {
-      task_list_node * new_node = new task_list_node();
-      new_node->init();
-      tail->next = new_node;
-      tail = new_node;
+      task_list_node * new_node_ = new task_list_node();
+      new_node_->init();
+      tail->next = new_node_;
+      tail = new_node_;
     }
     task * add(
 #if TASK_GROUP_VER >= 2
@@ -443,6 +469,20 @@ namespace mtbb {
 #if TASK_GROUP_VER >= 2
       mem.reset();
 #endif
+    }
+
+
+    template<typename C>
+    void run_(C c, const char * file, int line) {
+      (void)file;
+      (void)line;
+      run(c);
+    }
+
+    void wait_(const char * file, int line) {
+      (void)file;
+      (void)line;
+      wait();
     }
   };
 
