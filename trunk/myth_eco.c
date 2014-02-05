@@ -380,6 +380,8 @@ int myth_sleeper_push(int *sem, int rank,int num) {
   sleep_queue_t tmp = myth_malloc(sizeof(struct sleep_queue));
   tmp->head_sem = sem;
   tmp->head_rank = rank;
+  tmp->tail = tmp;
+  tmp->next = NULL;
   if(g_sleep_queue == NULL) {
     g_sleep_queue = tmp;
     g_sleep_queue->tail = tmp;
