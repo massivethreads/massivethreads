@@ -37,7 +37,8 @@ extern "C" {
     const char * gpl_file;	/* filename of the gpl */
     dr_clock_t uncollapse_min;	/* minimum length that can be uncollapsed */
     dr_clock_t collapse_max;	/* maximum length that can be collpased */
-    long alloc_unit_mb;           /* node allocation unit in bytes */
+    long node_count_target;	/* desired number of nodes */
+    long alloc_unit_mb;	        /* node allocation unit in bytes */
     long pre_alloc;             /* pre-allocated units */
     int gpl_sz;			/* size of gpl file */
     char dbg_level;		/* level of debugging features */
@@ -60,8 +61,9 @@ extern "C" {
     (const char *)"00dr.stat", /* stat_file */
     (const char *)"00dr.dot",  /* dot_file */
     (const char *)"00dr.gpl",  /* gpl_file */
-    0,			       /* uncollapse_min */
-    (1L << 60),			/* collapse_max */
+    0,			       /* uncollapse_min; obsolete. */
+    (1L << 60),	               /* collapse_max used to be (1L << 60), */
+    100000,                    /* node_count_target */
     1,			       /* alloc unit in MB */
     0,			       /* the number of pre-allocations */
     4000,			/* gpl_sz */

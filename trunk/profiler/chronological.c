@@ -37,12 +37,18 @@ typedef struct {
 
 static dr_event_queue * 
 dr_mk_event_queue() {
-  dr_event_queue * q = (dr_event_queue *)dr_malloc(sizeof(dr_event_queue));
+  dr_event_queue * q = (dr_event_queue *)dr_malloc(sizeof(dr_event_queue)); /* leaking */
   long sz = 100;
-  q->events = (dr_event *)dr_malloc(sizeof(dr_event) * sz);
+  q->events = (dr_event *)dr_malloc(sizeof(dr_event) * sz); /* leaking ? */
   q->sz = sz;
   q->n = 0;
   return q;
+}
+
+static void
+dr_destroy_event_queue(dr_event_queue * q) {
+  dr_free(q->events, sizeof(dr_event) * q->sz);
+  dr_free(q, sizeof(dr_event_queue));
 }
 
 /* check if parent <= child */
@@ -233,5 +239,6 @@ dr_pi_dag_chronological_traverse(dr_pi_dag * G,
     ct->process_event(ct, ev);
   }
   dr_free(ready_count, sizeof(int) * G->n);
+  dr_destroy_event_queue(F);
 }
 

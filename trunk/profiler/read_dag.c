@@ -44,12 +44,12 @@ dr_read_dag(const char * filename) {
   dr_pi_string_table * S = (dr_pi_string_table *)&G->E[G->m];
   long st_sz = S->sz;
 
+#if 0
   off_t expected_sz = header_sz 
     + sizeof(dr_pi_dag_node) * G->n
     + sizeof(dr_pi_dag_edge) * G->m
     + st_sz;
 
-#if 0
   if (expected_sz != file_sz) {
     fprintf(stderr, "error: file %s may be corrupted; it has %ld nodes and %ld edges; we expected %ld bytes, but the file is %ld bytes\n", 
 	    filename, G->n, G->m, expected_sz, file_sz);

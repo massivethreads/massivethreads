@@ -120,6 +120,12 @@ dr_basic_stat_init(dr_basic_stat * bs, dr_pi_dag * G) {
   bs->t = 0;			/* time of the last event */
 }
 
+static void
+dr_basic_stat_destroy(dr_basic_stat * bs, dr_pi_dag * G) {
+  long nw = G->num_workers;
+  dr_free(bs->edge_counts, sizeof(long) * dr_dag_edge_kind_max * nw * nw);
+}
+
 static void 
 dr_basic_stat_process_event(chronological_traverser * ct, 
 			    dr_event evt) {
@@ -214,23 +220,30 @@ static void
 dr_basic_stat_write_to_file(dr_basic_stat * bs, FILE * wp) {
   dr_pi_dag * G = bs->G;
   long * nc = G->T[0].info.node_counts;
-  long n_tasks = nc[dr_dag_node_kind_create_task];
+  long n_creates = nc[dr_dag_node_kind_create_task];
   long n_waits = nc[dr_dag_node_kind_wait_tasks];
   long n_ends = nc[dr_dag_node_kind_end_task];
-  long n_nodes = n_tasks + n_waits + n_ends;
+  //long n_sections = nc[dr_dag_node_kind_section];
+  //long n_tasks = nc[dr_dag_node_kind_task];
+  long n_ints = n_creates + n_waits + n_ends;
+  //long n_nodes = n_ints + n_sections + n_tasks;
+  long n_nodes = n_ints + n_waits + n_creates + 1;
+  long n_phys_nodes = G->T[0].info.phys_node_count;
   dr_clock_t t_inf = G->T[0].info.t_inf;
   dr_clock_t work = bs->total_t_1;
   dr_clock_t delay = bs->cum_delay + (bs->total_elapsed - bs->total_t_1);
   dr_clock_t no_work = bs->cum_no_work;
   double nw = bs->n_workers;
 
-  assert(work == G->T[0].info.t_1);
+  (void)dr_check(work == G->T[0].info.t_1);
+  /* +1 because root task is a task, yet not counted as a creation */
+  //(void)dr_check(n_creates + 1 == n_tasks);
+  //(void)dr_check(n_ends == n_tasks);
+  //(void)dr_check(n_waits == n_sections);
 
-  fprintf(wp, "create_task           = %ld\n", n_tasks);
+  fprintf(wp, "create_task           = %ld\n", n_creates);
   fprintf(wp, "wait_tasks            = %ld\n", n_waits);
   fprintf(wp, "end_task              = %ld\n", n_ends);
-  //fprintf(wp, "local edges           = %ld\n", bs->n_local_edges);
-  //fprintf(wp, "remote edges          = %ld\n", bs->n_remote_edges);
   fprintf(wp, "work (T1)             = %llu\n", work);
   fprintf(wp, "delay                 = %llu\n", delay);
   fprintf(wp, "no_work               = %llu\n", no_work);
@@ -257,9 +270,13 @@ dr_basic_stat_write_to_file(dr_basic_stat * bs, FILE * wp) {
   fprintf(wp, "observed/greedy       = %.3f\n", 
 	  (work/nw + t_inf)/bs->t);
   fprintf(wp, "task granularity      = %.3f\n", 
-	  bs->cum_running/(double)n_tasks);
-  fprintf(wp, "node granularity      = %.3f\n", 
-	  bs->cum_running/(double)n_nodes);
+	  bs->cum_running/(double)n_creates);
+  fprintf(wp, "interval granularity  = %.3f\n", 
+	  bs->cum_running/(double)n_ints);
+  fprintf(wp, "dag nodes             = %ld\n", n_nodes);
+  fprintf(wp, "materialized nodes    = %ld\n", n_phys_nodes);
+  fprintf(wp, "compression ratio     = %f\n", 
+	  n_phys_nodes / (double)n_nodes);
   dr_write_edge_counts(bs, wp);
 }
 
@@ -291,6 +308,7 @@ dr_gen_basic_stat(dr_pi_dag * G) {
   dr_calc_edges(bs, G);
   dr_pi_dag_chronological_traverse(G, (chronological_traverser *)bs);
   dr_basic_stat_write_to_file(bs, wp);
+  dr_basic_stat_destroy(bs, G);
   if (must_close) fclose(wp);
   return 1;
 }
