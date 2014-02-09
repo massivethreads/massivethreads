@@ -132,25 +132,15 @@ dr_dag_node_stack_push_children(dr_dag_node_stack * s,
       dr_dag_node_stack_push(s, g->child);
     }
   } else {
-#if NO_CHUNK
     dr_dag_node * head = g->subgraphs->head;
     dr_dag_node * tail = g->subgraphs->tail;
     dr_dag_node * ch;
-#else
-    dr_dag_node_chunk * head = g->subgraphs->head;
-    dr_dag_node_chunk * tail = g->subgraphs->tail;
-    dr_dag_node_chunk * ch;
-#endif
     /* a bit complicated to reverse the children */
 
     /* 1. count the number of children */
     int n_children = 0;
     for (ch = head; ch; ch = ch->next) {
-#if NO_CHUNK
       n_children++;
-#else
-      n_children += ch->n;
-#endif
     }
     /* 2. make the array of the right size and
        fill the array with children */
@@ -159,7 +149,6 @@ dr_dag_node_stack_push_children(dr_dag_node_stack * s,
     int idx = 0;
     dr_dag_node_kind_t K = g->info.kind;
     for (ch = head; ch; ch = ch->next) {
-#if NO_CHUNK
       dr_dag_node_kind_t k = ch->info.kind;
       if (DAG_RECORDER_CHK_LEVEL>=1) {
 	if (K == dr_dag_node_kind_section) {
@@ -179,33 +168,6 @@ dr_dag_node_stack_push_children(dr_dag_node_stack * s,
 	}
       }
       children[idx++] = ch;
-#else
-      int i;
-      for (i = 0; i < ch->n; i++) {
-	dr_dag_node_kind_t k = ch->a[i].info.kind;
-	/* the entire if expression for checks */
-	if (DAG_RECORDER_CHK_LEVEL>=1) {
-	  if (K == dr_dag_node_kind_section) {
-	    (void)dr_check(k == dr_dag_node_kind_create_task 
-			   || k == dr_dag_node_kind_section
-			   || k == dr_dag_node_kind_wait_tasks);
-	    if (k == dr_dag_node_kind_wait_tasks) {
-	      (void)dr_check(ch == tail);
-	      (void)dr_check(i == ch->n - 1);
-	    }
-	  } else {
-	    (void)dr_check(K == dr_dag_node_kind_task);
-	    (void)dr_check(k == dr_dag_node_kind_section
-			   || k == dr_dag_node_kind_end_task);
-	    if (k == dr_dag_node_kind_end_task) {
-	      (void)dr_check(ch == tail);
-	      (void)dr_check(i == ch->n - 1);
-	    }
-	  }
-	}
-	children[idx++] = &ch->a[i];
-      }
-#endif
     }
     assert(idx == n_children);
     /* 3. finally push them in the reverse order */
@@ -214,6 +176,75 @@ dr_dag_node_stack_push_children(dr_dag_node_stack * s,
     }
     dr_free(children, sizeof(dr_dag_node *) * n_children);
   }
+}
+
+/* --- free all descendants of g (and optionally g also) --- */
+
+static void 
+dr_dag_node_free(dr_dag_node * n, 
+		 dr_dag_node_freelist * fl) {
+#if DAG_RECORDER_VALGRIND_MEM_DBG
+  return dr_free(n, sizeof(dr_dag_node));
+#else
+  n->next = fl->head;
+  if (!fl->head)
+    fl->tail = n;
+  fl->head = n;
+#endif
+}
+
+  /* free all nodes in l */
+static void 
+dr_dag_node_list_free(dr_dag_node_list * l, 
+		      dr_dag_node_freelist * fl) {
+#if DAG_RECORDER_VALGRIND_MEM_DBG
+  dr_dag_node * ch;
+  dr_dag_node * next;
+  for (ch = l->head; ch; ch = next) {
+    next = ch->next;
+    dr_dag_node_free(ch, fl);
+  }
+  dr_dag_node_list_init(l);
+#else
+  if (l->head) {
+    (void)dr_check(l->tail);
+    (void)dr_check(!l->tail->next);
+    l->tail->next = fl->head;
+    if (!fl->head)
+      fl->tail = l->tail;
+    fl->head = l->head;
+    dr_dag_node_list_init(l);
+  } else {
+    (void)dr_check(!l->tail);
+  }
+#endif
+  (void)dr_check(!l->head);
+  (void)dr_check(!l->tail);
+}
+
+void 
+dr_free_dag(dr_dag_node * g, int free_root,
+	    dr_dag_node_freelist * fl) {
+  dr_dag_node_stack s[1];
+  dr_dag_node_stack_init(s);
+  dr_dag_node_stack_push(s, g);
+  while (s->top) {
+    dr_dag_node * x = dr_dag_node_stack_pop(s);
+    if (x->info.kind == dr_dag_node_kind_create_task) {
+      if (x->child) {
+	dr_dag_node_stack_push(s, x->child);
+      }
+    } else if (x->info.kind >= dr_dag_node_kind_section) {
+      dr_dag_node_stack_push_children(s, x);
+    }
+    if (x != g) dr_dag_node_free(x, fl);
+  }
+  if (free_root) {
+    dr_dag_node_free(g, fl);
+  } else {
+    dr_dag_node_list_init(g->subgraphs);
+  }
+  dr_dag_node_stack_fini(s);
 }
 
 /* --- make a position-independent copy of a graph --- */
@@ -320,7 +351,7 @@ dr_string_table_flatten(dr_string_table * t) {
     long header_bytes = sizeof(dr_pi_string_table);
     long table_bytes = n * sizeof(const char *);
     long total_bytes = header_bytes + table_bytes + str_bytes;
-    void * a = dr_malloc(total_bytes);
+    void * a = dr_malloc(total_bytes); /* leaking */
     dr_pi_string_table * h = a;
     /* index array */
     long * I = a + header_bytes;
@@ -388,7 +419,6 @@ dr_pi_dag_copy_children(dr_dag_node * g,
       p++;
     }
   } else {
-#if NO_CHUNK
     dr_dag_node * head = g->subgraphs->head;
     dr_dag_node * ch;
     g_pi->subgraphs_begin_offset = p - g_pi;
@@ -396,18 +426,6 @@ dr_pi_dag_copy_children(dr_dag_node * g,
       dr_pi_dag_copy_1(ch, p, lim, st);
       p++;
     }
-#else
-    dr_dag_node_chunk * head = g->subgraphs->head;
-    dr_dag_node_chunk * ch;
-    g_pi->subgraphs_begin_offset = p - g_pi;
-    for (ch = head; ch; ch = ch->next) {
-      int i;
-      for (i = 0; i < ch->n; i++) {
-	dr_pi_dag_copy_1(&ch->a[i], p, lim, st);
-	p++;
-      }
-    }
-#endif
     g_pi->subgraphs_end_offset = p - g_pi;
   }
   return p;
@@ -436,45 +454,6 @@ dr_dag_count_nodes(dr_dag_node * g) {
   }
   dr_dag_node_stack_fini(s);
   return n;
-}
-
-/* --- free dag --- */
-
-static void 
-dr_free_dag_recursively(dr_dag_node * g, 
-#if NO_CHUNK
-			dr_dag_node_freelist * fl
-#else
-			dr_dag_node_list * fl
-#endif
-			) {
-  dr_dag_node_stack s[1];
-  dr_dag_node_stack_init(s);
-  dr_dag_node_stack_push(s, g);
-  while (s->top) {
-    dr_dag_node * x = dr_dag_node_stack_pop(s);
-    if (x->info.kind == dr_dag_node_kind_create_task) {
-      if (x->child) {
-	dr_dag_node_stack_push(s, x->child);
-      }
-    } else if (x->info.kind >= dr_dag_node_kind_section) {
-      dr_dag_node_stack_push_children(s, x);
-      dr_dag_node_list_clear(x->subgraphs, fl);
-      /* TODO: since task node is individually
-	 allocated by dr_malloc (in dr_mk_dag_node_task),
-	 we free it here.
-	 other kinds of nodes are allocated inside
-	 a subgraphs list of their parents */
-      if (x->info.kind == dr_dag_node_kind_task) {
-#if NO_CHUNK
-	dr_dag_node_free(x, fl);
-#else
-	dr_free(x, sizeof(dr_dag_node));
-#endif
-      }
-    }
-  }
-  dr_dag_node_stack_fini(s);
 }
 
 
@@ -608,7 +587,7 @@ dr_pi_dag_enum_edges(dr_pi_dag * G) {
   dr_pi_dag_node * T = G->T;
   long m = dr_pi_dag_count_edges_uncollapsed(G);
   dr_pi_dag_edge * E
-    = (dr_pi_dag_edge *)dr_malloc(sizeof(dr_pi_dag_edge) * m);
+    = (dr_pi_dag_edge *)dr_malloc(sizeof(dr_pi_dag_edge) * m); /* leaking */
   dr_pi_dag_edge * e = E;
   dr_pi_dag_edge * E_lim = E + m;
   long i;
@@ -705,6 +684,11 @@ dr_pi_dag_set_edge_ptrs(dr_pi_dag * G) {
   T[n - 1].edges_end = m;
 }
 
+static void 
+dr_pi_dag_set_string_table(dr_pi_dag * G, dr_string_table * st) {
+  G->S = dr_string_table_flatten(st); /* G->S */
+}
+
 /* convert pointer-based dag structure (g)
    into a "position-independent" format (G)
    suitable for dumping into disk */
@@ -715,13 +699,21 @@ dr_make_pi_dag(dr_pi_dag * G, dr_dag_node * g,
   dr_string_table_init(st);
   G->num_workers = num_workers;
   dr_pi_dag_init(G);
-  dr_pi_dag_enum_nodes(G, g, start_clock, st);
-  dr_pi_dag_enum_edges(G);
+  dr_pi_dag_enum_nodes(G, g, start_clock, st); /* G->T */
+  dr_pi_dag_enum_edges(G);	/* G->E */
   dr_pi_dag_sort_edges(G);
   dr_pi_dag_set_edge_ptrs(G);
-  G->S = dr_string_table_flatten(st);
+  dr_pi_dag_set_string_table(G, st); /* G->S */
   dr_string_table_destroy(st);
 }
+
+static void
+dr_destroy_pi_dag(dr_pi_dag * G) {
+  dr_free(G->T, G->n * sizeof(dr_pi_dag_node));
+  dr_free(G->E, G->m * sizeof(dr_pi_dag_edge));
+  dr_free(G->S, G->S->sz);	/* string table */
+}
+
 
 
 /* format of the dag file
@@ -864,6 +856,8 @@ void dr_options_default(dr_options * opts) {
       || getenv_ull("DR_UNCOLLAPSE_MIN",        &opts->uncollapse_min)) {}
   if (getenv_ull("DAG_RECORDER_COLLAPSE_MAX", &opts->collapse_max)
       || getenv_ull("DR_COLLAPSE_MAX",        &opts->collapse_max)) {}
+  if (getenv_long("DAG_RECORDER_NODE_COUNT",  &opts->node_count_target)
+      || getenv_long("DR_NC",                 &opts->node_count_target)) {}
   if (getenv_long("DAG_RECORDER_ALLOC_UNIT_MB", &opts->alloc_unit_mb)
       || getenv_long("DR_ALLOC_UNIT_MB",      &opts->alloc_unit_mb)) {}
   if (getenv_long("DAG_RECORDER_PRE_ALLOC",   &opts->pre_alloc)
@@ -924,6 +918,7 @@ dr_init_(dr_options * opts, int num_workers) {
     GS.initialized = 1;
     GS.num_workers = num_workers;
     const char * dag_recorder = getenv("DAG_RECORDER");
+    if (!dag_recorder) dag_recorder = getenv("DR"); /* abbrev */
     if (!dag_recorder || atoi(dag_recorder)) {
       dr_opts_init(opts);
       GS.thread_specific = dr_make_thread_specific_state(num_workers);
@@ -940,7 +935,6 @@ void dr_stop__(const char * file, int line, int worker) {
 
 /* --------------------- free dag ------------------- */
 
-#if NO_CHUNK
 static void 
 dr_free_freelist(dr_dag_node_freelist * fl) {
   dr_dag_node_page * head = fl->pages;
@@ -951,18 +945,6 @@ dr_free_freelist(dr_dag_node_freelist * fl) {
     dr_free(page, page->sz);
   }
 }
-#else
-static void 
-dr_free_freelist(dr_dag_node_list * fl) {
-  dr_dag_node_chunk * head = fl->head;
-  dr_dag_node_chunk * ch;
-  dr_dag_node_chunk * next;
-  for (ch = head; ch; ch = next) {
-    next = ch->next;
-    dr_free(ch, sizeof(dr_dag_node_chunk));
-  }
-}
-#endif
 
 static void 
 dr_free_freelists(int num_workers) {
@@ -978,12 +960,15 @@ void dr_cleanup__(const char * file, int line,
   if (GS.initialized) {
     if (GS.ts) dr_stop__(file, line, worker);
     /* get dag tree back into the free list of the calling worker */
-    dr_free_dag_recursively(GS.root, GS.thread_specific[worker].freelist); 
-    GS.root = 0;
-    /* get everybody's freelists back into the underlying malloc */
-    dr_free_freelists(num_workers);
-    /* free thread specific data structure */
-    dr_free_thread_specific_state(num_workers);
+    if (GS.thread_specific) {
+      (void)dr_check(GS.root);
+      dr_free_dag(GS.root, 1, GS.thread_specific[worker].freelist); 
+      GS.root = 0;
+      /* get everybody's freelists back into the underlying malloc */
+      dr_free_freelists(num_workers);
+      /* free thread specific data structure */
+      dr_free_thread_specific_state(num_workers);
+    }
     GS.initialized = 0;
   }
 }
@@ -995,7 +980,7 @@ void dr_start__(dr_options * opts, const char * file, int line,
   dr_init_(opts, num_workers);
   if (GS.thread_specific) {
     if (GS.root) {
-      dr_free_dag_recursively(GS.root, GS.thread_specific[worker].freelist); 
+      dr_free_dag(GS.root, 1, GS.thread_specific[worker].freelist); 
     }
     GS.ts = GS.thread_specific;
     GS.start_clock = dr_get_tsc();
@@ -1012,6 +997,7 @@ void dr_dump() {
     dr_gen_basic_stat(G);
     dr_gen_dot(G);
     dr_gen_gpl(G);
+    dr_destroy_pi_dag(G);
   }
 }
 
