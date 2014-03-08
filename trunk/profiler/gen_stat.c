@@ -81,7 +81,7 @@ dr_calc_edges(dr_basic_stat * bs, dr_pi_dag * G) {
 	} else {
 	  (void)dr_check(w >= 0);
 	  (void)dr_check(w < nw);
-	  EDGE_COUNTS(k, w, w) += t->info.edge_counts[k];
+	  EDGE_COUNTS(k, w, w) += t->info.logical_edge_counts[k];
 	}
       }
     }    
@@ -219,7 +219,7 @@ dr_write_edge_counts(dr_basic_stat * bs, FILE * wp) {
 static void
 dr_basic_stat_write_to_file(dr_basic_stat * bs, FILE * wp) {
   dr_pi_dag * G = bs->G;
-  long * nc = G->T[0].info.node_counts;
+  long * nc = G->T[0].info.logical_node_counts;
   long n_creates = nc[dr_dag_node_kind_create_task];
   long n_waits = nc[dr_dag_node_kind_wait_tasks];
   long n_ends = nc[dr_dag_node_kind_end_task];
@@ -228,7 +228,7 @@ dr_basic_stat_write_to_file(dr_basic_stat * bs, FILE * wp) {
   long n_ints = n_creates + n_waits + n_ends;
   //long n_nodes = n_ints + n_sections + n_tasks;
   long n_nodes = n_ints + n_waits + n_creates + 1;
-  long n_phys_nodes = G->T[0].info.phys_node_count;
+  long n_mat_nodes = G->T[0].info.cur_node_count;
   dr_clock_t t_inf = G->T[0].info.t_inf;
   dr_clock_t work = bs->total_t_1;
   dr_clock_t delay = bs->cum_delay + (bs->total_elapsed - bs->total_t_1);
@@ -274,9 +274,9 @@ dr_basic_stat_write_to_file(dr_basic_stat * bs, FILE * wp) {
   fprintf(wp, "interval granularity  = %.3f\n", 
 	  bs->cum_running/(double)n_ints);
   fprintf(wp, "dag nodes             = %ld\n", n_nodes);
-  fprintf(wp, "materialized nodes    = %ld\n", n_phys_nodes);
+  fprintf(wp, "materialized nodes    = %ld\n", n_mat_nodes);
   fprintf(wp, "compression ratio     = %f\n", 
-	  n_phys_nodes / (double)n_nodes);
+	  n_mat_nodes / (double)n_nodes);
   dr_write_edge_counts(bs, wp);
 }
 

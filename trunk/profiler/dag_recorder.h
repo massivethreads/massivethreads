@@ -38,6 +38,7 @@ extern "C" {
     dr_clock_t uncollapse_min;	/* minimum length that can be uncollapsed */
     dr_clock_t collapse_max;	/* maximum length that can be collpased */
     long node_count_target;	/* desired number of nodes */
+    long prune_threshold;	/* prune nodes larger than node_count_target * prune_threshold */
     long alloc_unit_mb;	        /* node allocation unit in bytes */
     long pre_alloc;             /* pre-allocated units */
     int gpl_sz;			/* size of gpl file */
@@ -63,7 +64,8 @@ extern "C" {
     (const char *)"00dr.gpl",  /* gpl_file */
     0,			       /* uncollapse_min; obsolete. */
     (1L << 60),	               /* collapse_max used to be (1L << 60), */
-    100000,                    /* node_count_target */
+    10000,                    /* node_count_target */
+    100000,                   /* prune_threshold */
     1,			       /* alloc unit in MB */
     0,			       /* the number of pre-allocations */
     4000,			/* gpl_sz */

@@ -193,7 +193,12 @@ dr_dag_node_free(dr_dag_node * n,
 #endif
 }
 
-  /* free all nodes in l */
+static void 
+dr_dag_node_list_free(dr_dag_node_list * l, 
+		      dr_dag_node_freelist * fl) 
+  __attribute__ ((unused));
+
+/* free all nodes in l */
 static void 
 dr_dag_node_list_free(dr_dag_node_list * l, 
 		      dr_dag_node_freelist * fl) {
@@ -858,6 +863,8 @@ void dr_options_default(dr_options * opts) {
       || getenv_ull("DR_COLLAPSE_MAX",        &opts->collapse_max)) {}
   if (getenv_long("DAG_RECORDER_NODE_COUNT",  &opts->node_count_target)
       || getenv_long("DR_NC",                 &opts->node_count_target)) {}
+  if (getenv_long("DAG_RECORDER_PRUNE_THRESHOLD",  &opts->prune_threshold)
+      || getenv_long("DR_PRUNE",              &opts->prune_threshold)) {}
   if (getenv_long("DAG_RECORDER_ALLOC_UNIT_MB", &opts->alloc_unit_mb)
       || getenv_long("DR_ALLOC_UNIT_MB",      &opts->alloc_unit_mb)) {}
   if (getenv_long("DAG_RECORDER_PRE_ALLOC",   &opts->pre_alloc)
@@ -868,6 +875,21 @@ static void
 dr_dag_node_freelist_init(dr_dag_node_freelist * fl) {
   fl->tail = fl->head = 0;
   fl->pages = 0;
+}
+
+/* procedures for non-recursive pruning */
+static void 
+dr_prune_nodes_stack_init(dr_prune_nodes_stack * S) {
+  S->sz = 1000;
+  S->entries 
+    = (dr_prune_nodes_stack_ent*)
+    dr_malloc(S->sz * sizeof(dr_prune_nodes_stack_ent));
+  S->n = 0;
+}
+
+static void 
+dr_prune_nodes_stack_destroy(dr_prune_nodes_stack * S) {
+  dr_free(S->entries, S->sz * sizeof(dr_prune_nodes_stack_ent));
 }
 
 static dr_thread_specific_state *
@@ -887,6 +909,7 @@ dr_make_thread_specific_state(int num_workers) {
     for (j = 0; j < pages_per_worker; j++) {
       dr_dag_node_freelist_add_page(fl, alloc_sz);
     }
+    dr_prune_nodes_stack_init(ts[i].prune_stack);
   }
   return ts;
 }
@@ -954,6 +977,14 @@ dr_free_freelists(int num_workers) {
   }
 }
 
+static void
+dr_destroy_prune_stacks(int num_workers) {
+  int i;
+  for (i = 0; i < num_workers; i++) {
+    dr_prune_nodes_stack_destroy(GS.thread_specific[i].prune_stack);
+  }
+}
+
 /* completely uninitialize */
 void dr_cleanup__(const char * file, int line,
 		  int worker, int num_workers) {
@@ -968,6 +999,8 @@ void dr_cleanup__(const char * file, int line,
       dr_free_freelists(num_workers);
       /* free thread specific data structure */
       dr_free_thread_specific_state(num_workers);
+      /* destroy prune stacks */
+      dr_destroy_prune_stacks(num_workers);
     }
     GS.initialized = 0;
   }
