@@ -97,6 +97,7 @@ extern "C" {
 
   /* list of dag nodes */
   struct dr_dag_node_list {
+    long n;
     dr_dag_node * head;
     dr_dag_node * tail;
   };
@@ -121,11 +122,20 @@ extern "C" {
     dr_clock_t est;	 /* earliest start time */
     dr_clock_t t_1;	 /* work */
     dr_clock_t t_inf;	 /* critical path */
-    /* number of nodes in this subgraph */
-    long node_counts[dr_dag_node_kind_section];
-    long phys_node_count;
+    /* "logical" number of nodes in this subgraph.
+       "logical" means we keep track of collapsed nodes */
+    long logical_node_counts[dr_dag_node_kind_section];
     /* number of edges connecting nodes in this subgraph */
-    long edge_counts[dr_dag_edge_kind_max];
+    long logical_edge_counts[dr_dag_edge_kind_max];
+    /* actual node count under it. 
+       for leaf or collapsed nodes, they are 1.
+       for create_task node, it does NOT include 
+       nodes in children.
+       it is however include in the count of the
+       section that contains it */
+    long cur_node_count;
+    /* minimum number of nodes if all collapsable nodes are collapsed */
+    long min_node_count;
     /* direct children of create_task type */
     long n_child_create_tasks;
     int worker;
@@ -173,12 +183,29 @@ extern "C" {
     dr_dag_node_page * pages;
   } dr_dag_node_freelist;
 
+  /* stack for non recursive version 
+     of dr_prune_nodes */
+  typedef struct {
+    dr_dag_node * x;
+    long budget;
+    long budget_left;
+    long nodes_left;
+    dr_dag_node * last_child;
+    long visit_count;
+  } dr_prune_nodes_stack_ent;
+
+  typedef struct {
+    dr_prune_nodes_stack_ent * entries;
+    long sz;
+    long n;
+  } dr_prune_nodes_stack;
 
   typedef struct dr_thread_specific_state {
     union {
       struct {
 	dr_dag_node * task;		/* current task */
 	dr_dag_node_freelist freelist[1];
+	dr_prune_nodes_stack prune_stack[1];
 	/* only used in Cilk: it holds a pointer to 
 	   the interval that just created a task */
 	dr_dag_node * parent;
@@ -311,6 +338,7 @@ extern "C" {
 
   static void 
   dr_dag_node_list_init(dr_dag_node_list * l) {
+    l->n = 0;
     l->tail = l->head = 0;
   }
 
@@ -318,6 +346,9 @@ extern "C" {
 
   static int
   dr_dag_node_list_empty(dr_dag_node_list * l) {
+#if 1    
+    return l->n == 0;
+#else
     if (l->head) {
       (void)dr_check(l->tail);
       return 0;
@@ -325,10 +356,17 @@ extern "C" {
       (void)dr_check(!l->tail);
       return 1;
     }
+#endif
   }
 
+#if ! __CILK__
+  __attribute__((unused)) 
+#endif
   static long
   dr_dag_node_list_size(dr_dag_node_list * l) {
+#if 1
+    return l->n;
+#else
     dr_dag_node * ch;
     long n = 0;
     if (DAG_RECORDER_CHK_LEVEL) {
@@ -342,6 +380,7 @@ extern "C" {
       n++;
     }
     return n;
+#endif
   }
 
   static dr_dag_node *
@@ -385,6 +424,7 @@ extern "C" {
     l->tail = n;
     (void)dr_check(l->head);
     (void)dr_check(l->tail);
+    l->n++;
     return n;
   }
 
@@ -481,6 +521,21 @@ extern "C" {
     return x;
   } 
 
+  /* note: dag recorder assumes this number of
+     threads are used by the TBB program. that is,
+     the TBB program should call 
+     new task_scheduler_init(x), with x equals to 
+     this number.
+     TBB uses all cores when task_scheduler_init
+     is not created; so, when you set this environment
+     variable but the program does not call 
+     a matching new task_scheduler_init(x),
+     the result may be inconsistent.
+
+     I wish I query the number of threads used by
+     TBB, but TBB seems to (intentionally) make
+     it unavailable.
+  */
   static inline int dr_tbb_num_workers() {
     return dr_get_num_workers_env("TBB_NTHREADS");
   }
@@ -591,13 +646,14 @@ extern "C" {
     dn->info.end.pos.file = file;
     dn->info.end.pos.line = line;
     for (k = 0; k < dr_dag_node_kind_section; k++) {
-      dn->info.node_counts[k] = 0;
+      dn->info.logical_node_counts[k] = 0;
     }
-    dn->info.node_counts[kind] = 1;
-    dn->info.phys_node_count = 1;
+    dn->info.logical_node_counts[kind] = 1;
     for (k = 0; k < dr_dag_edge_kind_max; k++) {
-      dn->info.edge_counts[k] = 0;
+      dn->info.logical_edge_counts[k] = 0;
     }
+    dn->info.cur_node_count = 1;
+    dn->info.min_node_count = 1;
     dn->info.worker = worker;
     dn->info.cpu = dr_getcpu();
   }
@@ -691,7 +747,7 @@ extern "C" {
     if (GS.ts) {
       /* make a task, section, and interval */
       dr_dag_node * nt = dr_mk_dag_node_task(GS.ts[worker].freelist);
-      if (DAG_RECORDER_VERBOSE_LEVEL>=2) {
+      if (DAG_RECORDER_VERBOSE_LEVEL>=3) {
 	printf("dr_start_task(parent=%p) by %d new task=%p\n", 
 	       p, worker, nt);
       }
@@ -726,7 +782,7 @@ extern "C" {
       dr_dag_node * t = dr_get_cur_task_(worker);
       dr_dag_node * s = dr_task_active_node(t);
       dr_dag_node * new_s = dr_push_back_section(t, s, GS.ts[worker].freelist);
-      if (DAG_RECORDER_VERBOSE_LEVEL>=2) {
+      if (DAG_RECORDER_VERBOSE_LEVEL>=3) {
 	printf("dr_begin_section() by %d task=%p,"
 	       " parent section=%p, new section = %p\n", 
 	       worker, t, s, new_s);
@@ -756,7 +812,7 @@ extern "C" {
       ct->info.kind = dr_dag_node_kind_create_task;
       ct->child = 0;
       // dr_dag_node * ct = dr_task_add_create(t);
-      if (DAG_RECORDER_VERBOSE_LEVEL>=2) {
+      if (DAG_RECORDER_VERBOSE_LEVEL>=3) {
 	printf("dr_enter_create_task() by %d task=%p, section=%p, new interval=%p\n", 
 	       worker, t, s, ct);
       }
@@ -790,7 +846,7 @@ extern "C" {
 			       int worker) {
     if (GS.ts) {
       dr_dag_node * ct = dr_task_last_section_or_create(t);
-      if (DAG_RECORDER_VERBOSE_LEVEL>=2) {
+      if (DAG_RECORDER_VERBOSE_LEVEL>=3) {
 	printf("dr_return_from_create_task(task=%p) by %d interval=%p\n", 
 	       t, worker, ct);
       }
@@ -812,7 +868,7 @@ extern "C" {
       dr_dag_node * s = dr_task_ensure_section(t, GS.ts[worker].freelist);
       dr_dag_node * i 
 	= dr_dag_node_list_push_back(s->subgraphs, GS.ts[worker].freelist);
-      if (DAG_RECORDER_VERBOSE_LEVEL>=2) {
+      if (DAG_RECORDER_VERBOSE_LEVEL>=3) {
 	printf("dr_enter_wait_tasks() by %d task=%p, "
 	       "section=%p, new interval=%p\n", 
 	       worker, t, s, i);
@@ -836,22 +892,34 @@ extern "C" {
     dr_dag_node * last = dr_dag_node_list_last(s->subgraphs);
     int i;
     /* initialize the result */
+    /* s's start time is it's first nodes' start time */
     s->info.start   = first->info.start;
+    /* s's end time is it's last nodes' end time */
     s->info.end     = last->info.end;
+    /* s's worker is temporarily first node's worker.
+       later we may set it to -1 when other nodes' workers
+       are different */
     s->info.worker  = first->info.worker;
+    /* similar to worker */
     s->info.cpu     = first->info.cpu;
+    /* s's earliest start time is its first node's 
+       earliest start time */
     s->info.est     = first->info.est;
+    /* s's last node kind */
     s->info.last_node_kind = last->info.last_node_kind;
     s->info.t_1     = 0;
     s->info.t_inf   = 0;
+    /* accumulate node counts (we later accumulate 
+       subgraphs's results into them) */
     for (i = 0; i < dr_dag_node_kind_section; i++) {
-      s->info.node_counts[i] = 0;
+      s->info.logical_node_counts[i] = 0;
     }
-    s->info.node_counts[s->info.kind] = 1;
-    s->info.phys_node_count = 1;
+    s->info.logical_node_counts[s->info.kind] = 1;
     for (i = 0; i < dr_dag_edge_kind_max; i++) {
-      s->info.edge_counts[i] = 0;
+      s->info.logical_edge_counts[i] = 0;
     }
+    s->info.cur_node_count = 1;
+    s->info.min_node_count = 1;
     s->info.n_child_create_tasks = 0;
 
     {
@@ -871,20 +939,23 @@ extern "C" {
 	s->info.cpu = dr_meet_ints(s->info.cpu, x->info.cpu);
 	/* accumulate node counts of each type */
 	for (k = 0; k < dr_dag_node_kind_section; k++) {
-	  s->info.node_counts[k] += x->info.node_counts[k];
+	  s->info.logical_node_counts[k] += x->info.logical_node_counts[k];
 	}
-	s->info.phys_node_count += x->info.phys_node_count;
 	/* accumulate edge counts of each type */
 	for (k = 0; k < dr_dag_edge_kind_max; k++) {
-	  s->info.edge_counts[k] += x->info.edge_counts[k];
+	  s->info.logical_edge_counts[k] += x->info.logical_edge_counts[k];
 	}
+	s->info.cur_node_count += x->info.cur_node_count;
+	/* at this point, we assume s is not collapsable,
+	   so its minimum number of nodes is the sum of its children */
+	s->info.min_node_count += x->info.min_node_count;
 	switch (x->info.kind) {
 	case dr_dag_node_kind_create_task: {
 	  /* besides, we need to count edges
 	     from x to its successor */
 	  (void)dr_check(x->next);
-	  s->info.edge_counts[dr_dag_edge_kind_create]++;
-	  s->info.edge_counts[dr_dag_edge_kind_create_cont]++;
+	  s->info.logical_edge_counts[dr_dag_edge_kind_create]++;
+	  s->info.logical_edge_counts[dr_dag_edge_kind_create_cont]++;
 	  s->info.n_child_create_tasks++;
 	  /* similar accumulation for x's child task */
 	  dr_dag_node * c = x->child;
@@ -897,14 +968,16 @@ extern "C" {
 	  t_inf = dr_max_clock(s->info.t_inf + c->info.t_inf, t_inf);
 	  s->info.worker = dr_meet_ints(s->info.worker, c->info.worker);
 	  s->info.cpu = dr_meet_ints(s->info.cpu, c->info.cpu);
-	  
+	  /* if a section contains a create task node,
+	     count its children as well */
 	  for (k = 0; k < dr_dag_node_kind_section; k++) {
-	    s->info.node_counts[k] += c->info.node_counts[k];
+	    s->info.logical_node_counts[k] += c->info.logical_node_counts[k];
 	  }
-	  s->info.phys_node_count += c->info.phys_node_count;
 	  for (k = 0; k < dr_dag_edge_kind_max; k++) {
-	    s->info.edge_counts[k] += c->info.edge_counts[k];
+	    s->info.logical_edge_counts[k] += c->info.logical_edge_counts[k];
 	  }
+	  s->info.cur_node_count += c->info.cur_node_count;
+	  s->info.min_node_count += c->info.min_node_count;
 	  break;
 	}
 	case dr_dag_node_kind_wait_tasks: 
@@ -914,8 +987,8 @@ extern "C" {
 	}
 	case dr_dag_node_kind_section:
 	  if (x->next) {
-	    s->info.edge_counts[dr_dag_edge_kind_wait_cont]++;
-	    s->info.edge_counts[dr_dag_edge_kind_end] 
+	    s->info.logical_edge_counts[dr_dag_edge_kind_wait_cont]++;
+	    s->info.logical_edge_counts[dr_dag_edge_kind_end] 
 	      += x->info.n_child_create_tasks;
 	  }
 	  break;
@@ -926,6 +999,8 @@ extern "C" {
       }
       s->info.t_inf = dr_max_clock(t_inf, s->info.t_inf);
     }
+    /* turned out we can collapse this node. */
+    if (s->info.worker != -1) s->info.min_node_count = 1;
   }
 
 /* --- free all descendants of g (and optionally g also) --- */
@@ -940,32 +1015,49 @@ extern "C" {
     (void)dr_check(s->info.kind >= dr_dag_node_kind_section);
     /* free s's descendants, but not s */
     dr_free_dag(s, 0, fl);
-    s->info.phys_node_count = 1;
+    s->info.cur_node_count = 1;
   }
 
-  static void spaces(int indent) {
-    int i;
-    for (i = 0; i < indent; i++) putchar(' ');
+  /* node count of s and its descendants */
+  static long dr_cur_nodes_below(dr_dag_node * s) {
+    if (s->info.kind == dr_dag_node_kind_create_task) {
+      (void)dr_check(s->info.cur_node_count == 1);
+      return 1 + s->child->info.cur_node_count;
+    } else {
+      return s->info.cur_node_count;
+    }
   }
 
+  /* node count of s and its descendants */
+  static long dr_min_nodes_below(dr_dag_node * s) {
+    if (s->info.kind == dr_dag_node_kind_create_task) {
+      (void)dr_check(s->info.min_node_count == 1);
+      return 1 + s->child->info.min_node_count;
+    } else {
+      return s->info.min_node_count;
+    }
+  }
+
+  /* check if actual_node_count field is correct,
+     for n and all descendants of n */
   static long
-  dr_check_phys_node_count(dr_dag_node * n) {
+  dr_check_cur_node_count(dr_dag_node * n) {
     switch (n->info.kind) {
     case dr_dag_node_kind_create_task:
-      (void)dr_check(n->info.phys_node_count == 1);
-      return 1 + dr_check_phys_node_count(n->child);
+      (void)dr_check(n->info.cur_node_count == 1);
+      return 1 + dr_check_cur_node_count(n->child);
     case dr_dag_node_kind_wait_tasks:
     case dr_dag_node_kind_end_task:
-      (void)dr_check(n->info.phys_node_count == 1);
+      (void)dr_check(n->info.cur_node_count == 1);
       return 1;
     case dr_dag_node_kind_section:
     case dr_dag_node_kind_task: {
       dr_dag_node * ch;
       long x = 1;
       for (ch = n->subgraphs->head; ch; ch = ch->next) {
-	x += dr_check_phys_node_count(ch);
+	x += dr_check_cur_node_count(ch);
       }
-      (void)dr_check(n->info.phys_node_count == x);
+      (void)dr_check(n->info.cur_node_count == x);
       return x;
     }
     default:
@@ -974,73 +1066,311 @@ extern "C" {
     }
   }
 
+  /* check if min_node_count field is correct,
+     for n and all descendants of n */
   static long
-  dr_adjust_phys_node_count(dr_dag_node * s, long budget,
-			    dr_dag_node_freelist * fl, 
-			    int indent) {
-    long r = 1;
-    if (DAG_RECORDER_VERBOSE_LEVEL>=3) {
-      spaces(indent);
-      printf("dr_adjust_phys_node_count(%p (%ld nodes, kind=%d), budget=%ld)\n", 
-	     s, s->info.phys_node_count, s->info.kind, budget);
-    }
-    /* TODO: get rid of recursion 
-       (collapse all of s's children, but not s) */
-    if (s->info.kind == dr_dag_node_kind_create_task) {
-      dr_dag_node * child = s->child;
-      dr_adjust_phys_node_count(child, budget - 1, 
-				fl, indent + 1);
-      r = 1 + child->info.phys_node_count;
-      (void)dr_check(r == dr_check_phys_node_count(s));
-    } else if (s->info.kind < dr_dag_node_kind_section) {
-      (void)dr_check(s->info.phys_node_count == 1);
-      (void)dr_check(r == dr_check_phys_node_count(s));
-    } else {
-      long n_children = dr_dag_node_list_size(s->subgraphs);
-      long n_all = s->info.phys_node_count;
-      if (budget < n_children + 1 && s->info.worker != -1) {
-	/* the budget overflows unless we collapse s
-	   (even if all children become single nodes) */
-	/* TODO: consider how to collapse a subgraph involving
-	   by multiple workers */
-	dr_collapse_subgraph(s, fl);
-	(void)dr_check(r == dr_check_phys_node_count(s));
-      } else if (budget < n_all) {
-	/* we can keep s's children (at least when all children
-	   become singleton, but we still need to collapse some nodes. 
-	   distribute budget to subgraphs. */
-	long total0 = 1;
-	long total1 = 1;
-	dr_dag_node * ch;
-	for (ch = s->subgraphs->head; ch; ch = ch->next) {
-	  long c0 = (ch->info.kind == dr_dag_node_kind_create_task ?
-		     (ch->info.phys_node_count + ch->child->info.phys_node_count) :
-		     ch->info.phys_node_count);
-	  /* budget for ch. distribute  */
-	  long b = (budget - total1) * c0 / (n_all - total0);
-	  long c1 = dr_adjust_phys_node_count(ch, b, fl, indent + 1);
-	  (void)dr_check(c1 == dr_check_phys_node_count(ch));
-	  total0 += c0;
-	  total1 += c1;
-	}
-	s->info.phys_node_count = total1;
-	r = total1;
-	(void)dr_check(r == dr_check_phys_node_count(s));
+  dr_check_min_node_count(dr_dag_node * n) {
+    switch (n->info.kind) {
+    case dr_dag_node_kind_create_task:
+      (void)dr_check(n->info.min_node_count == 1);
+      return 1 + dr_check_min_node_count(n->child);
+    case dr_dag_node_kind_wait_tasks:
+    case dr_dag_node_kind_end_task:
+      (void)dr_check(n->info.min_node_count == 1);
+      return 1;
+    case dr_dag_node_kind_section:
+    case dr_dag_node_kind_task: {
+      dr_dag_node * ch;
+      long x = 1;
+      for (ch = n->subgraphs->head; ch; ch = ch->next) {
+	x += dr_check_min_node_count(ch);
+      }
+      if (n->info.worker == -1) {
+	(void)dr_check(n->info.min_node_count == x);
+	return x;
       } else {
-	r = n_all;
+	(void)dr_check(n->info.min_node_count == 1);
+	return 1;
       }
     }
-    if (DAG_RECORDER_VERBOSE_LEVEL>=3) {
+    default:
+      (void)dr_check(0);
+      return 0;
+    }
+  }
+
+  /* check both min_node_count and actual_node_count */
+  static long
+  dr_check_node_counts(dr_dag_node * n) {
+    (void)dr_check_min_node_count(n);
+    return dr_check_cur_node_count(n);
+  }
+
+  static long
+  dr_prune_nodes(dr_prune_nodes_stack * S,
+		 dr_dag_node * s, long budget,
+		 dr_dag_node_freelist * fl, 
+		 int indent);
+
+  static void spaces(int indent) {
+    int i;
+    for (i = 0; i < indent; i++) putchar(' ');
+  }
+
+  static int
+  dr_prune_nodes_stack_empty(dr_prune_nodes_stack * S) {
+    return S->n == 0;
+  }
+
+  static dr_prune_nodes_stack_ent *
+  dr_prune_nodes_stack_top(dr_prune_nodes_stack * S) {
+    (void)dr_check(S->n > 0);
+    return &S->entries[S->n - 1];
+  }
+
+  static dr_prune_nodes_stack_ent *
+  dr_prune_nodes_stack_pop(dr_prune_nodes_stack * S,
+				      dr_prune_nodes_stack_ent * e) {
+    (void)dr_check(S->n > 0);
+    dr_prune_nodes_stack_ent * f = &S->entries[S->n - 1];
+    (void)dr_check(e == f);
+    S->n--;
+    return f;
+  }
+
+  static void 
+  dr_prune_nodes_stack_ensure(dr_prune_nodes_stack * S, 
+					 long x) {
+    if (S->sz < x) {
+      if (DAG_RECORDER_VERBOSE_LEVEL>=3) {
+	printf("dr_prune_nodes_stack_ensure(%ld)\n", x);
+      }      
+      long new_sz = S->sz * 2;
+      if (x > new_sz) new_sz = x;
+      dr_prune_nodes_stack_ent * new_entries 
+	= (dr_prune_nodes_stack_ent *)
+	dr_malloc(new_sz * sizeof(dr_prune_nodes_stack_ent));
+      if (S->entries) {
+	memcpy(new_entries, S->entries, 
+	       S->sz * sizeof(dr_prune_nodes_stack_ent));
+	dr_free(S->entries, 
+		S->sz * sizeof(dr_prune_nodes_stack_ent));
+      }
+      S->entries = new_entries;
+      S->sz = new_sz;
+    }
+  }
+
+
+  static dr_prune_nodes_stack_ent *
+  dr_prune_nodes_stack_push_ent(dr_prune_nodes_stack * S) {
+    dr_prune_nodes_stack_ensure(S, S->n + 1);
+    dr_prune_nodes_stack_ent * e = &S->entries[S->n];
+    S->n++;
+    return e;
+  }
+
+  static dr_prune_nodes_stack_ent *
+  dr_prune_nodes_stack_push(dr_prune_nodes_stack * S,
+				       dr_dag_node * x, 
+				       long budget) {
+    dr_prune_nodes_stack_ent * e 
+      = dr_prune_nodes_stack_push_ent(S);
+    e->x = x;
+    e->budget = budget;
+    e->budget_left = budget;
+    e->nodes_left = x->info.cur_node_count;
+    e->last_child = 0;
+    e->visit_count = 0;
+    return e;
+  }
+
+  static const char * dr_kind_to_str(dr_dag_node_kind_t k) {
+    switch (k) {
+    case dr_dag_node_kind_end_task: 
+      return "end_task";
+    case dr_dag_node_kind_wait_tasks: 
+      return "wait_tasks";
+    case dr_dag_node_kind_create_task: 
+      return "create_task";
+    case dr_dag_node_kind_section: 
+      return "section";
+    case dr_dag_node_kind_task: 
+      return "task";
+    default:
+      (void)dr_check(0);
+    }
+    (void)dr_check(0);
+    return 0;
+  }
+
+  static long dr_dag_node_list_min_nodes(dr_dag_node_list * l) {
+    dr_dag_node * x;
+    long n = 0;
+    for (x = l->head; x; x = x->next) {
+      n += dr_min_nodes_below(x);
+    }
+    return n;
+  }
+
+  static long
+  dr_prune_nodes_norec(dr_prune_nodes_stack * S,
+		       dr_dag_node * s, long budget,
+		       dr_dag_node_freelist * fl) {
+    //dr_prune_nodes_stack S[1];
+    //dr_prune_nodes_stack_init(S);
+    dr_prune_nodes_stack_push(S, s, budget);
+    while (!dr_prune_nodes_stack_empty(S)) {
+      dr_prune_nodes_stack_ent * e = dr_prune_nodes_stack_top(S);
+      dr_dag_node * x = e->x;
+      const char * pop = 0;
+      if (DAG_RECORDER_VERBOSE_LEVEL>=2
+	   && e->visit_count == 0) {
+	  /* this is the first time e has been processed */
+	  spaces(S->n);
+	  printf("dr_prune_nodes(%p (%ld/%ld nodes, %s),"
+		 " budget=%ld)\n", 
+		 x, 
+		 dr_cur_nodes_below(x), 
+		 dr_min_nodes_below(x), 
+		 dr_kind_to_str(x->info.kind), 
+		 e->budget);
+      }
+
+      switch (x->info.kind) {
+      case dr_dag_node_kind_end_task:
+      case dr_dag_node_kind_wait_tasks:	{
+	(void)dr_check(x->info.cur_node_count == 1);
+	/* leaf. done */
+	pop = "leaf";
+	break;
+      }
+      case dr_dag_node_kind_create_task: {
+	dr_dag_node * child = x->child;
+	if (e->visit_count == 0) {
+	  /* push child */
+	  e->visit_count++;
+	  dr_prune_nodes_stack_push(S, child, e->budget - 1);
+	} else {
+	  pop = "create";
+	}
+	break;
+      }
+      case dr_dag_node_kind_section:
+      case dr_dag_node_kind_task: {
+	if (e->visit_count == 0) {
+	  long nc_cur = dr_cur_nodes_below(x);
+	  long nc_min = dr_min_nodes_below(x);
+	  if (nc_cur <= e->budget) {
+	    /* it's already within budget. done */
+	    pop = "within budget";
+	  } else if (nc_min >= nc_cur) {
+	    (void)dr_check(nc_min == nc_cur);
+	    /* s has been maximally collapsed. nothing we can do */
+	    pop = "already minimum";
+	  } else {
+	    long min_nodes_children = dr_dag_node_list_min_nodes(x->subgraphs);
+	    if (e->budget < min_nodes_children + 1 
+		&& x->info.min_node_count == 1) {
+	      /* the budget overflows unless we collapse s
+		 (even if all children become single nodes) */
+	      /* TODO: consider how to collapse a subgraph involving
+		 by multiple workers */
+	      dr_collapse_subgraph(x, fl);
+	      pop = "just collapsed";
+	    } else {
+	      /* start recursing on the children */
+	      e->last_child = 0;
+	      e->visit_count++;
+	      e->nodes_left--;	/* count x itself */
+	      e->budget_left--;	/* count x itself */
+	    }
+	  }
+	} else {
+	  /* we are in the middle of processing children */
+	  if (e->last_child) {
+	    e->budget_left -= dr_cur_nodes_below(e->last_child);
+	  }
+	  dr_dag_node * ch 
+	    = (e->last_child ? e->last_child->next : x->subgraphs->head);
+	  if (!ch) {
+	    x->info.cur_node_count = e->budget - e->budget_left;
+	      pop = "done recursions";
+#if 0
+	      /* if we overflow budget, we must already
+		 maximally collapse it */
+	      if (x->info.cur_node_count > e->budget &&
+		  x->info.cur_node_count != x->info.min_node_count) {
+		(void)dr_check(x->info.cur_node_count > x->info.min_node_count);
+		fprintf(stderr, 
+			"warning: node %p : budget %ld > count %ld,"
+			" yet not have been maximally collapsed"
+			" (min_count = %ld)\n", 
+			x, e->budget, 
+			x->info.cur_node_count, x->info.min_node_count);
+		dr_collapse_subgraph(x, fl);
+		pop = "done recursions and collapse";
+	      }
+#endif	
+	  } else {
+	    /* nodes for this child, when no collaption occurs */
+	    long nodes_ch = dr_cur_nodes_below(ch);
+	    /* budget for this child (a fair proportion of the 
+	       remaining budget) */
+	    (void)dr_check(e->nodes_left > 0);
+	    long b = e->budget_left * nodes_ch / e->nodes_left;
+	    e->nodes_left -= nodes_ch;
+	    e->last_child = ch;
+	    dr_prune_nodes_stack_push(S, ch, b);
+	  }
+	}
+      }
+      }
+
+      if (pop) {
+	/* we are done with this node. pop it. */
+	if (DAG_RECORDER_VERBOSE_LEVEL>=2) {
+	  long c = dr_cur_nodes_below(x);
+	  spaces(S->n);
+	  printf("--> %ld (%s)\n", c, pop);
+	}
+	(void)dr_check(dr_cur_nodes_below(x) == dr_check_node_counts(x));
+	dr_prune_nodes_stack_pop(S, e);
+      }
+    }
+    //dr_prune_nodes_stack_destroy(S);
+    (void)dr_check(dr_cur_nodes_below(s) == dr_check_node_counts(s));
+    return dr_cur_nodes_below(s);
+  }
+
+  static long
+  dr_prune_nodes(dr_prune_nodes_stack * S,
+		 dr_dag_node * s, long budget,
+		 dr_dag_node_freelist * fl,
+		 int indent) {
+    dr_clock_t t0 = 0, t1 = 0;
+    if (DAG_RECORDER_VERBOSE_LEVEL>=1) {
       spaces(indent);
-      printf(" --> %ld\n", r);
+      printf("dr_prune_nodes(%p (%ld/%ld nodes, kind=%s), budget=%ld)\n", 
+	     s, 
+	     dr_cur_nodes_below(s), 
+	     dr_min_nodes_below(s), 
+	     dr_kind_to_str(s->info.kind), budget);
+      t0 = dr_get_tsc();
+    }
+    long r = dr_prune_nodes_norec(S, s, budget, fl);
+    if (DAG_RECORDER_VERBOSE_LEVEL>=1) {
+      t1 = dr_get_tsc();
+      printf("--> %ld (%llu clocks)\n", r, t1 - t0);
     }
     return r;
   }
 
   static void 
-  dr_summarize_section_or_task(dr_dag_node * s, 
+  dr_summarize_section_or_task(dr_prune_nodes_stack * S,
+			       dr_dag_node * s, 
 			       dr_dag_node_freelist * fl) {
-    if (DAG_RECORDER_VERBOSE_LEVEL>=2) {
+    if (DAG_RECORDER_VERBOSE_LEVEL>=3) {
       if (s->info.kind == dr_dag_node_kind_section) {
 	printf("dr_summarize_section(section=%p)\n", s);
       } else if (s->info.kind == dr_dag_node_kind_task) {
@@ -1051,23 +1381,19 @@ extern "C" {
     (void)dr_check(!dr_dag_node_list_empty(s->subgraphs));
     /* accumulate t_1, t_inf, number of nodes, etc. */
     dr_accumulate_stats(s);
-    (void)dr_check(s->info.phys_node_count == dr_check_phys_node_count(s));
-    /* now check if we can collapse it
-       for now, we collapse it if 
-       (i) it was very short, or
-       (ii) it was executed on a single worker
-       and it isn't too long */
+    (void)dr_check(dr_cur_nodes_below(s) == dr_check_node_counts(s));
+    /* now check if we should collapse it */
     if (GS.opts.node_count_target) {
-      if (s->info.phys_node_count > (GS.opts.node_count_target * 3) / 2) {
-	dr_adjust_phys_node_count(s, GS.opts.node_count_target, fl, 0);
-	(void)dr_check(s->info.phys_node_count == dr_check_phys_node_count(s));
+      if (s->info.cur_node_count > GS.opts.prune_threshold) {
+	dr_prune_nodes(S, s, GS.opts.node_count_target, fl, 0);
+	(void)dr_check(dr_cur_nodes_below(s) == dr_check_node_counts(s));
       }
     } else if (s->info.worker != -1
 	       && s->info.end.t - s->info.start.t < GS.opts.collapse_max) {
       /* TODO: consider how to collapse a subgraph involving
 	 by multiple workers */
       dr_collapse_subgraph(s, fl);
-      (void)dr_check(s->info.phys_node_count == dr_check_phys_node_count(s));
+      (void)dr_check(dr_cur_nodes_below(s) == dr_check_node_counts(s));
     }
   }
 
@@ -1088,7 +1414,7 @@ extern "C" {
       if (dr_check(s->info.kind == dr_dag_node_kind_section)) {
 	dr_dag_node * p = dr_dag_node_list_last(s->subgraphs);
 	(void)dr_check(p->info.kind == dr_dag_node_kind_wait_tasks);
-	if (DAG_RECORDER_VERBOSE_LEVEL>=2) {
+	if (DAG_RECORDER_VERBOSE_LEVEL>=3) {
 	  printf("dr_return_from_wait_tasks(task=%p)"
 		 " by %d section=%p, pred=%p\n", 
 		 t, worker, s, p);
@@ -1109,7 +1435,8 @@ extern "C" {
 	      }
 	    }
 	  }
-	  dr_summarize_section_or_task(s, GS.ts[worker].freelist);
+	  dr_summarize_section_or_task(GS.ts[worker].prune_stack, s,
+				       GS.ts[worker].freelist);
 	  dr_set_cur_task_(worker, t);
 	  t->info.est = est;
 	  dr_set_start_info(&t->info.start, file, line);
@@ -1126,7 +1453,7 @@ extern "C" {
       dr_dag_node * s = dr_task_active_node(t);
       dr_dag_node * i 
 	= dr_dag_node_list_push_back(s->subgraphs, GS.ts[worker].freelist);
-      if (DAG_RECORDER_VERBOSE_LEVEL>=2) {
+      if (DAG_RECORDER_VERBOSE_LEVEL>=3) {
 	printf("dr_end_task() by %d task=%p, section=%p, "
 	       "new interval=%p\n", 
 	       worker, t, s, i);
@@ -1134,7 +1461,8 @@ extern "C" {
       dr_end_interval_(i, worker, dr_dag_node_kind_end_task,
 		       end_t, file, line, 
 		       t->info.est, t->info.start);
-      dr_summarize_section_or_task(t, GS.ts[worker].freelist);
+      dr_summarize_section_or_task(GS.ts[worker].prune_stack, t, 
+				   GS.ts[worker].freelist);
     }
   }
 

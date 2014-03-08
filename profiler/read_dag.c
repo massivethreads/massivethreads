@@ -42,9 +42,9 @@ dr_read_dag(const char * filename) {
   G->T = (dr_pi_dag_node *)(a + header_sz);
   G->E = (dr_pi_dag_edge *)&G->T[G->n];
   dr_pi_string_table * S = (dr_pi_string_table *)&G->E[G->m];
-  long st_sz = S->sz;
 
 #if 0
+  long st_sz = S->sz;
   off_t expected_sz = header_sz 
     + sizeof(dr_pi_dag_node) * G->n
     + sizeof(dr_pi_dag_edge) * G->m
