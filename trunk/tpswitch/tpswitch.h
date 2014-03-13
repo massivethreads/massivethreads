@@ -129,7 +129,7 @@
 #define cilk_proc_void_return return
 
 
-/* serial */
+/* No C++ or serial */
 #elif TO_SERIAL || TO_TBB || TO_MTHREAD || TO_MTHREAD_NATIVE || TO_QTHREAD || TO_NANOX
 
 #if TO_TBB || TO_MTHREAD || TO_MTHREAD_NATIVE || TO_QTHREAD || TO_NANOX
@@ -144,10 +144,18 @@
 #define create_taskA(statement)       create_task(statement)
 #define call_task(statement)          do { statement; } while(0)
 #define call_taskc(callable)          callable()
-#define create_task_and_wait(statement)			\
+
+#if create_task_and_wait_creates_task
+#define create_task_and_wait(statement) \
   do { create_taskA(statement); wait_tasks; } while(0)
-#define create_taskc_and_wait(callable)			\
+#define create_taskc_and_wait(callable) \
   do { create_taskc(callable); wait_tasks; } while(0)
+#else
+#define create_task_and_wait(statement) \
+  do { call_task(statement); wait_tasks; } while(0)
+#define create_taskc_and_wait(callable) \
+  do { call_taskc(callable); wait_tasks; } while(0)
+#endif
 
 #define cilk_proc_start       int __dummy_cilk_proc_start__ __attribute__((unused)) = 0
 #define cilk_proc_return(x)   return x
