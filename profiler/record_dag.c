@@ -872,6 +872,41 @@ void dr_options_default(dr_options * opts) {
 }
 
 static void 
+dr_opts_print(dr_options * opts) {
+  if (!opts) opts = &GS.opts;
+  FILE * wp = stderr;
+  fprintf(wp, "DAG Recorder Options:\n");
+  fprintf(wp, "dag_file (DAG_RECORDER_DAG_FILE,DR_DAG) : %s\n", 
+	  opts->dag_file);
+  fprintf(wp, "stat_file (DAG_RECORDER_STAT_FILE,DR_STAT) : %s\n", 
+	  opts->stat_file);
+  fprintf(wp, "dot_file (DAG_RECORDER_DOT_FILE,DR_DOT) : %s\n", 
+	  opts->dot_file);
+  fprintf(wp, "gpl_file (DAG_RECORDER_GPL_FILE,DR_GPL) : %s\n", 
+	  opts->gpl_file);
+  fprintf(wp, "gpl_sz (DAG_RECORDER_GPL_SIZE,DR_GPL_SZ) : %d\n", 
+	  opts->gpl_sz);
+  fprintf(wp, "dbg_level (DAG_RECORDER_DBG_LEVEL,DR_DBG) : %d\n", 
+	  opts->dbg_level);
+  fprintf(wp, "verbose_level (DAG_RECORDER_VERBOSE_LEVEL,DR_VERBOSE) : %d\n", 
+	  opts->verbose_level);
+  fprintf(wp, "chk_level (DAG_RECORDER_CHK_LEVEL,DR_CHK) : %d\n", 
+	  opts->chk_level);
+  fprintf(wp, "uncollapse_min (DAG_RECORDER_UNCOLLAPSE_MIN,DR_UNCOLLAPSE_MIN) : %llu\n", 
+	  opts->uncollapse_min);
+  fprintf(wp, "collapse_max (DAG_RECORDER_COLLAPSE_MAX,DR_COLLAPSE_MAX) : %llu\n", 
+	  opts->collapse_max);
+  fprintf(wp, "node_count_target (DAG_RECORDER_NODE_COUNT,DR_NC) : %ld\n", 
+	  opts->node_count_target);
+  fprintf(wp, "prune_threshold (DAG_RECORDER_PRUNE_THRESHOLD,DR_PRUNE) : %ld\n", 
+	  opts->prune_threshold);
+  fprintf(wp, "alloc_unit_mb (DAG_RECORDER_ALLOC_UNIT_MB,DR_ALLOC_UNIT_MB) : %ld\n", 
+	  opts->alloc_unit_mb);
+  fprintf(wp, "pre_alloc (DAG_RECORDER_PRE_ALLOC,DR_PRE_ALLOC) : %ld\n", 
+	  opts->pre_alloc);
+}
+
+static void 
 dr_dag_node_freelist_init(dr_dag_node_freelist * fl) {
   fl->tail = fl->head = 0;
   fl->pages = 0;
@@ -922,7 +957,8 @@ dr_free_thread_specific_state(int num_workers) {
   GS.ts = 0;
 }
 
-void dr_opts_init(dr_options * opts) {
+void
+dr_opts_init(dr_options * opts) {
   dr_options opts_[1];
   if (!opts) {
     opts = opts_;
@@ -930,6 +966,7 @@ void dr_opts_init(dr_options * opts) {
   }
   GS.opts = *opts;
 }
+
 
 /* initialize dag recorder, when called 
    for the first time.
@@ -944,6 +981,7 @@ dr_init_(dr_options * opts, int num_workers) {
     if (!dag_recorder) dag_recorder = getenv("DR"); /* abbrev */
     if (!dag_recorder || atoi(dag_recorder)) {
       dr_opts_init(opts);
+      dr_opts_print(opts);
       GS.thread_specific = dr_make_thread_specific_state(num_workers);
       GS.ts = 0;
     }  
