@@ -64,7 +64,7 @@ extern "C" {
     (const char *)"00dr.gpl",  /* gpl_file */
     0,			       /* uncollapse_min; obsolete. */
     (1L << 60),	               /* collapse_max used to be (1L << 60), */
-    10000,                    /* node_count_target */
+    0,	                       /* node_count_target */
     100000,                   /* prune_threshold */
     1,			       /* alloc unit in MB */
     0,			       /* the number of pre-allocations */

@@ -412,8 +412,10 @@ dr_pi_dag_copy_children(dr_dag_node * g,
   /* sanity check. g_pi should be a copy of g */
   assert(g_pi->info.start.t == g->info.start.t);
   /* make the time relative */
-  g_pi->info.start.t -= start_clock;
-  g_pi->info.end.t -= start_clock;
+  g_pi->info.start.t       -= start_clock;
+  g_pi->info.end.t         -= start_clock;
+  g_pi->info.first_ready_t -= start_clock;
+  g_pi->info.last_start_t  -= start_clock;
 
   if (g_pi->info.kind < dr_dag_node_kind_section) {
     /* copy the child if it is a create_task node */
@@ -607,6 +609,26 @@ dr_pi_dag_enum_edges(dr_pi_dag * G) {
 	dr_pi_dag_node * s = dr_pi_dag_node_last(x, G);
 	dr_pi_dag_node * t = dr_pi_dag_node_first(x + 1, G);
 	assert(e < E_lim);
+#if 1
+	switch (t->info.in_edge_kind) {
+	case dr_dag_edge_kind_create_cont:
+	  dr_pi_dag_add_edge(e, E_lim, dr_dag_edge_kind_create_cont, 
+			     s - T, t - T);
+	  break;
+	case dr_dag_edge_kind_end:
+	case dr_dag_edge_kind_wait_cont:
+	  /* t is a node that follows wait node */
+	  dr_pi_dag_add_edge(e, E_lim, dr_dag_edge_kind_wait_cont, 
+			     s - T, t - T);
+	  break;
+	default:
+	  /* create_cont can't happen. */
+	  (void)dr_check(t->info.in_edge_kind 
+			 != dr_dag_edge_kind_create);
+	  (void)dr_check(0);
+	  break;
+	}
+#else
 	switch (s->info.last_node_kind) {
 	case dr_dag_node_kind_create_task:
 	  dr_pi_dag_add_edge(e, E_lim, dr_dag_edge_kind_create_cont, s - T, t - T);
@@ -617,6 +639,7 @@ dr_pi_dag_enum_edges(dr_pi_dag * G) {
 	default:
 	  (void)dr_check(0);
 	}
+#endif
 	e++;
 	if (x->info.kind == dr_dag_node_kind_section) {
 	  dr_pi_dag_node * xa = x + x->subgraphs_begin_offset;

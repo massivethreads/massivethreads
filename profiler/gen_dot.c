@@ -61,27 +61,56 @@ dr_pi_dag_node_gen_dot(dr_pi_dag_node * g,
   dr_pi_string_table * S = G->S;
   const char * C = S->C;
   long * I = S->I;
+  double running_dt = g->info.end.t - g->info.start.t;
+  double ready_dt = g->info.last_start_t - g->info.first_ready_t;
+
   fprintf(wp, 
 	  "/* node %ld : edges: %ld-%ld */\n"
-	  "T%lu [%s, label=\"[%ld] %s (%s)\\n"
-	  "%llu-%llu (%llu) est=%llu\\n"
-	  "T=%llu/%llu,nodes=%ld/%ld/%ld,edges=%ld/%ld/%ld/%ld\\n"
-	  "by %d on %d\\n"
-	  "%s:%ld-%s:%ld\"];\n",
-	  g - G->T, 
-	  g->edges_begin, 
+	  "T%lu [%s, label=\"[%ld] %s\\n"
+	  "running %llu-%llu (%llu)\\n"
+	  "ready %llu-%llu (%llu)\\n"
+	  "t_running %llu (%f)\\n"
+	  "t_ready %llu/%llu/%llu/%llu (%f/%f/%f/%f)\\n"
+	  "est=%llu T=%llu/%llu,\\n"
+	  "nodes=%ld/%ld/%ld,edges=%ld/%ld/%ld/%ld\\n"
+	  "by %d on %d %s:%ld-%s:%ld\"];\n",
+	  g - G->T, 		/* node: .. */
+	  g->edges_begin, 	/* edges: .. */
 	  g->edges_end,
-	  g - G->T,
-	  dr_node_attr(g),
-	  g - G->T,
+
+	  g - G->T,		/* T%lu */
+	  dr_node_attr(g),	/* [%s, .. */
+	  g - G->T,		/* label=\"...  */
 	  dr_node_kind_str(g->info.kind),
-	  dr_node_kind_str(g->info.last_node_kind),
-	  g->info.start.t, 
-	  g->info.end.t, 
+
+	  /* "running %llu-%llu (%llu)\\n" */
+	  g->info.start.t, g->info.end.t, 
 	  g->info.end.t - g->info.start.t, 
+
+	  /* "ready %llu-%llu (%llu)\\n" */
+	  g->info.first_ready_t, g->info.last_start_t, 
+	  g->info.last_start_t - g->info.first_ready_t,
+
+	  /* "t_running %llu (%f)\\n" */
+	  g->info.t_1, 
+	  g->info.t_1 / running_dt,
+
+	  /* "t_ready %llu/%llu/%llu/%llu (%f/%f/%f/%f)\\n" */
+	  g->info.t_ready[dr_dag_edge_kind_end], 
+	  g->info.t_ready[dr_dag_edge_kind_create], 
+	  g->info.t_ready[dr_dag_edge_kind_create_cont], 
+	  g->info.t_ready[dr_dag_edge_kind_wait_cont], 
+	  g->info.t_ready[dr_dag_edge_kind_end]         / ready_dt,
+	  g->info.t_ready[dr_dag_edge_kind_create]      / ready_dt,
+	  g->info.t_ready[dr_dag_edge_kind_create_cont] / ready_dt,
+	  g->info.t_ready[dr_dag_edge_kind_wait_cont]   / ready_dt,
+
+	  /* "est=%llu T=%llu/%llu,\\n" */
 	  g->info.est, 
 	  g->info.t_1, 
 	  g->info.t_inf,
+
+	  /* "nodes=%ld/%ld/%ld,edges=%ld/%ld/%ld/%ld\\n" */
 	  g->info.logical_node_counts[dr_dag_node_kind_create_task],
 	  g->info.logical_node_counts[dr_dag_node_kind_wait_tasks],
 	  g->info.logical_node_counts[dr_dag_node_kind_end_task],
@@ -89,8 +118,12 @@ dr_pi_dag_node_gen_dot(dr_pi_dag_node * g,
 	  g->info.logical_edge_counts[dr_dag_edge_kind_create],
 	  g->info.logical_edge_counts[dr_dag_edge_kind_create_cont],
 	  g->info.logical_edge_counts[dr_dag_edge_kind_wait_cont],
+
+	  /* "by %d on %d */
 	  g->info.worker, 
 	  g->info.cpu,
+
+	  /* %s:%ld-%s:%ld\"];\n" */
 	  C + I[g->info.start.pos.file_idx], 
 	  g->info.start.pos.line,
 	  C + I[g->info.end.pos.file_idx],   

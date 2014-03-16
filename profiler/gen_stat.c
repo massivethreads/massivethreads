@@ -123,7 +123,8 @@ dr_basic_stat_init(dr_basic_stat * bs, dr_pi_dag * G) {
 static void
 dr_basic_stat_destroy(dr_basic_stat * bs, dr_pi_dag * G) {
   long nw = G->num_workers;
-  dr_free(bs->edge_counts, sizeof(long) * dr_dag_edge_kind_max * nw * nw);
+  dr_free(bs->edge_counts, 
+	  sizeof(long) * dr_dag_edge_kind_max * nw * nw);
 }
 
 static void 
@@ -164,8 +165,11 @@ dr_basic_stat_process_event(chronological_traverser * ct,
     break;
   }
   case dr_event_kind_start: {
-    bs->n_ready--;
     bs->n_running++;
+    break;
+  }
+  case dr_event_kind_last_start: {
+    bs->n_ready--;
     break;
   }
   case dr_event_kind_end: {
