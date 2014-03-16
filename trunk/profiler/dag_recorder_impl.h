@@ -68,6 +68,7 @@ typedef struct dr_pi_dag {
 typedef enum {
   dr_event_kind_ready,
   dr_event_kind_start,
+  dr_event_kind_last_start,
   dr_event_kind_end,
 } dr_event_kind_t;
 

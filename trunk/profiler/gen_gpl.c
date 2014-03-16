@@ -21,18 +21,25 @@ typedef enum {
   dr_node_state_max,
 } dr_node_state_t;
 
-
 /* an entry in the parallelism profile. */
 typedef struct {
   dr_clock_t t;			/* time */
-  int a[dr_node_state_max];	/* count of nodes in each state */
+  /* count of nodes in each state */
+  int hist[dr_node_state_max];
+  /* count of nodes in each state in float */
+  double hist_float[dr_node_state_max];
 } dr_para_prof_history_entry;
 
 typedef struct {
   /* this must be the first element */
   void (*process_event)(chronological_traverser * ct, dr_event evt);
   int counts[dr_node_state_max];
-  dr_clock_t last_time;
+  double counts_float[dr_node_state_max];
+  int last_counts[dr_node_state_max];
+  double last_counts_float[dr_node_state_max];
+  dr_clock_t last_record_time;
+  dr_clock_t next_check_time;
+  dr_clock_t finish_time;
   dr_para_prof_history_entry * history;
   long hist_sz;
   long n_hists;
@@ -42,13 +49,18 @@ static void
 dr_para_prof_process_event(chronological_traverser * pp, dr_event evt);
 
 static void 
-dr_para_prof_init(dr_para_prof * pp, long hist_sz, dr_clock_t last_time) {
+dr_para_prof_init(dr_para_prof * pp, long hist_sz, dr_clock_t finish_time) {
   int i;
   for (i = 0; i < dr_node_state_max; i++) {
     pp->counts[i] = 0;
+    pp->counts_float[i] = 0.0;
+    pp->last_counts[i] = 0;
+    pp->last_counts_float[i] = 0.0;
   }
   pp->process_event = dr_para_prof_process_event;
-  pp->last_time = last_time;
+  pp->finish_time = finish_time;
+  pp->last_record_time = 0;
+  pp->next_check_time = 0;
   pp->hist_sz = hist_sz;
   pp->n_hists = 0;
   pp->history = (dr_para_prof_history_entry *)
@@ -62,6 +74,89 @@ dr_para_prof_destroy(dr_para_prof * pp) {
 }
 
 
+#if 1
+
+static void 
+dr_para_prof_add_hist(dr_para_prof * pp, dr_clock_t t) {
+  long sz = pp->hist_sz;
+  long n = pp->n_hists;
+  dr_para_prof_history_entry * hist = pp->history;
+  /* 
+
+     +-----+-----+-----+-----+
+     0     1       ...       sz-1
+
+     we try to plot the time series by 
+     sampling values at the above points.
+     when we have recorded n points,
+
+     +-----+-----+-----+-----+
+     0    ...   <n>          sz-1
+
+     the next point should come at or after
+     the point <n>. we track the newest
+     value, and when we encounter a point
+     at or after <n+1>, 
+
+   */
+
+  int k;
+  if (t >= pp->next_check_time) {
+    dr_para_prof_history_entry * h = &hist[n];
+    assert(n < sz);
+    /* 
+                         +
+          ++
+          |++
+         ++
+        ++
+	----x------x-----x------------
+          last    next   t
+
+     */
+
+    /* make check point at the last point */
+    h->t = pp->last_record_time;
+    for (k = 0; k < dr_node_state_max; k++) {
+      h->hist[k] = pp->last_counts[k];
+      h->hist_float[k] = pp->last_counts_float[k];
+    }
+    if (GS.opts.dbg_level>=2) {
+      fprintf(stderr, "hist[%ld] @ %llu :", n, h->t);
+      for (k = 0; k < dr_node_state_max; k++) {
+	fprintf(stderr, " %f", h->hist_float[k]);
+      }
+      fprintf(stderr, "\n");
+    }
+    pp->n_hists = n + 1;
+    /* 
+       divide the remaining time by
+       the remaining slots and calc
+       next check time
+
+         -----------+--x-------------+ 
+                    t  next      finish_time
+                   [n]             [sz-1]
+       
+     */
+    if (n == sz - 1) {
+      pp->next_check_time = pp->finish_time + 1;
+    } else {
+      pp->next_check_time = t + (pp->finish_time - t) / (sz - 1 - n);
+    }
+  }
+
+  for (k = 0; k < dr_node_state_max; k++) {
+    pp->last_counts[k] = pp->counts[k];
+    pp->last_counts_float[k] = pp->counts_float[k];
+    pp->last_record_time = t;
+  }
+  
+
+}
+
+#else
+
 static void 
 dr_para_prof_add_hist(dr_para_prof * pp, dr_clock_t t) {
   long sz = pp->hist_sz;
@@ -70,23 +165,35 @@ dr_para_prof_add_hist(dr_para_prof * pp, dr_clock_t t) {
   //long last_t = (n ? hist[n-1].t : 0);
   // (last_t + (t - last_t) * (sz - n) >= pp->last_time)
 
-  if (t / (double)pp->last_time > n / (double)sz) {
-    int i;
+  if (t == 0 || (t / (double)pp->last_time > n / (double)sz)) {
+    int k;
     dr_para_prof_history_entry * h = &hist[n];
     assert(n < sz);
     h->t = t;
-    for (i = 0; i < dr_node_state_max; i++) {
-      h->a[i] = pp->counts[i];
+    for (k = 0; k < dr_node_state_max; k++) {
+      h->hist[k] = pp->counts[k];
+      h->hist_float[k] = pp->counts_float[k];
+    }
+    if (GS.opts.dbg_level>=2) {
+      fprintf(stderr, "hist[%ld] @ %llu :", n, t);
+      for (k = 0; k < dr_node_state_max; k++) {
+	fprintf(stderr, " %f", h->hist_float[k]);
+      }
+      fprintf(stderr, "\n");
     }
     pp->n_hists = n + 1;
   }
 }
+
+#endif
 
 static void
 dr_para_prof_check(dr_para_prof * pp) {
   int i;
   for (i = 0; i < dr_node_state_max; i++) {
     (void)dr_check(pp->counts[i] == 0);
+    (void)dr_check(pp->counts_float[i] < 1.0e-5);
+    (void)dr_check(pp->counts_float[i] > -1.0e-5);
   }
 }
 
@@ -122,37 +229,54 @@ dr_para_prof_write_to_file(dr_para_prof * pp, FILE * wp) {
 	 (t_prev, y_prev) -> (t, y), we draw
 	 the following *******
 
-	         y           *-----+
+                    y        *-----+
 		             *
-		 y0   +*******
+               y_prev +*******
                       |      
                       |
-                     t0      t
+                     t_prev  t
       */
       int j;
       int y_prev = 0;
       int y = 0;
+      double y_prev_float = 0;
+      double y_float = 0;
 
       if (i == 0) {
-	fprintf(wp, "%d %d %d\n", 0, 0, 0);
-	fprintf(wp, "%llu %d %d\n", h[0].t, 0, 0);
+	//fprintf(wp, "%d %f %f\n", 0, 0.0, 0.0);
+	//fprintf(wp, "%llu %f %f\n", h[0].t, 0.0, 0.0);
       } else {
 	for (j = 0; j < k; j++) {
-	  y_prev += h[i-1].a[j];
+	  y_prev       += h[i-1].hist[j];
+	  y_prev_float += h[i-1].hist_float[j];
 	}
+#if 1
+	fprintf(wp, "%llu %f %f\n", 
+		h[i].t, y_prev_float, 
+		y_prev_float + h[i-1].hist_float[k]);
+#else
 	fprintf(wp, "%llu %d %d\n", 
-		h[i].t, y_prev, y_prev + h[i-1].a[k]);
+		h[i].t, y_prev, y_prev + h[i-1].hist[k]);
+#endif
       }
       for (j = 0; j < k; j++) {
-	y += h[i].a[j];
+	y += h[i].hist[j];
+	y_float += h[i].hist_float[j];
       }
-      fprintf(wp, "%llu %d %d\n", h[i].t, y, y + h[i].a[k]);
+#if 1
+      fprintf(wp, "%llu %f %f\n", 
+	      h[i].t, y_float, y_float + h[i].hist_float[k]);
+#else
+      fprintf(wp, "%llu %d %d\n", 
+	      h[i].t, y, y + h[i].hist[k]);
+#endif
     }
     fprintf(wp, "e\n");
   }
   fprintf(wp, "pause -1\n");
 }
 
+#if 0
 static dr_node_state_t 
 calc_node_state(dr_pi_dag_node * pred, dr_dag_edge_kind_t ek) {
   /* no predecessor. 
@@ -174,34 +298,120 @@ calc_node_state(dr_pi_dag_node * pred, dr_dag_edge_kind_t ek) {
   (void)dr_check(0);
   return dr_node_state_running;
 }
+#endif
 
 static void 
 dr_para_prof_show_counts(dr_para_prof * pp) {
   int k;
   printf(" node states:");
   for (k = 0; k < dr_node_state_max; k++) {
-    printf(" %d", pp->counts[k]);
+    //printf(" %d", pp->counts[k]);
+    printf(" %f", pp->counts_float[k]);
   }  
   printf("\n");
 }
 
+static dr_node_state_t 
+dr_dag_edge_kind_to_node_state(dr_dag_edge_kind_t ek) {
+  switch (ek) {
+  case dr_dag_edge_kind_end:
+    return dr_node_state_ready_end;
+  case dr_dag_edge_kind_create:
+    return dr_node_state_ready_create;
+  case dr_dag_edge_kind_create_cont:
+    return dr_node_state_ready_create_cont;
+  case dr_dag_edge_kind_wait_cont:
+    return dr_node_state_ready_wait_cont;
+  default:
+    (void)dr_check(0);
+  }
+  return 0;
+}
+
+static const char *
+dr_node_state_to_str(dr_node_state_t s) {
+  switch(s) {
+  case dr_node_state_running:
+    return "running";
+  case dr_node_state_ready_end:
+    return "ready_end";
+  case dr_node_state_ready_create:
+    return "ready_create";
+  case dr_node_state_ready_create_cont:
+    return "ready_create_cont";
+  case dr_node_state_ready_wait_cont:
+    return "ready_wait_cont";
+  default:
+    (void)dr_check(0);
+  }
+  return 0;
+}
+
 static void 
-dr_para_prof_process_event(chronological_traverser * pp_, dr_event ev) {
+dr_para_prof_process_event(chronological_traverser * pp_, 
+			   dr_event ev) {
   dr_para_prof * pp = (dr_para_prof *)pp_;
   switch (ev.kind) {
   case dr_event_kind_ready: {
-    dr_node_state_t k = calc_node_state(ev.pred, ev.edge_kind);
-    pp->counts[k]++;
+    // dr_node_state_t k = calc_node_state(ev.pred, ev.edge_kind);
+    // dr_node_state_t k = dr_dag_edge_kind_to_node_state(ev.u->incoming_edge_kind);
+    double dt = ev.u->info.last_start_t - ev.u->info.first_ready_t;
+    dr_clock_t * t_ready = ev.u->info.t_ready;
+    dr_dag_edge_kind_t k;
+    for (k = 0; k < dr_dag_edge_kind_max; k++) {
+      dr_node_state_t s = dr_dag_edge_kind_to_node_state(k);
+      if (GS.opts.dbg_level>=2) {
+	printf(" %p ready: count[%s] %f += %f -> %f\n",
+	       ev.u, dr_node_state_to_str(s), 
+	       pp->counts_float[s],  t_ready[k] / dt, 
+	       pp->counts_float[s] + t_ready[k] / dt);
+      }
+      pp->counts[s]++;
+      pp->counts_float[s] += t_ready[k] / dt;
+    }
     break;
   }
   case dr_event_kind_start: {
-    dr_node_state_t k = calc_node_state(ev.pred, ev.edge_kind);
-    pp->counts[k]--;
+    // dr_node_state_t k = calc_node_state(ev.pred, ev.edge_kind);
+    double dt = ev.u->info.end.t - ev.u->info.start.t;
+    dr_clock_t w = ev.u->info.t_1;
+    if (GS.opts.dbg_level>=2) {
+      printf("           count[running] %f += %f -> %f\n",
+	     pp->counts_float[dr_node_state_running], w / dt, 
+	     pp->counts_float[dr_node_state_running] + w / dt);
+    }
     pp->counts[dr_node_state_running]++;
+    pp->counts_float[dr_node_state_running] += w / dt;
+    break;
+  }
+  case dr_event_kind_last_start: {
+    // dr_node_state_t k = calc_node_state(ev.pred, ev.edge_kind);
+    double dt = ev.u->info.last_start_t - ev.u->info.first_ready_t;
+    dr_clock_t * t_ready = ev.u->info.t_ready;
+    dr_dag_edge_kind_t k;
+    for (k = 0; k < dr_dag_edge_kind_max; k++) {
+      dr_node_state_t s = dr_dag_edge_kind_to_node_state(k);
+      if (GS.opts.dbg_level>=2) {
+	printf(" %p start: count[%s] %f -= %f -> %f\n",
+	       ev.u, dr_node_state_to_str(s), 
+	       pp->counts_float[s],  t_ready[k] / dt, 
+	       pp->counts_float[s] - t_ready[k] / dt);
+      }
+      pp->counts[s]--;
+      pp->counts_float[s] -= t_ready[k] / dt;
+    }
     break;
   }
   case dr_event_kind_end: {
+    double dt = ev.u->info.end.t - ev.u->info.start.t;
+    dr_clock_t w = ev.u->info.t_1;
+    if (GS.opts.dbg_level>=2) {
+      printf(" %p end: count[running] %f -= %f -> %f\n",
+	     ev.u, pp->counts_float[dr_node_state_running], w / dt, 
+	     pp->counts_float[dr_node_state_running] - w / dt);
+    }
     pp->counts[dr_node_state_running]--;
+    pp->counts_float[dr_node_state_running] -= w / dt;
     break;
   }
   default:

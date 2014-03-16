@@ -117,11 +117,22 @@ extern "C" {
   } dr_clock_pos;
 
   typedef struct dr_dag_node_info {
-    dr_clock_pos start; /* start clock,position */
-    dr_clock_pos end;	 /* end clock,position */
-    dr_clock_t est;	 /* earliest start time */
-    dr_clock_t t_1;	 /* work */
-    dr_clock_t t_inf;	 /* critical path */
+    /* start clock,position */
+    dr_clock_pos start;
+    /* end clock,position */
+    dr_clock_pos end;
+    /* earliest start time */
+    dr_clock_t est;
+    /* work */
+    dr_clock_t t_1;
+    /* critical path */
+    dr_clock_t t_inf;
+    /* time at which this node became ready */
+    dr_clock_t first_ready_t;
+    /* time at which the last node started */
+    dr_clock_t last_start_t;
+    /* weighted sum of ready tasks */
+    dr_clock_t t_ready[dr_dag_edge_kind_max];
     /* "logical" number of nodes in this subgraph.
        "logical" means we keep track of collapsed nodes */
     long logical_node_counts[dr_dag_node_kind_section];
@@ -141,7 +152,10 @@ extern "C" {
     int worker;
     int cpu;
     dr_dag_node_kind_t kind;
+#if 0
     dr_dag_node_kind_t last_node_kind;
+#endif
+    dr_dag_edge_kind_t in_edge_kind;
   } dr_dag_node_info;
 
   typedef struct dr_pi_dag_node dr_pi_dag_node;
@@ -250,7 +264,7 @@ extern "C" {
     if (DAG_RECORDER_CHK_LEVEL) {
       if (!a) { perror("malloc"); exit(1); }
     }
-    if (DAG_RECORDER_VERBOSE_LEVEL>=3) {
+    if (DAG_RECORDER_VERBOSE_LEVEL>=4) {
       printf("dr_malloc(%ld) -> %p\n", sz, a);
     }
     if (DAG_RECORDER_DBG_LEVEL>=2) {
@@ -261,7 +275,7 @@ extern "C" {
 
   static void
   dr_free(void * a, size_t sz) {
-    if (DAG_RECORDER_VERBOSE_LEVEL>=3) {
+    if (DAG_RECORDER_VERBOSE_LEVEL>=4) {
       printf("dr_free(%p, %ld)\n", a, sz);
     }
     if (DAG_RECORDER_CHK_LEVEL) {
@@ -327,7 +341,7 @@ extern "C" {
     fl->head = next;
     if (!next) fl->tail = 0;
     head->next = 0;
-    if (DAG_RECORDER_VERBOSE_LEVEL>=3) {
+    if (DAG_RECORDER_VERBOSE_LEVEL>=4) {
       printf("dr_dag_node_alloc(%p) -> %p\n", 
 	     fl, head);
     }
@@ -620,9 +634,31 @@ extern "C" {
     return (x < y ? y : x);
   }
 
+  static inline dr_clock_t
+  dr_min_clock(dr_clock_t x, dr_clock_t y) {
+    return (x < y ? x : y);
+  }
+
   static inline int
   dr_meet_ints(int x, int y) {
     return (x == y ? x : -1);
+  }
+
+  static const char * 
+  dr_dag_edge_kind_to_str(dr_dag_edge_kind_t ek) {
+    switch (ek) {
+    case dr_dag_edge_kind_end:
+      return "end";
+    case dr_dag_edge_kind_create:
+      return "create";
+    case dr_dag_edge_kind_create_cont:
+      return "create_cont";
+    case dr_dag_edge_kind_wait_cont:
+      return "wait_cont";
+    default:
+      (void)dr_check(0);
+    }
+    return 0;
   }
 
   /* end an interval, 
@@ -630,15 +666,23 @@ extern "C" {
   static void 
   dr_end_interval_(dr_dag_node * dn, int worker, 
 		   dr_dag_node_kind_t kind,
+		   dr_dag_edge_kind_t edge_kind,
+		   /* time at which the interval ended */
 		   dr_clock_t end_t, 
+		   /* est of this inerval */
+		   dr_clock_t est,
+		   /* time at which the interval became ready */
+		   dr_clock_t ready_t,
 		   const char * file, int line,
-		   dr_clock_t est, 
-		   dr_clock_pos start) {
-    int k;
+		   dr_clock_pos start
+		   ) {
+    int k, ek;
     (void)dr_check(kind < dr_dag_node_kind_section);
     dn->info.start = start;
     dn->info.kind = kind;
+#if 0
     dn->info.last_node_kind = kind;
+#endif
     dn->info.est = est;
     dn->info.n_child_create_tasks = 0;
     dn->info.t_inf = dn->info.t_1 = end_t - start.t;
@@ -649,9 +693,22 @@ extern "C" {
       dn->info.logical_node_counts[k] = 0;
     }
     dn->info.logical_node_counts[kind] = 1;
-    for (k = 0; k < dr_dag_edge_kind_max; k++) {
-      dn->info.logical_edge_counts[k] = 0;
+    for (ek = 0; ek < dr_dag_edge_kind_max; ek++) {
+      dn->info.logical_edge_counts[ek] = 0;
     }
+    dn->info.first_ready_t = ready_t;
+    dn->info.last_start_t = start.t;
+    /* the time this node was ready */
+    for (ek = 0; ek < dr_dag_edge_kind_max; ek++) {
+      dn->info.t_ready[ek] = 0;
+    }
+    if (DAG_RECORDER_VERBOSE_LEVEL>=3) {
+      printf(" [%p].t_ready[%s] = %llu\n", 
+	     dn, dr_dag_edge_kind_to_str((dr_dag_edge_kind_t)edge_kind), 
+	     start.t - ready_t);
+    }
+    dn->info.t_ready[edge_kind] = start.t - ready_t;
+    dn->info.in_edge_kind = edge_kind;
     dn->info.cur_node_count = 1;
     dn->info.min_node_count = 1;
     dn->info.worker = worker;
@@ -757,9 +814,13 @@ extern "C" {
 	(void)dr_check(p->child == 0);
 	p->child = nt;
 	nt->info.est = p->info.est + p->info.t_inf;
+	nt->info.first_ready_t = p->info.end.t; /* ??? */
       } else {
 	nt->info.est = 0;
+	nt->info.first_ready_t = GS.start_clock; /* ???? */
       }
+      (void)dr_check(nt->info.first_ready_t > 0);
+      nt->info.in_edge_kind = dr_dag_edge_kind_create;
       /* set current task */
       dr_set_cur_task_(worker, nt);
       /* record info on the point of start */
@@ -816,9 +877,12 @@ extern "C" {
 	printf("dr_enter_create_task() by %d task=%p, section=%p, new interval=%p\n", 
 	       worker, t, s, ct);
       }
-      dr_end_interval_(ct, worker, dr_dag_node_kind_create_task,
-		       end_t, file, line,
-		       t->info.est, t->info.start);
+      dr_end_interval_(ct, worker, 
+		       dr_dag_node_kind_create_task,
+		       t->info.in_edge_kind, 
+		       end_t, t->info.est, 
+		       t->info.first_ready_t, 
+		       file, line, t->info.start);
       *c = ct;
       return t;
     } else {
@@ -853,6 +917,9 @@ extern "C" {
       (void)dr_check(ct->info.kind == dr_dag_node_kind_create_task);
       dr_set_cur_task_(worker, t);
       t->info.est = ct->info.est + ct->info.t_inf;
+      t->info.first_ready_t = ct->info.end.t;
+      (void)dr_check(t->info.first_ready_t > 0);
+      t->info.in_edge_kind = dr_dag_edge_kind_create_cont;
       dr_set_start_info(&t->info.start, file, line);
     }
   }
@@ -875,9 +942,13 @@ extern "C" {
       }
       t->active_section = s->parent_section;
       (void)dr_check(dr_task_active_node(t) == t->active_section);
-      dr_end_interval_(i, worker, dr_dag_node_kind_wait_tasks,
-		       end_t, file, line, 
-		       t->info.est, t->info.start);
+      dr_end_interval_(i, worker, 
+		       dr_dag_node_kind_wait_tasks,
+		       t->info.in_edge_kind,
+		       end_t, t->info.est, 
+		       t->info.first_ready_t, 
+		       file, line, 
+		       t->info.start);
       return t;
     } else {
       return (dr_dag_node *)0;
@@ -888,6 +959,10 @@ extern "C" {
   /* accumulate results from s's subgraphs into s */
   static void 
   dr_accumulate_stats(dr_dag_node * s) {
+    if (DAG_RECORDER_VERBOSE_LEVEL>=3) {
+      printf("dr_accumulate_stats(%p)\n", s);
+    }
+
     dr_dag_node * first = dr_dag_node_list_first(s->subgraphs);
     dr_dag_node * last = dr_dag_node_list_last(s->subgraphs);
     int i;
@@ -905,10 +980,23 @@ extern "C" {
     /* s's earliest start time is its first node's 
        earliest start time */
     s->info.est     = first->info.est;
+    /* s's ready time is its first node's
+       ready time */
+    s->info.in_edge_kind = first->info.in_edge_kind;
+    s->info.first_ready_t = first->info.first_ready_t;
+    s->info.last_start_t = last->info.start.t;
+    (void)dr_check(s->info.first_ready_t > 0);
+
     /* s's last node kind */
+#if 0
     s->info.last_node_kind = last->info.last_node_kind;
+#endif
     s->info.t_1     = 0;
     s->info.t_inf   = 0;
+    /* accumulate ready times */
+    for (i = 0; i < dr_dag_edge_kind_max; i++) {
+      s->info.t_ready[i] = 0;
+    }
     /* accumulate node counts (we later accumulate 
        subgraphs's results into them) */
     for (i = 0; i < dr_dag_node_kind_section; i++) {
@@ -934,6 +1022,21 @@ extern "C" {
 	s->info.t_1     += x->info.t_1;
 	/* accumulate t_inf along the sequential chain */
 	s->info.t_inf   += x->info.t_inf;
+
+	/* accumulate ready along the sequential chain */
+	for (k = 0; k < dr_dag_edge_kind_max; k++) {
+	  if (DAG_RECORDER_VERBOSE_LEVEL>=3) {
+	    printf(" [%p].t_ready[%s] (%llu) += [%p].t_ready[%s] (%llu) -> %llu\n", 
+		   s, dr_dag_edge_kind_to_str((dr_dag_edge_kind_t)k), 
+		   s->info.t_ready[k], 
+		   x, dr_dag_edge_kind_to_str((dr_dag_edge_kind_t)k), 
+		   x->info.t_ready[k], 
+		   s->info.t_ready[k] + x->info.t_ready[k]);
+	  }
+	  s->info.t_ready[k] += x->info.t_ready[k];
+	}
+
+
 	/* meet workers and cpus */
 	s->info.worker = dr_meet_ints(s->info.worker, x->info.worker);
 	s->info.cpu = dr_meet_ints(s->info.cpu, x->info.cpu);
@@ -960,12 +1063,36 @@ extern "C" {
 	  /* similar accumulation for x's child task */
 	  dr_dag_node * c = x->child;
 	  (void)dr_check(c);
+	  /* s is a section; s's last node may
+	     have finished eariler than one of its
+	     children */
 	  s->info.end.t = dr_max_clock(c->info.end.t, s->info.end.t);
+	  s->info.last_start_t = dr_max_clock(c->info.last_start_t, s->info.last_start_t);
+#if 0
 	  s->info.last_node_kind 
 	    = (c->info.end.t > s->info.end.t
 	       ? c->info.last_node_kind : s->info.last_node_kind);
+#endif
 	  s->info.t_1     += c->info.t_1;
 	  t_inf = dr_max_clock(s->info.t_inf + c->info.t_inf, t_inf);
+
+	  /* count "ready" tasks.  the task c is
+	     "ready" from the point it is created
+	     (x->info.end.t) to the point it is
+	     finished c->info.end.t */
+	  for (k = 0; k < dr_dag_edge_kind_max; k++) {
+	    if (DAG_RECORDER_VERBOSE_LEVEL>=3) {
+	      printf("  [%p].t_ready[%s] (%llu)"
+		     " += [%p].t_ready[%s] (%llu) -> %llu\n", 
+		     s, dr_dag_edge_kind_to_str((dr_dag_edge_kind_t)k), 
+		     s->info.t_ready[k], 
+		     c, dr_dag_edge_kind_to_str((dr_dag_edge_kind_t)k), 
+		     c->info.t_ready[k],
+		     s->info.t_ready[k] + c->info.t_ready[k]);
+	    }
+	    s->info.t_ready[k] += c->info.t_ready[k];
+	  }
+
 	  s->info.worker = dr_meet_ints(s->info.worker, c->info.worker);
 	  s->info.cpu = dr_meet_ints(s->info.cpu, c->info.cpu);
 	  /* if a section contains a create task node,
@@ -1224,7 +1351,7 @@ extern "C" {
       dr_prune_nodes_stack_ent * e = dr_prune_nodes_stack_top(S);
       dr_dag_node * x = e->x;
       const char * pop = 0;
-      if (DAG_RECORDER_VERBOSE_LEVEL>=2
+      if (DAG_RECORDER_VERBOSE_LEVEL>=3
 	   && e->visit_count == 0) {
 	  /* this is the first time e has been processed */
 	  spaces(S->n);
@@ -1329,7 +1456,7 @@ extern "C" {
 
       if (pop) {
 	/* we are done with this node. pop it. */
-	if (DAG_RECORDER_VERBOSE_LEVEL>=2) {
+	if (DAG_RECORDER_VERBOSE_LEVEL>=3) {
 	  long c = dr_cur_nodes_below(x);
 	  spaces(S->n);
 	  printf("--> %ld (%s)\n", c, pop);
@@ -1349,7 +1476,7 @@ extern "C" {
 		 dr_dag_node_freelist * fl,
 		 int indent) {
     dr_clock_t t0 = 0, t1 = 0;
-    if (DAG_RECORDER_VERBOSE_LEVEL>=1) {
+    if (DAG_RECORDER_VERBOSE_LEVEL>=2) {
       spaces(indent);
       printf("dr_prune_nodes(%p (%ld/%ld nodes, kind=%s), budget=%ld)\n", 
 	     s, 
@@ -1359,7 +1486,7 @@ extern "C" {
       t0 = dr_get_tsc();
     }
     long r = dr_prune_nodes_norec(S, s, budget, fl);
-    if (DAG_RECORDER_VERBOSE_LEVEL>=1) {
+    if (DAG_RECORDER_VERBOSE_LEVEL>=2) {
       t1 = dr_get_tsc();
       printf("--> %ld (%llu clocks)\n", r, t1 - t0);
     }
@@ -1370,7 +1497,7 @@ extern "C" {
   dr_summarize_section_or_task(dr_prune_nodes_stack * S,
 			       dr_dag_node * s, 
 			       dr_dag_node_freelist * fl) {
-    if (DAG_RECORDER_VERBOSE_LEVEL>=3) {
+    if (DAG_RECORDER_VERBOSE_LEVEL>=2) {
       if (s->info.kind == dr_dag_node_kind_section) {
 	printf("dr_summarize_section(section=%p)\n", s);
       } else if (s->info.kind == dr_dag_node_kind_task) {
@@ -1420,8 +1547,11 @@ extern "C" {
 		 t, worker, s, p);
 	}
 	{
-	  /* calc EST of the interval to start */
+	  /* calc EST and READY_T of the interval to start */
 	  dr_clock_t est = p->info.est + p->info.t_inf;
+	  dr_clock_t ready_t = p->info.end.t;
+	  dr_dag_edge_kind_t edge_kind = dr_dag_edge_kind_wait_cont;
+	  (void)dr_check(ready_t > 0);
 	  dr_dag_node * head = s->subgraphs->head;
 	  dr_dag_node * ch;
 	  for (ch = head; ch; ch = ch->next) {
@@ -1432,6 +1562,11 @@ extern "C" {
 	      if (dr_check(ct)) {
 		dr_clock_t x = ct->info.est + ct->info.t_inf;
 		if (est < x) est = x;
+		if (ready_t < ct->info.end.t) {
+		  /* ct finished after other predecessors */
+		  ready_t = ct->info.end.t;
+		  edge_kind = dr_dag_edge_kind_end;
+		}
 	      }
 	    }
 	  }
@@ -1439,6 +1574,10 @@ extern "C" {
 				       GS.ts[worker].freelist);
 	  dr_set_cur_task_(worker, t);
 	  t->info.est = est;
+	  /* this node becomes ready when all of its predecessors finished */
+	  t->info.first_ready_t = ready_t;
+	  t->info.in_edge_kind = edge_kind;
+	  (void)dr_check(ready_t > 0);
 	  dr_set_start_info(&t->info.start, file, line);
 	}
       }
@@ -1458,9 +1597,11 @@ extern "C" {
 	       "new interval=%p\n", 
 	       worker, t, s, i);
       }
-      dr_end_interval_(i, worker, dr_dag_node_kind_end_task,
-		       end_t, file, line, 
-		       t->info.est, t->info.start);
+      dr_end_interval_(i, worker, 
+		       dr_dag_node_kind_end_task,
+		       t->info.in_edge_kind,
+		       end_t, t->info.est, t->info.first_ready_t, 
+		       file, line, t->info.start);
       dr_summarize_section_or_task(GS.ts[worker].prune_stack, t, 
 				   GS.ts[worker].freelist);
     }

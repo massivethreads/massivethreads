@@ -205,6 +205,15 @@ dr_pi_dag_chronological_traverse(dr_pi_dag * G,
       if (GS.opts.dbg_level>=2) {
 	printf("%llu : node %ld start\n", ev.t, u - G->T);
       }
+      dr_event_queue_enq(F, dr_mk_event(u->info.last_start_t, 
+					dr_event_kind_last_start, u, 
+					ev.pred, ev.edge_kind));
+      break;
+    }
+    case dr_event_kind_last_start: {
+      if (GS.opts.dbg_level>=2) {
+	printf("%llu : node %ld last start\n", ev.t, u - G->T);
+      }
       dr_event_queue_enq(F, dr_mk_event(u->info.end.t, 
 					dr_event_kind_end, u, 
 					ev.pred, ev.edge_kind));
