@@ -323,7 +323,7 @@ top_srcdir = @top_srcdir@
 # required when you use libtool (for building shared libs)
 ACLOCAL_AMFLAGS = -I m4
 lib_LTLIBRARIES = libdr.la
-include_HEADERS = dag_recorder.h dag_recorder_inl.h
+include_HEADERS = dag_recorder.h dag_recorder_inl.h dag_recorder_impl.h
 libdr_la_SOURCES = record_dag.c dag_recorder_api.c chronological.c gen_stat.c gen_dot.c gen_gpl.c read_dag.c
 libdr_la_CFLAGS = $(CFLAGS)
 all: all-am
