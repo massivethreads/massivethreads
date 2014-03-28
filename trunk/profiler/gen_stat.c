@@ -220,7 +220,7 @@ dr_write_edge_counts(dr_basic_stat * bs, FILE * wp) {
 }
 
 
-static void
+static int
 dr_basic_stat_write_to_file(dr_basic_stat * bs, FILE * wp) {
   dr_pi_dag * G = bs->G;
   long * nc = G->T[0].info.logical_node_counts;
@@ -282,39 +282,30 @@ dr_basic_stat_write_to_file(dr_basic_stat * bs, FILE * wp) {
   fprintf(wp, "compression ratio     = %f\n", 
 	  n_mat_nodes / (double)n_nodes);
   dr_write_edge_counts(bs, wp);
+
+  if (ferror(wp)) {
+    fprintf(stderr, "%s:%d:error: fprintf %s\n", 
+	    __FILE__, __LINE__, strerror(errno)); 
+    return 0;
+  } else {
+    return 1;
+  }
 }
 
 int 
 dr_gen_basic_stat(dr_pi_dag * G) {
-  FILE * wp = NULL;
   int must_close = 0;
-  const char * filename = GS.opts.stat_file;
-  if (filename && strcmp(filename, "") != 0) {
-    if (strcmp(filename, "-") == 0) {
-      fprintf(stderr, "writing stat to stdout\n");
-      wp = stdout;
-    } else {
-      fprintf(stderr, "writing stat to %s\n", filename);
-      wp = fopen(filename, "wb");
-      if (!wp) { 
-	fprintf(stderr, "fopen: %s (%s)\n", strerror(errno), filename); 
-	return 0;
-      }
-      must_close = 1;
-    }
-  } else {
-    fprintf(stderr, "not writing stat\n");
-    return 1;
-  }
+  FILE * wp = dr_pi_dag_open_to_write(GS.opts.stat_file, "stat", &must_close);
+  if (!wp) return 1;
   dr_basic_stat bs[1];
   dr_basic_stat_init(bs, G);
   dr_calc_inner_delay(bs, G);
   dr_calc_edges(bs, G);
   dr_pi_dag_chronological_traverse(G, (chronological_traverser *)bs);
-  dr_basic_stat_write_to_file(bs, wp);
+  int r = dr_basic_stat_write_to_file(bs, wp);
   dr_basic_stat_destroy(bs, G);
   if (must_close) fclose(wp);
-  return 1;
+  return r;
 }
 
 

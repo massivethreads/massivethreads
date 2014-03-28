@@ -11,7 +11,7 @@
 
 #include "dag_recorder_impl.h"
 
-static dr_pi_dag * 
+dr_pi_dag * 
 dr_read_dag(const char * filename) {
   int fd = open(filename, O_RDONLY);
   void * a;
@@ -65,10 +65,12 @@ dr_read_dag(const char * filename) {
   G->S = S;
   long n = S->n;
   long i;
+#if 0
   printf("%ld strings\n", n);
   for (i = 0; i < n; i++) {
     printf("string %ld : %s\n", i, S->C + S->I[i]);
   }
+#endif
 
   close(fd);
   return G;

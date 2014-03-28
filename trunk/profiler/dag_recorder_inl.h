@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -642,6 +643,19 @@ extern "C" {
   static inline int
   dr_meet_ints(int x, int y) {
     return (x == y ? x : -1);
+  }
+
+  static const char * 
+  dr_dag_node_kind_to_str(dr_dag_node_kind_t nk) {
+    switch (nk) {
+    case dr_dag_node_kind_create_task: return "create_task";
+    case dr_dag_node_kind_wait_tasks:  return "wait_tasks";
+    case dr_dag_node_kind_end_task:    return "end_task";
+    case dr_dag_node_kind_section:     return "section";
+    case dr_dag_node_kind_task:        return "task";
+    default : (void)dr_check(0);
+    }
+    return (const char *)0;
   }
 
   static const char * 
@@ -1607,6 +1621,30 @@ extern "C" {
     }
   }
 
+  static FILE * 
+  dr_pi_dag_open_to_write(const char * filename, const char * file_kind, 
+			  int * must_close_p) {
+    *must_close_p = 0;
+    if (filename && strcmp(filename, "") != 0) {
+      if (strcmp(filename, "-") == 0) {
+	fprintf(stderr, "writing %s to stdout\n", file_kind);
+	return stdout;
+      } else {
+	fprintf(stderr, "writing %s to %s\n", file_kind, filename);
+	FILE * wp = fopen(filename, "wb");
+	if (!wp) { 
+	  fprintf(stderr, "fopen: %s (%s)\n", strerror(errno), filename); 
+	  return (FILE *)0;
+	}
+	* must_close_p = 1;
+	return wp;
+      }
+    } else {
+      fprintf(stderr, "not writing %s\n", file_kind);
+      return (FILE *)0;
+    }
+  }
+
   /* dummy function to supress many
      "static function defined but not called" 
      errors */
@@ -1628,6 +1666,8 @@ extern "C" {
     dr_return_from_wait_tasks__(t, "", 1, 1);
     dr_stop__("", 1, 1);
     dr_free(t, sizeof(dr_dag_node));
+    dr_dag_node_kind_to_str((dr_dag_node_kind_t)1);
+    dr_pi_dag_open_to_write("", "", NULL);
   }
 
 #ifdef __cplusplus

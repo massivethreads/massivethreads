@@ -7,19 +7,6 @@
 #include "dag_recorder_impl.h"
 
 static const char * 
-dr_node_kind_str(dr_dag_node_kind_t kind) {
-  switch (kind) {
-  case dr_dag_node_kind_create_task: return "create_task";
-  case dr_dag_node_kind_wait_tasks:  return "wait_tasks";
-  case dr_dag_node_kind_end_task:    return "end_task";
-  case dr_dag_node_kind_section:     return "section";
-  case dr_dag_node_kind_task:        return "task";
-  default : (void)dr_check(0);
-  }
-  return (const char *)0;
-}
-
-static const char * 
 dr_node_attr(dr_pi_dag_node * g) {
   switch (g->info.kind) {
   case dr_dag_node_kind_create_task:
@@ -55,7 +42,7 @@ dr_edge_color(dr_dag_edge_kind_t k) {
   return 0;
 }
 
-static void 
+static int
 dr_pi_dag_node_gen_dot(dr_pi_dag_node * g, 
 		       dr_pi_dag * G, FILE * wp) {
   dr_pi_string_table * S = G->S;
@@ -77,24 +64,24 @@ dr_pi_dag_node_gen_dot(dr_pi_dag_node * g,
 	  g - G->T, 		/* node: .. */
 	  g->edges_begin, 	/* edges: .. */
 	  g->edges_end,
-
+	  
 	  g - G->T,		/* T%lu */
 	  dr_node_attr(g),	/* [%s, .. */
 	  g - G->T,		/* label=\"...  */
-	  dr_node_kind_str(g->info.kind),
-
+	  dr_dag_node_kind_to_str(g->info.kind),
+	  
 	  /* "running %llu-%llu (%llu)\\n" */
 	  g->info.start.t, g->info.end.t, 
 	  g->info.end.t - g->info.start.t, 
-
+	  
 	  /* "ready %llu-%llu (%llu)\\n" */
 	  g->info.first_ready_t, g->info.last_start_t, 
 	  g->info.last_start_t - g->info.first_ready_t,
-
+	  
 	  /* "t_running %llu (%f)\\n" */
 	  g->info.t_1, 
 	  g->info.t_1 / running_dt,
-
+	  
 	  /* "t_ready %llu/%llu/%llu/%llu (%f/%f/%f/%f)\\n" */
 	  g->info.t_ready[dr_dag_edge_kind_end], 
 	  g->info.t_ready[dr_dag_edge_kind_create], 
@@ -104,12 +91,12 @@ dr_pi_dag_node_gen_dot(dr_pi_dag_node * g,
 	  g->info.t_ready[dr_dag_edge_kind_create]      / ready_dt,
 	  g->info.t_ready[dr_dag_edge_kind_create_cont] / ready_dt,
 	  g->info.t_ready[dr_dag_edge_kind_wait_cont]   / ready_dt,
-
+	  
 	  /* "est=%llu T=%llu/%llu,\\n" */
 	  g->info.est, 
 	  g->info.t_1, 
 	  g->info.t_inf,
-
+	  
 	  /* "nodes=%ld/%ld/%ld,edges=%ld/%ld/%ld/%ld\\n" */
 	  g->info.logical_node_counts[dr_dag_node_kind_create_task],
 	  g->info.logical_node_counts[dr_dag_node_kind_wait_tasks],
@@ -118,26 +105,34 @@ dr_pi_dag_node_gen_dot(dr_pi_dag_node * g,
 	  g->info.logical_edge_counts[dr_dag_edge_kind_create],
 	  g->info.logical_edge_counts[dr_dag_edge_kind_create_cont],
 	  g->info.logical_edge_counts[dr_dag_edge_kind_wait_cont],
-
+	  
 	  /* "by %d on %d */
 	  g->info.worker, 
 	  g->info.cpu,
-
+	  
 	  /* %s:%ld-%s:%ld\"];\n" */
 	  C + I[g->info.start.pos.file_idx], 
 	  g->info.start.pos.line,
 	  C + I[g->info.end.pos.file_idx],   
 	  g->info.end.pos.line
 	  );
+  if (ferror(wp)) {
+    fprintf(stderr, "%s:%d:error: fprintf %s\n", 
+	    __FILE__, __LINE__, strerror(errno)); 
+    return 0;
+  } else {
+    return 1;
+  }
 }
 
-static void
+static int
 dr_pi_dag_edge_gen_dot(dr_pi_dag_edge * e, FILE * wp) {
-  fprintf(wp, "T%lu -> T%lu [color=\"%s\"];\n", 
-	  e->u, e->v, dr_edge_color(e->kind));
+  if (!fprintf(wp, "T%lu -> T%lu [color=\"%s\"];\n", 
+	       e->u, e->v, dr_edge_color(e->kind))) return 0;
+  return 1;
 }
 
-static void 
+static int
 dr_pi_dag_gen_dot(dr_pi_dag * G, FILE * wp) {
   long n = G->n;
   long m = G->m;
@@ -153,34 +148,18 @@ dr_pi_dag_gen_dot(dr_pi_dag * G, FILE * wp) {
     }
   }
   for (i = 0; i < m; i++) {
-    dr_pi_dag_edge_gen_dot(&E[i], wp);
+    if (!dr_pi_dag_edge_gen_dot(&E[i], wp)) return 0;
   }
-  fprintf(wp, "}\n");
+  if (!fprintf(wp, "}\n")) return 0;
+  return 1;
 }
 
 int dr_gen_dot(dr_pi_dag * G) {
-  FILE * wp = NULL;
   int must_close = 0;
-  const char * filename = GS.opts.dot_file;
-  if (filename && strcmp(filename, "") != 0) {
-    if (strcmp(filename, "-") == 0) {
-      fprintf(stderr, "writing dot to stdout\n");
-      wp = stdout;
-    } else {
-      fprintf(stderr, "writing dot to %s\n", filename);
-      wp = fopen(filename, "wb");
-      if (!wp) { 
-	fprintf(stderr, "fopen: %s (%s)\n", strerror(errno), filename); 
-	return 0;
-      }
-      must_close = 1;
-    }
-  } else {
-    fprintf(stderr, "not writing dot\n");
-    return 1;
-  }
-  dr_pi_dag_gen_dot(G, wp);
+  FILE * wp = dr_pi_dag_open_to_write(GS.opts.dot_file, "dot", &must_close);
+  if (!wp) return 1;
+  int r = dr_pi_dag_gen_dot(G, wp);
   if (must_close) fclose(wp);
-  return 1;
+  return r;
 }
 
