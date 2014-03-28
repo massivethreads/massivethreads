@@ -103,7 +103,11 @@ dr_pi_dag_node_first(dr_pi_dag_node * g, dr_pi_dag * G);
 dr_pi_dag_node *
 dr_pi_dag_node_last(dr_pi_dag_node * g, dr_pi_dag * G);
 
-int dr_gen_dot(dr_pi_dag * G);
+dr_pi_dag * 
+dr_read_dag(const char * filename);
+
 int dr_gen_gpl(dr_pi_dag * G);
 int dr_gen_basic_stat(dr_pi_dag * G);
+int dr_gen_dot(dr_pi_dag * G);
+int dr_gen_text(dr_pi_dag * G);
 

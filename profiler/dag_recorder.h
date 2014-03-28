@@ -33,8 +33,15 @@ extern "C" {
   typedef struct dr_options {
     const char * dag_file;	/* filename of the dag */
     const char * stat_file;	/* filename of the dag */
-    const char * dot_file;	/* filename of the dot */
     const char * gpl_file;	/* filename of the gpl */
+    const char * dot_file;	/* filename of the dot */
+    const char * sqlite_file;	/* filename of the sqlite3 */
+    const char * text_file;	/* filename of the text */
+    const char * nodes_file;	/* filename of the nodes */
+    const char * edges_file;	/* filename of the edges */
+    const char * strings_file;	/* filename of the strings */
+    const char * text_file_sep;	/* separator for text file */
+
     dr_clock_t uncollapse_min;	/* minimum length that can be uncollapsed */
     dr_clock_t collapse_max;	/* maximum length that can be collpased */
     long node_count_target;	/* desired number of nodes */
@@ -60,8 +67,14 @@ extern "C" {
   dr_options_default_values __attribute__ ((unused)) = { 
     (const char *)"00dr.dag",  /* dag_file */
     (const char *)"00dr.stat", /* stat_file */
-    (const char *)"00dr.dot",  /* dot_file */
     (const char *)"00dr.gpl",  /* gpl_file */
+    (const char *)0,	       /* dot_file */
+    (const char *)0,	       /* sqlite_file */
+    (const char *)0,	       /* text_file */
+    (const char *)0,	       /* nodes_file */
+    (const char *)0,	       /* edges_file */
+    (const char *)0,	       /* strings_file */
+    (const char *)"|",	       /* text_file_sep */
     0,			       /* uncollapse_min; obsolete. */
     (1L << 60),	               /* collapse_max used to be (1L << 60), */
     0,	                       /* node_count_target */

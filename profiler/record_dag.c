@@ -868,12 +868,17 @@ void dr_options_default(dr_options * opts) {
       || getenv_str("DR_DAG",                 &opts->dag_file)) {}
   if (getenv_str("DAG_RECORDER_STAT_FILE",    &opts->stat_file)
       || getenv_str("DR_STAT",                &opts->stat_file)) {}
-  if (getenv_str("DAG_RECORDER_DOT_FILE",     &opts->dot_file)
-      || getenv_str("DR_DOT",                 &opts->dot_file)) {}
   if (getenv_str("DAG_RECORDER_GPL_FILE",     &opts->gpl_file)
       || getenv_str("DR_GPL",                 &opts->gpl_file)) {}
+  if (getenv_str("DAG_RECORDER_DOT_FILE",     &opts->dot_file)
+      || getenv_str("DR_DOT",                 &opts->dot_file)) {}
+  if (getenv_str("DAG_RECORDER_TEXT_FILE",    &opts->text_file)
+      || getenv_str("DR_TEXT",                &opts->text_file)) {}
+  /* NOTE: we do not set sqlite_file via environment variables */
   if (getenv_int("DAG_RECORDER_GPL_SIZE",     &opts->gpl_sz)
       || getenv_int("DR_GPL_SZ",              &opts->gpl_sz)) {}
+  if (getenv_str("DAG_RECORDER_TEXT_FILE_SEP",    &opts->text_file_sep)
+      || getenv_str("DR_TEXT_SEP",                &opts->text_file_sep)) {}
   if (getenv_byte("DAG_RECORDER_DBG_LEVEL",   &opts->dbg_level)
       || getenv_byte("DR_DBG",                &opts->dbg_level)) {}
   if (getenv_byte("DAG_RECORDER_VERBOSE_LEVEL",  &opts->verbose_level)
@@ -903,12 +908,16 @@ dr_opts_print(dr_options * opts) {
 	  opts->dag_file);
   fprintf(wp, "stat_file (DAG_RECORDER_STAT_FILE,DR_STAT) : %s\n", 
 	  opts->stat_file);
-  fprintf(wp, "dot_file (DAG_RECORDER_DOT_FILE,DR_DOT) : %s\n", 
-	  opts->dot_file);
   fprintf(wp, "gpl_file (DAG_RECORDER_GPL_FILE,DR_GPL) : %s\n", 
 	  opts->gpl_file);
+  fprintf(wp, "dot_file (DAG_RECORDER_DOT_FILE,DR_DOT) : %s\n", 
+	  opts->dot_file);
+  fprintf(wp, "text_file (DAG_RECORDER_TEXT_FILE,DR_TEXT) : %s\n", 
+	  opts->text_file);
   fprintf(wp, "gpl_sz (DAG_RECORDER_GPL_SIZE,DR_GPL_SZ) : %d\n", 
 	  opts->gpl_sz);
+  fprintf(wp, "text_file (DAG_RECORDER_TEXT_FILE_SEP,DR_TEXT_SEP) : %s\n", 
+	  opts->text_file_sep);
   fprintf(wp, "dbg_level (DAG_RECORDER_DBG_LEVEL,DR_DBG) : %d\n", 
 	  opts->dbg_level);
   fprintf(wp, "verbose_level (DAG_RECORDER_VERBOSE_LEVEL,DR_VERBOSE) : %d\n", 
@@ -1089,8 +1098,9 @@ void dr_dump() {
     dr_make_pi_dag(G, GS.root, GS.start_clock, GS.num_workers);
     dr_gen_pi_dag(G);
     dr_gen_basic_stat(G);
-    dr_gen_dot(G);
     dr_gen_gpl(G);
+    dr_gen_dot(G);
+    dr_gen_text(G);
     dr_destroy_pi_dag(G);
   }
 }

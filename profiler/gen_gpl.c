@@ -197,7 +197,7 @@ dr_para_prof_check(dr_para_prof * pp) {
   }
 }
 
-static void 
+static int
 dr_para_prof_write_to_file(dr_para_prof * pp, FILE * wp) {
   long n = pp->n_hists;
   dr_para_prof_history_entry * h = pp->history;
@@ -274,31 +274,16 @@ dr_para_prof_write_to_file(dr_para_prof * pp, FILE * wp) {
     fprintf(wp, "e\n");
   }
   fprintf(wp, "pause -1\n");
+
+  if (ferror(wp)) {
+    fprintf(stderr, "%s:%d:error: fprintf %s\n", 
+	    __FILE__, __LINE__, strerror(errno)); 
+    return 0;
+  } else {
+    return 1;
+  }
 }
 
-#if 0
-static dr_node_state_t 
-calc_node_state(dr_pi_dag_node * pred, dr_dag_edge_kind_t ek) {
-  /* no predecessor. 
-     i.e. root node. treat as if it is created */
-  if (!pred) 
-    return dr_node_state_ready_create;
-  switch (ek) {
-  case dr_dag_edge_kind_end:
-    return dr_node_state_ready_end;
-  case dr_dag_edge_kind_create:
-    return dr_node_state_ready_create;
-  case dr_dag_edge_kind_create_cont:
-    return dr_node_state_ready_create_cont;
-  case dr_dag_edge_kind_wait_cont:
-    return dr_node_state_ready_wait_cont;
-  default:
-    (void)dr_check(0);
-  }
-  (void)dr_check(0);
-  return dr_node_state_running;
-}
-#endif
 
 static void 
 dr_para_prof_show_counts(dr_para_prof * pp) {
@@ -426,34 +411,17 @@ dr_para_prof_process_event(chronological_traverser * pp_,
 
 int 
 dr_gen_gpl(dr_pi_dag * G) {
-  FILE * wp = NULL;
   int must_close = 0;
-  const char * filename = GS.opts.gpl_file;
-  if (filename && strcmp(filename, "") != 0) {
-    if (strcmp(filename, "-") == 0) {
-      fprintf(stderr, "writing gnuplot to stdout\n");
-      wp = stdout;
-    } else {
-      fprintf(stderr, "writing gnuplot to %s\n", filename);
-      wp = fopen(filename, "wb");
-      if (!wp) { 
-	fprintf(stderr, "fopen: %s (%s)\n", strerror(errno), filename); 
-	return 0;
-      }
-      must_close = 1;
-    }
-  } else {
-    fprintf(stderr, "not writing gnuplot\n");
-    return 1;
-  }
+  FILE * wp = dr_pi_dag_open_to_write(GS.opts.gpl_file, "stat", &must_close);
+  if (!wp) return 1;
   dr_pi_dag_node * last = dr_pi_dag_node_last(G->T, G);
   dr_para_prof pp[1];
   dr_para_prof_init(pp, GS.opts.gpl_sz, last->info.end.t);
   dr_pi_dag_chronological_traverse(G, (chronological_traverser *)pp);
   dr_para_prof_check(pp);
-  dr_para_prof_write_to_file(pp, wp);
+  int r = dr_para_prof_write_to_file(pp, wp);
   dr_para_prof_destroy(pp);
   if (must_close) fclose(wp);
-  return 1;
+  return r;
 }
 
