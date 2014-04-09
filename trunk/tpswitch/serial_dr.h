@@ -24,8 +24,9 @@
  */
 
 #pragma once
-
+#if DAG_RECORDER>=2
 #include <dag_recorder.h>
+#endif
 
 #define mk_task_group_with_prof  int __mk_task_group_n_children__ = 0
 
