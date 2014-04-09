@@ -28,7 +28,7 @@
 #include <dag_recorder.h>
 #endif
 
-#define mk_task_group_with_prof  int __mk_task_group_n_children__ = 0
+#define mk_task_group_with_prof  int __mk_task_group_n_children__ __attribute__((unused)) = 0
 
 #define create_task_with_prof(statement) do {			\
     if (__mk_task_group_n_children__ == 0) dr_begin_section(); \
