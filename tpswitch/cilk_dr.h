@@ -3,7 +3,9 @@
  */
 
 #pragma once
+#if DAG_RECORDER>=2
 #include <dag_recorder.h>
+#endif
 
 #define cilk_proc_start_with_prof			   \
   int __cilk_proc_start__ = dr_start_cilk_proc()
