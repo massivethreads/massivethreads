@@ -286,6 +286,8 @@ dr_string_table_find(dr_string_table * t, const char * s) {
   dr_string_table_cell * c;
   long i = 0;
   for (c = t->head; c; c = c->next) {
+    assert(c->s);
+    assert(s);
     if (strcmp(c->s, s) == 0) return i;
     i++;
   }
@@ -388,6 +390,8 @@ dr_pi_dag_copy_1(dr_dag_node * g,
   assert(p < lim);
   p->info = g->info;
   p->info.start.pos.file = 0;
+  assert(g->info.start.pos.file);
+  assert(strlen(g->info.start.pos.file) > 0);
   p->info.start.pos.file_idx
     = dr_string_table_intern(st, g->info.start.pos.file);
   p->info.end.pos.file = 0;
@@ -977,6 +981,10 @@ dr_make_thread_specific_state(int num_workers) {
       dr_dag_node_freelist_add_page(fl, alloc_sz);
     }
     dr_prune_nodes_stack_init(ts[i].prune_stack);
+    /* this field is actually overwritten by the
+       thread that calls dr_start */
+    ts[i].task = (dr_dag_node*)0;
+    ts[i].parent = (dr_dag_node*)0;
   }
   return ts;
 }
@@ -1022,7 +1030,30 @@ dr_init_(dr_options * opts, int num_workers) {
 
 /* stop profiling */
 void dr_stop__(const char * file, int line, int worker) {
-  dr_end_task__(file, line, worker);
+  /* we have a complication in OpenMP environment,
+     similar to the one we have in dr_start__ */
+  int i;
+  for (i = 0; i < GS.num_workers; i++) {
+    if (!GS.ts) break;	/* no DAG Recorder */
+    if (GS.ts[i].task == GS.root) {
+      if (DAG_RECORDER_VERBOSE_LEVEL>=3) {
+	fprintf(stderr, 
+		"the last task executed by %d, I am %d\n", i, worker);
+      }
+      break;
+    }
+  }
+  if (i == GS.num_workers) {
+    fprintf(stderr, 
+	    "DAG Recorder error: could not find a worker"
+	    " that finished the root task. die\n");
+    for (i = 0; i < GS.num_workers; i++) {
+      fprintf(stderr, 
+	      "ts[%d].task = %p\n",  i, GS.ts[i].task);
+    }
+    exit(1);
+  }
+  dr_end_task__(file, line, i);
   GS.ts = 0;
 }
 
@@ -1089,6 +1120,31 @@ void dr_start__(dr_options * opts, const char * file, int line,
     GS.start_clock = dr_get_tsc();
     dr_start_task__(0, file, line, worker);
     GS.root = dr_get_cur_task_(worker);
+
+    {
+      /* set .task fields of ALL workers to the
+	 same root task.
+	 we need this because in OpenMP, there are no guarantee
+	 that the current worker is the one who performs the
+	 next task parallel operation. this happens when 
+	 dr_start is called outside omp parallel section,
+	 and omp single just inside it is executed by 
+	 a different worker.
+	 dr_start(..);  // worker = a
+	 #pragma omp parallel
+	 #pragma omp single
+	 // here, we may be worker = b (!= a)
+	 the following is an ugly trick to fix this.
+	 we set .task pointers of ALL workers to the 
+	 same one. whoever is executing the single
+	 region should work normally and others
+	 will override it anyways.
+      */
+      int i;
+      for (i = 0; i < num_workers; i++) {
+	GS.ts[i].task = GS.root;
+      }
+    }
   }
 }
 
