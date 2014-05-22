@@ -60,7 +60,7 @@
 
 #else
 
-#define mk_task_group   int __mk_task_group_n_children__ = 0
+#define mk_task_group   int __mk_task_group_n_children__ __attribute__((unused)) = 0
 #define create_task(s)  s
 #define create_taskc(c) c()
 #define wait_tasks      
