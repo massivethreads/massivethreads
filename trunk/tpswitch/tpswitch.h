@@ -166,7 +166,7 @@
 
 
 /* Cilk */
-#elif TO_CILK
+#elif TO_CILK || TO_CILKPLUS
 #include <tpswitch/cilk_dr.h>
 
 #define mk_task_group int __mk_task_group__ __attribute__((unused)) = 0
@@ -174,7 +174,11 @@
 #define create_task1(s0,function_call)    spawn_(function_call)
 #define create_task2(s0,s1,function_call) spawn_(function_call)
 #define create_taskA(function_call)       spawn_(function_call)
-#define create_taskc(callable)            spawn_(callable())
+#if TO_CILK
+#define create_taskc(callable)            spawn_(spawn callable())
+#else
+#define create_taskc(callable)            spawn_(_Cilk_spawn callable())
+#endif
 #define create_task_and_wait(function_call)			\
   do { create_taskA(function_call); wait_tasks; } while(0)
 #define create_taskc_and_wait(callable)			\
