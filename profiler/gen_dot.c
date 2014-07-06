@@ -13,6 +13,8 @@ dr_node_attr(dr_pi_dag_node * g) {
     return "shape=\"box\",color=\"blue\"";
   case dr_dag_node_kind_wait_tasks:
     return "shape=\"box\",color=\"red\"";
+  case dr_dag_node_kind_other:
+    return "shape=\"box\",color=\"yellow\"";
   case dr_dag_node_kind_end_task:
     return "shape=\"box\"";
   case dr_dag_node_kind_section:
@@ -36,6 +38,8 @@ dr_edge_color(dr_dag_edge_kind_t k) {
     return "pink";
   case dr_dag_edge_kind_wait_cont:
     return "black";
+  case dr_dag_edge_kind_other_cont:
+    return "yellow";
   default:
     (void)dr_check(0);
   }
@@ -57,9 +61,9 @@ dr_pi_dag_node_gen_dot(dr_pi_dag_node * g,
 	  "running %llu-%llu (%llu)\\n"
 	  "ready %llu-%llu (%llu)\\n"
 	  "t_running %llu (%f)\\n"
-	  "t_ready %llu/%llu/%llu/%llu (%f/%f/%f/%f)\\n"
+	  "t_ready %llu/%llu/%llu/%llu/%llu (%f/%f/%f/%f/%f)\\n"
 	  "est=%llu T=%llu/%llu,\\n"
-	  "nodes=%ld/%ld/%ld,edges=%ld/%ld/%ld/%ld\\n"
+	  "nodes=%ld/%ld/%ld/%ld,edges=%ld/%ld/%ld/%ld/%ld\\n"
 	  "by %d on %d %s:%ld-%s:%ld\"];\n",
 	  g - G->T, 		/* node: .. */
 	  g->edges_begin, 	/* edges: .. */
@@ -82,29 +86,33 @@ dr_pi_dag_node_gen_dot(dr_pi_dag_node * g,
 	  g->info.t_1, 
 	  g->info.t_1 / running_dt,
 	  
-	  /* "t_ready %llu/%llu/%llu/%llu (%f/%f/%f/%f)\\n" */
+	  /* "t_ready %llu/%llu/%llu/%llu/%llu (%f/%f/%f/%f/%f)\\n" */
 	  g->info.t_ready[dr_dag_edge_kind_end], 
 	  g->info.t_ready[dr_dag_edge_kind_create], 
 	  g->info.t_ready[dr_dag_edge_kind_create_cont], 
 	  g->info.t_ready[dr_dag_edge_kind_wait_cont], 
+	  g->info.t_ready[dr_dag_edge_kind_other_cont], 
 	  g->info.t_ready[dr_dag_edge_kind_end]         / ready_dt,
 	  g->info.t_ready[dr_dag_edge_kind_create]      / ready_dt,
 	  g->info.t_ready[dr_dag_edge_kind_create_cont] / ready_dt,
 	  g->info.t_ready[dr_dag_edge_kind_wait_cont]   / ready_dt,
+	  g->info.t_ready[dr_dag_edge_kind_other_cont]  / ready_dt,
 	  
 	  /* "est=%llu T=%llu/%llu,\\n" */
 	  g->info.est, 
 	  g->info.t_1, 
 	  g->info.t_inf,
 	  
-	  /* "nodes=%ld/%ld/%ld,edges=%ld/%ld/%ld/%ld\\n" */
+	  /* "nodes=%ld/%ld/%ld/%ld,edges=%ld/%ld/%ld/%ld/%ld\\n" */
 	  g->info.logical_node_counts[dr_dag_node_kind_create_task],
 	  g->info.logical_node_counts[dr_dag_node_kind_wait_tasks],
+	  g->info.logical_node_counts[dr_dag_node_kind_other],
 	  g->info.logical_node_counts[dr_dag_node_kind_end_task],
 	  g->info.logical_edge_counts[dr_dag_edge_kind_end],
 	  g->info.logical_edge_counts[dr_dag_edge_kind_create],
 	  g->info.logical_edge_counts[dr_dag_edge_kind_create_cont],
 	  g->info.logical_edge_counts[dr_dag_edge_kind_wait_cont],
+	  g->info.logical_edge_counts[dr_dag_edge_kind_other_cont],
 	  
 	  /* "by %d on %d */
 	  g->info.worker, 

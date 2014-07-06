@@ -18,6 +18,7 @@ typedef enum {
   dr_node_state_ready_create,
   dr_node_state_ready_create_cont,
   dr_node_state_ready_wait_cont,
+  dr_node_state_ready_other_cont,
   dr_node_state_max,
 } dr_node_state_t;
 
@@ -209,6 +210,7 @@ dr_para_prof_write_to_file(dr_para_prof * pp, FILE * wp) {
      dr_node_state_ready_create,
      dr_node_state_ready_create_cont,
      dr_node_state_ready_wait_cont,
+     dr_node_state_ready_other_cont,
 
      the following must match the definition
      of dr_node_state_t
@@ -307,6 +309,8 @@ dr_dag_edge_kind_to_node_state(dr_dag_edge_kind_t ek) {
     return dr_node_state_ready_create_cont;
   case dr_dag_edge_kind_wait_cont:
     return dr_node_state_ready_wait_cont;
+  case dr_dag_edge_kind_other_cont:
+    return dr_node_state_ready_other_cont;
   default:
     (void)dr_check(0);
   }
@@ -326,6 +330,8 @@ dr_node_state_to_str(dr_node_state_t s) {
     return "ready_create_cont";
   case dr_node_state_ready_wait_cont:
     return "ready_wait_cont";
+  case dr_node_state_ready_other_cont:
+    return "ready_other_cont";
   default:
     (void)dr_check(0);
   }

@@ -89,15 +89,34 @@ extern "C" {
 
   typedef struct dr_dag_node dr_dag_node;
 
-  static_if_inline void          dr_start_task__(dr_dag_node * parent, const char * file, int line, int worker);
-  static_if_inline int           dr_start_cilk_proc__(const char * file, int line, int worker);
-  static_if_inline void          dr_begin_section__(int worker);
-  static_if_inline dr_dag_node * dr_enter_create_task__(dr_dag_node ** create, const char * file, int line, int worker);
-  static_if_inline dr_dag_node * dr_enter_create_cilk_proc_task__(const char * file, int line, int worker);
-  static_if_inline void          dr_return_from_create_task__(dr_dag_node * task, const char * file, int line, int worker);
-  static_if_inline dr_dag_node * dr_enter_wait_tasks__(const char * file, int line, int worker);
-  static_if_inline void          dr_return_from_wait_tasks__(dr_dag_node * task, const char * file, int line, int worker);
-  static_if_inline void          dr_end_task__(const char * file, int line, int worker);
+  static_if_inline void
+  dr_start_task__(dr_dag_node * parent, 
+		  const char * file, int line, int worker);
+  static_if_inline int
+  dr_start_cilk_proc__(const char * file, int line, int worker);
+  static_if_inline void
+  dr_begin_section__(int worker);
+  static_if_inline dr_dag_node * 
+  dr_enter_create_task__(dr_dag_node ** create, 
+			 const char * file, int line, int worker);
+  static_if_inline dr_dag_node * 
+  dr_enter_create_cilk_proc_task__(const char * file, int line, int worker);
+  static_if_inline void 
+  dr_return_from_create_task__(dr_dag_node * task, 
+			       const char * file, int line, int worker);
+  static_if_inline dr_dag_node * 
+  dr_enter_wait_tasks__(const char * file, int line, int worker);
+  static_if_inline void 
+  dr_return_from_wait_tasks__(dr_dag_node * task, 
+			      const char * file, int line, int worker);
+  static_if_inline dr_dag_node * 
+  dr_enter_other__(const char * file, int line, int worker);
+  static_if_inline void 
+  dr_return_from_other__(dr_dag_node * t, 
+			 const char * file, int line, int worker);
+  static_if_inline void 
+  dr_end_task__(const char * file, int line, int worker);
+
   void dr_options_default(dr_options * opts);
   void dr_start__(dr_options * opts, const char * file, int line, 
 		  int worker, int num_workers);
@@ -150,6 +169,18 @@ extern "C" {
 
 #define dr_return_from_wait_tasks(task) \
   dr_return_from_wait_tasks_(task, __FILE__, __LINE__)
+
+#define dr_enter_other_(file, line)			\
+  dr_enter_other__(file, line, dr_get_worker())
+
+#define dr_enter_other() \
+  dr_enter_other_(__FILE__, __LINE__)
+
+#define dr_return_from_other_(task, file, line)		\
+  dr_return_from_other__(task, file, line, dr_get_worker())
+
+#define dr_return_from_other(task) \
+  dr_return_from_other_(task, __FILE__, __LINE__)
 
 #define dr_end_task_(file, line)			\
   dr_end_task__(file, line, dr_get_worker())

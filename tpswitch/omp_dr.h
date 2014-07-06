@@ -90,6 +90,40 @@
 #define dr_get_max_workers() (omp_in_parallel() ? omp_get_num_threads() : omp_get_max_threads())
 #define dr_get_worker()      omp_get_thread_num()
 
+/* when using DAG Recorder with OpenMP task parallelism,
+   the following usual sequence needs to be instrumented
+   #pragma omp parallel
+   #pragma omp single
+     S;
+
+   to the following
+   {
+     dr_dag_node * __t__ = dr_enter_other();
+   #pragma omp parallel
+   #pragma omp single
+     {
+       dr_return_from_other(__t__);
+       S;
+       __t__ = dr_enter_other();
+     }
+     dr_return_from_other(__t__);
+   }
+   
+ */
+
+#define pragma_omp_parallel_single(clause, S) \
+  do {					     \
+     dr_dag_node * __t__ = dr_enter_other(); \
+     pragma_omp(parallel) {		     \
+       pragma_omp(single clause) {	     \
+         dr_return_from_other(__t__);	     \
+         S				     \
+         __t__ = dr_enter_other();	     \
+       }				     \
+     }					     \
+     dr_return_from_other(__t__);	     \
+  } while(0)
+
 #else
 
 #define pragma_omp_task(options, statement)	\
@@ -97,6 +131,16 @@
 #define pragma_omp_taskc(options, callable)	\
   pragma_omp_taskc_no_prof(options, callable)
 #define pragma_omp_taskwait pragma_omp_taskwait_no_prof
+
+#define pragma_omp_parallel_single(clause, S) \
+  do {					     \
+     pragma_omp(parallel) {		     \
+       pragma_omp(single clause) {	     \
+         S				     \
+       }				     \
+     }					     \
+  } while(0)
+
 
 
 #endif

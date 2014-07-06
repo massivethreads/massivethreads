@@ -50,12 +50,15 @@ extern "C" {
 #endif
 
   /* a kind of nodes.
-     in many places the code assumes
+     a node is of kind k when it finishes
+     by issuing k.
+     in many places, the code assumes
      k < dr_dag_node_kind_section
      iff k is a primitive node */
   typedef enum {
     dr_dag_node_kind_create_task,
     dr_dag_node_kind_wait_tasks,
+    dr_dag_node_kind_other,
     dr_dag_node_kind_end_task,
     dr_dag_node_kind_section,
     dr_dag_node_kind_task,
@@ -91,6 +94,7 @@ extern "C" {
     dr_dag_edge_kind_create, /* create -> child */
     dr_dag_edge_kind_create_cont, /* create -> next */
     dr_dag_edge_kind_wait_cont,	/* wait -> next */
+    dr_dag_edge_kind_other_cont, /* other -> next */
     dr_dag_edge_kind_max,
   } dr_dag_edge_kind_t;
 
@@ -98,11 +102,12 @@ extern "C" {
 
   /* list of dag nodes */
   struct dr_dag_node_list {
-    long n;
+    long n;			/* number of elements */
     dr_dag_node * head;
     dr_dag_node * tail;
   };
 
+  /* code position (file,line_no) */
   typedef struct {
     /* pointer to filename. valid in dr_dag_node */
     const char * file;
@@ -112,6 +117,7 @@ extern "C" {
     long line;
   } code_pos;
 
+  /* code position + clock */
   typedef struct {
     dr_clock_t t;		/* clock */
     code_pos pos;		/* code position */
@@ -153,9 +159,6 @@ extern "C" {
     int worker;
     int cpu;
     dr_dag_node_kind_t kind;
-#if 0
-    dr_dag_node_kind_t last_node_kind;
-#endif
     dr_dag_edge_kind_t in_edge_kind;
   } dr_dag_node_info;
 
@@ -170,13 +173,11 @@ extern "C" {
        convert the graph into the 
        position independent format */
     dr_pi_dag_node * forward;
-    /* todo: done and collapsed are actually redundant.
-       done is used only for sanity checks
-       collapsed <-> subgraphs are empty
-    */
     union {
-      dr_dag_node * child;		/* kind == create_task */
-      struct {				/* kind == section/task */
+      /* pointer to child. valid when info.kind == create_task */
+      dr_dag_node * child;
+      struct {
+	/* list of subgraphs. valid when info.kind == section/task */
 	dr_dag_node_list subgraphs[1];
 	union {
 	  dr_dag_node * parent_section; /* kind == section */
@@ -186,19 +187,21 @@ extern "C" {
     };
   };
 
+  /* nodes are allocated in the unit of page */
   typedef struct dr_dag_node_page {
     struct dr_dag_node_page * next;
     long sz;
     dr_dag_node nodes[2];	/* this is the minimum size */
   } dr_dag_node_page;
 
+  /* free list of pages */
   typedef struct {
     dr_dag_node * head;
     dr_dag_node * tail;
     dr_dag_node_page * pages;
   } dr_dag_node_freelist;
 
-  /* stack for non recursive version 
+  /* stack used by the non recursive version 
      of dr_prune_nodes */
   typedef struct {
     dr_dag_node * x;
@@ -257,8 +260,7 @@ extern "C" {
 
   extern dr_global_state GS;
 
-  /* malloc and free */
-
+  /* malloc and free. with some debug support */
   static void * 
   dr_malloc(size_t sz) {
     void * a = malloc(sz);
@@ -291,6 +293,8 @@ extern "C" {
     }
   }
 
+  /* allocate a page of sz_ bytes and put 
+     nodes into free list fl */
   static dr_dag_node *
   dr_dag_node_freelist_add_page(dr_dag_node_freelist * fl, size_t sz_) {
     size_t sz = (sz_ > sizeof(dr_dag_node_page) 
@@ -321,9 +325,13 @@ extern "C" {
     return fl->head;
   }
 
+  /* allocate a node from free list */
   static dr_dag_node *
   dr_dag_node_alloc(dr_dag_node_freelist * fl) {
 #if DAG_RECORDER_VALGRIND_MEM_DBG
+    /* when debugging with valgrind,
+       do not manage memory by ourselves.
+       let malloc does everything */
     dr_dag_node * ch = (dr_dag_node *)dr_malloc(sizeof(dr_dag_node));
     ch->next = 0;
     return ch;
@@ -334,9 +342,11 @@ extern "C" {
 	fprintf(stderr, 
 		"dr_dag_node_alloc(%p) allocate page\n", fl);
       }
+      /* free list empty. supplement it with a page */
       head = dr_dag_node_freelist_add_page(fl, 
 					   (GS.opts.alloc_unit_mb << 20));
     }
+    /* pop the head element off the list */
     (void)dr_check(fl->tail);
     dr_dag_node * next = head->next;
     fl->head = next;
@@ -361,17 +371,7 @@ extern "C" {
 
   static int
   dr_dag_node_list_empty(dr_dag_node_list * l) {
-#if 1    
     return l->n == 0;
-#else
-    if (l->head) {
-      (void)dr_check(l->tail);
-      return 0;
-    } else {
-      (void)dr_check(!l->tail);
-      return 1;
-    }
-#endif
   }
 
 #if ! __CILK__
@@ -379,25 +379,10 @@ extern "C" {
 #endif
   static long
   dr_dag_node_list_size(dr_dag_node_list * l) {
-#if 1
     return l->n;
-#else
-    dr_dag_node * ch;
-    long n = 0;
-    if (DAG_RECORDER_CHK_LEVEL) {
-      if (l->head) {
-	(void)dr_check(l->tail);
-      } else {
-	(void)dr_check(!l->tail);
-      }
-    }
-    for (ch = l->head; ch; ch = ch->next) {
-      n++;
-    }
-    return n;
-#endif
   }
 
+  /* the first element of l */
   static dr_dag_node *
   dr_dag_node_list_first(dr_dag_node_list * l) {
     if (DAG_RECORDER_CHK_LEVEL) {
@@ -410,6 +395,7 @@ extern "C" {
     return l->head;
   }
 
+  /* the last element of l */
   static dr_dag_node *
   dr_dag_node_list_last(dr_dag_node_list * l) {
     if (DAG_RECORDER_CHK_LEVEL) {
@@ -422,7 +408,7 @@ extern "C" {
     return l->tail;
   }
 
-  /* extend l by one element and return a point
+  /* extend l by one element and return a pointer
      to the new element */
   static dr_dag_node *
   dr_dag_node_list_push_back(dr_dag_node_list * l,
@@ -502,13 +488,17 @@ extern "C" {
     return __sync_fetch_and_add(&dr_gwks.worker_counter, 1);
   }
   
+  /* get my worker number */
   static inline int dr_get_worker_by_pthread_key() {
     pthread_key_t wk = dr_get_worker_key();
     void * x = pthread_getspecific(wk);
     if (x) {
+      /* aleady initialized */
       int w = (long)x - 1;
       return w;
     } else {
+      /* this is the first time the thread calls it.
+	 get a sequence number from a shared counter */
       int c = worker_counter_get_next();
       pthread_setspecific(wk, (void *)((long)c + 1));
       int w = c;
@@ -516,6 +506,9 @@ extern "C" {
     }
   }
 
+  /* check env variable v and read it as int.
+     return 0 if v is not found in the environment 
+     or it canot be parsed as an integer */
   static int 
   dr_get_num_workers_env(const char * v) {
     char * s = getenv(v);
@@ -536,7 +529,13 @@ extern "C" {
     return x;
   } 
 
-  /* note: dag recorder assumes this number of
+  /* get the number of workers of TBB programs;
+     TBB (deliberately) does not provide a method 
+     to get it. so we assume it is taken from
+     envrionment variable TBB_NTHREADS and the
+     number is passed to new task_scheduler_init(x);
+
+     note: dag recorder assumes this number of
      threads are used by the TBB program. that is,
      the TBB program should call 
      new task_scheduler_init(x), with x equals to 
@@ -555,15 +554,18 @@ extern "C" {
     return dr_get_num_workers_env("TBB_NTHREADS");
   }
 
+  /* get the number of workers of nanos++ programs */
   static inline int dr_nanox_num_workers() {
     return dr_get_num_workers_env("NX_PES");
   }
 
+  /* the current task of this worker */
   static dr_dag_node * 
   dr_get_cur_task_(int worker) {
     return GS.ts[worker].task;
   }
 
+  /* set the current task of this worker to t */
   static void 
   dr_set_cur_task_(int worker, dr_dag_node * t) {
     GS.ts[worker].task = t;
@@ -576,6 +578,7 @@ extern "C" {
 				   dr_dag_node * p) {
     (void)dr_check(kind >= dr_dag_node_kind_section);
     n->info.kind = kind;
+    /* empty subgraphs list */
     dr_dag_node_list_init(n->subgraphs);
 
     if (kind == dr_dag_node_kind_section) {
@@ -650,6 +653,7 @@ extern "C" {
     switch (nk) {
     case dr_dag_node_kind_create_task: return "create_task";
     case dr_dag_node_kind_wait_tasks:  return "wait_tasks";
+    case dr_dag_node_kind_other:       return "other";
     case dr_dag_node_kind_end_task:    return "end_task";
     case dr_dag_node_kind_section:     return "section";
     case dr_dag_node_kind_task:        return "task";
@@ -669,6 +673,8 @@ extern "C" {
       return "create_cont";
     case dr_dag_edge_kind_wait_cont:
       return "wait_cont";
+    case dr_dag_edge_kind_other_cont:
+      return "other_cont";
     default:
       (void)dr_check(0);
     }
@@ -694,9 +700,6 @@ extern "C" {
     (void)dr_check(kind < dr_dag_node_kind_section);
     dn->info.start = start;
     dn->info.kind = kind;
-#if 0
-    dn->info.last_node_kind = kind;
-#endif
     dn->info.est = est;
     dn->info.n_child_create_tasks = 0;
     dn->info.t_inf = dn->info.t_1 = end_t - start.t;
@@ -742,7 +745,7 @@ extern "C" {
 
 
   /* it returns a dag node to which a new interval 
-     should added when the program performs an action
+     should be added when the program performs an action
      that needs one.
      starting from t, it descends the rightmost child,
      until it finds that a node's rightmost child is
@@ -754,19 +757,28 @@ extern "C" {
     return t->active_section;
   }
 
+  /* get the task's last node. it is
+     (i) a section node, if the task has just returned from wait_tasks
+     (ii) a create_task node, if the task has just returned from create_task
+     (iii) a other node, if the task has just returned from other */
   static dr_dag_node * 
-  dr_task_last_section_or_create(dr_dag_node * t) {
+  dr_task_last_node(dr_dag_node * t) {
     if (dr_check(t->info.kind == dr_dag_node_kind_task)) {
       dr_dag_node * s = dr_task_active_node(t);
       dr_dag_node * i = dr_dag_node_list_last(s->subgraphs);
       (void)dr_check(i->info.kind == dr_dag_node_kind_section
-		     || i->info.kind == dr_dag_node_kind_create_task);
+		     || i->info.kind == dr_dag_node_kind_create_task
+		     || i->info.kind == dr_dag_node_kind_other);
       return i;
     } else {
       return 0;
     }
   }
 
+  /* ensure that the task node t has a an open section.
+     it does not when a task has just been created
+     or has just finished wait_tasks. it is called when
+     a task performs an action in this state */
   static dr_dag_node * 
   dr_task_ensure_section(dr_dag_node * t, 
 			 dr_dag_node_freelist * fl) {
@@ -803,12 +815,7 @@ extern "C" {
   /* 
      task    ::= section* end 
 
-     the interval that is just beginning may 
-     be a task_group or end_task.
-     we don't know which until end of this
-     interval.
-     at this point we just record the information
-     about the opening interval in t
+     called when a task just started
   */
 
   static_if_inline void 
@@ -817,31 +824,38 @@ extern "C" {
 		  int worker) {
     if (GS.ts) {
       /* make a task, section, and interval */
+      /* create a task node */
       dr_dag_node * nt = dr_mk_dag_node_task(GS.ts[worker].freelist);
       if (DAG_RECORDER_VERBOSE_LEVEL>=3) {
 	printf("dr_start_task(parent=%p) by %d new task=%p\n", 
 	       p, worker, nt);
       }
-      /* register this task as the child of p */
       if (p) {
+	/* we have a parent p.
+	   register this task as the child of p */
 	(void)dr_check(p->info.kind == dr_dag_node_kind_create_task);
 	(void)dr_check(p->child == 0);
 	p->child = nt;
 	nt->info.est = p->info.est + p->info.t_inf;
 	nt->info.first_ready_t = p->info.end.t; /* ??? */
       } else {
+	/* no parent. this is the root task */
 	nt->info.est = 0;
 	nt->info.first_ready_t = GS.start_clock; /* ???? */
       }
       (void)dr_check(nt->info.first_ready_t > 0);
       nt->info.in_edge_kind = dr_dag_edge_kind_create;
-      /* set current task */
+      /* set current task to the node just created */
       dr_set_cur_task_(worker, nt);
       /* record info on the point of start */
       dr_set_start_info(&nt->info.start, file, line);
     }
   }
   
+  /* in MIT-Cilk, the user needs to insert this
+     at the beginning of a cilk function. 
+     on other systems, a call to dr_start_task__ 
+     is inserted by the system */
   static_if_inline int 
   dr_start_cilk_proc__(const char * file, int line,
 		       int worker) {
@@ -851,11 +865,15 @@ extern "C" {
     return 0;
   }
 
+  /* begin a new section */
   static_if_inline void
   dr_begin_section__(int worker) {
     if (GS.ts) {
+      /* the current task of this worker */
       dr_dag_node * t = dr_get_cur_task_(worker);
+      /* the current section of this task */
       dr_dag_node * s = dr_task_active_node(t);
+      /* pus a new section as a child of the current section */
       dr_dag_node * new_s = dr_push_back_section(t, s, GS.ts[worker].freelist);
       if (DAG_RECORDER_VERBOSE_LEVEL>=3) {
 	printf("dr_begin_section() by %d task=%p,"
@@ -866,37 +884,42 @@ extern "C" {
   }
 
 
-  /* end current interval and start create_task 
-
-     task    ::= section* end 
-     section ::= task_group (section|create)* wait
-
+  /*
+    called right before a program creates a task.
+    end the current node and push the node into
+    the graph.
   */
   static_if_inline dr_dag_node * 
   dr_enter_create_task__(dr_dag_node ** c, 
 			 const char * file, int line,
 			 int worker) {
     if (GS.ts) {
+      /* get time stamp */
       dr_clock_t end_t = dr_get_tsc();
+      /* the current task of this worker */
       dr_dag_node * t = dr_get_cur_task_(worker);
       /* ensure t has a session */
       dr_dag_node * s = dr_task_ensure_section(t, GS.ts[worker].freelist);
-      /* add a new node to s */
+      /* add a new node as a child of s */
       dr_dag_node * ct 
 	= dr_dag_node_list_push_back(s->subgraphs, GS.ts[worker].freelist);
+      /* set info about the new node */
       ct->info.kind = dr_dag_node_kind_create_task;
+      /* child is set when the child gets started */
       ct->child = 0;
       // dr_dag_node * ct = dr_task_add_create(t);
       if (DAG_RECORDER_VERBOSE_LEVEL>=3) {
 	printf("dr_enter_create_task() by %d task=%p, section=%p, new interval=%p\n", 
 	       worker, t, s, ct);
       }
+      /* put various info of ct */
       dr_end_interval_(ct, worker, 
 		       dr_dag_node_kind_create_task,
 		       t->info.in_edge_kind, 
 		       end_t, t->info.est, 
 		       t->info.first_ready_t, 
 		       file, line, t->info.start);
+      /* tell the caller the node just created */
       *c = ct;
       return t;
     } else {
@@ -904,6 +927,11 @@ extern "C" {
     }
   }
 
+  /* 
+     in cilk, this must be called by the user program
+     when it spawns a cilk procedure.
+     in other systems, create_task macros handle that for you.
+   */
   static_if_inline dr_dag_node *
   dr_enter_create_cilk_proc_task__(const char * file, int line,
 				   int worker) {
@@ -915,38 +943,54 @@ extern "C" {
     }
   }
 
-  /* resume from create_task 
-     section ::= task_group (section|create)* wait
+  /* 
+     called when it returns from create_task
   */
   static_if_inline void 
   dr_return_from_create_task__(dr_dag_node * t, 
 			       const char * file, int line,
 			       int worker) {
     if (GS.ts) {
-      dr_dag_node * ct = dr_task_last_section_or_create(t);
+      /* get the node that called create_task
+	 from which we have just returned.
+	 it must be the last node of the current
+	 section */
+      dr_dag_node * ct = dr_task_last_node(t);
       if (DAG_RECORDER_VERBOSE_LEVEL>=3) {
 	printf("dr_return_from_create_task(task=%p) by %d interval=%p\n", 
 	       t, worker, ct);
       }
       (void)dr_check(ct->info.kind == dr_dag_node_kind_create_task);
+      /* set this worker's current task */
       dr_set_cur_task_(worker, t);
+      /* this node's est is the preceeding node's est
+	 + its critical path len */
       t->info.est = ct->info.est + ct->info.t_inf;
+      /* this node became ready when the preceeding
+	 node finished */
       t->info.first_ready_t = ct->info.end.t;
       (void)dr_check(t->info.first_ready_t > 0);
+      /* its incoming edge must be create_cont type */
       t->info.in_edge_kind = dr_dag_edge_kind_create_cont;
+      /* record an interval just started */
       dr_set_start_info(&t->info.start, file, line);
     }
   }
 
-  /* end current interval and start wait_tasks 
-     section ::= task_group (section|create)* wait
+  /* 
+     called when a program calls wait_tasks.
   */
   static_if_inline dr_dag_node *
   dr_enter_wait_tasks__(const char * file, int line, int worker) {
     if (GS.ts) {
       dr_clock_t end_t = dr_get_tsc();
+      /* the current task of this worker */
       dr_dag_node * t = dr_get_cur_task_(worker);
+      /* it may be the first node of this task, in
+	 which case we ensure to have a section */
       dr_dag_node * s = dr_task_ensure_section(t, GS.ts[worker].freelist);
+      /* create and append a new node, which becomes
+	 an wait_task node */
       dr_dag_node * i 
 	= dr_dag_node_list_push_back(s->subgraphs, GS.ts[worker].freelist);
       if (DAG_RECORDER_VERBOSE_LEVEL>=3) {
@@ -956,6 +1000,7 @@ extern "C" {
       }
       t->active_section = s->parent_section;
       (void)dr_check(dr_task_active_node(t) == t->active_section);
+      /* record an interval has ended */
       dr_end_interval_(i, worker, 
 		       dr_dag_node_kind_wait_tasks,
 		       t->info.in_edge_kind,
@@ -1001,17 +1046,13 @@ extern "C" {
     s->info.last_start_t = last->info.start.t;
     (void)dr_check(s->info.first_ready_t > 0);
 
-    /* s's last node kind */
-#if 0
-    s->info.last_node_kind = last->info.last_node_kind;
-#endif
     s->info.t_1     = 0;
     s->info.t_inf   = 0;
     /* accumulate ready times */
     for (i = 0; i < dr_dag_edge_kind_max; i++) {
       s->info.t_ready[i] = 0;
     }
-    /* accumulate node counts (we later accumulate 
+    /* initialize node/edge counts (we later accumulate 
        subgraphs's results into them) */
     for (i = 0; i < dr_dag_node_kind_section; i++) {
       s->info.logical_node_counts[i] = 0;
@@ -1025,7 +1066,7 @@ extern "C" {
     s->info.n_child_create_tasks = 0;
 
     {
-      /* look through all chunks */
+      /* look through all subgraphs */
       dr_clock_t t_inf = 0;
       dr_dag_node * head = s->subgraphs->head;
       dr_dag_node * ch;
@@ -1049,7 +1090,6 @@ extern "C" {
 	  }
 	  s->info.t_ready[k] += x->info.t_ready[k];
 	}
-
 
 	/* meet workers and cpus */
 	s->info.worker = dr_meet_ints(s->info.worker, x->info.worker);
@@ -1081,12 +1121,8 @@ extern "C" {
 	     have finished eariler than one of its
 	     children */
 	  s->info.end.t = dr_max_clock(c->info.end.t, s->info.end.t);
-	  s->info.last_start_t = dr_max_clock(c->info.last_start_t, s->info.last_start_t);
-#if 0
-	  s->info.last_node_kind 
-	    = (c->info.end.t > s->info.end.t
-	       ? c->info.last_node_kind : s->info.last_node_kind);
-#endif
+	  s->info.last_start_t 
+	    = dr_max_clock(c->info.last_start_t, s->info.last_start_t);
 	  s->info.t_1     += c->info.t_1;
 	  t_inf = dr_max_clock(s->info.t_inf + c->info.t_inf, t_inf);
 
@@ -1126,6 +1162,8 @@ extern "C" {
 	  (void)dr_check(!x->next);
 	  break;
 	}
+	case dr_dag_node_kind_other: 
+	  break;
 	case dr_dag_node_kind_section:
 	  if (x->next) {
 	    s->info.logical_edge_counts[dr_dag_edge_kind_wait_cont]++;
@@ -1162,6 +1200,8 @@ extern "C" {
   /* node count of s and its descendants */
   static long dr_cur_nodes_below(dr_dag_node * s) {
     if (s->info.kind == dr_dag_node_kind_create_task) {
+      /* create_task node's cur_node_count does NOT
+	 include the task's it created */
       (void)dr_check(s->info.cur_node_count == 1);
       return 1 + s->child->info.cur_node_count;
     } else {
@@ -1173,6 +1213,8 @@ extern "C" {
   static long dr_min_nodes_below(dr_dag_node * s) {
     if (s->info.kind == dr_dag_node_kind_create_task) {
       (void)dr_check(s->info.min_node_count == 1);
+      /* create_task node's min_node_count does NOT
+	 include the task's it created */
       return 1 + s->child->info.min_node_count;
     } else {
       return s->info.min_node_count;
@@ -1180,7 +1222,8 @@ extern "C" {
   }
 
   /* check if actual_node_count field is correct,
-     for n and all descendants of n */
+     for n and all descendants of n 
+     (for debugging) */
   static long
   dr_check_cur_node_count(dr_dag_node * n) {
     switch (n->info.kind) {
@@ -1188,6 +1231,7 @@ extern "C" {
       (void)dr_check(n->info.cur_node_count == 1);
       return 1 + dr_check_cur_node_count(n->child);
     case dr_dag_node_kind_wait_tasks:
+    case dr_dag_node_kind_other:
     case dr_dag_node_kind_end_task:
       (void)dr_check(n->info.cur_node_count == 1);
       return 1;
@@ -1216,6 +1260,7 @@ extern "C" {
       (void)dr_check(n->info.min_node_count == 1);
       return 1 + dr_check_min_node_count(n->child);
     case dr_dag_node_kind_wait_tasks:
+    case dr_dag_node_kind_other:
     case dr_dag_node_kind_end_task:
       (void)dr_check(n->info.min_node_count == 1);
       return 1;
@@ -1258,20 +1303,29 @@ extern "C" {
     for (i = 0; i < indent; i++) putchar(' ');
   }
 
+  /* prune_stack manipulation functions
+     prune_stack is used to collapse a subgraph,
+     without recursive calls (which may overflow
+     stack) */
+
+
+  /* empty stack */
   static int
   dr_prune_nodes_stack_empty(dr_prune_nodes_stack * S) {
     return S->n == 0;
   }
 
+  /* top element of S */
   static dr_prune_nodes_stack_ent *
   dr_prune_nodes_stack_top(dr_prune_nodes_stack * S) {
     (void)dr_check(S->n > 0);
     return &S->entries[S->n - 1];
   }
 
+  /* pop top element of S */
   static dr_prune_nodes_stack_ent *
   dr_prune_nodes_stack_pop(dr_prune_nodes_stack * S,
-				      dr_prune_nodes_stack_ent * e) {
+			   dr_prune_nodes_stack_ent * e) {
     (void)dr_check(S->n > 0);
     dr_prune_nodes_stack_ent * f = &S->entries[S->n - 1];
     (void)dr_check(e == f);
@@ -1279,9 +1333,10 @@ extern "C" {
     return f;
   }
 
+  /* ensure S has at least x elements */
   static void 
   dr_prune_nodes_stack_ensure(dr_prune_nodes_stack * S, 
-					 long x) {
+			      long x) {
     if (S->sz < x) {
       if (DAG_RECORDER_VERBOSE_LEVEL>=3) {
 	printf("dr_prune_nodes_stack_ensure(%ld)\n", x);
@@ -1302,7 +1357,7 @@ extern "C" {
     }
   }
 
-
+  /* push a new entry to S */
   static dr_prune_nodes_stack_ent *
   dr_prune_nodes_stack_push_ent(dr_prune_nodes_stack * S) {
     dr_prune_nodes_stack_ensure(S, S->n + 1);
@@ -1311,10 +1366,13 @@ extern "C" {
     return e;
   }
 
+  /* push x to S.
+     budget represents how much nodes we can afford
+     for x and its descendants */
   static dr_prune_nodes_stack_ent *
   dr_prune_nodes_stack_push(dr_prune_nodes_stack * S,
-				       dr_dag_node * x, 
-				       long budget) {
+			    dr_dag_node * x, 
+			    long budget) {
     dr_prune_nodes_stack_ent * e 
       = dr_prune_nodes_stack_push_ent(S);
     e->x = x;
@@ -1328,12 +1386,14 @@ extern "C" {
 
   static const char * dr_kind_to_str(dr_dag_node_kind_t k) {
     switch (k) {
-    case dr_dag_node_kind_end_task: 
-      return "end_task";
-    case dr_dag_node_kind_wait_tasks: 
-      return "wait_tasks";
     case dr_dag_node_kind_create_task: 
       return "create_task";
+    case dr_dag_node_kind_wait_tasks: 
+      return "wait_tasks";
+    case dr_dag_node_kind_other: 
+      return "other";
+    case dr_dag_node_kind_end_task: 
+      return "end_task";
     case dr_dag_node_kind_section: 
       return "section";
     case dr_dag_node_kind_task: 
@@ -1345,6 +1405,7 @@ extern "C" {
     return 0;
   }
 
+  /* sum of min_nodes over nodes in l */
   static long dr_dag_node_list_min_nodes(dr_dag_node_list * l) {
     dr_dag_node * x;
     long n = 0;
@@ -1354,13 +1415,18 @@ extern "C" {
     return n;
   }
 
+  /* prune some nodes under s, to make the number
+     of nodes within budget */
   static long
   dr_prune_nodes_norec(dr_prune_nodes_stack * S,
 		       dr_dag_node * s, long budget,
 		       dr_dag_node_freelist * fl) {
-    //dr_prune_nodes_stack S[1];
-    //dr_prune_nodes_stack_init(S);
+    /* push the root node (s) to the stack,
+       along with budget */
     dr_prune_nodes_stack_push(S, s, budget);
+    /* repeat checking the top element and see if
+       we can possibly have its children 
+       to meet the budget */
     while (!dr_prune_nodes_stack_empty(S)) {
       dr_prune_nodes_stack_ent * e = dr_prune_nodes_stack_top(S);
       dr_dag_node * x = e->x;
@@ -1379,17 +1445,20 @@ extern "C" {
       }
 
       switch (x->info.kind) {
-      case dr_dag_node_kind_end_task:
-      case dr_dag_node_kind_wait_tasks:	{
+      case dr_dag_node_kind_wait_tasks:	
+      case dr_dag_node_kind_other:
+      case dr_dag_node_kind_end_task: {
 	(void)dr_check(x->info.cur_node_count == 1);
-	/* leaf. done */
+	/* leaf. done. pop it */
 	pop = "leaf";
 	break;
       }
       case dr_dag_node_kind_create_task: {
 	dr_dag_node * child = x->child;
 	if (e->visit_count == 0) {
-	  /* push child */
+	  /* the first time this entry is popped,
+	     push child (e is still in the stack)
+	     with budget = budget - 1 */
 	  e->visit_count++;
 	  dr_prune_nodes_stack_push(S, child, e->budget - 1);
 	} else {
@@ -1398,74 +1467,69 @@ extern "C" {
 	break;
       }
       case dr_dag_node_kind_section:
-      case dr_dag_node_kind_task: {
-	if (e->visit_count == 0) {
-	  long nc_cur = dr_cur_nodes_below(x);
-	  long nc_min = dr_min_nodes_below(x);
-	  if (nc_cur <= e->budget) {
-	    /* it's already within budget. done */
-	    pop = "within budget";
-	  } else if (nc_min >= nc_cur) {
-	    (void)dr_check(nc_min == nc_cur);
-	    /* s has been maximally collapsed. nothing we can do */
-	    pop = "already minimum";
-	  } else {
-	    long min_nodes_children = dr_dag_node_list_min_nodes(x->subgraphs);
-	    if (e->budget < min_nodes_children + 1 
-		&& x->info.min_node_count == 1) {
-	      /* the budget overflows unless we collapse s
-		 (even if all children become single nodes) */
-	      /* TODO: consider how to collapse a subgraph involving
-		 by multiple workers */
-	      dr_collapse_subgraph(x, fl);
-	      pop = "just collapsed";
+      case dr_dag_node_kind_task: 
+	{
+	  if (e->visit_count == 0) {
+	    long nc_cur = dr_cur_nodes_below(x);
+	    long nc_min = dr_min_nodes_below(x);
+	    if (nc_cur <= e->budget) {
+	      /* it's already within budget. done. 
+		 we can have the entire descendants.
+		 pop it */
+	      pop = "within budget";
+	    } else if (nc_min >= nc_cur) {
+	      (void)dr_check(nc_min == nc_cur);
+	      /* s has been maximally collapsed. 
+		 we may overrun the budget, but
+		 nothing we can do. done */
+	      pop = "already minimum";
 	    } else {
-	      /* start recursing on the children */
-	      e->last_child = 0;
-	      e->visit_count++;
-	      e->nodes_left--;	/* count x itself */
-	      e->budget_left--;	/* count x itself */
+	      long min_nodes_children 
+		= dr_dag_node_list_min_nodes(x->subgraphs);
+	      if (e->budget < min_nodes_children + 1 
+		  && x->info.min_node_count == 1) {
+		/* the budget overflows unless we collapse s
+		   (even if all children become single nodes) */
+		/* TODO: consider how to collapse a subgraph involving
+		   multiple workers */
+		dr_collapse_subgraph(x, fl);
+		pop = "just collapsed";
+	      } else {
+		/* start recursing on the children */
+		e->last_child = 0;
+		e->visit_count++;
+		e->nodes_left--;	/* count x itself */
+		e->budget_left--;	/* count x itself */
+	      }
+	    }
+	  } else {
+	    /* this is not the first time we see
+	       this entry on top of the stack. that is,
+	       we are in the middle of processing children */
+	    if (e->last_child) {
+	      e->budget_left -= dr_cur_nodes_below(e->last_child);
+	    }
+	    dr_dag_node * ch 
+	      = (e->last_child ? e->last_child->next : x->subgraphs->head);
+	    if (!ch) {
+	      x->info.cur_node_count = e->budget - e->budget_left;
+	      pop = "done recursions";
+	    } else {
+	      /* nodes for this child, when no collaption occurs */
+	      long nodes_ch = dr_cur_nodes_below(ch);
+	      /* budget for this child (a fair proportion of the 
+		 remaining budget) */
+	      (void)dr_check(e->nodes_left > 0);
+	      long b = e->budget_left * nodes_ch / e->nodes_left;
+	      e->nodes_left -= nodes_ch;
+	      e->last_child = ch;
+	      dr_prune_nodes_stack_push(S, ch, b);
 	    }
 	  }
-	} else {
-	  /* we are in the middle of processing children */
-	  if (e->last_child) {
-	    e->budget_left -= dr_cur_nodes_below(e->last_child);
-	  }
-	  dr_dag_node * ch 
-	    = (e->last_child ? e->last_child->next : x->subgraphs->head);
-	  if (!ch) {
-	    x->info.cur_node_count = e->budget - e->budget_left;
-	      pop = "done recursions";
-#if 0
-	      /* if we overflow budget, we must already
-		 maximally collapse it */
-	      if (x->info.cur_node_count > e->budget &&
-		  x->info.cur_node_count != x->info.min_node_count) {
-		(void)dr_check(x->info.cur_node_count > x->info.min_node_count);
-		fprintf(stderr, 
-			"warning: node %p : budget %ld > count %ld,"
-			" yet not have been maximally collapsed"
-			" (min_count = %ld)\n", 
-			x, e->budget, 
-			x->info.cur_node_count, x->info.min_node_count);
-		dr_collapse_subgraph(x, fl);
-		pop = "done recursions and collapse";
-	      }
-#endif	
-	  } else {
-	    /* nodes for this child, when no collaption occurs */
-	    long nodes_ch = dr_cur_nodes_below(ch);
-	    /* budget for this child (a fair proportion of the 
-	       remaining budget) */
-	    (void)dr_check(e->nodes_left > 0);
-	    long b = e->budget_left * nodes_ch / e->nodes_left;
-	    e->nodes_left -= nodes_ch;
-	    e->last_child = ch;
-	    dr_prune_nodes_stack_push(S, ch, b);
-	  }
 	}
-      }
+	break;
+      default:
+	(void)dr_check(0);
       }
 
       if (pop) {
@@ -1484,6 +1548,9 @@ extern "C" {
     return dr_cur_nodes_below(s);
   }
 
+  /* try to collapse some nodes under S,
+     so as to make the number of nodes for 
+     S and its descendants under budget */
   static long
   dr_prune_nodes(dr_prune_nodes_stack * S,
 		 dr_dag_node * s, long budget,
@@ -1507,6 +1574,8 @@ extern "C" {
     return r;
   }
 
+  /* we have just finished a section or task.
+     see if we have to collapse it (or a part thereof) */
   static void 
   dr_summarize_section_or_task(dr_prune_nodes_stack * S,
 			       dr_dag_node * s, 
@@ -1525,33 +1594,35 @@ extern "C" {
     (void)dr_check(dr_cur_nodes_below(s) == dr_check_node_counts(s));
     /* now check if we should collapse it */
     if (GS.opts.node_count_target) {
+      /* when node_count_target is given,
+	 make S withing the target.
+	 (this is expensive. not recommended) */
       if (s->info.cur_node_count > GS.opts.prune_threshold) {
 	dr_prune_nodes(S, s, GS.opts.node_count_target, fl, 0);
 	(void)dr_check(dr_cur_nodes_below(s) == dr_check_node_counts(s));
       }
     } else if (s->info.worker != -1
 	       && s->info.end.t - s->info.start.t < GS.opts.collapse_max) {
+      /* otherwise we simply collapse it,
+	 unless it is below the specified threshold */
       /* TODO: consider how to collapse a subgraph involving
-	 by multiple workers */
+	 multiple workers */
       dr_collapse_subgraph(s, fl);
       (void)dr_check(dr_cur_nodes_below(s) == dr_check_node_counts(s));
     }
   }
 
   
-  /* resume from wait_tasks 
-     
-     task    ::= section* end 
-     section ::= task_group (section|create)* wait
-
+  /* 
+     called when we return from wait_tasks 
   */
   static_if_inline void 
   dr_return_from_wait_tasks__(dr_dag_node * t, 
 			      const char * file, int line,
 			      int worker) {
     if (GS.ts) {
-      /* get the section that finished last */
-      dr_dag_node * s = dr_task_last_section_or_create(t);
+      /* get the section that has just finished */
+      dr_dag_node * s = dr_task_last_node(t);
       if (dr_check(s->info.kind == dr_dag_node_kind_section)) {
 	dr_dag_node * p = dr_dag_node_list_last(s->subgraphs);
 	(void)dr_check(p->info.kind == dr_dag_node_kind_wait_tasks);
@@ -1562,16 +1633,25 @@ extern "C" {
 	}
 	{
 	  /* calc EST and READY_T of the interval to start */
+	  /* the starting node's est is that of last one
+	     + its critical path len */
 	  dr_clock_t est = p->info.est + p->info.t_inf;
+	  /* the starting node became ready when all its
+	     predecessors ended. we later take max among
+	     all child tasks that are waited */
 	  dr_clock_t ready_t = p->info.end.t;
 	  dr_dag_edge_kind_t edge_kind = dr_dag_edge_kind_wait_cont;
 	  (void)dr_check(ready_t > 0);
 	  dr_dag_node * head = s->subgraphs->head;
 	  dr_dag_node * ch;
+	  /* examine all child tasks that are waited by 
+	     this wait_tasks */
 	  for (ch = head; ch; ch = ch->next) {
 	    dr_dag_node * sc = ch;
 	    (void)dr_check(sc->info.kind < dr_dag_node_kind_task); 
 	    if (sc->info.kind == dr_dag_node_kind_create_task) {
+	      /* if the node is create_task, take the created
+		 task (child) and see its end time */
 	      dr_dag_node * ct = sc->child;
 	      if (dr_check(ct)) {
 		dr_clock_t x = ct->info.est + ct->info.t_inf;
@@ -1584,26 +1664,93 @@ extern "C" {
 	      }
 	    }
 	  }
+	  /* we may collapse it */
 	  dr_summarize_section_or_task(GS.ts[worker].prune_stack, s,
 				       GS.ts[worker].freelist);
+	  /* set the current task of this worker */
 	  dr_set_cur_task_(worker, t);
 	  t->info.est = est;
 	  /* this node becomes ready when all of its predecessors finished */
 	  t->info.first_ready_t = ready_t;
 	  t->info.in_edge_kind = edge_kind;
 	  (void)dr_check(ready_t > 0);
+	  /* record start time etc. */
 	  dr_set_start_info(&t->info.start, file, line);
 	}
       }
     }
   }
   
+  /* enter a runtime for any reason. 
+     the worker may change when we return from it */
+  static_if_inline dr_dag_node * 
+  dr_enter_other__(const char * file, int line,
+		   int worker) {
+    if (GS.ts) {
+      /* get time stamp */
+      dr_clock_t end_t = dr_get_tsc();
+      /* the current task of this worker */
+      dr_dag_node * t = dr_get_cur_task_(worker);
+      /* ensure t has a session */
+      //dr_dag_node * s = dr_task_ensure_section(t, GS.ts[worker].freelist);
+      dr_dag_node * s = dr_task_active_node(t);
+      /* add a new node as a child of s */
+      dr_dag_node * i
+	= dr_dag_node_list_push_back(s->subgraphs, GS.ts[worker].freelist);
+      if (DAG_RECORDER_VERBOSE_LEVEL>=3) {
+	printf("dr_enter_other() by %d task=%p, section=%p, new interval=%p\n", 
+	       worker, t, s, i);
+      }
+      //t->active_section = s->parent_section;
+      dr_end_interval_(i, worker, 
+		       dr_dag_node_kind_other,
+		       t->info.in_edge_kind, 
+		       end_t, t->info.est, 
+		       t->info.first_ready_t, 
+		       file, line, t->info.start);
+      return t;
+    } else {
+      return (dr_dag_node *)0;
+    }
+  }
+
+  static_if_inline void 
+  dr_return_from_other__(dr_dag_node * t, 
+			 const char * file, int line,
+			 int worker) {
+    if (GS.ts) {
+      dr_dag_node * rt = dr_task_last_node(t);
+      if (DAG_RECORDER_VERBOSE_LEVEL>=3) {
+	printf("dr_return_from_other(task=%p) by %d interval=%p\n", 
+	       t, worker, rt);
+      }
+      (void)dr_check(rt->info.kind == dr_dag_node_kind_other);
+      /* set this worker's current task */
+      dr_set_cur_task_(worker, t);
+      /* this node's est is the preceeding node's est
+	 + its critical path len */
+      t->info.est = rt->info.est + rt->info.t_inf;
+      /* this node became ready when the preceeding
+	 node finished */
+      t->info.first_ready_t = rt->info.end.t;
+      (void)dr_check(t->info.first_ready_t > 0);
+      /* its incoming edge must be create_cont type */
+      t->info.in_edge_kind = dr_dag_edge_kind_other_cont;
+      /* record an interval just started */
+      dr_set_start_info(&t->info.start, file, line);
+    }
+  }
+
+  /* 
+     called when a program ends a task
+   */
   static_if_inline void 
   dr_end_task__(const char * file, int line, int worker) {
     if (GS.ts) {
       dr_clock_t end_t = dr_get_tsc();
       dr_dag_node * t = dr_get_cur_task_(worker);
       dr_dag_node * s = dr_task_active_node(t);
+      /* create a new node */
       dr_dag_node * i 
 	= dr_dag_node_list_push_back(s->subgraphs, GS.ts[worker].freelist);
       if (DAG_RECORDER_VERBOSE_LEVEL>=3) {
@@ -1621,6 +1768,8 @@ extern "C" {
     }
   }
 
+  /* open filename to write position independent dag 
+     (this function does not belong to this file...) */
   static FILE * 
   dr_pi_dag_open_to_write(const char * filename, const char * file_kind, 
 			  int * must_close_p) {
@@ -1664,6 +1813,8 @@ extern "C" {
     dr_return_from_create_task__(t, "", 1, 1);
     t = dr_enter_wait_tasks__("", 1, 1);
     dr_return_from_wait_tasks__(t, "", 1, 1);
+    t = dr_enter_other__("", 1, 1);
+    dr_return_from_other__(t, "", 1, 1);
     dr_stop__("", 1, 1);
     dr_free(t, sizeof(dr_dag_node));
     dr_dag_node_kind_to_str((dr_dag_node_kind_t)1);

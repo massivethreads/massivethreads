@@ -24,13 +24,16 @@ dr_pi_dag_gen_text_node(long idx,
   fprintf(wp, "%s%llu", sep, g->info.t_ready[dr_dag_edge_kind_create]);
   fprintf(wp, "%s%llu", sep, g->info.t_ready[dr_dag_edge_kind_create_cont]);
   fprintf(wp, "%s%llu", sep, g->info.t_ready[dr_dag_edge_kind_wait_cont]);
+  fprintf(wp, "%s%llu", sep, g->info.t_ready[dr_dag_edge_kind_other_cont]);
   fprintf(wp, "%s%ld",  sep, g->info.logical_node_counts[dr_dag_node_kind_create_task]);
   fprintf(wp, "%s%ld",  sep, g->info.logical_node_counts[dr_dag_node_kind_wait_tasks]);
+  fprintf(wp, "%s%ld",  sep, g->info.logical_node_counts[dr_dag_node_kind_other]);
   fprintf(wp, "%s%ld",  sep, g->info.logical_node_counts[dr_dag_node_kind_end_task]);
   fprintf(wp, "%s%ld",  sep, g->info.logical_edge_counts[dr_dag_edge_kind_end]);
   fprintf(wp, "%s%ld",  sep, g->info.logical_edge_counts[dr_dag_edge_kind_create]);
   fprintf(wp, "%s%ld",  sep, g->info.logical_edge_counts[dr_dag_edge_kind_create_cont]);
   fprintf(wp, "%s%ld",  sep, g->info.logical_edge_counts[dr_dag_edge_kind_wait_cont]);
+  fprintf(wp, "%s%ld",  sep, g->info.logical_edge_counts[dr_dag_edge_kind_other_cont]);
   fprintf(wp, "%s%ld",  sep, g->info.cur_node_count);
   fprintf(wp, "%s%ld",  sep, g->info.min_node_count);
   fprintf(wp, "%s%ld",  sep, g->info.n_child_create_tasks);
