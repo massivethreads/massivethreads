@@ -63,9 +63,9 @@ dr_read_dag(const char * filename) {
   /* char array after the index table */
   S->C = (const char *)&S->I[S->n];
   G->S = S;
+#if 0
   long n = S->n;
   long i;
-#if 0
   printf("%ld strings\n", n);
   for (i = 0; i < n; i++) {
     printf("string %ld : %s\n", i, S->C + S->I[i]);

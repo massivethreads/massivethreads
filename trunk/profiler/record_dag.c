@@ -31,7 +31,6 @@ dr_get_worker_key_struct dr_gwks = { 0, 0, 0 };
 typedef struct dr_dag_node_stack_cell {
   /* next cell in the stack or a free list */
   struct dr_dag_node_stack_cell * next;
-  /* one and only one of these two fields are non-null */
   dr_dag_node * node;		/* this is a node */
 } dr_dag_node_stack_cell;
 
@@ -153,14 +152,16 @@ dr_dag_node_stack_push_children(dr_dag_node_stack * s,
       if (DAG_RECORDER_CHK_LEVEL>=1) {
 	if (K == dr_dag_node_kind_section) {
 	  (void)dr_check(k == dr_dag_node_kind_create_task 
-			 || k == dr_dag_node_kind_section
-			 || k == dr_dag_node_kind_wait_tasks);
+			 || k == dr_dag_node_kind_wait_tasks
+			 || k == dr_dag_node_kind_other
+			 || k == dr_dag_node_kind_section);
 	  if (k == dr_dag_node_kind_wait_tasks) {
 	    (void)dr_check(ch == tail);
 	  }
 	} else {
 	  (void)dr_check(K == dr_dag_node_kind_task);
 	  (void)dr_check(k == dr_dag_node_kind_section
+			 || k == dr_dag_node_kind_other
 			 || k == dr_dag_node_kind_end_task);
 	  if (k == dr_dag_node_kind_end_task) {
 	    (void)dr_check(ch == tail);
@@ -613,37 +614,25 @@ dr_pi_dag_enum_edges(dr_pi_dag * G) {
 	dr_pi_dag_node * s = dr_pi_dag_node_last(x, G);
 	dr_pi_dag_node * t = dr_pi_dag_node_first(x + 1, G);
 	assert(e < E_lim);
-#if 1
 	switch (t->info.in_edge_kind) {
 	case dr_dag_edge_kind_create_cont:
-	  dr_pi_dag_add_edge(e, E_lim, dr_dag_edge_kind_create_cont, 
+	case dr_dag_edge_kind_wait_cont:
+	case dr_dag_edge_kind_other_cont:
+	  dr_pi_dag_add_edge(e, E_lim, t->info.in_edge_kind, 
 			     s - T, t - T);
 	  break;
 	case dr_dag_edge_kind_end:
-	case dr_dag_edge_kind_wait_cont:
-	  /* t is a node that follows wait node */
 	  dr_pi_dag_add_edge(e, E_lim, dr_dag_edge_kind_wait_cont, 
 			     s - T, t - T);
 	  break;
 	default:
+	  /* case dr_dag_edge_kind_end should not happen */
 	  /* create_cont can't happen. */
 	  (void)dr_check(t->info.in_edge_kind 
 			 != dr_dag_edge_kind_create);
 	  (void)dr_check(0);
 	  break;
 	}
-#else
-	switch (s->info.last_node_kind) {
-	case dr_dag_node_kind_create_task:
-	  dr_pi_dag_add_edge(e, E_lim, dr_dag_edge_kind_create_cont, s - T, t - T);
-	  break;
-	case dr_dag_node_kind_wait_tasks:
-	  dr_pi_dag_add_edge(e, E_lim, dr_dag_edge_kind_wait_cont, s - T, t - T);
-	  break;
-	default:
-	  (void)dr_check(0);
-	}
-#endif
 	e++;
 	if (x->info.kind == dr_dag_node_kind_section) {
 	  dr_pi_dag_node * xa = x + x->subgraphs_begin_offset;
@@ -1030,6 +1019,12 @@ dr_init_(dr_options * opts, int num_workers) {
 
 /* stop profiling */
 void dr_stop__(const char * file, int line, int worker) {
+
+#if 1
+  /* the bug below has been fixed
+     with dr_enter_other/dr_return_from_other */
+  dr_end_task__(file, line, worker);
+#else
   /* we have a complication in OpenMP environment,
      similar to the one we have in dr_start__ */
   int i;
@@ -1054,6 +1049,7 @@ void dr_stop__(const char * file, int line, int worker) {
     exit(1);
   }
   dr_end_task__(file, line, i);
+#endif
   GS.ts = 0;
 }
 
@@ -1121,6 +1117,12 @@ void dr_start__(dr_options * opts, const char * file, int line,
     dr_start_task__(0, file, line, worker);
     GS.root = dr_get_cur_task_(worker);
 
+#if 1
+    /* the bug below has been fixed by introducing
+       dr_enter_other/dr_return_from_other */
+    GS.ts[worker].task = GS.root;
+
+#else
     {
       /* set .task fields of ALL workers to the
 	 same root task.
@@ -1145,6 +1147,7 @@ void dr_start__(dr_options * opts, const char * file, int line,
 	GS.ts[i].task = GS.root;
       }
     }
+#endif
   }
 }
 

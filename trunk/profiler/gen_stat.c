@@ -76,8 +76,8 @@ dr_calc_edges(dr_basic_stat * bs, dr_pi_dag * G) {
 	int w = t->info.worker;
 	if (w == -1) {
 	  fprintf(stderr, 
-		  "warning: %ld (k=%d w=%d)\n",
-		  i, t->info.kind, w);
+		  "warning: node %ld (kind=%s) has worker = %d)\n",
+		  i, dr_dag_node_kind_to_str(t->info.kind), w);
 	} else {
 	  (void)dr_check(w >= 0);
 	  (void)dr_check(w < nw);
@@ -90,11 +90,21 @@ dr_calc_edges(dr_basic_stat * bs, dr_pi_dag * G) {
     dr_pi_dag_edge * e = &G->E[i];
     int uw = G->T[e->u].info.worker;
     int vw = G->T[e->v].info.worker;
-    if (uw == -1 || vw == -1) {
-      fprintf(stderr, "warning: %ld (k=%d w=%d) -> %ld (k=%d w=%d)\n",
-	      e->u, G->T[e->u].info.kind, uw, 
-	      e->v, G->T[e->v].info.kind, vw);
-    } else {
+    if (uw == -1) {
+      fprintf(stderr, "warning: source node (%ld) of edge %ld %ld (kind=%s) -> %ld (kind=%s) has worker = %d\n",
+	      e->u,
+	      i, 
+	      e->u, dr_dag_node_kind_to_str(G->T[e->u].info.kind), 
+	      e->v, dr_dag_node_kind_to_str(G->T[e->v].info.kind), uw);
+    }
+    if (vw == -1) {
+      fprintf(stderr, "warning: dest node (%ld) of edge %ld %ld (kind=%s) -> %ld (kind=%s) has worker = %d\n",
+	      e->v,
+	      i, 
+	      e->u, dr_dag_node_kind_to_str(G->T[e->u].info.kind), 
+	      e->v, dr_dag_node_kind_to_str(G->T[e->v].info.kind), vw);
+    }
+    if (uw != -1 && vw != -1) {
       (void)dr_check(uw >= 0);
       (void)dr_check(uw < nw);
       (void)dr_check(vw >= 0);
@@ -205,6 +215,9 @@ dr_write_edge_counts(dr_basic_stat * bs, FILE * wp) {
     case dr_dag_edge_kind_wait_cont:
       fprintf(wp, "wait-cont edges:\n");
       break;
+    case dr_dag_edge_kind_other_cont:
+      fprintf(wp, "other-cont edges:\n");
+      break;
     default:
       (void)dr_check(0);
       break;
@@ -226,10 +239,11 @@ dr_basic_stat_write_to_file(dr_basic_stat * bs, FILE * wp) {
   long * nc = G->T[0].info.logical_node_counts;
   long n_creates = nc[dr_dag_node_kind_create_task];
   long n_waits = nc[dr_dag_node_kind_wait_tasks];
+  long n_others = nc[dr_dag_node_kind_other];
   long n_ends = nc[dr_dag_node_kind_end_task];
   //long n_sections = nc[dr_dag_node_kind_section];
   //long n_tasks = nc[dr_dag_node_kind_task];
-  long n_ints = n_creates + n_waits + n_ends;
+  long n_ints = n_creates + n_waits + n_others + n_ends;
   //long n_nodes = n_ints + n_sections + n_tasks;
   long n_nodes = n_ints + n_waits + n_creates + 1;
   long n_mat_nodes = G->T[0].info.cur_node_count;
