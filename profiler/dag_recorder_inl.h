@@ -56,10 +56,10 @@ extern "C" {
      k < dr_dag_node_kind_section
      iff k is a primitive node */
   typedef enum {
-    dr_dag_node_kind_create_task,
-    dr_dag_node_kind_wait_tasks,
-    dr_dag_node_kind_other,
-    dr_dag_node_kind_end_task,
+    dr_dag_node_kind_create_task, /* ended by create_task */
+    dr_dag_node_kind_wait_tasks,  /* ended by wait_tasks */
+    dr_dag_node_kind_other,	  /* ended by other reasons */
+    dr_dag_node_kind_end_task,	  /* ended by ending a task */
     dr_dag_node_kind_section,
     dr_dag_node_kind_task,
   } dr_dag_node_kind_t;
