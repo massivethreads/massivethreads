@@ -171,20 +171,20 @@
 
 //#define mk_task_group int __mk_task_group__ __attribute__((unused)) = 0
 #define mk_task_group 
-#define create_task0(function_call)       spawn_(function_call)
-#define create_task1(s0,function_call)    spawn_(function_call)
-#define create_task2(s0,s1,function_call) spawn_(function_call)
-#define create_taskA(function_call)       spawn_(function_call)
+#define create_task0(spawn_stmt)       spawn_(spawn_stmt)
+#define create_task1(s0,spawn_stmt)    spawn_(spawn_stmt)
+#define create_task2(s0,s1,spawn_stmt) spawn_(spawn_stmt)
+#define create_taskA(spawn_stmt)       spawn_(spawn_stmt)
 #if TO_CILK
 #define create_taskc(callable)            spawn_(spawn callable())
 #else
 #define create_taskc(callable)            spawn_(_Cilk_spawn callable())
 #endif
-#define create_task_and_wait(function_call)			\
-  do { create_taskA(function_call); wait_tasks; } while(0)
+#define create_task_and_wait(spawn_stmt)			\
+  do { create_taskA(spawn_stmt); wait_tasks; } while(0)
 #define create_taskc_and_wait(callable)			\
   do { create_taskc(callable); wait_tasks; } while(0)
-#define call_task(function_call)          create_task_and_wait(function_call)
+#define call_task(spawn_stmt)          create_task_and_wait(spawn_stmt)
 #define call_taskc(callable)              create_taskc_and_wait(callable)   
 
 #define wait_tasks sync_
