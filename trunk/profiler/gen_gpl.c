@@ -223,6 +223,7 @@ dr_para_prof_write_to_file(dr_para_prof * pp, FILE * wp) {
 	  ", \"-\" u 1:2:3 w filledcurves title \"create\""
 	  ", \"-\" u 1:2:3 w filledcurves title \"create cont\""
 	  ", \"-\" u 1:2:3 w filledcurves title \"wait cont\""
+	  ", \"-\" u 1:2:3 w filledcurves title \"other cont\""
 	  "\n"
 	  );
   for (k = 0; k < dr_node_state_max; k++) {
