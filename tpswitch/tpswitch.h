@@ -86,9 +86,18 @@
   do { create_taskc(C); wait_tasks; } while(0)
 #define wait_tasks pragma_omp_taskwait
 
-#define cilk_proc_start       int __dummy_cilk_proc_start__ __attribute__((unused)) = 0
-#define cilk_proc_return(x)   return x
-#define cilk_proc_void_return return
+#define cilk_begin				\
+  int __cilk_begin__ = 0
+
+#define cilk_return(x) do {				   \
+    (void)__cilk_begin__;				   \
+    return x;						   \
+  } while(0)
+
+#define cilk_void_return do {				   \
+    (void)__cilk_begin__;				   \
+    return;						   \
+  } while(0)
 
 /* TBB, MassiveThredhads, Qthreads, Nanos++ */
 #elif defined(__cplusplus) && (TO_TBB || TO_MTHREAD || TO_MTHREAD_NATIVE || TO_QTHREAD || TO_NANOX)
@@ -124,9 +133,18 @@
 #endif
 #define wait_tasks __tg__.wait()
 
-#define cilk_proc_start       int __dummy_cilk_proc_start__ __attribute__((unused)) = 0
-#define cilk_proc_return(x)   return x
-#define cilk_proc_void_return return
+#define cilk_begin				\
+  int __cilk_begin__ = 0
+
+#define cilk_return(x) do {				   \
+    (void)__cilk_begin__;				   \
+    return x;						   \
+  } while(0)
+
+#define cilk_void_return do {				   \
+    (void)__cilk_begin__;				   \
+    return;						   \
+  } while(0)
 
 
 /* No C++ or serial */
@@ -157,12 +175,18 @@
   do { call_taskc(callable); wait_tasks; } while(0)
 #endif
 
-#define cilk_proc_start       int __dummy_cilk_proc_start__ __attribute__((unused)) = 0
-#define cilk_proc_return(x)   return x
-#define cilk_proc_void_return return
+#define cilk_begin				\
+  int __cilk_begin__ = 0
 
+#define cilk_return(x) do {				   \
+    (void)__cilk_begin__;				   \
+    return x;						   \
+  } while(0)
 
-
+#define cilk_void_return do {				   \
+    (void)__cilk_begin__;				   \
+    return;						   \
+  } while(0)
 
 
 /* Cilk */
