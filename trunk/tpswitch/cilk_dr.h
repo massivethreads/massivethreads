@@ -46,12 +46,12 @@ cilk int f(int x) {
 #define cilk_return_no_prof(x) do {			   \
     (void)__cilk_begin__;				   \
     return x;						   \
-  } while(0);
+  } while(0)
 
 #define cilk_void_return_no_prof do {			   \
     (void)__cilk_begin__;				   \
     return;						   \
-  } while(0);
+  } while(0)
 
 #define spawn_no_prof(spawn_stmt) spawn_stmt
 
@@ -75,7 +75,7 @@ cilk int f(int x) {
     (void)__cilk_begin__;				   \
     dr_end_task();					   \
     return;						   \
-  } while(0);
+  } while(0)
 
 #define spawn_with_prof(spawn_stmt) do {			\
     dr_dag_node * __t__ = dr_enter_create_cilk_proc_task();	\
@@ -113,7 +113,7 @@ cilk int f(int x) {
 #define cilk_begin            cilk_begin_no_prof
 #define cilk_return(x)        cilk_return_no_prof(x)
 #define cilk_void_return      cilk_void_return_no_prof
-#define spawn_(spawn_stmt)    spawn_no_prof_(spawn_stmt)
-#define sync_                 sync_no_prof__
+#define spawn_(spawn_stmt)    spawn_no_prof(spawn_stmt)
+#define sync_                 sync_no_prof
 
 #endif
