@@ -131,7 +131,7 @@ extern "C" {
 #define dr_start_task(parent) \
   dr_start_task_(parent, __FILE__, __LINE__)
 
-#define dr_start_cilk_proc_(parent, file, line)			\
+#define dr_start_cilk_proc_(file, line)			\
   dr_start_cilk_proc__(file, line, dr_get_worker())
 
 #define dr_start_cilk_proc(parent) \
