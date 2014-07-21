@@ -10,6 +10,7 @@ static int
 dr_pi_dag_gen_text_node(long idx,
 			dr_pi_dag_node * g, 
 			dr_pi_dag * G, FILE * wp, const char * sep) {
+  (void)G;
   fprintf(wp, "%ld",   idx);
   fprintf(wp, "%s%s",   sep, dr_dag_node_kind_to_str(g->info.kind));
   fprintf(wp, "%s%s",   sep, dr_dag_edge_kind_to_str(g->info.in_edge_kind));

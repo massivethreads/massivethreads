@@ -509,11 +509,11 @@ namespace mtbb {
 #define dr_get_worker() qthread_worker(NULL)
 #define dr_get_max_workers() qthread_num_workers()
 #elif TO_TBB
-#define dr_get_worker() dr_get_worker_by_pthread_key()
-#define dr_get_max_workers() dr_tbb_num_workers()
+#define dr_get_worker() dr_tbb_get_worker()
+#define dr_get_max_workers() dr_tbb_max_workers()
 #elif TO_NANOX
-#define dr_get_worker() dr_get_worker_by_pthread_key()
-#define dr_get_max_workers() dr_nanox_num_workers()
+#define dr_get_worker() dr_nanox_get_worker()
+#define dr_get_max_workers() dr_nanox_max_workers()
 #else
 #error "DAG_RECORDER==2 requires a definition of dr_get_worker(). define one, or use predefined one by defining one of TO_SERIAL, TO_MTHREAD, TO_MTHREAD_NATIVE, TO_QTHREAD, TO_TBB, TO_NANOX"
 #endif

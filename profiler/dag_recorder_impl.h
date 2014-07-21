@@ -96,12 +96,13 @@ void
 dr_pi_dag_chronological_traverse(dr_pi_dag * G,
 				 chronological_traverser * ct);
 
-dr_pi_dag_node *
-dr_pi_dag_node_first(dr_pi_dag_node * g, dr_pi_dag * G);
+FILE * 
+dr_pi_dag_open_to_write(const char * filename, 
+			const char * file_kind, 
+			int * must_close_p);
 
-
-dr_pi_dag_node *
-dr_pi_dag_node_last(dr_pi_dag_node * g, dr_pi_dag * G);
+void dr_opts_init(dr_options * opts);
+void dr_opts_print(dr_options * opts);
 
 dr_pi_dag * 
 dr_read_dag(const char * filename);
@@ -111,3 +112,173 @@ int dr_gen_basic_stat(dr_pi_dag * G);
 int dr_gen_dot(dr_pi_dag * G);
 int dr_gen_text(dr_pi_dag * G);
 
+/* 
+ *
+ */
+
+typedef struct dr_dag_node_stack_cell {
+  /* next cell in the stack or a free list */
+  struct dr_dag_node_stack_cell * next;
+  dr_dag_node * node;		/* this is a node */
+} dr_dag_node_stack_cell;
+
+/* TODO:
+   probably we should make it larger, so that
+   we don't call malloc too many times.
+   to do so, we explictly need to maintain
+   the set of addresses obtained from malloc.
+   currently there are no track of them.
+   in the end we simply call free for individual
+   cells (see dr_dag_node_stack_fini), and
+   it is wrong when dr_dag_node_stack_cell_sz > 1
+ */
+enum { dr_dag_node_stack_cell_sz = 1 }; /* it must be 1 */
+
+typedef struct dr_dag_node_stack {
+  /* free list (recycle popped cells) */
+  dr_dag_node_stack_cell * freelist;
+  /* the stack (linear list) */
+  dr_dag_node_stack_cell * top;
+} dr_dag_node_stack;
+
+
+dr_pi_dag_node *
+dr_pi_dag_node_first(dr_pi_dag_node * g, dr_pi_dag * G);
+dr_pi_dag_node *
+dr_pi_dag_node_last(dr_pi_dag_node * g, dr_pi_dag * G);
+
+
+/* initialize the stack to be empty */
+static void 
+dr_dag_node_stack_init(dr_dag_node_stack * s) {
+  s->freelist = 0;
+  s->top = 0;
+}
+
+static void 
+dr_dag_node_stack_fini(dr_dag_node_stack * s) {
+  (void)dr_check(!s->top);
+  dr_dag_node_stack_cell * cell;
+  dr_dag_node_stack_cell * next;
+  for (cell = s->freelist; cell; cell = next) {
+    next = cell->next;
+    dr_free(cell, sizeof(dr_dag_node_stack_cell) * dr_dag_node_stack_cell_sz);
+  }
+}
+
+/* ensure the free list is not empty.
+   get memory via malloc and fill the free list.
+   return a pointer to a cell */
+static dr_dag_node_stack_cell * 
+ensure_freelist(dr_dag_node_stack * s) {
+  dr_dag_node_stack_cell * f = s->freelist;
+  if (!f) {
+    int n = dr_dag_node_stack_cell_sz;
+    f = (dr_dag_node_stack_cell *)
+      dr_malloc(sizeof(dr_dag_node_stack_cell) * n);
+    int i;
+    for (i = 0; i < n - 1; i++) {
+      f[i].next = &f[i + 1];
+    }
+    f[n - 1].next = 0;
+    s->freelist = f;
+  }
+  return f;
+}
+
+/* push a dag node to the stack */
+static void 
+dr_dag_node_stack_push(dr_dag_node_stack * s, 
+		       dr_dag_node * node) {
+  dr_dag_node_stack_cell * f = ensure_freelist(s);
+  f->node = node;
+  s->freelist = f->next;
+  f->next = s->top;
+  s->top = f;
+}
+
+/* push the children of g in the reverse order,
+   so that we later handle the children in the
+   right order */
+static void
+dr_dag_node_stack_push_children(dr_dag_node_stack * s, 
+				dr_dag_node * g) {
+  if (g->info.kind < dr_dag_node_kind_section) {
+    if (g->info.kind == dr_dag_node_kind_create_task
+	&& g->child) {
+      dr_dag_node_stack_push(s, g->child);
+    }
+  } else {
+    dr_dag_node * head = g->subgraphs->head;
+    dr_dag_node * tail = g->subgraphs->tail;
+    dr_dag_node * ch;
+    /* a bit complicated to reverse the children */
+
+    /* 1. count the number of children */
+    int n_children = 0;
+    for (ch = head; ch; ch = ch->next) {
+      n_children++;
+    }
+    /* 2. make the array of the right size and
+       fill the array with children */
+    dr_dag_node ** children
+      = (dr_dag_node **)dr_malloc(sizeof(dr_dag_node *) * n_children);
+    int idx = 0;
+    dr_dag_node_kind_t K = g->info.kind;
+    for (ch = head; ch; ch = ch->next) {
+      dr_dag_node_kind_t k = ch->info.kind;
+      if (DAG_RECORDER_CHK_LEVEL>=1) {
+	if (K == dr_dag_node_kind_section) {
+	  (void)dr_check(k == dr_dag_node_kind_create_task 
+			 || k == dr_dag_node_kind_wait_tasks
+			 || k == dr_dag_node_kind_other
+			 || k == dr_dag_node_kind_section);
+	  if (k == dr_dag_node_kind_wait_tasks) {
+	    (void)dr_check(ch == tail);
+	  }
+	} else {
+	  (void)dr_check(K == dr_dag_node_kind_task);
+	  (void)dr_check(k == dr_dag_node_kind_section
+			 || k == dr_dag_node_kind_other
+			 || k == dr_dag_node_kind_end_task);
+	  if (k == dr_dag_node_kind_end_task) {
+	    (void)dr_check(ch == tail);
+	  }
+	}
+      }
+      children[idx++] = ch;
+    }
+    assert(idx == n_children);
+    /* 3. finally push them in the reverse order */
+    for (idx = n_children - 1; idx >= 0; idx--) {
+      dr_dag_node_stack_push(s, children[idx]);
+    }
+    dr_free(children, sizeof(dr_dag_node *) * n_children);
+  }
+}
+
+/* pop an element from the stack s.
+   it is either a string or a dag node.
+   the result is returned to one of 
+   *xp (when it is a node) and *strp
+   (when it is a string). the other one
+   is filled with a null.
+*/
+static dr_dag_node * 
+dr_dag_node_stack_pop(dr_dag_node_stack * s) {
+  dr_dag_node_stack_cell * top = s->top;
+  (void)dr_check(top);
+  s->top = top->next;
+  top->next = s->freelist;
+  s->freelist = top;
+  return top->node;
+}
+
+static void use_unused() __attribute__ ((unused));
+static void use_unused() {
+  dr_dag_node_stack_init(0);
+  dr_dag_node_stack_fini(0);
+  dr_dag_node_stack_push(0, 0);
+  dr_dag_node_stack_push_children(0, 0);
+  dr_dag_node_stack_pop(0);
+}
