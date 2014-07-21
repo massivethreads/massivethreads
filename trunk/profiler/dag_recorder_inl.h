@@ -38,11 +38,7 @@
 #endif
 
 #if !defined(DAG_RECORDER_RECORD_CPU)
-#define DAG_RECORDER_RECORD_CPU 0
-#endif
-
-#if !defined(DAG_RECORDER_RECORD_POS)
-#define DAG_RECORDER_RECORD_POS 0
+#define DAG_RECORDER_RECORD_CPU GS.opts.record_cpu
 #endif
 
 #ifdef __cplusplus
@@ -165,9 +161,9 @@ extern "C" {
   typedef struct dr_pi_dag_node dr_pi_dag_node;
 
   /* a node of the in-memory, growing/shrinking dag */
-  /* size = 216 bytes? */
   struct dr_dag_node {
     dr_dag_node_info info;
+    /* a pointer to the next node in lists */
     dr_dag_node * next;
     /* a pointer used to recursively
        convert the graph into the 
@@ -180,7 +176,9 @@ extern "C" {
 	/* list of subgraphs. valid when info.kind == section/task */
 	dr_dag_node_list subgraphs[1];
 	union {
+	  /* pointer to the immediately enclosing section */
 	  dr_dag_node * parent_section; /* kind == section */
+	  /* pointer to the currently active section (or itself) */
 	  dr_dag_node * active_section; /* kind == task */
 	};
       };
@@ -189,22 +187,23 @@ extern "C" {
 
   /* nodes are allocated in the unit of page */
   typedef struct dr_dag_node_page {
-    struct dr_dag_node_page * next;
-    long sz;
-    dr_dag_node nodes[2];	/* this is the minimum size */
+    struct dr_dag_node_page * next; /* next pointer in a page free list */
+    long sz;			    /* size of the page in bytes */
+    dr_dag_node nodes[2]; /* this is the minimum size. we allocate more */
   } dr_dag_node_page;
 
-  /* free list of pages */
+  /* free list of nodes */
   typedef struct {
     dr_dag_node * head;
     dr_dag_node * tail;
     dr_dag_node_page * pages;
   } dr_dag_node_freelist;
 
-  /* stack used by the non recursive version 
+  /* an entry in the stack used by 
+     the non recursive version 
      of dr_prune_nodes */
   typedef struct {
-    dr_dag_node * x;
+    dr_dag_node * x;		/* pointer to the node */
     long budget;
     long budget_left;
     long nodes_left;
@@ -218,30 +217,55 @@ extern "C" {
     long n;
   } dr_prune_nodes_stack;
 
-  typedef struct dr_thread_specific_state {
+  typedef struct dr_worker_specific_state {
     union {
       struct {
+	/* pointer next */
+	struct dr_worker_specific_state * next;
 	dr_dag_node * task;		/* current task */
 	dr_dag_node_freelist freelist[1];
 	dr_prune_nodes_stack prune_stack[1];
 	/* only used in Cilk: it holds a pointer to 
 	   the interval that just created a task */
 	dr_dag_node * parent;
+	int worker;		/* worker id */
       };
       char minimum_size[64];
     };
-  } dr_thread_specific_state;
+  } dr_worker_specific_state;
 
   typedef struct dr_global_state {
     int initialized;
-    int num_workers;
     /* root of the task graph. 
        used (only) by print_task_graph */
     dr_dag_node * root;
     /* the clock when dr_start() was called */
     dr_clock_t start_clock;
-    dr_thread_specific_state * thread_specific; /* allocate at init */
-    dr_thread_specific_state * ts; /* null when not profiling */
+    /* generation is incremented everytime we start/stop
+       dag recorder. it is odd iff profiling is on */
+    long generation;
+    /* two methods to maintain worker-specific states
+       (1) fixed-sized array
+       (2) linear list
+       the former requires the maximum number of workers
+       to be given upon initialization. some systems (e.g., TBB)
+       do not provide it. */
+
+    /* (1) fixed-sized array */
+    dr_worker_specific_state * worker_specific_state_array;
+    int worker_specific_state_array_sz;
+    /* (2) linear list */
+    dr_worker_specific_state * volatile worker_specific_state_list;
+
+    /* key for worker-specific state */
+    pthread_key_t worker_specific_state_key;
+    pthread_key_t worker_specific_state_key_valid;
+
+    /* key for worker id */
+    pthread_key_t worker_id_key;
+    int worker_id_key_valid;
+    int worker_id_counter;
+
     dr_options opts;
   } dr_global_state;
 
@@ -296,7 +320,8 @@ extern "C" {
   /* allocate a page of sz_ bytes and put 
      nodes into free list fl */
   static dr_dag_node *
-  dr_dag_node_freelist_add_page(dr_dag_node_freelist * fl, size_t sz_) {
+  dr_dag_node_freelist_add_page(dr_dag_node_freelist * fl, 
+				size_t sz_) {
     size_t sz = (sz_ > sizeof(dr_dag_node_page) 
 		 ? sz_ : sizeof(dr_dag_node_page));
     dr_dag_node_page * page = (dr_dag_node_page *)dr_malloc(sz);
@@ -362,7 +387,6 @@ extern "C" {
     }
 #endif
   }
-
 
   static void 
   dr_dag_node_list_init(dr_dag_node_list * l) {
@@ -463,114 +487,84 @@ extern "C" {
     return dr_rdtsc();
   }
 
-  /* a hopefully portable way to get a unique worker id.
-     you can roll your own 
-     dr_get_worker and dr_get_max_workers.
-     this one is used as the last resort */
+  dr_worker_specific_state * dr_make_worker_specific_state(int worker);
 
-  typedef struct {
-    pthread_key_t worker_key;
-    volatile int worker_key_state;
-    int worker_counter;
-  } dr_get_worker_key_struct;
-  
-  extern dr_get_worker_key_struct dr_gwks;
-  
-  static inline pthread_key_t dr_get_worker_key() {
-    if (dr_gwks.worker_key_state == 2) return dr_gwks.worker_key;
-    if (__sync_bool_compare_and_swap(&dr_gwks.worker_key_state, 0, 1)) {
-      pthread_key_create(&dr_gwks.worker_key, NULL);
-      dr_gwks.worker_key_state = 2;
+  static dr_worker_specific_state * 
+  dr_get_worker_specific_state(int worker) {
+    if (GS.worker_specific_state_array) {
+      (void)dr_check(worker >= 0);
+      (void)dr_check(worker < GS.worker_specific_state_array_sz);
+      return &GS.worker_specific_state_array[worker];
     } else {
-      while (dr_gwks.worker_key_state < 2) ;
+      pthread_key_t wss_key = GS.worker_specific_state_key;
+      if (dr_check(GS.worker_specific_state_key_valid)) {
+	void * wss = pthread_getspecific(wss_key);
+	if (wss) {
+	  /* aleady initialized */
+	  return (dr_worker_specific_state *)wss;
+	} else {
+	  /* this is the first time the thread calls it.
+	     get a sequence number from a shared counter */
+	  dr_worker_specific_state * new_wss
+	    = dr_make_worker_specific_state(worker);
+	  pthread_setspecific(wss_key, (void *)new_wss);
+	  return new_wss;
+	}
+      } else {
+	return 0;		/* never reach here */
+      }
     }
-    return dr_gwks.worker_key;
+  }
+
+  static int worker_id_counter_get_next() {
+    return __sync_fetch_and_add(&GS.worker_id_counter, 1);
   }
   
-  static int worker_counter_get_next() {
-    return __sync_fetch_and_add(&dr_gwks.worker_counter, 1);
-  }
-  
+  void dr_ensure_worker_id_key();
+
   /* get my worker number */
-  static inline int dr_get_worker_by_pthread_key() {
-    pthread_key_t wk = dr_get_worker_key();
-    void * x = pthread_getspecific(wk);
-    if (x) {
-      /* aleady initialized */
-      int w = (long)x - 1;
-      return w;
+  static inline int dr_get_worker_id_by_pthread_key() {
+    dr_ensure_worker_id_key();
+    if (dr_check(GS.worker_id_key_valid)) {
+      pthread_key_t wik = GS.worker_id_key;
+      void * x = pthread_getspecific(GS.worker_id_key);
+      if (x) {
+	/* aleady initialized */
+	int w = (long)x - 1;
+	return w;
+      } else {
+	/* this is the first time the thread calls it.
+	   get a sequence number from a shared counter */
+	int w = worker_id_counter_get_next();
+	pthread_setspecific(wik, (void *)((long)w + 1));
+	return w;
+      }
     } else {
-      /* this is the first time the thread calls it.
-	 get a sequence number from a shared counter */
-      int w = worker_counter_get_next();
-      pthread_setspecific(wk, (void *)((long)w + 1));
-      return w;
+      return -1;		/* never reach */
     }
   }
 
-  /* check env variable v and read it as int.
-     return 0 if v is not found in the environment 
-     or it canot be parsed as an integer */
-  static int 
-  dr_get_num_workers_env(const char * v) {
-    char * s = getenv(v);
-    int x;
-    if (!s) {
-      fprintf(stderr, 
-	      "error: could not get number of workers\n"
-	      "set environment variable %s\n", v);
-      return 0;
-    }
-    x = atoi(s);
-    if (x <= 0) {
-      fprintf(stderr, 
-	      "error: invalid value in environment varible %s (%s)\n"
-	      "set a positive integer\n", v, s);
-      return 0;
-    }
-    return x;
-  } 
-
-  /* get the number of workers of TBB programs;
-     TBB (deliberately) does not provide a method 
-     to get it. so we assume it is taken from
-     envrionment variable TBB_NTHREADS and the
-     number is passed to new task_scheduler_init(x);
-
-     note: dag recorder assumes this number of
-     threads are used by the TBB program. that is,
-     the TBB program should call 
-     new task_scheduler_init(x), with x equals to 
-     this number.
-     TBB uses all cores when task_scheduler_init
-     is not created; so, when you set this environment
-     variable but the program does not call 
-     a matching new task_scheduler_init(x),
-     the result may be inconsistent.
-
-     I wish I query the number of threads used by
-     TBB, but TBB seems to (intentionally) make
-     it unavailable.
-  */
-  static inline int dr_tbb_num_workers() {
-    return dr_get_num_workers_env("TBB_NTHREADS");
+  static inline int dr_tbb_get_worker() {
+    return dr_get_worker_id_by_pthread_key();
   }
 
-  /* get the number of workers of nanos++ programs */
-  static inline int dr_nanox_num_workers() {
-    return dr_get_num_workers_env("NX_PES");
+  static inline int dr_nanox_get_worker() {
+    return dr_get_worker_id_by_pthread_key();
   }
+
+  int dr_tbb_max_workers();
+  int dr_nanox_max_workers();
 
   /* the current task of this worker */
   static dr_dag_node * 
-  dr_get_cur_task_(int worker) {
-    return GS.ts[worker].task;
+  dr_get_cur_task_(dr_worker_specific_state * wss) {
+    return wss->task;
   }
 
   /* set the current task of this worker to t */
   static void 
-  dr_set_cur_task_(int worker, dr_dag_node * t) {
-    GS.ts[worker].task = t;
+  dr_set_cur_task_(dr_worker_specific_state * wss, dr_dag_node * t) {
+    wss->task = t;
   }
 
   /* initialize dag node n to become a section- or a task-type node */
@@ -628,11 +622,11 @@ extern "C" {
 #endif
 
   static int dr_getcpu() {
-#if DAG_RECORDER_RECORD_CPU
-    return sched_getcpu();
-#else
-    return 0;
-#endif
+    if (DAG_RECORDER_RECORD_CPU) {
+      return sched_getcpu();
+    } else {
+      return 0;
+    }
   }
 
   static inline dr_clock_t
@@ -822,15 +816,16 @@ extern "C" {
 
   static_if_inline void 
   dr_start_task__(dr_dag_node * p, 
-		  const char * file, int line,
-		  int worker) {
-    if (GS.ts) {
+		  const char * file, int line, int worker) {
+    if (GS.generation % 2) {
       /* make a task, section, and interval */
       /* create a task node */
-      dr_dag_node * nt = dr_mk_dag_node_task(GS.ts[worker].freelist);
+      dr_worker_specific_state * wss 
+	= dr_get_worker_specific_state(worker);
+      dr_dag_node * nt = dr_mk_dag_node_task(wss->freelist);
       if (DAG_RECORDER_VERBOSE_LEVEL>=3) {
 	printf("dr_start_task(parent=%p) by %d new task=%p\n", 
-	       p, worker, nt);
+	       p, wss->worker, nt);
       }
       if (p) {
 	/* we have a parent p.
@@ -848,7 +843,7 @@ extern "C" {
       (void)dr_check(nt->info.first_ready_t > 0);
       nt->info.in_edge_kind = dr_dag_edge_kind_create;
       /* set current task to the node just created */
-      dr_set_cur_task_(worker, nt);
+      dr_set_cur_task_(wss, nt);
       /* record info on the point of start */
       dr_set_start_info(&nt->info.start, file, line);
     }
@@ -859,10 +854,11 @@ extern "C" {
      on other systems, a call to dr_start_task__ 
      is inserted by the system */
   static_if_inline int 
-  dr_start_cilk_proc__(const char * file, int line,
-		       int worker) {
-    if (GS.ts) {
-      dr_start_task__(GS.ts[worker].parent, file, line, worker);
+  dr_start_cilk_proc__(const char * file, int line, int worker) {
+    if (GS.generation % 2) {
+      dr_worker_specific_state * wss 
+	= dr_get_worker_specific_state(worker);
+      dr_start_task__(wss->parent, file, line, worker);
     }
     return 0;
   }
@@ -870,17 +866,18 @@ extern "C" {
   /* begin a new section */
   static_if_inline void
   dr_begin_section__(int worker) {
-    if (GS.ts) {
-      /* the current task of this worker */
-      dr_dag_node * t = dr_get_cur_task_(worker);
+    if (GS.generation % 2) {
+      dr_worker_specific_state * wss 
+	= dr_get_worker_specific_state(worker);
+      dr_dag_node * t = dr_get_cur_task_(wss);
       /* the current section of this task */
       dr_dag_node * s = dr_task_active_node(t);
       /* pus a new section as a child of the current section */
-      dr_dag_node * new_s = dr_push_back_section(t, s, GS.ts[worker].freelist);
+      dr_dag_node * new_s = dr_push_back_section(t, s, wss->freelist);
       if (DAG_RECORDER_VERBOSE_LEVEL>=3) {
 	printf("dr_begin_section() by %d task=%p,"
 	       " parent section=%p, new section = %p\n", 
-	       worker, t, s, new_s);
+	       wss->worker, t, s, new_s);
       }
     }
   }
@@ -893,18 +890,19 @@ extern "C" {
   */
   static_if_inline dr_dag_node * 
   dr_enter_create_task__(dr_dag_node ** c, 
-			 const char * file, int line,
-			 int worker) {
-    if (GS.ts) {
+			 const char * file, int line, int worker) {
+    if (GS.generation % 2) {
+      dr_worker_specific_state * wss 
+	= dr_get_worker_specific_state(worker);
       /* get time stamp */
       dr_clock_t end_t = dr_get_tsc();
       /* the current task of this worker */
-      dr_dag_node * t = dr_get_cur_task_(worker);
+      dr_dag_node * t = dr_get_cur_task_(wss);
       /* ensure t has a session */
-      dr_dag_node * s = dr_task_ensure_section(t, GS.ts[worker].freelist);
+      dr_dag_node * s = dr_task_ensure_section(t, wss->freelist);
       /* add a new node as a child of s */
       dr_dag_node * ct 
-	= dr_dag_node_list_push_back(s->subgraphs, GS.ts[worker].freelist);
+	= dr_dag_node_list_push_back(s->subgraphs, wss->freelist);
       /* set info about the new node */
       ct->info.kind = dr_dag_node_kind_create_task;
       /* child is set when the child gets started */
@@ -912,10 +910,10 @@ extern "C" {
       // dr_dag_node * ct = dr_task_add_create(t);
       if (DAG_RECORDER_VERBOSE_LEVEL>=3) {
 	printf("dr_enter_create_task() by %d task=%p, section=%p, new interval=%p\n", 
-	       worker, t, s, ct);
+	       wss->worker, t, s, ct);
       }
       /* put various info of ct */
-      dr_end_interval_(ct, worker, 
+      dr_end_interval_(ct, wss->worker, 
 		       dr_dag_node_kind_create_task,
 		       t->info.in_edge_kind, 
 		       end_t, t->info.est, 
@@ -935,11 +933,11 @@ extern "C" {
      in other systems, create_task macros handle that for you.
    */
   static_if_inline dr_dag_node *
-  dr_enter_create_cilk_proc_task__(const char * file, int line,
-				   int worker) {
-    if (GS.ts) {
-      return dr_enter_create_task__(&GS.ts[worker].parent, 
-				    file, line, worker);
+  dr_enter_create_cilk_proc_task__(const char * file, int line, int worker) {
+    if (GS.generation % 2) {
+      dr_worker_specific_state * wss 
+	= dr_get_worker_specific_state(worker);
+      return dr_enter_create_task__(&wss->parent, file, line, worker);
     } else {
       return (dr_dag_node *)0;
     }
@@ -950,21 +948,22 @@ extern "C" {
   */
   static_if_inline void 
   dr_return_from_create_task__(dr_dag_node * t, 
-			       const char * file, int line,
-			       int worker) {
-    if (GS.ts) {
+			       const char * file, int line, int worker) {
+    if (GS.generation % 2) {
       /* get the node that called create_task
 	 from which we have just returned.
 	 it must be the last node of the current
 	 section */
+      dr_worker_specific_state * wss 
+	= dr_get_worker_specific_state(worker);
       dr_dag_node * ct = dr_task_last_node(t);
       if (DAG_RECORDER_VERBOSE_LEVEL>=3) {
 	printf("dr_return_from_create_task(task=%p) by %d interval=%p\n", 
-	       t, worker, ct);
+	       t, wss->worker, ct);
       }
       (void)dr_check(ct->info.kind == dr_dag_node_kind_create_task);
       /* set this worker's current task */
-      dr_set_cur_task_(worker, t);
+      dr_set_cur_task_(wss, t);
       /* this node's est is the preceeding node's est
 	 + its critical path len */
       t->info.est = ct->info.est + ct->info.t_inf;
@@ -984,26 +983,28 @@ extern "C" {
   */
   static_if_inline dr_dag_node *
   dr_enter_wait_tasks__(const char * file, int line, int worker) {
-    if (GS.ts) {
+    if (GS.generation % 2) {
       dr_clock_t end_t = dr_get_tsc();
       /* the current task of this worker */
-      dr_dag_node * t = dr_get_cur_task_(worker);
+      dr_worker_specific_state * wss 
+	= dr_get_worker_specific_state(worker);
+      dr_dag_node * t = dr_get_cur_task_(wss);
       /* it may be the first node of this task, in
 	 which case we ensure to have a section */
-      dr_dag_node * s = dr_task_ensure_section(t, GS.ts[worker].freelist);
+      dr_dag_node * s = dr_task_ensure_section(t, wss->freelist);
       /* create and append a new node, which becomes
 	 an wait_task node */
       dr_dag_node * i 
-	= dr_dag_node_list_push_back(s->subgraphs, GS.ts[worker].freelist);
+	= dr_dag_node_list_push_back(s->subgraphs, wss->freelist);
       if (DAG_RECORDER_VERBOSE_LEVEL>=3) {
 	printf("dr_enter_wait_tasks() by %d task=%p, "
 	       "section=%p, new interval=%p\n", 
-	       worker, t, s, i);
+	       wss->worker, t, s, i);
       }
       t->active_section = s->parent_section;
       (void)dr_check(dr_task_active_node(t) == t->active_section);
       /* record an interval has ended */
-      dr_end_interval_(i, worker, 
+      dr_end_interval_(i, wss->worker, 
 		       dr_dag_node_kind_wait_tasks,
 		       t->info.in_edge_kind,
 		       end_t, t->info.est, 
@@ -1015,7 +1016,6 @@ extern "C" {
       return (dr_dag_node *)0;
     }
   }
-
 
   /* accumulate results from s's subgraphs into s */
   static void 
@@ -1629,9 +1629,10 @@ extern "C" {
   */
   static_if_inline void 
   dr_return_from_wait_tasks__(dr_dag_node * t, 
-			      const char * file, int line,
-			      int worker) {
-    if (GS.ts) {
+			      const char * file, int line, int worker) {
+    if (GS.generation % 2) {
+      dr_worker_specific_state * wss 
+	= dr_get_worker_specific_state(worker);
       /* get the section that has just finished */
       dr_dag_node * s = dr_task_last_node(t);
       if (dr_check(s->info.kind == dr_dag_node_kind_section)) {
@@ -1640,7 +1641,7 @@ extern "C" {
 	if (DAG_RECORDER_VERBOSE_LEVEL>=3) {
 	  printf("dr_return_from_wait_tasks(task=%p)"
 		 " by %d section=%p, pred=%p\n", 
-		 t, worker, s, p);
+		 t, wss->worker, s, p);
 	}
 	{
 	  /* calc EST and READY_T of the interval to start */
@@ -1676,10 +1677,10 @@ extern "C" {
 	    }
 	  }
 	  /* we may collapse it */
-	  dr_summarize_section_or_task(GS.ts[worker].prune_stack, s,
-				       GS.ts[worker].freelist);
+	  dr_summarize_section_or_task(wss->prune_stack, s,
+				       wss->freelist);
 	  /* set the current task of this worker */
-	  dr_set_cur_task_(worker, t);
+	  dr_set_cur_task_(wss, t);
 	  t->info.est = est;
 	  /* this node becomes ready when all of its predecessors finished */
 	  t->info.first_ready_t = ready_t;
@@ -1695,25 +1696,25 @@ extern "C" {
   /* enter a runtime for any reason. 
      the worker may change when we return from it */
   static_if_inline dr_dag_node * 
-  dr_enter_other__(const char * file, int line,
-		   int worker) {
-    if (GS.ts) {
+  dr_enter_other__(const char * file, int line, int worker) {
+    if (GS.generation % 2) {
+      dr_worker_specific_state * wss 
+	= dr_get_worker_specific_state(worker);
       /* get time stamp */
       dr_clock_t end_t = dr_get_tsc();
       /* the current task of this worker */
-      dr_dag_node * t = dr_get_cur_task_(worker);
+      dr_dag_node * t = dr_get_cur_task_(wss);
       /* ensure t has a session */
-      //dr_dag_node * s = dr_task_ensure_section(t, GS.ts[worker].freelist);
       dr_dag_node * s = dr_task_active_node(t);
       /* add a new node as a child of s */
       dr_dag_node * i
-	= dr_dag_node_list_push_back(s->subgraphs, GS.ts[worker].freelist);
+	= dr_dag_node_list_push_back(s->subgraphs, wss->freelist);
       if (DAG_RECORDER_VERBOSE_LEVEL>=3) {
 	printf("dr_enter_other() by %d task=%p, section=%p, new interval=%p\n", 
-	       worker, t, s, i);
+	       wss->worker, t, s, i);
       }
       //t->active_section = s->parent_section;
-      dr_end_interval_(i, worker, 
+      dr_end_interval_(i, wss->worker, 
 		       dr_dag_node_kind_other,
 		       t->info.in_edge_kind, 
 		       end_t, t->info.est, 
@@ -1727,17 +1728,18 @@ extern "C" {
 
   static_if_inline void 
   dr_return_from_other__(dr_dag_node * t, 
-			 const char * file, int line,
-			 int worker) {
-    if (GS.ts) {
+			 const char * file, int line, int worker) {
+    if (GS.generation % 2) {
+      dr_worker_specific_state * wss 
+	= dr_get_worker_specific_state(worker);
       dr_dag_node * rt = dr_task_last_node(t);
       if (DAG_RECORDER_VERBOSE_LEVEL>=3) {
 	printf("dr_return_from_other(task=%p) by %d interval=%p\n", 
-	       t, worker, rt);
+	       t, wss->worker, rt);
       }
       (void)dr_check(rt->info.kind == dr_dag_node_kind_other);
       /* set this worker's current task */
-      dr_set_cur_task_(worker, t);
+      dr_set_cur_task_(wss, t);
       /* this node's est is the preceeding node's est
 	 + its critical path len */
       t->info.est = rt->info.est + rt->info.t_inf;
@@ -1756,52 +1758,28 @@ extern "C" {
      called when a program ends a task
    */
   static_if_inline void 
-  dr_end_task__(const char * file, int line, int worker) {
-    if (GS.ts) {
+  dr_end_task__(const char * file, int line,int worker) {
+    if (GS.generation % 2) {
       dr_clock_t end_t = dr_get_tsc();
-      dr_dag_node * t = dr_get_cur_task_(worker);
+      dr_worker_specific_state * wss 
+	= dr_get_worker_specific_state(worker);
+      dr_dag_node * t = dr_get_cur_task_(wss);
       dr_dag_node * s = dr_task_active_node(t);
       /* create a new node */
       dr_dag_node * i 
-	= dr_dag_node_list_push_back(s->subgraphs, GS.ts[worker].freelist);
+	= dr_dag_node_list_push_back(s->subgraphs, wss->freelist);
       if (DAG_RECORDER_VERBOSE_LEVEL>=3) {
 	printf("dr_end_task() by %d task=%p, section=%p, "
 	       "new interval=%p\n", 
-	       worker, t, s, i);
+	       wss->worker, t, s, i);
       }
-      dr_end_interval_(i, worker, 
+      dr_end_interval_(i, wss->worker, 
 		       dr_dag_node_kind_end_task,
 		       t->info.in_edge_kind,
 		       end_t, t->info.est, t->info.first_ready_t, 
 		       file, line, t->info.start);
-      dr_summarize_section_or_task(GS.ts[worker].prune_stack, t, 
-				   GS.ts[worker].freelist);
-    }
-  }
-
-  /* open filename to write position independent dag 
-     (this function does not belong to this file...) */
-  static FILE * 
-  dr_pi_dag_open_to_write(const char * filename, const char * file_kind, 
-			  int * must_close_p) {
-    *must_close_p = 0;
-    if (filename && strcmp(filename, "") != 0) {
-      if (strcmp(filename, "-") == 0) {
-	fprintf(stderr, "writing %s to stdout\n", file_kind);
-	return stdout;
-      } else {
-	FILE * wp = fopen(filename, "wb");
-	fprintf(stderr, "writing %s to %s\n", file_kind, filename);
-	if (!wp) { 
-	  fprintf(stderr, "fopen: %s (%s)\n", strerror(errno), filename); 
-	  return (FILE *)0;
-	}
-	* must_close_p = 1;
-	return wp;
-      }
-    } else {
-      fprintf(stderr, "not writing %s\n", file_kind);
-      return (FILE *)0;
+      dr_summarize_section_or_task(wss->prune_stack, t, 
+				   wss->freelist);
     }
   }
 
@@ -1815,6 +1793,7 @@ extern "C" {
     dr_dag_node * t;
     dr_dag_node * c;
     dr_start__(NULL, "", 1, 1, 1);
+
     dr_begin_section__(1);
     t = dr_enter_create_task__(&c, "", 1, 1);
     dr_enter_create_cilk_proc_task__("", 1, 1);
@@ -1827,11 +1806,13 @@ extern "C" {
     t = dr_enter_other__("", 1, 1);
     dr_return_from_other__(t, "", 1, 1);
     dr_stop__("", 1, 1);
+
     dr_free(t, sizeof(dr_dag_node));
     dr_dag_node_kind_to_str((dr_dag_node_kind_t)1);
-    dr_pi_dag_open_to_write("", "", NULL);
+    //dr_pi_dag_open_to_write("", "", NULL);
     dr_dag_node_list_size(0);
     dr_dummy_call_static_functions();
+
   }
 
 #ifdef __cplusplus
