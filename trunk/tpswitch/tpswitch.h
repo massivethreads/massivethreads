@@ -131,7 +131,7 @@
 #define create_taskc_and_wait(callable) \
   do { call_taskc(callable); wait_tasks; } while(0)
 #endif
-#define wait_tasks __tg__.wait()
+#define wait_tasks __tg__.wait_(__FILE__, __LINE__)
 
 #define cilk_begin				\
   int __cilk_begin__ = 0
