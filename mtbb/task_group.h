@@ -522,13 +522,17 @@ namespace mtbb {
     struct dr_wrap_callable {
       Callable c;
       dr_dag_node * parent_interval;
-    dr_wrap_callable(Callable c_, dr_dag_node * parent_interval_) :
-      c(c_), parent_interval(parent_interval_) {}
+      const char * file;
+      long line;
+    dr_wrap_callable(Callable c_, dr_dag_node * parent_interval_,
+		     const char * file_, long line_) :
+      c(c_), parent_interval(parent_interval_),
+	file(file_), line(line_) {}
       
       void operator() () {
-	dr_start_task(parent_interval);
+	dr_start_task_(parent_interval, file, line);
 	c();
-	dr_end_task();
+	dr_end_task_(file, line);
       }
     };
 
@@ -545,7 +549,7 @@ namespace mtbb {
       n_outstanding_children++;
       dr_dag_node * ci = 0;
       dr_dag_node * t = dr_enter_create_task_(&ci, file, line);
-      task_group_no_prof::run(dr_wrap_callable<Callable>(c, ci));
+      task_group_no_prof::run(dr_wrap_callable<Callable>(c, ci, file, line));
       dr_return_from_create_task_(t, file, line);
     }
 
