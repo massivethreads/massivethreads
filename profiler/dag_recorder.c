@@ -390,7 +390,7 @@ void dr_cleanup__(const char * file, int line,
       dr_free_worker_specific_state_array();
       dr_free_worker_specific_state_list();
       /* destroy prune stacks */
-      dr_destroy_prune_stacks(num_workers);
+      dr_destroy_prune_stacks();
     }
     GS.initialized = 0;
   }
