@@ -1,0 +1,4 @@
+SUBDIRS = c
+if CXX_AVAILABLE
+SUBDIRS += cxx
+endif
