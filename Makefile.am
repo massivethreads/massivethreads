@@ -21,9 +21,9 @@ nobase_include_HEADERS = \
 	tpswitch/tbb_dr.h \
 	tpswitch/tpswitch.h
 
-libmyth_la_SOURCES        = $(COMMON_SRCS) myth_if_native.c myth_if_pthread.c myth_constructor.c
-libmyth_native_la_SOURCES = $(COMMON_SRCS) myth_if_native.c                   myth_constructor.c
-libmyth_compat_la_SOURCES = $(COMMON_SRCS)                  myth_if_pthread.c myth_constructor.c
+libmyth_la_SOURCES        = $(COMMON_SRCS) myth_if_native.c myth_if_pthread.c 
+libmyth_native_la_SOURCES = $(COMMON_SRCS) myth_if_native.c                   
+libmyth_compat_la_SOURCES = $(COMMON_SRCS)                  myth_if_pthread.c 
 
 # C compiler flags
 libmyth_la_CFLAGS         = $(COMMON_FLAGS)
