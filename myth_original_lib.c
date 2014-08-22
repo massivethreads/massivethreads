@@ -7,6 +7,7 @@
 #define LOAD_FN(fn) {real_##fn=dlsym(RTLD_NEXT,#fn);assert(real_##fn);}
 #define LOAD_PTHREAD_FN(fn) {real_pthread_##fn=dlsym(RTLD_NEXT,"pthread_"#fn);assert(real_pthread_##fn);}
 
+#ifdef MYTH_WRAP_PTHREAD_FUNCTIONS
 //pthread function pointers
 int (*real_pthread_key_create) (pthread_key_t *,void (*)(void *));
 int (*real_pthread_key_delete) (pthread_key_t);
@@ -34,35 +35,12 @@ int (*real_pthread_spin_unlock) (pthread_spinlock_t *);
 
 int (*real_sched_yield)(void);
 
-void *(*real_calloc)(size_t,size_t)=NULL;
-void *(*real_malloc)(size_t)=NULL;
-void (*real_free)(void *)=NULL;
-void *(*real_realloc)(void *,size_t)=NULL;
-
-#ifdef MYTH_WRAP_MALLOC_RUNTIME
-int (*real_posix_memalign)(void **, size_t, size_t);
-void *(*real_valloc)(size_t);
-int g_wrap_malloc_completed = 0;
-int g_wrap_malloc = 0;
-#endif
-
 //Load original pthread functions
 static void myth_get_pthread_funcs(void)
 {
 	static int done=0;
 	if (done)return;
 	done=1;
-	LOAD_FN(malloc);
-	LOAD_FN(calloc);
-	LOAD_FN(free);
-	LOAD_FN(realloc);
-#ifdef MYTH_WRAP_MALLOC_RUNTIME
-	LOAD_FN(posix_memalign);
-	LOAD_FN(valloc);
-	char * e = getenv(ENV_MYTH_DONT_WRAP_MALLOC);
-	if (!e || e[0] != '1') g_wrap_malloc = 1;
-	g_wrap_malloc_completed = 1;
-#endif
 	LOAD_FN(sched_yield);
 
 	//Basic operation
@@ -90,7 +68,64 @@ static void myth_get_pthread_funcs(void)
 static void myth_free_pthread_funcs(void)
 {
 }
+#else
+//Load original pthread functions
+static void myth_get_pthread_funcs(void)
+{
+}
 
+static void myth_free_pthread_funcs(void)
+{
+}
+#endif
+
+#ifdef MYTH_WRAP_MALLOC
+
+void *(*real_calloc)(size_t,size_t)=NULL;
+void *(*real_malloc)(size_t)=NULL;
+void (*real_free)(void *)=NULL;
+void *(*real_realloc)(void *,size_t)=NULL;
+
+#ifdef MYTH_WRAP_MALLOC_RUNTIME
+int (*real_posix_memalign)(void **, size_t, size_t);
+void *(*real_valloc)(size_t);
+int g_wrap_malloc_completed = 0;
+int g_wrap_malloc = 0;
+#endif
+
+static void myth_get_malloc_funcs(void)
+{
+	static int done=0;
+	if (done)return;
+	done=1;
+	LOAD_FN(malloc);
+	LOAD_FN(calloc);
+	LOAD_FN(free);
+	LOAD_FN(realloc);
+#ifdef MYTH_WRAP_MALLOC_RUNTIME
+	LOAD_FN(posix_memalign);
+	LOAD_FN(valloc);
+	char * e = getenv(ENV_MYTH_DONT_WRAP_MALLOC);
+	if (!e || e[0] != '1') g_wrap_malloc = 1;
+	g_wrap_malloc_completed = 1;
+#endif
+}
+
+static void myth_free_malloc_funcs(void)
+{
+}
+
+#else
+static void myth_get_malloc_funcs(void)
+{
+}
+
+static void myth_free_malloc_funcs(void)
+{
+}
+#endif
+
+#ifdef MYTH_WRAP_SOCKIO_FUNCTIONS
 //I/O function pointers
 int (*real_socket)(int, int, int);
 int (*real_connect)(int, const struct sockaddr *, socklen_t);
@@ -128,15 +163,27 @@ static void myth_free_io_funcs(void)
 {
 	//Do nothing
 }
+#else
+static void myth_get_io_funcs(void)
+{
+}
+
+static void myth_free_io_funcs(void)
+{
+	//Do nothing
+}
+#endif
 
 void __attribute__((constructor)) myth_get_original_funcs(void)
 {
 	myth_get_pthread_funcs();
+	myth_get_malloc_funcs();
 	myth_get_io_funcs();
 }
 
 void __attribute__((destructor)) myth_free_original_funcs(void)
 {
 	myth_free_pthread_funcs();
+	myth_free_malloc_funcs();
 	myth_free_io_funcs();
 }

@@ -349,7 +349,9 @@ static inline void myth_flfree(int rank,size_t size,void *ptr)
 static inline void *myth_malloc(size_t size)
 {
 	void *ptr;
+#ifdef MYTH_WRAP_MALLOC
 	if (!real_malloc)return NULL;
+#endif
 	ptr=real_malloc(size);
 	myth_assert(ptr);
 	return ptr;
