@@ -13,6 +13,19 @@
 #include "myth_sched_func.h"
 #include "myth_tls_func.h"
 
+#if 1
+extern int g_myth_initialized;
+static inline void myth_init_if_needed(){
+	if (g_myth_initialized)return;
+	myth_get_original_funcs();
+	myth_log_start_body();
+	myth_init_body(0,0);
+	myth_sched_prof_start_body();
+}
+#else
+static inline void myth_init_if_needed(){}
+#endif
+
 /*
    Function: myth_init
 
@@ -252,6 +265,7 @@ void myth_startpoint_exit_ex(int rank)
 */
 int myth_get_worker_num(void)
 {
+	myth_init_if_needed();
 	return myth_get_worker_num_body();
 }
 
@@ -274,6 +288,7 @@ int myth_get_worker_num(void)
 */
 int myth_get_num_workers(void)
 {
+	myth_init_if_needed();
 	return myth_get_num_workers_body();
 }
 
@@ -296,6 +311,7 @@ int myth_get_num_workers(void)
 */
 myth_thread_t myth_self(void)
 {
+	myth_init_if_needed();
 	return myth_self_body();
 }
 
@@ -318,6 +334,7 @@ myth_thread_t myth_self(void)
 */
 myth_thread_t myth_create(myth_func_t func,void *arg)
 {
+	myth_init_if_needed();
 	return myth_create_body(func,arg,0);
 }
 
@@ -340,6 +357,7 @@ myth_thread_t myth_create(myth_func_t func,void *arg)
 */
 myth_thread_t myth_create_ex(myth_func_t func,void *arg,myth_thread_option_t opt)
 {
+	myth_init_if_needed();
 	return myth_create_ex_body(func,arg,opt);
 }
 
@@ -362,6 +380,7 @@ myth_thread_t myth_create_ex(myth_func_t func,void *arg,myth_thread_option_t opt
 */
 void myth_exit(void *ret)
 {
+	myth_init_if_needed();
 	myth_exit_body(ret);
 }
 
@@ -384,6 +403,7 @@ void myth_exit(void *ret)
 */
 void myth_detach(myth_thread_t th)
 {
+	myth_init_if_needed();
 	myth_detach_body(th);
 }
 
@@ -406,6 +426,7 @@ void myth_detach(myth_thread_t th)
 */
 void myth_yield(int force_worksteal)
 {
+	myth_init_if_needed();
 	myth_yield_body(force_worksteal);
 }
 
@@ -428,6 +449,7 @@ void myth_yield(int force_worksteal)
 */
 void myth_yield2(void)
 {
+	myth_init_if_needed();
 	myth_yield2_body();
 }
 
@@ -450,26 +472,31 @@ void myth_yield2(void)
 */
 void myth_join(myth_thread_t th,void **result)
 {
+	myth_init_if_needed();
 	myth_join_body(th,result);
 }
 
 int myth_setcancelstate(int state, int *oldstate)
 {
+	myth_init_if_needed();
 	return myth_setcancelstate_body(state,oldstate);
 }
 
 int myth_setcanceltype(int type, int *oldtype)
 {
+	myth_init_if_needed();
 	return myth_setcanceltype_body(type,oldtype);
 }
 
 int myth_cancel(myth_thread_t th)
 {
+	myth_init_if_needed();
 	return myth_cancel_body(th);
 }
 
 void myth_testcancel(void)
 {
+	myth_init_if_needed();
 	myth_testcancel_body();
 }
 
@@ -492,6 +519,7 @@ void myth_testcancel(void)
 */
 int myth_key_create(myth_key_t *__key,void (*__destr_function) (void *))
 {
+	myth_init_if_needed();
 	return myth_key_create_body(__key,__destr_function);
 }
 
@@ -514,6 +542,7 @@ int myth_key_create(myth_key_t *__key,void (*__destr_function) (void *))
 */
 int myth_key_delete(myth_key_t __key)
 {
+	myth_init_if_needed();
 	return myth_key_delete_body(__key);
 }
 
@@ -536,6 +565,7 @@ int myth_key_delete(myth_key_t __key)
 */
 void *myth_getspecific(myth_key_t __key)
 {
+	myth_init_if_needed();
 	return myth_getspecific_body(__key);
 }
 
@@ -558,6 +588,7 @@ void *myth_getspecific(myth_key_t __key)
 */
 int myth_setspecific(myth_key_t __key,void *__pointer)
 {
+	myth_init_if_needed();
 	return myth_setspecific_body(__key,__pointer);
 }
 
@@ -580,31 +611,37 @@ int myth_setspecific(myth_key_t __key,void *__pointer)
 */
 void myth_set_def_stack_size(size_t newsize)
 {
+	myth_init_if_needed();
 	myth_set_def_stack_size_body(newsize);
 }
 
 void myth_log_start(void)
 {
+	myth_init_if_needed();
 	myth_log_start_body();
 }
 
 void myth_log_pause(void)
 {
+	myth_init_if_needed();
 	myth_log_pause_body();
 }
 
 void myth_log_flush(void)
 {
+	myth_init_if_needed();
 	myth_log_flush_body();
 }
 
 void myth_log_reset(void)
 {
+	myth_init_if_needed();
 	myth_log_reset_body();
 }
 
 void myth_log_annotate_thread(myth_thread_t th,char *name)
 {
+	myth_init_if_needed();
 	myth_log_annotate_thread_body(th,name);
 }
 /*
@@ -616,11 +653,13 @@ void myth_log_get_thread_annotation(myth_thread_t th,char *name)
 
 void myth_sched_prof_start(void)
 {
+	myth_init_if_needed();
 	myth_sched_prof_start_body();
 }
 
 void myth_sched_prof_pause(void)
 {
+	myth_init_if_needed();
 	myth_sched_prof_pause_body();
 }
 
@@ -662,6 +701,7 @@ void myth_sched_prof_pause(void)
 */
 myth_barrier_t myth_barrier_create(int nthreads)
 {
+	myth_init_if_needed();
 	return myth_barrier_create_body(nthreads);
 }
 
@@ -684,6 +724,7 @@ myth_barrier_t myth_barrier_create(int nthreads)
 */
 int myth_barrier_wait(myth_barrier_t bar)
 {
+	myth_init_if_needed();
 	return myth_barrier_wait_body(bar);
 }
 
@@ -706,22 +747,26 @@ int myth_barrier_wait(myth_barrier_t bar)
 */
 int myth_barrier_destroy(myth_barrier_t bar)
 {
+	myth_init_if_needed();
 	return myth_barrier_destroy_body(bar);
 }
 
 //join counter:Implementation is not complete, not recommended for use
 myth_jc_t myth_jc_create(int val)
 {
+	myth_init_if_needed();
 	return myth_jc_create_body(val);
 }
 
 void myth_jc_wait(myth_jc_t jc)
 {
+	myth_init_if_needed();
 	myth_jc_wait_body(jc);
 }
 
 void myth_jc_dec(myth_jc_t jc)
 {
+	myth_init_if_needed();
 	myth_jc_dec_body(jc);
 }
 
@@ -744,6 +789,7 @@ void myth_jc_dec(myth_jc_t jc)
 */
 myth_felock_t myth_felock_create(void)
 {
+	myth_init_if_needed();
 	return myth_felock_create_body();
 }
 
@@ -766,6 +812,7 @@ myth_felock_t myth_felock_create(void)
 */
 int myth_felock_destroy(myth_felock_t fe)
 {
+	myth_init_if_needed();
 	return myth_felock_destroy_body(fe);
 }
 
@@ -788,6 +835,7 @@ int myth_felock_destroy(myth_felock_t fe)
 */
 int myth_felock_lock(myth_felock_t fe)
 {
+	myth_init_if_needed();
 	return myth_felock_lock_body(fe);
 }
 
@@ -810,6 +858,7 @@ int myth_felock_lock(myth_felock_t fe)
 */
 int myth_felock_wait_lock(myth_felock_t fe,int val)
 {
+	myth_init_if_needed();
 	return myth_felock_wait_lock_body(fe,val);
 }
 
@@ -832,6 +881,7 @@ int myth_felock_wait_lock(myth_felock_t fe,int val)
 */
 int myth_felock_unlock(myth_felock_t fe)
 {
+	myth_init_if_needed();
 	return myth_felock_unlock_body(fe);
 }
 
@@ -854,6 +904,7 @@ int myth_felock_unlock(myth_felock_t fe)
 */
 int myth_felock_status(myth_felock_t fe)
 {
+	myth_init_if_needed();
 	return myth_felock_status_body(fe);
 }
 
@@ -876,6 +927,7 @@ int myth_felock_status(myth_felock_t fe)
 */
 int myth_felock_set_unlock(myth_felock_t fe,int val)
 {
+	myth_init_if_needed();
 	return myth_felock_set_unlock_body(fe,val);
 }
 
@@ -898,6 +950,7 @@ int myth_felock_set_unlock(myth_felock_t fe,int val)
 */
 myth_mutex_t myth_mutex_create(void)
 {
+	myth_init_if_needed();
 	return myth_mutex_create_body();
 }
 
@@ -920,6 +973,7 @@ myth_mutex_t myth_mutex_create(void)
 */
 void myth_mutex_destroy(myth_mutex_t mtx)
 {
+	myth_init_if_needed();
 	myth_mutex_destroy_body(mtx);
 }
 
@@ -942,6 +996,7 @@ void myth_mutex_destroy(myth_mutex_t mtx)
 */
 int myth_mutex_trylock(myth_mutex_t mtx)
 {
+	myth_init_if_needed();
 	return myth_mutex_trylock_body(mtx);
 }
 
@@ -964,6 +1019,7 @@ int myth_mutex_trylock(myth_mutex_t mtx)
 */
 void myth_mutex_lock(myth_mutex_t mtx)
 {
+	myth_init_if_needed();
 	myth_mutex_lock_body(mtx);
 }
 
@@ -986,6 +1042,7 @@ void myth_mutex_lock(myth_mutex_t mtx)
 */
 void myth_mutex_unlock(myth_mutex_t mtx)
 {
+	myth_init_if_needed();
 	myth_mutex_unlock_body(mtx);
 }
 
@@ -1008,6 +1065,7 @@ void myth_mutex_unlock(myth_mutex_t mtx)
 */
 myth_cond_t myth_cond_create(void)
 {
+	myth_init_if_needed();
 	return myth_cond_create_body();
 }
 
@@ -1030,6 +1088,7 @@ myth_cond_t myth_cond_create(void)
 */
 void myth_cond_destroy(myth_cond_t c)
 {
+	myth_init_if_needed();
 	myth_cond_destroy_body(c);
 }
 
@@ -1052,6 +1111,7 @@ void myth_cond_destroy(myth_cond_t c)
 */
 void myth_cond_signal(myth_cond_t c)
 {
+	myth_init_if_needed();
 	myth_cond_signal_body(c);
 }
 
@@ -1074,6 +1134,7 @@ void myth_cond_signal(myth_cond_t c)
 */
 void myth_cond_broadcast(myth_cond_t c)
 {
+	myth_init_if_needed();
 	myth_cond_broadcast_body(c);
 }
 
@@ -1096,6 +1157,7 @@ void myth_cond_broadcast(myth_cond_t c)
 */
 void myth_cond_wait (myth_cond_t c,myth_mutex_t mtx)
 {
+	myth_init_if_needed();
 	myth_cond_wait_body(c,mtx);
 }
 
@@ -1118,6 +1180,7 @@ void myth_cond_wait (myth_cond_t c,myth_mutex_t mtx)
 */
 size_t myth_wsapi_get_hint_size(myth_thread_t th)
 {
+	myth_init_if_needed();
 	if (th==NULL)th=myth_self();
 	return th->custom_data_size;
 }
@@ -1141,6 +1204,7 @@ size_t myth_wsapi_get_hint_size(myth_thread_t th)
 */
 void *myth_wsapi_get_hint_ptr(myth_thread_t th)
 {
+	myth_init_if_needed();
 	if (th==NULL)th=myth_self();
 	return th->custom_data_ptr;
 }
@@ -1164,6 +1228,7 @@ void *myth_wsapi_get_hint_ptr(myth_thread_t th)
 */
 void myth_wsapi_set_hint(myth_thread_t th,void **data,size_t *size)
 {
+	myth_init_if_needed();
 	if (th==NULL)th=myth_self();
 	void *newdata=*data;size_t newsize=*size;
 	*data=th->custom_data_ptr;*size=th->custom_data_size;
@@ -1189,6 +1254,7 @@ void myth_wsapi_set_hint(myth_thread_t th,void **data,size_t *size)
 */
 int myth_wsapi_rand(void)
 {
+	myth_init_if_needed();
 	return myth_random(0,myth_get_num_workers());
 }
 
@@ -1211,6 +1277,7 @@ int myth_wsapi_rand(void)
 */
 void myth_wsapi_randarr(int *ret,int n)
 {
+	myth_init_if_needed();
 	int i,j;
 	assert(n<=myth_get_num_workers());
 	for (i=0;i<n;i++){
@@ -1247,6 +1314,7 @@ void myth_wsapi_randarr(int *ret,int n)
 */
 myth_thread_t myth_wsapi_runqueue_take(int victim,myth_wsapi_decidefn_t decidefn,void *udata)
 {
+	myth_init_if_needed();
 	myth_thread_queue_t q;
 	myth_wscache_t wc;
 	myth_thread_t ret;
@@ -1326,6 +1394,7 @@ myth_thread_t myth_wsapi_runqueue_take(int victim,myth_wsapi_decidefn_t decidefn
 */
 myth_thread_t myth_wsapi_runqueue_peek(int victim,void *ptr,size_t *psize)
 {
+	myth_init_if_needed();
 	myth_thread_queue_t q;
 	myth_wscache_t wc;
 	q=&g_envs[victim].runnable_q;
@@ -1449,18 +1518,21 @@ myth_thread_t myth_wsapi_runqueue_peek(int victim,void *ptr,size_t *psize)
 
 int myth_wsapi_runqueue_pass(int target,myth_thread_t th)
 {
+	myth_init_if_needed();
 	//fprintf(stderr,"pass %d %p\n",target,th);
 	return myth_queue_trypass(&g_envs[target].runnable_q,th);
 }
 
 void myth_wsapi_runqueue_push(myth_thread_t th)
 {
+	myth_init_if_needed();
 	myth_running_env_t env=myth_get_current_env();
 	myth_queue_push(&env->runnable_q,th);
 }
 
 myth_thread_t myth_wsapi_runqueue_pop(void)
 {
+	myth_init_if_needed();
 	myth_running_env_t env=myth_get_current_env();
 	return myth_queue_pop(&env->runnable_q);
 }
