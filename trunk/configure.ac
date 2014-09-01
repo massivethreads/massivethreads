@@ -23,7 +23,7 @@ AC_PROG_CC_C_O
 AM_PROG_CC_C_O
 AM_PROG_AS
 AC_PROG_AWK
-AM_PROG_AR
+#AM_PROG_AR
 
 # Essential libraries
 AC_CHECK_LIB(dl, dlopen, [], [AC_MSG_ERROR(Test for dlopen failed.)])
