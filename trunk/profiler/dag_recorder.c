@@ -16,6 +16,7 @@ dr_global_state GS = {
   0,				/* root */
   0,				/* start_clock */
   0,				/* generation */
+  0,				/* thread_start_hook */
   0,				/* worker_specific_state_array */
   0,				/* worker_specific_state_list */
   0,				/* worker_specific_state_key */
@@ -23,7 +24,7 @@ dr_global_state GS = {
   0,				/* worker_id_key */
   0,				/* worker_id_key_valid */
   0,				/* worker_id_counter */
-  {
+  { /* options */
     0,	 /* dag_file */
     0,	 /* stat_file */
     0,	 /* gpl_file */
@@ -109,6 +110,9 @@ dr_init_worker_specific_state(dr_worker_specific_state * ts,
   ts->task = (dr_dag_node*)0;
   ts->parent = (dr_dag_node*)0;
   ts->worker = worker;
+  if (GS.thread_start_hook) {
+    GS.thread_start_hook(worker);
+  }
   return 1;
 }
 
@@ -301,6 +305,12 @@ dr_free_dag(dr_dag_node * g, int free_root,
     dr_dag_node_list_init(g->subgraphs);
   }
   dr_dag_node_stack_fini(s);
+}
+
+int dr_register_thread_start_hook(int (*f)(int worker)) {
+  (void)dr_check(!GS.thread_start_hook);
+  GS.thread_start_hook = f;
+  return 1;
 }
 
 /* initialize when called for the first time;

@@ -513,6 +513,7 @@ dr_make_pi_dag(dr_pi_dag * G, dr_dag_node * g,
   dr_string_table st[1];
   dr_string_table_init(st);
   G->num_workers = dr_get_number_of_workers();
+  G->start_clock = start_clock;
   dr_pi_dag_init(G);
   dr_pi_dag_enum_nodes(G, g, start_clock, st); /* G->T */
   dr_pi_dag_enum_edges(G);	/* G->E */
@@ -545,6 +546,7 @@ dr_pi_dag_dump(dr_pi_dag * G, FILE * wp,
 	       const char * filename) {
   if (fwrite(&G->n, sizeof(G->n), 1, wp) != 1
       || fwrite(&G->m, sizeof(G->m), 1, wp) != 1
+      || fwrite(&G->start_clock, sizeof(G->start_clock), 1, wp) != 1
       || fwrite(&G->num_workers, sizeof(G->num_workers), 1, wp) != 1
       || (long)fwrite(G->T, sizeof(dr_pi_dag_node), G->n, wp) != G->n
       || (long)fwrite(G->E, sizeof(dr_pi_dag_edge), G->m, wp) != G->m

@@ -75,8 +75,6 @@ dr_para_prof_destroy(dr_para_prof * pp) {
 }
 
 
-#if 1
-
 static void 
 dr_para_prof_add_hist(dr_para_prof * pp, dr_clock_t t) {
   long sz = pp->hist_sz;
@@ -152,41 +150,7 @@ dr_para_prof_add_hist(dr_para_prof * pp, dr_clock_t t) {
     pp->last_counts_float[k] = pp->counts_float[k];
     pp->last_record_time = t;
   }
-  
-
 }
-
-#else
-
-static void 
-dr_para_prof_add_hist(dr_para_prof * pp, dr_clock_t t) {
-  long sz = pp->hist_sz;
-  long n = pp->n_hists;
-  dr_para_prof_history_entry * hist = pp->history;
-  //long last_t = (n ? hist[n-1].t : 0);
-  // (last_t + (t - last_t) * (sz - n) >= pp->last_time)
-
-  if (t == 0 || (t / (double)pp->last_time > n / (double)sz)) {
-    int k;
-    dr_para_prof_history_entry * h = &hist[n];
-    assert(n < sz);
-    h->t = t;
-    for (k = 0; k < dr_node_state_max; k++) {
-      h->hist[k] = pp->counts[k];
-      h->hist_float[k] = pp->counts_float[k];
-    }
-    if (GS.opts.dbg_level>=2) {
-      fprintf(stderr, "hist[%ld] @ %llu :", n, t);
-      for (k = 0; k < dr_node_state_max; k++) {
-	fprintf(stderr, " %f", h->hist_float[k]);
-      }
-      fprintf(stderr, "\n");
-    }
-    pp->n_hists = n + 1;
-  }
-}
-
-#endif
 
 static void
 dr_para_prof_check(dr_para_prof * pp) {
@@ -253,26 +217,16 @@ dr_para_prof_write_to_file(dr_para_prof * pp, FILE * wp) {
 	  y_prev       += h[i-1].hist[j];
 	  y_prev_float += h[i-1].hist_float[j];
 	}
-#if 1
 	fprintf(wp, "%llu %f %f\n", 
 		h[i].t, y_prev_float, 
 		y_prev_float + h[i-1].hist_float[k]);
-#else
-	fprintf(wp, "%llu %d %d\n", 
-		h[i].t, y_prev, y_prev + h[i-1].hist[k]);
-#endif
       }
       for (j = 0; j < k; j++) {
 	y += h[i].hist[j];
 	y_float += h[i].hist_float[j];
       }
-#if 1
       fprintf(wp, "%llu %f %f\n", 
 	      h[i].t, y_float, y_float + h[i].hist_float[k]);
-#else
-      fprintf(wp, "%llu %d %d\n", 
-	      h[i].t, y, y + h[i].hist[k]);
-#endif
     }
     fprintf(wp, "e\n");
   }
@@ -345,10 +299,14 @@ dr_para_prof_process_event(chronological_traverser * pp_,
   dr_para_prof * pp = (dr_para_prof *)pp_;
   switch (ev.kind) {
   case dr_event_kind_ready: {
-    // dr_node_state_t k = calc_node_state(ev.pred, ev.edge_kind);
-    // dr_node_state_t k = dr_dag_edge_kind_to_node_state(ev.u->incoming_edge_kind);
+    /* dt = time between 
+       the point when a leaf in u first became ready and 
+       the point when a leaf in u last became started */
     double dt = ev.u->info.last_start_t - ev.u->info.first_ready_t;
+    /* t_ready = cumulative time in which tasks are ready */
     dr_clock_t * t_ready = ev.u->info.t_ready;
+    /* on average we have t_read/dt tasks ready in 
+       the interval mentioned above */
     dr_dag_edge_kind_t k;
     for (k = 0; k < dr_dag_edge_kind_max; k++) {
       dr_node_state_t s = dr_dag_edge_kind_to_node_state(k);
@@ -364,7 +322,6 @@ dr_para_prof_process_event(chronological_traverser * pp_,
     break;
   }
   case dr_event_kind_start: {
-    // dr_node_state_t k = calc_node_state(ev.pred, ev.edge_kind);
     double dt = ev.u->info.end.t - ev.u->info.start.t;
     dr_clock_t w = ev.u->info.t_1;
     if (GS.opts.dbg_level>=2) {
@@ -377,7 +334,6 @@ dr_para_prof_process_event(chronological_traverser * pp_,
     break;
   }
   case dr_event_kind_last_start: {
-    // dr_node_state_t k = calc_node_state(ev.pred, ev.edge_kind);
     double dt = ev.u->info.last_start_t - ev.u->info.first_ready_t;
     dr_clock_t * t_ready = ev.u->info.t_ready;
     dr_dag_edge_kind_t k;
