@@ -59,6 +59,7 @@ typedef struct {
 typedef struct dr_pi_dag {
   long n;			/* length of T */
   long m;			/* length of E */
+  long start_clock;		/* absolute clock time of start */
   long num_workers;		/* number of workers */
   dr_pi_dag_node * T;		/* all nodes in a contiguous array */
   dr_pi_dag_edge * E;		/* all edges in a contiguous array */

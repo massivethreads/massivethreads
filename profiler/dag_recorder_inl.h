@@ -244,6 +244,8 @@ extern "C" {
     /* generation is incremented everytime we start/stop
        dag recorder. it is odd iff profiling is on */
     long generation;
+    /* callback */
+    int (*thread_start_hook)(int worker);
     /* two methods to maintain worker-specific states
        (1) fixed-sized array
        (2) linear list

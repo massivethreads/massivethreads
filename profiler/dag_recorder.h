@@ -40,6 +40,8 @@ extern "C" {
 #define static_if_inline
 #endif
 
+  /* experimental backtrace sampling */
+
   /* data type for clocks (64 bits) */
   typedef unsigned long long dr_clock_t;
 
@@ -235,6 +237,8 @@ extern "C" {
 
   static_if_inline void 
   dr_end_task__(const char * file, int line, int worker);
+
+  int dr_register_thread_start_hook(int (*f)(int worker));
 
   void dr_start__(dr_options * opts, const char * file, int line, 
 		  int worker, int num_workers);

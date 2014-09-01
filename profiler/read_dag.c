@@ -23,6 +23,7 @@ dr_read_dag(const char * filename) {
   }
   if (read(fd, &G->n, sizeof(G->n)) != sizeof(G->n)
       || read(fd, &G->m, sizeof(G->m)) != sizeof(G->m)
+      || read(fd, &G->start_clock, sizeof(G->start_clock)) != sizeof(G->start_clock)
       || read(fd, &G->num_workers, sizeof(G->num_workers)) != sizeof(G->num_workers)) {
     const char * err = strerror(errno);
     fprintf(stderr, "read: %s (%s) offset %ld\n", 
@@ -31,7 +32,7 @@ dr_read_dag(const char * filename) {
     return 0;
   }
   off_t file_sz = lseek(fd, 0, SEEK_END);
-  off_t header_sz = sizeof(G->n) + sizeof(G->m) + sizeof(G->num_workers);
+  off_t header_sz = sizeof(G->n) + sizeof(G->m) + sizeof(G->start_clock) + sizeof(G->num_workers);
   a = mmap(NULL, file_sz, PROT_READ | PROT_WRITE,
 	   MAP_PRIVATE, fd, 0);
   if (a == MAP_FAILED) {
