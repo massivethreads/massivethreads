@@ -6,6 +6,14 @@
 
 #include <dag_recorder.h>
 
+/* these are used to make sure the library version
+   that dumps a dag file and the version that 
+   reads it match.
+   you ought not change the length of this string.
+   they are the first bytes of dag recorder files */
+#define DAG_RECORDER_HEADER     "DAG_RECORDER FORMAT VERSION  1.23\n"
+#define DAG_RECORDER_HEADER_LEN 34
+
 /* a node of the dag, position independent */
 struct dr_pi_dag_node {
   /* misc. information about this node */

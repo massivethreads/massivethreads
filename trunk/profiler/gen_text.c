@@ -11,11 +11,20 @@ dr_pi_dag_gen_text_node(long idx,
 			dr_pi_dag_node * g, 
 			dr_pi_dag * G, FILE * wp, const char * sep) {
   (void)G;
+  int i;
   fprintf(wp, "%ld",   idx);
   fprintf(wp, "%s%s",   sep, dr_dag_node_kind_to_str(g->info.kind));
   fprintf(wp, "%s%s",   sep, dr_dag_edge_kind_to_str(g->info.in_edge_kind));
   fprintf(wp, "%s%llu", sep, g->info.start.t);
+  /* ********************8 */
+  for (i = 0; i < dr_max_counters; i++) {
+    fprintf(wp, "%s%llu", sep, g->info.start.counters[i]);
+  }
   fprintf(wp, "%s%llu", sep, g->info.end.t);
+  /* ******************** */
+  for (i = 0; i < dr_max_counters; i++) {
+    fprintf(wp, "%s%llu", sep, g->info.end.counters[i]);
+  }
   fprintf(wp, "%s%llu", sep, g->info.est);
   fprintf(wp, "%s%llu", sep, g->info.t_1);
   fprintf(wp, "%s%llu", sep, g->info.t_inf);

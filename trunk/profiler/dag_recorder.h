@@ -44,6 +44,22 @@ extern "C" {
 
   /* data type for clocks (64 bits) */
   typedef unsigned long long dr_clock_t;
+  /* dag node */
+  typedef struct dr_dag_node dr_dag_node;
+  /* hook */
+  typedef int (*dr_hook)(dr_dag_node * node);
+
+  typedef struct {
+    dr_hook start_task;
+    dr_hook begin_section;
+    dr_hook enter_create_task;
+    dr_hook return_from_create_task;
+    dr_hook enter_wait_tasks;
+    dr_hook return_from_wait_tasks;
+    dr_hook enter_other;
+    dr_hook return_from_other;
+    dr_hook end_task;
+  } dr_hooks;
 
   /* runtime-settable options */
   typedef struct dr_options {
@@ -64,7 +80,8 @@ extern "C" {
     long prune_threshold;	/* prune nodes larger than node_count_target * prune_threshold */
     long alloc_unit_mb;	        /* node allocation unit in bytes */
     long pre_alloc_per_worker;  /* pre-allocated units per worker */
-    long pre_alloc;	 /* pre-allocated units */
+    long pre_alloc;	        /* pre-allocated units */
+    dr_hooks hooks;		/* hooks */
     int gpl_sz;			/* size of gpl file */
     char worker_specific_state_array; 
                                 /* set 1 to use array of worker-specific states */
@@ -106,6 +123,17 @@ extern "C" {
     1,		/* alloc unit in MB */
     0,	       /* the number of pre-allocations */
     0,	       /* the number of pre-allocations per worker */
+    {
+      0,	     /* start_task */
+      0,	     /* begin_section */
+      0,	     /* enter_create_task */
+      0,	     /* return_from_create_task */
+      0,	     /* enter_wait_tasks */
+      0,	     /* return_from_wait_tasks */
+      0,	     /* dr_hook enter_other */
+      0,	     /* return_from_other */
+      0,	     /* end_task */
+    },
     4000,      /* gpl_sz */
     0,	       /* worker_specific_state_array */
     0,	       /* dbg_level */
@@ -114,8 +142,6 @@ extern "C" {
     0,	       /* record_cpu */
   };
   
-  typedef struct dr_dag_node dr_dag_node;
-
   /* all instrumentation functions are defined as
      macros below, as calling corresponding functions
      taking extra parameters (caller's location, and

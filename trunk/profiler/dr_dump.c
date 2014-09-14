@@ -553,7 +553,9 @@ dr_pi_dag_dump(dr_pi_dag * G, FILE * wp,
   total_sz += sizeof(dr_pi_dag_edge) * G->m;
   total_sz += G->S->sz;
   fprintf(stderr, "dr_pi_dag_dump: %ld bytes\n", total_sz);
-  if (fwrite(&G->n, sizeof(G->n), 1, wp) != 1
+
+  if (fwrite(DAG_RECORDER_HEADER, DAG_RECORDER_HEADER_LEN, 1, wp) != 1
+      || fwrite(&G->n, sizeof(G->n), 1, wp) != 1
       || fwrite(&G->m, sizeof(G->m), 1, wp) != 1
       || fwrite(&G->start_clock, sizeof(G->start_clock), 1, wp) != 1
       || fwrite(&G->num_workers, sizeof(G->num_workers), 1, wp) != 1
