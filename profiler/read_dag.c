@@ -16,23 +16,42 @@ dr_read_dag(const char * filename) {
   int fd = open(filename, O_RDONLY);
   void * a;
   dr_pi_dag * G = dr_malloc(sizeof(dr_pi_dag));
+  char header_buf[DAG_RECORDER_HEADER_LEN+1];
   if (fd == -1) {
     fprintf(stderr, "open: %s (%s)\n", 
 	    strerror(errno), filename);
     return 0;
   }
-  if (read(fd, &G->n, sizeof(G->n)) != sizeof(G->n)
-      || read(fd, &G->m, sizeof(G->m)) != sizeof(G->m)
-      || read(fd, &G->start_clock, sizeof(G->start_clock)) != sizeof(G->start_clock)
-      || read(fd, &G->num_workers, sizeof(G->num_workers)) != sizeof(G->num_workers)) {
+  header_buf[DAG_RECORDER_HEADER_LEN] = 0;
+  ssize_t r;
+  if ((r = read(fd, header_buf, DAG_RECORDER_HEADER_LEN)) 
+      != DAG_RECORDER_HEADER_LEN
+      || (r = read(fd, &G->n, sizeof(G->n))) != sizeof(G->n)
+      || (r = read(fd, &G->m, sizeof(G->m))) != sizeof(G->m)
+      || (r = read(fd, &G->start_clock, sizeof(G->start_clock))) 
+      != sizeof(G->start_clock)
+      || (r = read(fd, &G->num_workers, sizeof(G->num_workers)))
+      != sizeof(G->num_workers)) {
     const char * err = strerror(errno);
-    fprintf(stderr, "read: %s (%s) offset %ld\n", 
+    fprintf(stderr, 
+	    "read: %s (%s) offset %ld\n", 
 	    err, filename, lseek(fd, 0, SEEK_CUR));
     close(fd);
     return 0;
   }
+  if (strcmp(header_buf, DAG_RECORDER_HEADER)) {
+    fprintf(stderr, 
+	    "error: format version mismatch. expected %s, read %s\n", 
+	    DAG_RECORDER_HEADER, header_buf);
+    close(fd);
+    return 0;
+  }
+
+  off_t header_sz = lseek(fd, 0, SEEK_CUR);
   off_t file_sz = lseek(fd, 0, SEEK_END);
-  off_t header_sz = sizeof(G->n) + sizeof(G->m) + sizeof(G->start_clock) + sizeof(G->num_workers);
+  dr_check(header_sz 
+	   == DAG_RECORDER_HEADER_LEN + sizeof(G->n) + sizeof(G->m) 
+	   + sizeof(G->start_clock) + sizeof(G->num_workers));
   a = mmap(NULL, file_sz, PROT_READ | PROT_WRITE,
 	   MAP_PRIVATE, fd, 0);
   if (a == MAP_FAILED) {

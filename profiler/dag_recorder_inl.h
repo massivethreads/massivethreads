@@ -114,8 +114,10 @@ extern "C" {
   } code_pos;
 
   /* code position + clock */
+  enum { dr_max_counters = 4 };
   typedef struct {
     dr_clock_t t;		/* clock */
+    long long counters[dr_max_counters];	/*  */
     code_pos pos;		/* code position */
   } dr_clock_pos;
 
@@ -152,6 +154,7 @@ extern "C" {
     long min_node_count;
     /* direct children of create_task type */
     long n_child_create_tasks;
+    /* worker */
     int worker;
     int cpu;
     dr_dag_node_kind_t kind;
@@ -641,6 +644,11 @@ extern "C" {
     return (x < y ? x : y);
   }
 
+  static inline dr_clock_t
+  dr_max_count(long long x, long long y) {
+    return (x < y ? y : x);
+  }
+
   static inline int
   dr_meet_ints(int x, int y) {
     return (x == y ? x : -1);
@@ -846,6 +854,10 @@ extern "C" {
       nt->info.in_edge_kind = dr_dag_edge_kind_create;
       /* set current task to the node just created */
       dr_set_cur_task_(wss, nt);
+      /* call hook */
+      if (GS.opts.hooks.start_task) {
+	GS.opts.hooks.start_task(nt);
+      }
       /* record info on the point of start */
       dr_set_start_info(&nt->info.start, file, line);
     }
@@ -874,8 +886,12 @@ extern "C" {
       dr_dag_node * t = dr_get_cur_task_(wss);
       /* the current section of this task */
       dr_dag_node * s = dr_task_active_node(t);
-      /* pus a new section as a child of the current section */
+      /* push a new section as a child of the current section */
       dr_dag_node * new_s = dr_push_back_section(t, s, wss->freelist);
+      /* call hook */
+      if (GS.opts.hooks.begin_section) {
+	GS.opts.hooks.begin_section(new_s);
+      }
       if (DAG_RECORDER_VERBOSE_LEVEL>=3) {
 	printf("dr_begin_section() by %d task=%p,"
 	       " parent section=%p, new section = %p\n", 
@@ -923,6 +939,10 @@ extern "C" {
 		       file, line, t->info.start);
       /* tell the caller the node just created */
       *c = ct;
+      /* call hook */
+      if (GS.opts.hooks.enter_create_task) {
+	GS.opts.hooks.enter_create_task(ct);
+      }
       return t;
     } else {
       return (dr_dag_node *)0;
@@ -975,6 +995,10 @@ extern "C" {
       (void)dr_check(t->info.first_ready_t > 0);
       /* its incoming edge must be create_cont type */
       t->info.in_edge_kind = dr_dag_edge_kind_create_cont;
+      /* call hook */
+      if (GS.opts.hooks.return_from_create_task) {
+	GS.opts.hooks.return_from_create_task(t);
+      }
       /* record an interval just started */
       dr_set_start_info(&t->info.start, file, line);
     }
@@ -1013,6 +1037,10 @@ extern "C" {
 		       t->info.first_ready_t, 
 		       file, line, 
 		       t->info.start);
+      /* call hook */
+      if (GS.opts.hooks.enter_wait_tasks) {
+	GS.opts.hooks.enter_wait_tasks(i);
+      }
       return t;
     } else {
       return (dr_dag_node *)0;
@@ -1126,6 +1154,12 @@ extern "C" {
 	       have finished eariler than one of its
 	       children */
 	    s->info.end.t = dr_max_clock(c->info.end.t, s->info.end.t);
+	    /* ******************************** */
+	    int i;
+	    for (i = 0; i < dr_max_counters; i++) {
+	      s->info.end.counters[i] = 
+		dr_max_count(c->info.end.counters[i], s->info.end.counters[i]);
+	    }
 	    s->info.last_start_t 
 	      = dr_max_clock(c->info.last_start_t, s->info.last_start_t);
 	    s->info.t_1     += c->info.t_1;
@@ -1691,6 +1725,10 @@ extern "C" {
 	  /* record start time etc. */
 	  dr_set_start_info(&t->info.start, file, line);
 	}
+	/* call hook */
+	if (GS.opts.hooks.return_from_wait_tasks) {
+	  GS.opts.hooks.return_from_wait_tasks(t);
+	}
       }
     }
   }
@@ -1722,6 +1760,10 @@ extern "C" {
 		       end_t, t->info.est, 
 		       t->info.first_ready_t, 
 		       file, line, t->info.start);
+      /* call hook */
+      if (GS.opts.hooks.enter_other) {
+	GS.opts.hooks.enter_other(i);
+      }
       return t;
     } else {
       return (dr_dag_node *)0;
@@ -1751,6 +1793,10 @@ extern "C" {
       (void)dr_check(t->info.first_ready_t > 0);
       /* its incoming edge must be create_cont type */
       t->info.in_edge_kind = dr_dag_edge_kind_other_cont;
+      /* call hook */
+      if (GS.opts.hooks.return_from_other) {
+	GS.opts.hooks.return_from_other(t);
+      }
       /* record an interval just started */
       dr_set_start_info(&t->info.start, file, line);
     }
@@ -1782,6 +1828,10 @@ extern "C" {
 		       file, line, t->info.start);
       dr_summarize_section_or_task(wss->prune_stack, t, 
 				   wss->freelist);
+      /* call hook */
+      if (GS.opts.hooks.end_task) {
+	GS.opts.hooks.end_task(i);
+      }
     }
   }
 
