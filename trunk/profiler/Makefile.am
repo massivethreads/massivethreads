@@ -1,3 +1,4 @@
+SUBDIRS = . dag2any drview
 
 # required when you use libtool (for building shared libs)
 ACLOCAL_AMFLAGS = -I m4
