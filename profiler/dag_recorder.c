@@ -5,7 +5,7 @@
 /* 
    this file primarily implements dr_start and dr_stop
  */
-
+#define DAG_RECORDER 2
 #include "dag_recorder_impl.h"
 
 /* the (only) shared global variable */
@@ -40,8 +40,13 @@ dr_global_state GS = {
     0,	 /* node_count_target */
     0,	 /* prune_threshold */
     0,	 /* alloc unit in MB */
-    0,	 /* the number of pre-allocations */
+    0,	 /* pre-alloc per worker */
+    0,	 /* pre-alloc */
+    {	 /* hooks */
+      0, 0, 0, 0, 0, 0, 0, 0, 0
+    },
     0,	 /* gpl_sz */
+    0,	 /* worker_specific_state_array */
     0,	 /* dbg_level */
     0,	 /* verbose_level */
     0,	 /* chk_level */

@@ -15,10 +15,10 @@ nobase_include_HEADERS = \
 	mtbb/task_group.h \
 	mtbb/parallel_for.h \
 	mtbb/parallel_reduce.h \
-	tpswitch/cilk_dr.h \
 	tpswitch/omp_dr.h \
-	tpswitch/serial_dr.h \
 	tpswitch/tbb_dr.h \
+	tpswitch/cilk_dr.h \
+	tpswitch/serial_dr.h \
 	tpswitch/tpswitch.h
 
 libmyth_la_SOURCES        = $(COMMON_SRCS) myth_if_native.c myth_if_pthread.c myth_constructor.c

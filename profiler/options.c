@@ -2,6 +2,7 @@
  * options.c
  */
 
+#define DAG_RECORDER 2
 #include "dag_recorder_impl.h"
 
 /* read environment variable v and parse it as a
@@ -66,7 +67,7 @@ dr_opts_init(dr_options * opts) {
 }
 
 /* fill opts with default values for all options */
-void dr_options_default(dr_options * opts) {
+void dr_options_default_(dr_options * opts) {
   * opts = dr_options_default_values;
 
   if (getenv_str("DAG_RECORDER_DAG_FILE",     &opts->dag_file)
@@ -112,40 +113,42 @@ void dr_options_default(dr_options * opts) {
 void 
 dr_opts_print(dr_options * opts) {
   if (!opts) opts = &GS.opts;
-  FILE * wp = stderr;
-  fprintf(wp, "DAG Recorder Options:\n");
-  fprintf(wp, "dag_file (DAG_RECORDER_DAG_FILE,DR_DAG) : %s\n", 
-	  opts->dag_file);
-  fprintf(wp, "stat_file (DAG_RECORDER_STAT_FILE,DR_STAT) : %s\n", 
-	  opts->stat_file);
-  fprintf(wp, "gpl_file (DAG_RECORDER_GPL_FILE,DR_GPL) : %s\n", 
-	  opts->gpl_file);
-  fprintf(wp, "dot_file (DAG_RECORDER_DOT_FILE,DR_DOT) : %s\n", 
-	  opts->dot_file);
-  fprintf(wp, "text_file (DAG_RECORDER_TEXT_FILE,DR_TEXT) : %s\n", 
-	  opts->text_file);
-  fprintf(wp, "gpl_sz (DAG_RECORDER_GPL_SIZE,DR_GPL_SZ) : %d\n", 
-	  opts->gpl_sz);
-  fprintf(wp, "text_file (DAG_RECORDER_TEXT_FILE_SEP,DR_TEXT_SEP) : %s\n", 
-	  opts->text_file_sep);
-  fprintf(wp, "dbg_level (DAG_RECORDER_DBG_LEVEL,DR_DBG) : %d\n", 
-	  opts->dbg_level);
-  fprintf(wp, "verbose_level (DAG_RECORDER_VERBOSE_LEVEL,DR_VERBOSE) : %d\n", 
-	  opts->verbose_level);
-  fprintf(wp, "chk_level (DAG_RECORDER_CHK_LEVEL,DR_CHK) : %d\n", 
-	  opts->chk_level);
-  fprintf(wp, "uncollapse_min (DAG_RECORDER_UNCOLLAPSE_MIN,DR_UNCOLLAPSE_MIN) : %llu\n", 
-	  opts->uncollapse_min);
-  fprintf(wp, "collapse_max (DAG_RECORDER_COLLAPSE_MAX,DR_COLLAPSE_MAX) : %llu\n", 
-	  opts->collapse_max);
-  fprintf(wp, "node_count_target (DAG_RECORDER_NODE_COUNT,DR_NC) : %ld\n", 
-	  opts->node_count_target);
-  fprintf(wp, "prune_threshold (DAG_RECORDER_PRUNE_THRESHOLD,DR_PRUNE) : %ld\n", 
-	  opts->prune_threshold);
-  fprintf(wp, "alloc_unit_mb (DAG_RECORDER_ALLOC_UNIT_MB,DR_ALLOC_UNIT_MB) : %ld\n", 
-	  opts->alloc_unit_mb);
-  fprintf(wp, "pre_alloc_per_worker (DAG_RECORDER_PRE_ALLOC_PER_WORKER,DR_PRE_ALLOC_PER_WORKER) : %ld\n", 
-	  opts->pre_alloc_per_worker);
-  fprintf(wp, "pre_alloc (DAG_RECORDER_PRE_ALLOC,DR_PRE_ALLOC) : %ld\n", 
-	  opts->pre_alloc);
+  if (opts->verbose_level >= 1) {
+    FILE * wp = stderr;
+    fprintf(wp, "DAG Recorder Options:\n");
+    fprintf(wp, "dag_file (DAG_RECORDER_DAG_FILE,DR_DAG) : %s\n", 
+	    opts->dag_file);
+    fprintf(wp, "stat_file (DAG_RECORDER_STAT_FILE,DR_STAT) : %s\n", 
+	    opts->stat_file);
+    fprintf(wp, "gpl_file (DAG_RECORDER_GPL_FILE,DR_GPL) : %s\n", 
+	    opts->gpl_file);
+    fprintf(wp, "dot_file (DAG_RECORDER_DOT_FILE,DR_DOT) : %s\n", 
+	    opts->dot_file);
+    fprintf(wp, "text_file (DAG_RECORDER_TEXT_FILE,DR_TEXT) : %s\n", 
+	    opts->text_file);
+    fprintf(wp, "gpl_sz (DAG_RECORDER_GPL_SIZE,DR_GPL_SZ) : %d\n", 
+	    opts->gpl_sz);
+    fprintf(wp, "text_file (DAG_RECORDER_TEXT_FILE_SEP,DR_TEXT_SEP) : %s\n", 
+	    opts->text_file_sep);
+    fprintf(wp, "dbg_level (DAG_RECORDER_DBG_LEVEL,DR_DBG) : %d\n", 
+	    opts->dbg_level);
+    fprintf(wp, "verbose_level (DAG_RECORDER_VERBOSE_LEVEL,DR_VERBOSE) : %d\n", 
+	    opts->verbose_level);
+    fprintf(wp, "chk_level (DAG_RECORDER_CHK_LEVEL,DR_CHK) : %d\n", 
+	    opts->chk_level);
+    fprintf(wp, "uncollapse_min (DAG_RECORDER_UNCOLLAPSE_MIN,DR_UNCOLLAPSE_MIN) : %llu\n", 
+	    opts->uncollapse_min);
+    fprintf(wp, "collapse_max (DAG_RECORDER_COLLAPSE_MAX,DR_COLLAPSE_MAX) : %llu\n", 
+	    opts->collapse_max);
+    fprintf(wp, "node_count_target (DAG_RECORDER_NODE_COUNT,DR_NC) : %ld\n", 
+	    opts->node_count_target);
+    fprintf(wp, "prune_threshold (DAG_RECORDER_PRUNE_THRESHOLD,DR_PRUNE) : %ld\n", 
+	    opts->prune_threshold);
+    fprintf(wp, "alloc_unit_mb (DAG_RECORDER_ALLOC_UNIT_MB,DR_ALLOC_UNIT_MB) : %ld\n", 
+	    opts->alloc_unit_mb);
+    fprintf(wp, "pre_alloc_per_worker (DAG_RECORDER_PRE_ALLOC_PER_WORKER,DR_PRE_ALLOC_PER_WORKER) : %ld\n", 
+	    opts->pre_alloc_per_worker);
+    fprintf(wp, "pre_alloc (DAG_RECORDER_PRE_ALLOC,DR_PRE_ALLOC) : %ld\n", 
+	    opts->pre_alloc);
+  }
 }

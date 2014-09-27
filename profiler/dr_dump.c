@@ -5,6 +5,7 @@
 #include <errno.h>
 #include <string.h>
 
+#define DAG_RECORDER 2
 #include "dag_recorder_impl.h"
 
 extern dr_global_state GS;
@@ -499,7 +500,6 @@ dr_get_number_of_workers() {
     for (wss = GS.worker_specific_state_list; wss; wss = wss->next) {
       n++;
     }
-    printf("%d workers\n", n);
     return n;
   }
 }
@@ -552,7 +552,8 @@ dr_pi_dag_dump(dr_pi_dag * G, FILE * wp,
   total_sz += sizeof(dr_pi_dag_node) * G->n;
   total_sz += sizeof(dr_pi_dag_edge) * G->m;
   total_sz += G->S->sz;
-  fprintf(stderr, "dr_pi_dag_dump: %ld bytes\n", total_sz);
+  if (GS.opts.verbose_level >= 1) 
+    fprintf(stderr, "dr_pi_dag_dump: %ld bytes\n", total_sz);
 
   if (fwrite(DAG_RECORDER_HEADER, DAG_RECORDER_HEADER_LEN, 1, wp) != 1
       || fwrite(&G->n, sizeof(G->n), 1, wp) != 1
@@ -577,10 +578,12 @@ static int dr_gen_pi_dag(dr_pi_dag * G) {
   const char * filename = GS.opts.dag_file;
   if (filename && strcmp(filename, "") != 0) {
     if (strcmp(filename, "-") == 0) {
-      fprintf(stderr, "writing dag to stdout\n");
+      if (GS.opts.verbose_level >= 1)
+	fprintf(stderr, "writing dag to stdout\n");
       wp = stdout;
     } else {
-      fprintf(stderr, "writing dag to %s\n", filename);
+      if (GS.opts.verbose_level >= 1)
+	fprintf(stderr, "writing dag to %s\n", filename);
       wp = fopen(filename, "wb");
       if (!wp) { 
 	fprintf(stderr, "fopen: %s (%s)\n", strerror(errno), filename); 
@@ -589,7 +592,8 @@ static int dr_gen_pi_dag(dr_pi_dag * G) {
       must_close = 1;
     }
   } else {
-    fprintf(stderr, "not writing dag\n");
+    if (GS.opts.verbose_level >= 1)
+      fprintf(stderr, "not writing dag\n");
   }
   if (wp) {
     dr_pi_dag_dump(G, wp, filename);
@@ -602,15 +606,17 @@ static int dr_gen_pi_dag(dr_pi_dag * G) {
    (this function does not belong to this file...) */
 FILE * 
 dr_pi_dag_open_to_write(const char * filename, const char * file_kind, 
-			int * must_close_p) {
+			int * must_close_p, int show_message) {
   *must_close_p = 0;
   if (filename && strcmp(filename, "") != 0) {
     if (strcmp(filename, "-") == 0) {
-      fprintf(stderr, "writing %s to stdout\n", file_kind);
+      if (show_message) 
+	fprintf(stderr, "writing %s to stdout\n", file_kind);
       return stdout;
     } else {
       FILE * wp = fopen(filename, "wb");
-      fprintf(stderr, "writing %s to %s\n", file_kind, filename);
+      if (show_message) 
+	fprintf(stderr, "writing %s to %s\n", file_kind, filename);
       if (!wp) { 
 	fprintf(stderr, "fopen: %s (%s)\n", strerror(errno), filename); 
 	return (FILE *)0;
@@ -619,17 +625,19 @@ dr_pi_dag_open_to_write(const char * filename, const char * file_kind,
       return wp;
     }
   } else {
-    fprintf(stderr, "not writing %s\n", file_kind);
+    if (show_message) 
+      fprintf(stderr, "not writing %s\n", file_kind);
     return (FILE *)0;
   }
 }
 
 /* --------------------- free dag ------------------- */
 
-void dr_dump() {
+void dr_dump_() {
   if (GS.root) {
     dr_pi_dag G[1];
     dr_make_pi_dag(G, GS.root, GS.start_clock);
+    interpolate_counters(G);
     dr_gen_pi_dag(G);
     dr_gen_basic_stat(G);
     dr_gen_gpl(G);

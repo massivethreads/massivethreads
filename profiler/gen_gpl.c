@@ -4,6 +4,7 @@
 
 #include <errno.h>
 #include <string.h>
+#define DAG_RECORDER 2
 #include "dag_recorder_impl.h"
 
 /* 
@@ -375,7 +376,8 @@ dr_para_prof_process_event(chronological_traverser * pp_,
 int 
 dr_gen_gpl(dr_pi_dag * G) {
   int must_close = 0;
-  FILE * wp = dr_pi_dag_open_to_write(GS.opts.gpl_file, "stat", &must_close);
+  FILE * wp = dr_pi_dag_open_to_write(GS.opts.gpl_file, "parallelism", &must_close,
+				      GS.opts.verbose_level >= 1);
   if (!wp) return 1;
   dr_pi_dag_node * last = dr_pi_dag_node_last(G->T, G);
   dr_para_prof pp[1];

@@ -118,6 +118,8 @@ extern "C" {
   typedef struct {
     dr_clock_t t;		/* clock */
     long long counters[dr_max_counters];	/*  */
+    int worker;
+    int cpu;
     code_pos pos;		/* code position */
   } dr_clock_pos;
 
@@ -156,6 +158,7 @@ extern "C" {
     long n_child_create_tasks;
     /* worker */
     int worker;
+    /* cpu */
     int cpu;
     dr_dag_node_kind_t kind;
     dr_dag_edge_kind_t in_edge_kind;
@@ -734,8 +737,13 @@ extern "C" {
     dn->info.in_edge_kind = edge_kind;
     dn->info.cur_node_count = 1;
     dn->info.min_node_count = 1;
+    dn->info.end.worker = worker;
+    dn->info.end.cpu    = dr_getcpu();
+    /* by construction, the worker should not change */
+    (void)dr_check(dn->info.start.worker == dn->info.end.worker);
     dn->info.worker = worker;
-    dn->info.cpu = dr_getcpu();
+    /* OS may migrate workers */
+    dn->info.cpu = dr_meet_ints(dn->info.start.cpu, dn->info.end.cpu);
   }
 
   /* auxiliary functions that modify or query task and section */
@@ -812,10 +820,13 @@ extern "C" {
   /* called when we start a task */
 
   static void
-  dr_set_start_info(dr_clock_pos * p, const char * file, int line) {
+  dr_set_start_info(dr_clock_pos * p, 
+		    int worker, const char * file, int line) {
     p->pos.file = file;
     p->pos.line = line;
     p->t = dr_get_tsc();
+    p->worker = worker;
+    p->cpu = dr_getcpu();
   }
 
   /* 
@@ -859,7 +870,7 @@ extern "C" {
 	GS.opts.hooks.start_task(nt);
       }
       /* record info on the point of start */
-      dr_set_start_info(&nt->info.start, file, line);
+      dr_set_start_info(&nt->info.start, wss->worker, file, line);
     }
   }
   
@@ -1000,7 +1011,7 @@ extern "C" {
 	GS.opts.hooks.return_from_create_task(t);
       }
       /* record an interval just started */
-      dr_set_start_info(&t->info.start, file, line);
+      dr_set_start_info(&t->info.start, wss->worker, file, line);
     }
   }
 
@@ -1126,7 +1137,7 @@ extern "C" {
 	  
 	  /* meet workers and cpus */
 	  s->info.worker = dr_meet_ints(s->info.worker, x->info.worker);
-	  s->info.cpu = dr_meet_ints(s->info.cpu, x->info.cpu);
+	  s->info.cpu    = dr_meet_ints(s->info.cpu, x->info.cpu);
 	  /* accumulate node counts of each type */
 	  for (k = 0; k < dr_dag_node_kind_section; k++) {
 	    s->info.logical_node_counts[k] += x->info.logical_node_counts[k];
@@ -1183,7 +1194,7 @@ extern "C" {
 	    }
 	    
 	    s->info.worker = dr_meet_ints(s->info.worker, c->info.worker);
-	    s->info.cpu = dr_meet_ints(s->info.cpu, c->info.cpu);
+	    s->info.cpu    = dr_meet_ints(s->info.cpu, c->info.cpu);
 	    /* if a section contains a create task node,
 	       count its children as well */
 	    for (k = 0; k < dr_dag_node_kind_section; k++) {
@@ -1671,64 +1682,63 @@ extern "C" {
 	= dr_get_worker_specific_state(worker);
       /* get the section that has just finished */
       dr_dag_node * s = dr_task_last_node(t);
-      if (dr_check(s->info.kind == dr_dag_node_kind_section)) {
-	dr_dag_node * p = dr_dag_node_list_last(s->subgraphs);
-	(void)dr_check(p->info.kind == dr_dag_node_kind_wait_tasks);
-	if (DAG_RECORDER_VERBOSE_LEVEL>=3) {
-	  printf("dr_return_from_wait_tasks(task=%p)"
-		 " by %d section=%p, pred=%p\n", 
-		 t, wss->worker, s, p);
-	}
-	{
-	  /* calc EST and READY_T of the interval to start */
-	  /* the starting node's est is that of last one
-	     + its critical path len */
-	  dr_clock_t est = p->info.est + p->info.t_inf;
-	  /* the starting node became ready when all its
-	     predecessors ended. we later take max among
-	     all child tasks that are waited */
-	  dr_clock_t ready_t = p->info.end.t;
-	  dr_dag_edge_kind_t edge_kind = dr_dag_edge_kind_wait_cont;
-	  dr_dag_node * head = s->subgraphs->head;
-	  dr_dag_node * ch;
-	  (void)dr_check(ready_t > 0);
-	  /* examine all child tasks that are waited by 
-	     this wait_tasks */
-	  for (ch = head; ch; ch = ch->next) {
-	    dr_dag_node * sc = ch;
-	    (void)dr_check(sc->info.kind < dr_dag_node_kind_task); 
-	    if (sc->info.kind == dr_dag_node_kind_create_task) {
-	      /* if the node is create_task, take the created
-		 task (child) and see its end time */
-	      dr_dag_node * ct = sc->child;
-	      if (dr_check(ct)) {
-		dr_clock_t x = ct->info.est + ct->info.t_inf;
-		if (est < x) est = x;
-		if (ready_t < ct->info.end.t) {
-		  /* ct finished after other predecessors */
-		  ready_t = ct->info.end.t;
-		  edge_kind = dr_dag_edge_kind_end;
-		}
-	      }
+         dr_dag_node * p = dr_dag_node_list_last(s->subgraphs);
+      /* calc EST and READY_T of the interval to start */
+      /* the starting node's est is that of last one
+	 + its critical path len */
+      dr_clock_t est = p->info.est + p->info.t_inf;
+      /* the starting node became ready when all its
+	 predecessors ended. we later take max among
+	 all child tasks that are waited */
+      dr_clock_t ready_t = p->info.end.t;
+      dr_dag_edge_kind_t edge_kind = dr_dag_edge_kind_wait_cont;
+      dr_dag_node * head = s->subgraphs->head;
+      dr_dag_node * ch;
+      if (DAG_RECORDER_VERBOSE_LEVEL>=3) {
+	printf("dr_return_from_wait_tasks(task=%p)"
+	       " by %d section=%p, pred=%p\n", 
+	       t, wss->worker, s, p);
+      }
+      (void)dr_check(s->info.kind == dr_dag_node_kind_section);
+      (void)dr_check(p->info.kind == dr_dag_node_kind_wait_tasks);
+      (void)dr_check(ready_t > 0);
+      /* examine all child tasks that are waited by 
+	 this wait_tasks */
+      for (ch = head; ch; ch = ch->next) {
+	dr_dag_node * sc = ch;
+	(void)dr_check(sc->info.kind < dr_dag_node_kind_task); 
+	if (sc->info.kind == dr_dag_node_kind_create_task) {
+	  /* if the node is create_task, take the created
+	     task (child) and see its end time */
+	  dr_dag_node * ct = sc->child;
+	  if (dr_check(ct)) {
+	    dr_clock_t x = ct->info.est + ct->info.t_inf;
+	    if (est < x) est = x;
+	    if (ready_t < ct->info.end.t) {
+	      /* ct finished after other predecessors */
+	      ready_t = ct->info.end.t;
+	      edge_kind = dr_dag_edge_kind_end;
 	    }
 	  }
-	  /* we may collapse it */
-	  dr_summarize_section_or_task(wss->prune_stack, s,
-				       wss->freelist);
-	  /* set the current task of this worker */
-	  dr_set_cur_task_(wss, t);
-	  t->info.est = est;
-	  /* this node becomes ready when all of its predecessors finished */
-	  t->info.first_ready_t = ready_t;
-	  t->info.in_edge_kind = edge_kind;
-	  (void)dr_check(ready_t > 0);
-	  /* record start time etc. */
-	  dr_set_start_info(&t->info.start, file, line);
 	}
-	/* call hook */
-	if (GS.opts.hooks.return_from_wait_tasks) {
-	  GS.opts.hooks.return_from_wait_tasks(t);
-	}
+      }
+      
+      /* we may collapse it */
+      dr_summarize_section_or_task(wss->prune_stack, s,
+				   wss->freelist);
+      /* set the current task of this worker */
+      dr_set_cur_task_(wss, t);
+      t->info.est = est;
+      /* this node becomes ready when all of its predecessors finished */
+      t->info.first_ready_t = ready_t;
+      t->info.in_edge_kind = edge_kind;
+      (void)dr_check(ready_t > 0);
+      /* record start time etc. */
+      dr_set_start_info(&t->info.start, wss->worker, file, line);
+      
+      /* call hook */
+      if (GS.opts.hooks.return_from_wait_tasks) {
+	GS.opts.hooks.return_from_wait_tasks(t);
       }
     }
   }
@@ -1798,7 +1808,7 @@ extern "C" {
 	GS.opts.hooks.return_from_other(t);
       }
       /* record an interval just started */
-      dr_set_start_info(&t->info.start, file, line);
+      dr_set_start_info(&t->info.start, wss->worker, file, line);
     }
   }
 
@@ -1826,12 +1836,13 @@ extern "C" {
 		       t->info.in_edge_kind,
 		       end_t, t->info.est, t->info.first_ready_t, 
 		       file, line, t->info.start);
-      dr_summarize_section_or_task(wss->prune_stack, t, 
-				   wss->freelist);
-      /* call hook */
+      /* call hook (important to call it before summarize,
+	 to get counters updated) */
       if (GS.opts.hooks.end_task) {
 	GS.opts.hooks.end_task(i);
       }
+      dr_summarize_section_or_task(wss->prune_stack, t, 
+				   wss->freelist);
     }
   }
 

@@ -3,6 +3,7 @@
  */
 
 #include <errno.h>
+#define DAG_RECORDER 2
 #include "dag_recorder_impl.h"
 
 typedef struct {
@@ -309,7 +310,8 @@ dr_basic_stat_write_to_file(dr_basic_stat * bs, FILE * wp) {
 int 
 dr_gen_basic_stat(dr_pi_dag * G) {
   int must_close = 0;
-  FILE * wp = dr_pi_dag_open_to_write(GS.opts.stat_file, "stat", &must_close);
+  FILE * wp = dr_pi_dag_open_to_write(GS.opts.stat_file, "stat", &must_close,
+				      GS.opts.verbose_level >= 1);
   if (!wp) return 1;
   dr_basic_stat bs[1];
   dr_basic_stat_init(bs, G);
