@@ -91,14 +91,12 @@
 #define DAG_RECORDER_VER 0	/* old version */
 #endif
 
-#if DAG_RECORDER>=2
 #ifdef __cplusplus
 extern "C" {
 #endif
 #include <dag_recorder.h>
 #ifdef __cplusplus
 }
-#endif
 #endif
 
 namespace mtbb {

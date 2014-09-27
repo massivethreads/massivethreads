@@ -3,6 +3,7 @@
  */
 #include <errno.h>
 #include <string.h>
+#define DAG_RECORDER 2
 #include "dag_recorder_impl.h"
 
 /* write a single element x into wp. if failed, show err msg and return 0 */
@@ -100,7 +101,8 @@ int dr_gen_text(dr_pi_dag * G) {
   const char * text_file = GS.opts.text_file;
   const char * sep = GS.opts.text_file_sep;
   int must_close = 0;
-  FILE * wp = dr_pi_dag_open_to_write(text_file, "text", &must_close);
+  FILE * wp = dr_pi_dag_open_to_write(text_file, "text", &must_close,
+				      GS.opts.verbose_level >= 1);
   if (!wp) return 1;		/* do nothing; OK */
   int r = dr_pi_dag_gen_text(G, wp, sep);
   if (must_close) fclose(wp);

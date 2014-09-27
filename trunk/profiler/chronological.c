@@ -1,7 +1,7 @@
 /* 
  * chronological.c
  */
-
+#define DAG_RECORDER 2
 #include "dag_recorder_impl.h"
 
 dr_event 

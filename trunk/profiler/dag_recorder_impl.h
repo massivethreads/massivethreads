@@ -11,8 +11,8 @@
    reads it match.
    you ought not change the length of this string.
    they are the first bytes of dag recorder files */
-#define DAG_RECORDER_HEADER     "DAG_RECORDER FORMAT VERSION  1.23\n"
-#define DAG_RECORDER_HEADER_LEN 34
+#define DAG_RECORDER_HEADER     "DAG_RECORDER FORMAT VERSION  1.24 2014/09/18\n"
+#define DAG_RECORDER_HEADER_LEN 45
 
 /* a node of the dag, position independent */
 struct dr_pi_dag_node {
@@ -108,7 +108,8 @@ dr_pi_dag_chronological_traverse(dr_pi_dag * G,
 FILE * 
 dr_pi_dag_open_to_write(const char * filename, 
 			const char * file_kind, 
-			int * must_close_p);
+			int * must_close_p,
+			int show_message);
 
 void dr_opts_init(dr_options * opts);
 void dr_opts_print(dr_options * opts);
@@ -120,6 +121,9 @@ int dr_gen_gpl(dr_pi_dag * G);
 int dr_gen_basic_stat(dr_pi_dag * G);
 int dr_gen_dot(dr_pi_dag * G);
 int dr_gen_text(dr_pi_dag * G);
+
+int interpolate_counters(dr_pi_dag * G);
+
 
 /* 
  *

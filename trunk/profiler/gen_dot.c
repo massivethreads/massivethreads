@@ -4,6 +4,7 @@
 
 #include <errno.h>
 #include <string.h>
+#define DAG_RECORDER 2
 #include "dag_recorder_impl.h"
 
 static const char * 
@@ -115,7 +116,7 @@ dr_pi_dag_node_gen_dot(dr_pi_dag_node * g,
 	  g->info.logical_edge_counts[dr_dag_edge_kind_other_cont],
 	  
 	  /* "by %d on %d */
-	  g->info.worker, 
+	  g->info.worker,
 	  g->info.cpu,
 	  
 	  /* %s:%ld-%s:%ld\"];\n" */
@@ -164,7 +165,8 @@ dr_pi_dag_gen_dot(dr_pi_dag * G, FILE * wp) {
 
 int dr_gen_dot(dr_pi_dag * G) {
   int must_close = 0;
-  FILE * wp = dr_pi_dag_open_to_write(GS.opts.dot_file, "dot", &must_close);
+  FILE * wp = dr_pi_dag_open_to_write(GS.opts.dot_file, "dot", &must_close,
+				      GS.opts.verbose_level >= 1);
   if (!wp) return 1;
   int r = dr_pi_dag_gen_dot(G, wp);
   if (must_close) fclose(wp);

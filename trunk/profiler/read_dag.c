@@ -9,6 +9,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+#define DAG_RECORDER 2
 #include "dag_recorder_impl.h"
 
 dr_pi_dag * 
@@ -49,9 +50,9 @@ dr_read_dag(const char * filename) {
 
   off_t header_sz = lseek(fd, 0, SEEK_CUR);
   off_t file_sz = lseek(fd, 0, SEEK_END);
-  dr_check(header_sz 
-	   == DAG_RECORDER_HEADER_LEN + sizeof(G->n) + sizeof(G->m) 
-	   + sizeof(G->start_clock) + sizeof(G->num_workers));
+  (void)dr_check(header_sz 
+		 == DAG_RECORDER_HEADER_LEN + sizeof(G->n) + sizeof(G->m) 
+		 + sizeof(G->start_clock) + sizeof(G->num_workers));
   a = mmap(NULL, file_sz, PROT_READ | PROT_WRITE,
 	   MAP_PRIVATE, fd, 0);
   if (a == MAP_FAILED) {
@@ -101,7 +102,7 @@ int dr_gen_dot(dr_pi_dag * G);
 int dr_gen_gpl(dr_pi_dag * G);
 void dr_opts_init(dr_options * opts);
 
-int dr_read_and_analyze_dag(const char * filename) {
+int dr_read_and_analyze_dag_(const char * filename) {
   dr_pi_dag * G = dr_read_dag(filename);
   if (G) {
     dr_opts_init(0);

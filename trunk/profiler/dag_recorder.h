@@ -154,8 +154,10 @@ extern "C" {
           some_instrumentation_func_(..., __FILE__, __LINE__)
   */
 
+#if DAG_RECORDER == 2
   /* set default options in opts */
-  void dr_options_default(dr_options * opts);
+#define dr_options_default(opts) \
+  dr_options_default_(opts)
 
   /* call this at the beginning of a task */
 #define dr_start_task(parent)			\
@@ -216,15 +218,34 @@ extern "C" {
 #define dr_cleanup() \
   dr_cleanup__(__FILE__, __LINE__, dr_get_worker(), dr_get_max_workers())
 
-  /* dump the last dag */
-  void dr_dump();
+#define dr_dump() dr_dump_()
 
-  /* read dag from filename and produce other files
-     (state, gnuplot, ...) */
-  int dr_read_and_analyze_dag(const char * filename);
+#define dr_read_and_analyze_dag(filename) \
+  dr_read_and_analyze_dag_(filename)
 
+#else
 
+#define dr_options_default(opts)          (void)0
+#define dr_start_task(parent)             do { } while (0)
+#define dr_start_cilk_proc(parent)        do { } while (0)
+#define dr_begin_section()                do { } while (0)
+#define dr_enter_create_task(create)      do { } while (0)
+#define dr_enter_create_cilk_proc_task()  do { } while (0)
+#define dr_return_from_create_task(task)  do { } while (0)
+#define dr_enter_wait_tasks()             do { } while (0)
+#define dr_return_from_wait_tasks(task)   do { } while (0)
+#define dr_enter_other()                  do { } while (0)
+#define dr_return_from_other(task)        do { } while (0)
+#define dr_end_task()                     do { } while (0)
+#define dr_start(opts)                    do { } while (0)
+#define dr_stop()                         do { } while (0)
+#define dr_cleanup()                      do { } while (0)
+#define dr_dump()                         do { } while (0)
+#define dr_read_and_analyze_dag(filename) 0
 
+#endif
+
+  void dr_options_default_(dr_options * opts);
 
   static_if_inline void
   dr_start_task__(dr_dag_node * parent, 
@@ -304,6 +325,13 @@ extern "C" {
 #define dr_end_task_(file, line)			\
   dr_end_task__(file, line, dr_get_worker())
 
+  /* dump the last dag */
+  void dr_dump_();
+
+  /* read dag from filename and produce other files
+     (state, gnuplot, ...) */
+  int dr_read_and_analyze_dag_(const char * filename);
+
 #ifdef __cplusplus
 }
 #endif
@@ -313,8 +341,11 @@ extern "C" {
    all the above external functions are defined in 
    dag_recorder.c
  */
+#if DAG_RECORDER>=2
 #if DAG_RECORDER_INLINE_INSTRUMENTATION
 #include <dag_recorder_inl.h>
 #endif
+#endif
+
 
 
