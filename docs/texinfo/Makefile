@@ -93,5 +93,5 @@ $(resized_epss) : %_resized.eps : %_resized.png
 	convert $< $@
 
 clean :
-	rm -f $(manual).aux $(manual).info $(manual).log $(manual).cp $(manual).info-1 $(manual).md 
+	rm -f $(manual).aux $(manual).log $(manual).cp $(manual).info-1 $(manual).md 
 	rm -f $(manual).toc $(manual).info-2 $(manual).pg $(manual).tp $(manual).fn $(manual).ky $(manual).vr $(manual).dvi
