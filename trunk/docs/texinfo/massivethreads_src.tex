@@ -60,14 +60,14 @@ One is what we call TBB-compatible interface, that provides a subset of
 functions in Intel Threading Building Block.  It does not only provide
 TBB-compatible interface, but also allows you to switch between various
 lightweight thread libraries implementing the same API.  Currently
-supported librries include MassiveThreads, Qthreads, Nanos++, and what
+supported libraries include MassiveThreads, Qthreads, Nanos++, and what
 we call a dummy scheduler.  The last one elides task parallel primitives.
 
 The other interface is what we call a task parallel switcher, with which
 you can write a single program running on top of even wider set of task
 parallel systems including OpenMP, Cilk, and TBB.  
 
-Besides pvoriding a uniform API on various runtime systems, they serve
+Besides providing a uniform API on various runtime systems, they serve
 another important purpose, which is to allow you to trace your task
 parallel programs with @xref{DAG Recorder}, a tracing tool described
 later in this manual.  By programming in these APIs, rather than in the
@@ -111,7 +111,7 @@ TBB-compatible interface is distributed as a part of MassiveThreads, so
 you do not do anything particular to install it besides the installation
 procedure of MassiveThreads.
 
-After installation, the files costituing the API are installed as:
+After installation, the files constituting the API are installed as:
 @itemize
 @item @i{PREFIX}@file{/include/mtbb/task_group.h}
 @item @i{PREFIX}@file{/include/mtbb/parallel_for.h}
@@ -162,7 +162,7 @@ task_group's @file{run} method will create a thread of MassiveThreads
 library via @file{myth_create} and wait method will wait for all threads
 associated with the task group object to finish via @file{myth_join}.
 
-The @file{mtbb/task_group.h} file allows you to use threading libraries other than MassiveThreads, by defining a compile time flag @file{TO_XXX}.  Currently, you can choose from the original Intel TBB, MassiveThreads, Qthreds, Nanos++, or None.  Flags you should give to them are listed below.
+The @file{mtbb/task_group.h} file allows you to use threading libraries other than MassiveThreads, by defining a compile time flag @file{TO_XXX}.  Currently, you can choose from the original Intel TBB, MassiveThreads, Qthreads, Nanos++, or None.  Flags you should give to them are listed below.
 
 @multitable @columnfractions .5 .5
 @headitem Runtime system @tab Flag 
@@ -180,14 +180,14 @@ In order to use @file{mtbb/task_group.h} with the scheduler you chose, you of co
 @section  Task Parallel Switcher
 
 TBB-compatible interface unifies various schedulers under the same,
-TBB-compatable interface.  Task parallel switcher goes one step further 
+TBB-compatible interface.  Task parallel switcher goes one step further 
 by defining an API that can be mapped onto OpenMP and Cilk as well.
 
 OpenMP, Cilk, and TBB's task_group interfaces are all conceptually very
 similar; they all define ways to create tasks and wait for outstanding
 tasks to finish, after all.
 
-Yet there are idiosyncracies that make defining truly uniform APIs
+Yet there are idiosyncrasies that make defining truly uniform APIs
 difficult.  
 
 TODO: detail the following
@@ -231,7 +231,7 @@ where PREFIX is the path you specified with @file{--prefix} at
 @file{configure} command line.  
 
 In most cases, you do not have to directly include
-@file{dag_recorder.h}.  TBB-compatible interface or aformentioned
+@file{dag_recorder.h}.  TBB-compatible interface or aforementioned
 wrappers (@file{omp_dr.h} and @file{cilk_dr.h}) will automatically
 include it.
 
@@ -256,7 +256,7 @@ model you chose and detailed in the following subsections.
 
 @subsection Using DAG Recorder with TBB-Compatible Interface
 
-If you are using TBB-Compatible Interface (@pxref{Writing Programs Using TBB-Compatible Interface}), the instrumentation is most straighforward and least intrusive.  Let's say you have a program including @file{mtbb/task_group.h} such as this.
+If you are using TBB-Compatible Interface (@pxref{Writing Programs Using TBB-Compatible Interface}), the instrumentation is most straightforward and least intrusive.  Let's say you have a program including @file{mtbb/task_group.h} such as this.
 @example
 @verbatiminclude examples/bin_mtbb.cc
 @end example
@@ -310,7 +310,7 @@ program to our example, written in the regular OpenMP.
 We need to instrument these pragmas, for which we defined equivalent
 @i{macros} (not pragmas) in a header file @file{tpswitch/omp_dr.h}.
 This is not as straightforward as we hope, but we do not know any good
-mechanism to introduce a new pragma or redefine exising pragmas.
+mechanism to introduce a new pragma or redefine existing pragmas.
 
 @file{tpswitch/omp_dr.h} defines the following macros.
 
@@ -320,7 +320,7 @@ mechanism to introduce a new pragma or redefine exising pragmas.
 @item @code{pragma_omp_parallel_single(@i{clauses, statement})}
 @end itemize
 
-Without DAG Recorder, they are expanded into equivalent OpenMP pragmras
+Without DAG Recorder, they are expanded into equivalent OpenMP pragmas
 in an obvious manner:
 
 @itemize @bullet
@@ -404,7 +404,7 @@ You will find the following three files generated under the current directory.
 @item @file{00dr.stat} --- The summary stat file.  This is a text file showing, among others, the number of tasks, total work time (time spent in the application code), critical path, the number of steals, etc.  The contents of this file will be explained later.
 @end itemize
 
-Run this program with setting environemnt variable @code{DR=0}, and you
+Run this program with setting environment variable @code{DR=0}, and you
 can run the program with DAG Recorder turned off.
 
 @example 
@@ -465,7 +465,7 @@ bin(10) = 1024
 @end verbatim
 @end example
 
-Uppercase names within parens are environent variables you might want to
+Uppercase names within parentheses are environment variables you might want to
 set.  They start with a prefix @code{DAG_RECORDER_} and many of them
 have a shorter version that begin with @code{DR_}.  The list will change
 as our experiences accumulate.  Below is the list of frequently used
@@ -533,7 +533,7 @@ By default, programs traced by DAG Recorder generates a parallelism profile as a
 
 @end iftex
 
-The horizontail axis represents time (in clock cycles) and the vertical
+The horizontal axis represents time (in clock cycles) and the vertical
 axis the number of tasks of various conditions, indicated by colors.
 
 @itemize @bullet
@@ -550,7 +550,7 @@ by the type of event that made them runnable.
 
 @itemize @bullet
 
-@item ``end'' means the task became avaiable as its awaiting task finished.
+@item ``end'' means the task became available as its awaiting task finished.
 
 @item ``create'' means the task became available as its parent created it.
 
@@ -604,7 +604,7 @@ program did not have enough tasks in that interval, so you might have to
 consider increasing the parallelism in that interval.  In some cases you
 have simply left some section of your code left not parallelized at all,
 which is easily visible in the parallelism profile.  A tool drview will
-help you spot souce code locations when this happens.  
+help you spot source code locations when this happens.  
 @pxref{Viewing DAG file with drview}.
 
 If, on the other hand, available tasks are abundant, it means the
@@ -727,7 +727,7 @@ Therefore, it always holds that
 In other words, @code{T1, delay}, and @code{no_work} give a
 @i{breakdown} of the whole execution time.  Perfectly scalable
 executions have @code{T1} approximately the same as that of serial
-execution and have both @code{deley} and @code{no_work} nearly zero.
+execution and have both @code{delay} and @code{no_work} nearly zero.
 They in general give you a quantitative information on why your
 application does not ideally scale.
 
@@ -895,7 +895,7 @@ basics:  ........................................
 nodes:   ........................................
 edges:   ........................................
 strings: ........................................
-commiting
+committing
 $ drview 00dr.sqlite
 @end example
 This will bring up the user interface window.
@@ -921,7 +921,7 @@ code of the corresponding location.  By clicking somewhere in the
 group's start or end position, respectively.
 
 The most useful feature of this tool is that you can zoom into an
-inerval of your interest in the parallelism pane.  Hold the left button
+interval of your interest in the parallelism pane.  Hold the left button
 of the mouse pushed and specify a rectangular region in the parallelism
 pane, and you will see the parallelism and the task panes redrawn to
 reflect the tasks executed in the selected interval.  This way, you can

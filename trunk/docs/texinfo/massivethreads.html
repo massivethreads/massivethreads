@@ -305,14 +305,14 @@ programmers.
 functions in Intel Threading Building Block.  It does not only provide
 TBB-compatible interface, but also allows you to switch between various
 lightweight thread libraries implementing the same API.  Currently
-supported librries include MassiveThreads, Qthreads, Nanos++, and what
+supported libraries include MassiveThreads, Qthreads, Nanos++, and what
 we call a dummy scheduler.  The last one elides task parallel primitives.
 </p>
 <p>The other interface is what we call a task parallel switcher, with which
 you can write a single program running on top of even wider set of task
 parallel systems including OpenMP, Cilk, and TBB.  
 </p>
-<p>Besides pvoriding a uniform API on various runtime systems, they serve
+<p>Besides providing a uniform API on various runtime systems, they serve
 another important purpose, which is to allow you to trace your task
 parallel programs with See <a href="#DAG-Recorder">DAG Recorder</a>, a tracing tool described
 later in this manual.  By programming in these APIs, rather than in the
@@ -388,7 +388,7 @@ Next: <a href="#Writing-Programs-Using-TBB_002dCompatible-Interface" accesskey="
 you do not do anything particular to install it besides the installation
 procedure of MassiveThreads.
 </p>
-<p>After installation, the files costituing the API are installed as:
+<p>After installation, the files constituting the API are installed as:
 </p><ul>
 <li> <i>PREFIX</i><samp>/include/mtbb/task_group.h</samp>
 </li><li> <i>PREFIX</i><samp>/include/mtbb/parallel_for.h</samp>
@@ -473,7 +473,7 @@ task_group&rsquo;s <samp>run</samp> method will create a thread of MassiveThread
 library via <samp>myth_create</samp> and wait method will wait for all threads
 associated with the task group object to finish via <samp>myth_join</samp>.
 </p>
-<p>The <samp>mtbb/task_group.h</samp> file allows you to use threading libraries other than MassiveThreads, by defining a compile time flag <samp>TO_XXX</samp>.  Currently, you can choose from the original Intel TBB, MassiveThreads, Qthreds, Nanos++, or None.  Flags you should give to them are listed below.
+<p>The <samp>mtbb/task_group.h</samp> file allows you to use threading libraries other than MassiveThreads, by defining a compile time flag <samp>TO_XXX</samp>.  Currently, you can choose from the original Intel TBB, MassiveThreads, Qthreads, Nanos++, or None.  Flags you should give to them are listed below.
 </p>
 <table>
 <thead><tr><th width="50%">Runtime system</th><th width="50%">Flag</th></tr></thead>
@@ -498,14 +498,14 @@ Previous: <a href="#TBB_002dCompatible-Interface" accesskey="p" rel="prev">TBB-C
 <h3 class="section">3.3 Task Parallel Switcher</h3>
 
 <p>TBB-compatible interface unifies various schedulers under the same,
-TBB-compatable interface.  Task parallel switcher goes one step further 
+TBB-compatible interface.  Task parallel switcher goes one step further 
 by defining an API that can be mapped onto OpenMP and Cilk as well.
 </p>
 <p>OpenMP, Cilk, and TBB&rsquo;s task_group interfaces are all conceptually very
 similar; they all define ways to create tasks and wait for outstanding
 tasks to finish, after all.
 </p>
-<p>Yet there are idiosyncracies that make defining truly uniform APIs
+<p>Yet there are idiosyncrasies that make defining truly uniform APIs
 difficult.  
 </p>
 <p>TODO: detail the following
@@ -587,7 +587,7 @@ can, for example, use DAG Recorder to analyze TBB or OpenMP programs.
 <samp>configure</samp> command line.  
 </p>
 <p>In most cases, you do not have to directly include
-<samp>dag_recorder.h</samp>.  TBB-compatible interface or aformentioned
+<samp>dag_recorder.h</samp>.  TBB-compatible interface or aforementioned
 wrappers (<samp>omp_dr.h</samp> and <samp>cilk_dr.h</samp>) will automatically
 include it.
 </p>
@@ -646,7 +646,7 @@ Next: <a href="#Using-DAG-Recorder-with-OpenMP" accesskey="n" rel="next">Using D
 <a name="Using-DAG-Recorder-with-TBB_002dCompatible-Interface-1"></a>
 <h4 class="subsection">4.3.2 Using DAG Recorder with TBB-Compatible Interface</h4>
 
-<p>If you are using TBB-Compatible Interface (see <a href="#Writing-Programs-Using-TBB_002dCompatible-Interface">Writing Programs Using TBB-Compatible Interface</a>), the instrumentation is most straighforward and least intrusive.  Let&rsquo;s say you have a program including <samp>mtbb/task_group.h</samp> such as this.
+<p>If you are using TBB-Compatible Interface (see <a href="#Writing-Programs-Using-TBB_002dCompatible-Interface">Writing Programs Using TBB-Compatible Interface</a>), the instrumentation is most straightforward and least intrusive.  Let&rsquo;s say you have a program including <samp>mtbb/task_group.h</samp> such as this.
 </p><div class="example">
 <pre class="verbatim">#include &lt;mtbb/task_group.h&gt;
 
@@ -776,7 +776,7 @@ int main(int argc, char ** argv) {
 <p>We need to instrument these pragmas, for which we defined equivalent
 <i>macros</i> (not pragmas) in a header file <samp>tpswitch/omp_dr.h</samp>.
 This is not as straightforward as we hope, but we do not know any good
-mechanism to introduce a new pragma or redefine exising pragmas.
+mechanism to introduce a new pragma or redefine existing pragmas.
 </p>
 <p><samp>tpswitch/omp_dr.h</samp> defines the following macros.
 </p>
@@ -786,7 +786,7 @@ mechanism to introduce a new pragma or redefine exising pragmas.
 </li><li> <code>pragma_omp_parallel_single(<i>clauses, statement</i>)</code>
 </li></ul>
 
-<p>Without DAG Recorder, they are expanded into equivalent OpenMP pragmras
+<p>Without DAG Recorder, they are expanded into equivalent OpenMP pragmas
 in an obvious manner:
 </p>
 <ul>
@@ -931,7 +931,7 @@ bin(20) = 1048576
 </li><li> <samp>00dr.stat</samp> &mdash; The summary stat file.  This is a text file showing, among others, the number of tasks, total work time (time spent in the application code), critical path, the number of steals, etc.  The contents of this file will be explained later.
 </li></ul>
 
-<p>Run this program with setting environemnt variable <code>DR=0</code>, and you
+<p>Run this program with setting environment variable <code>DR=0</code>, and you
 can run the program with DAG Recorder turned off.
 </p>
 <div class="example">
@@ -995,7 +995,7 @@ not writing text
 bin(10) = 1024
 </pre></div>
 
-<p>Uppercase names within parens are environent variables you might want to
+<p>Uppercase names within parentheses are environment variables you might want to
 set.  They start with a prefix <code>DAG_RECORDER_</code> and many of them
 have a shorter version that begin with <code>DR_</code>.  The list will change
 as our experiences accumulate.  Below is the list of frequently used
@@ -1091,7 +1091,7 @@ Next: <a href="#Visualizing-the-DAG-via-graphviz" accesskey="n" rel="next">Visua
 <img src="gpl/tbb.png" alt="gpl/tbb">
 
 
-<p>The horizontail axis represents time (in clock cycles) and the vertical
+<p>The horizontal axis represents time (in clock cycles) and the vertical
 axis the number of tasks of various conditions, indicated by colors.
 </p>
 <ul>
@@ -1106,7 +1106,7 @@ predecessors in the DAG have finished.  Available tasks are classified
 by the type of event that made them runnable.  
 
 <ul>
-<li> &ldquo;end&rdquo; means the task became avaiable as its awaiting task finished.
+<li> &ldquo;end&rdquo; means the task became available as its awaiting task finished.
 
 </li><li> &ldquo;create&rdquo; means the task became available as its parent created it.
 
@@ -1158,7 +1158,7 @@ program did not have enough tasks in that interval, so you might have to
 consider increasing the parallelism in that interval.  In some cases you
 have simply left some section of your code left not parallelized at all,
 which is easily visible in the parallelism profile.  A tool drview will
-help you spot souce code locations when this happens.  
+help you spot source code locations when this happens.  
 see <a href="#Viewing-DAG-file-with-drview">Viewing DAG file with drview</a>.
 </p>
 <p>If, on the other hand, available tasks are abundant, it means the
@@ -1336,7 +1336,7 @@ Therefore, it always holds that
 <p>In other words, <code>T1, delay</code>, and <code>no_work</code> give a
 <i>breakdown</i> of the whole execution time.  Perfectly scalable
 executions have <code>T1</code> approximately the same as that of serial
-execution and have both <code>deley</code> and <code>no_work</code> nearly zero.
+execution and have both <code>delay</code> and <code>no_work</code> nearly zero.
 They in general give you a quantitative information on why your
 application does not ideally scale.
 </p>
@@ -1478,7 +1478,7 @@ basics:  ........................................
 nodes:   ........................................
 edges:   ........................................
 strings: ........................................
-commiting
+committing
 $ drview 00dr.sqlite
 </pre></div>
 <p>This will bring up the user interface window.
@@ -1504,7 +1504,7 @@ code of the corresponding location.  By clicking somewhere in the
 group&rsquo;s start or end position, respectively.
 </p>
 <p>The most useful feature of this tool is that you can zoom into an
-inerval of your interest in the parallelism pane.  Hold the left button
+interval of your interest in the parallelism pane.  Hold the left button
 of the mouse pushed and specify a rectangular region in the parallelism
 pane, and you will see the parallelism and the task panes redrawn to
 reflect the tasks executed in the selected interval.  This way, you can
