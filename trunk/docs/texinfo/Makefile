@@ -1,9 +1,9 @@
 #
 # Makefile for generating documents
 # 
-# mthman.pdf
-# mthman.info
-# mthman.html
+# massivethreads.pdf
+# massivethreads.info
+# massivethreads.html
 #
 # distribution contains them so you normally have to run this.
 #
@@ -14,7 +14,7 @@
 # (3) dvipdfm (for gxpman.pdf)
 #
 
-manual = mthman
+manual = massivethreads
 
 #
 # svg files
@@ -54,7 +54,7 @@ $(manual).pdf : $(manual).dvi
 	dvipdfm $(manual).dvi
 
 $(manual).html : $(manual).tex $(images)
-	makeinfo --no-split --force --html --css-include=mthman.css --fill-column=70 --output $@ $< 
+	makeinfo --no-split --force --html --css-include=massivethreads.css --fill-column=70 --output $@ $< 
 
 #
 # svg files
