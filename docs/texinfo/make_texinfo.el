@@ -8,4 +8,4 @@
   (texinfo-master-menu t)
   (write-file dst))
 
-(make-texinfo "mthman_src.tex" "mthman.tex")
+(make-texinfo "massivethreads_src.tex" "massivethreads.tex")
