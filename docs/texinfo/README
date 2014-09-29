@@ -1,0 +1,7 @@
+Hot to edit the manual
+
+[1] edit mthman_src.tex
+[2] run make
+
+Never edit mthman.tex, which is generated from
+mthman_src.tex by make_texinfo.el
