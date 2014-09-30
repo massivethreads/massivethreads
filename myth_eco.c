@@ -446,10 +446,14 @@ int futex_wakeup_all( void *futex ) {
 
 int fetch_and_store(volatile void *ptr, int addend) {
   int result;
+#if defined MYTH_ARCH_i386 || defined MYTH_ARCH_amd64
   __asm__ __volatile__("lock\nxadd" "" " %0,%1"
 		       : "=r"(result),"=m"(*(volatile int*)ptr)
 		       : "0"(addend), "m"(*(volatile int*)ptr)
 		       : "memory");
+#else
+  result = __sync_fetch_and_add((int*)ptr, addend);
+#endif
   return result;
 }
 #endif
