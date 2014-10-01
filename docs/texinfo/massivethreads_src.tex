@@ -56,46 +56,47 @@ burdensome as a parallel programming interface.  MassiveThreads also
 provides higher level APIs, easier and more convenient APIs for
 programmers.
 
-One is what we call TBB-compatible interface, that provides a subset of
-functions in Intel Threading Building Block.  It does not only provide
-TBB-compatible interface, but also allows you to switch between various
-lightweight thread libraries implementing the same API.  Currently
-supported libraries include MassiveThreads, Qthreads, Nanos++, and what
-we call a dummy scheduler.  The last one elides task parallel primitives.
+One is what we call @i{TBB-compatible interface}, that provides a subset
+of functions of Intel Threading Building Block.  It does not only
+provide TBB-compatible interface, but also allows you to switch between
+various lightweight thread libraries under the same TBB-compatible
+interface.  Currently supported libraries include MassiveThreads,
+Qthreads, Nanos++, and what we call a dummy scheduler.  The last one
+elides task parallel primitives.
 
-The other interface is what we call a task parallel switcher, with which
-you can write a single program running on top of even wider set of task
-parallel systems including OpenMP, Cilk, and TBB.  
+The other interface is what we call a @i{task parallel switcher}, with
+which you can write a single program running on top of even wider set of
+task parallel systems including OpenMP, Cilk, and TBB.
 
 Besides providing a uniform API on various runtime systems, they serve
 another important purpose, which is to allow you to trace your task
-parallel programs with @xref{DAG Recorder}, a tracing tool described
-later in this manual.  By programming in these APIs, rather than in the
-native API of the respective runtime systems, your are free from the
-burden of manually instrumenting your programs for tracing.  To this
-end, we also provide headers to facilitate instrumentation of OpenMP and
-Cilk.  They do not serve any purpose of making OpenMP and Cilk more
-convenient nor more uniform; they simply make instrumenting OpenMP and
-Cilk easier.
+parallel programs with DAG Recorder, a tracing tool described later in
+this manual. @xref{DAG Recorder}. By programming in these APIs, rather
+than in the native API of the respective runtime system, your are free
+from the burden of manually instrumenting your programs for tracing.  To
+this end, we also provide headers to facilitate instrumentation of
+OpenMP and Cilk.  They do not serve any purpose of making OpenMP and
+Cilk more convenient nor more uniform; they simply make instrumenting
+OpenMP and Cilk easier.
 
 Here is the summary of choices of APIs and runtime systems.
 
 @multitable @columnfractions .4 .35 .25
 @headitem API            @tab Header file       @tab Runtime System 
+@item     TBB-compatible @tab mtbb/task_group.h @tab None (dummy)
 @item     TBB-compatible @tab mtbb/task_group.h @tab Intel TBB 
 @item     TBB-compatible @tab mtbb/task_group.h @tab MassiveThreads
 @item     TBB-compatible @tab mtbb/task_group.h @tab Qthreads
 @item     TBB-compatible @tab mtbb/task_group.h @tab Nanos++
 @item     OpenMP-like    @tab tpswitch/omp_dr.h          @tab OpenMP
 @item     Cilk-like      @tab tpswitch/cilk_dr.h         @tab Cilk
-@item     TBB-compatible @tab mtbb/task_group.h @tab None (dummy)
+@item     Task Parallel Switcher @tab tpswitch/tpswitch.h @tab None (dummy)
 @item     Task Parallel Switcher @tab tpswitch/tpswitch.h @tab Intel TBB 
 @item     Task Parallel Switcher @tab tpswitch/tpswitch.h @tab MassiveThreads
 @item     Task Parallel Switcher @tab tpswitch/tpswitch.h @tab Qthreads
 @item     Task Parallel Switcher @tab tpswitch/tpswitch.h @tab Nanos++
 @item     Task Parallel Switcher @tab tpswitch/tpswitch.h @tab OpenMP
 @item     Task Parallel Switcher @tab tpswitch/tpswitch.h @tab Cilk
-@item     Task Parallel Switcher @tab tpswitch/tpswitch.h @tab None (dummy)
 @end multitable
 
 @section TBB-Compatible Interface
@@ -103,7 +104,8 @@ Here is the summary of choices of APIs and runtime systems.
 
 As of writing, it supports @file{task_group} class, @file{parallel_for}
 template function, and @file{parallel_reduce} template function.  See
-respective sections of the TBB reference manual for their APIs.
+respective sections of the TBB reference manual for these classes.
+We will see examples using @file{task_group} class below.
 
 @subsection Installing TBB-Compatible Interface
 
@@ -132,9 +134,19 @@ Here is a simple example (@file{bin_mtbb.cc}).
 @verbatiminclude examples/bin_mtbb.cc
 @end example
 
-Without DAG Recorder, you would compile this program as follows.
+I hope you agree that changes are minimal.  The original TBB version
+would look like this (only differences are the file name of the include
+file and namespace prefix of the @file{task_group} class).
+
 @example
-g++ --std=c++0x bin_mtbb.cc -lmyth-native
+@verbatiminclude examples/bin_tbb.cc
+@end example
+
+Without DAG Recorder, you would compile @file{bin_mtbb.cc} as follows.
+@example
+@verbatim
+$ g++ --std=c++0x bin_mtbb.cc -lmyth-native
+@end verbatim
 @end example
 
 Remark 1: @file{--std=c++0x} is given to use C++ lambda expression at
@@ -151,7 +163,9 @@ example, if you install MassiveThreads under @file{/home/you/local} (i.e.,
 gave @file{/home/you/local} to @file{--prefix} of the @file{configure}
 command), the command line will be:
 @example
-g++ --std=c++0x -I/home/you/local/include -L/home/you/local/lib -Wl,-R/home/you/local/lib bin_mtbb.cc -lmyth-native
+@verbatim
+$ g++ --std=c++0x -I/home/you/local/include -L/home/you/local/lib -Wl,-R/home/you/local/lib bin_mtbb.cc -lmyth-native
+@end verbatim
 @end example
 
 @subsection Choosing Schedulers Beneath the TBB-Compatible Interface
@@ -209,7 +223,7 @@ TODO: detail the following
 
 @section DAG Recorder Overview 
 
-DAG Recorder is a tool to analyze the execution of task parallel
+DAG Recorder is a tracing tool to analyze execution of task parallel
 programs.  It records all relevant events in an execution of the
 program, such as task start, task creation, and task synchronization and
 stores them in a manner that is able to reconstruct the computational
@@ -247,12 +261,12 @@ Currently, DAG Recorder supports the following task parallel APIs.
 @end itemize
 
 Making your programs ready for DAG Recorder involves replacing original
-task parallel primitives with equivalent, instrumented versions and
-inserting calls to start/stop recording at appropriate place.  You also
-need to specify where to start/stop instrumentation and dump the result.
-We provide header files to make the instrumentation as straightforward
-as possible.  How instrumentation is done depends on the programming
-model you chose and detailed in the following subsections.
+task parallel primitives with equivalent, instrumented versions.  You
+also need to specify where to start/stop instrumentation and dump the
+result.  We provide header files to make the instrumentation nearly
+automatic or at least quite mechanical.  What you exactly need to do
+depends on the programming model you chose and are detailed in the
+following subsections.
 
 @subsection Using DAG Recorder with TBB-Compatible Interface
 

@@ -96,7 +96,7 @@ class dr_database:
                       running_plus, running_minus))
         return sql_execute(co, cmd_all)
 
-class pvis:
+class drview:
     def __init__(self, opts, args):
         self.opts = opts
         self.args = args
@@ -206,7 +206,10 @@ class pvis:
 
     def search_file(self, filename):
         for d in self.search_paths:
-            p = "%s/%s" % (d, filename)
+            if filename[:1] == "/":
+                p = filename
+            else:
+                p = "%s/%s" % (d, filename)
             if os.path.exists(p):
                 return p
         return None
@@ -420,6 +423,8 @@ class pvis:
         y_last = [ 0.0, 0.0, 0.0, 0.0, 0.0 ]
         # integral values between (interval[0],t)
         Y_interval = [ 0.0, 0.0, 0.0, 0.0, 0.0 ]
+        # FIX: add "other"
+        Y_labels = [ "running", "end", "create", "create cont", "wait cont" ]
         Y = [ [], [], [], [], [] ]
         T = []
         n = 0                   # samples already taken
@@ -444,9 +449,16 @@ class pvis:
                 Y_interval = [ 0.0, 0.0, 0.0, 0.0, 0.0 ]
             t_last = t
         max_y = 1.1 * max((sum(ys) for ys in zip(*Y)))
-        self.parallelism_ax.set_ylim((0, max_y))
-        self.parallelism_ax.set_xlim((0, max(T) * 1.1))
-        sp = self.parallelism_ax.stackplot(T, Y, linewidth=0)
+        ax = self.parallelism_ax
+        ax.set_ylim((0, max_y))
+        ax.set_xlim((0, max(T) * 1.1))
+        ax.set_color_cycle(["red", "lightgreen", "blue", "magenta", "cyan" ])
+        sp = ax.stackplot(T, Y, linewidth=0)
+        # here is how to add legends 
+        # http://stackoverflow.com/questions/20336881/matplotlib-stackplot-legend-error
+        proxy_rects = [plt.Rectangle((0,0),1,1,
+                                     fc=p.get_facecolor()[0]) for p in sp ]
+        ax.legend(proxy_rects, Y_labels)
         #red_patch = mpatches.Patch(color='red', label='The red data')
         #self.parallelism_ax.legend(handles=[red_patch])
         #plt.legend(handles=[red_patch])
@@ -462,10 +474,10 @@ def parse_cmdline(cmdline_args):
 
 def main():
     opt,args = parse_cmdline(sys.argv[1:])
-    pv = pvis(opt, args)
-    pv.setup()
+    drv = drview(opt, args)
+    drv.setup()
     gtk.main()
-    return pv
+    return drv
 
 pv = main()
 
