@@ -5,6 +5,21 @@
 #define DAG_RECORDER 2
 #include "dag_recorder_impl.h"
 
+static char 
+getenv_bool(const char * v, char * y) {
+  char * x = getenv(v);
+  if (!x) return 0;
+  if (strcasecmp(x, "0") == 0
+      || strcasecmp(x, "n") == 0
+      || strcasecmp(x, "false") == 0) {
+    *y = 0;
+  } else {
+    *y = 1;
+  }
+  return 1;
+}
+
+
 /* read environment variable v and parse it as a
    small integer */
 static int 
@@ -70,16 +85,18 @@ dr_opts_init(dr_options * opts) {
 void dr_options_default_(dr_options * opts) {
   * opts = dr_options_default_values;
 
-  if (getenv_str("DAG_RECORDER_DAG_FILE",     &opts->dag_file)
-      || getenv_str("DR_DAG",                 &opts->dag_file)) {}
-  if (getenv_str("DAG_RECORDER_STAT_FILE",    &opts->stat_file)
-      || getenv_str("DR_STAT",                &opts->stat_file)) {}
-  if (getenv_str("DAG_RECORDER_GPL_FILE",     &opts->gpl_file)
-      || getenv_str("DR_GPL",                 &opts->gpl_file)) {}
-  if (getenv_str("DAG_RECORDER_DOT_FILE",     &opts->dot_file)
-      || getenv_str("DR_DOT",                 &opts->dot_file)) {}
-  if (getenv_str("DAG_RECORDER_TEXT_FILE",    &opts->text_file)
-      || getenv_str("DR_TEXT",                &opts->text_file)) {}
+  if (getenv_str("DAG_RECORDER_FILE_PREFIX",  &opts->dag_file_prefix)
+      || getenv_str("DR_PREFIX",              &opts->dag_file_prefix)) {}
+  if (getenv_bool("DAG_RECORDER_DAG_FILE",    &opts->dag_file_yes)
+      || getenv_bool("DR_DAG",                &opts->dag_file_yes)) {}
+  if (getenv_bool("DAG_RECORDER_STAT_FILE",   &opts->stat_file_yes)
+      || getenv_bool("DR_STAT",               &opts->stat_file_yes)) {}
+  if (getenv_bool("DAG_RECORDER_GPL_FILE",    &opts->gpl_file_yes)
+      || getenv_bool("DR_GPL",                &opts->gpl_file_yes)) {}
+  if (getenv_bool("DAG_RECORDER_DOT_FILE",    &opts->dot_file_yes)
+      || getenv_bool("DR_DOT",                &opts->dot_file_yes)) {}
+  if (getenv_bool("DAG_RECORDER_TEXT_FILE",   &opts->text_file_yes)
+      || getenv_bool("DR_TEXT",               &opts->text_file_yes)) {}
   /* NOTE: we do not set sqlite_file via environment variables */
   if (getenv_int("DAG_RECORDER_GPL_SIZE",     &opts->gpl_sz)
       || getenv_int("DR_GPL_SZ",              &opts->gpl_sz)) {}
@@ -116,19 +133,21 @@ dr_opts_print(dr_options * opts) {
   if (opts->verbose_level >= 1) {
     FILE * wp = stderr;
     fprintf(wp, "DAG Recorder Options:\n");
-    fprintf(wp, "dag_file (DAG_RECORDER_DAG_FILE,DR_DAG) : %s\n", 
-	    opts->dag_file);
-    fprintf(wp, "stat_file (DAG_RECORDER_STAT_FILE,DR_STAT) : %s\n", 
-	    opts->stat_file);
-    fprintf(wp, "gpl_file (DAG_RECORDER_GPL_FILE,DR_GPL) : %s\n", 
-	    opts->gpl_file);
-    fprintf(wp, "dot_file (DAG_RECORDER_DOT_FILE,DR_DOT) : %s\n", 
-	    opts->dot_file);
-    fprintf(wp, "text_file (DAG_RECORDER_TEXT_FILE,DR_TEXT) : %s\n", 
-	    opts->text_file);
+    fprintf(wp, "dag_file_prefix (DAG_RECORDER_DAG_FILE_PREFIX,DR_PREFIX) : %s\n", 
+	    opts->dag_file_prefix);
+    fprintf(wp, "dag_file_yes (DAG_RECORDER_DAG_FILE,DR_DAG) : %d\n", 
+	    opts->dag_file_yes);
+    fprintf(wp, "stat_file_yes (DAG_RECORDER_STAT_FILE,DR_STAT) : %d\n", 
+	    opts->stat_file_yes);
+    fprintf(wp, "gpl_file_yes (DAG_RECORDER_GPL_FILE,DR_GPL) : %d\n", 
+	    opts->gpl_file_yes);
+    fprintf(wp, "dot_file_yes (DAG_RECORDER_DOT_FILE,DR_DOT) : %d\n", 
+	    opts->dot_file_yes);
+    fprintf(wp, "text_file_yes (DAG_RECORDER_TEXT_FILE,DR_TEXT) : %d\n", 
+	    opts->text_file_yes);
     fprintf(wp, "gpl_sz (DAG_RECORDER_GPL_SIZE,DR_GPL_SZ) : %d\n", 
 	    opts->gpl_sz);
-    fprintf(wp, "text_file (DAG_RECORDER_TEXT_FILE_SEP,DR_TEXT_SEP) : %s\n", 
+    fprintf(wp, "text_file_sep (DAG_RECORDER_TEXT_FILE_SEP,DR_TEXT_SEP) : %s\n", 
 	    opts->text_file_sep);
     fprintf(wp, "dbg_level (DAG_RECORDER_DBG_LEVEL,DR_DBG) : %d\n", 
 	    opts->dbg_level);

@@ -63,16 +63,17 @@ extern "C" {
 
   /* runtime-settable options */
   typedef struct dr_options {
-    const char * dag_file;	/* filename of the dag */
-    const char * stat_file;	/* filename of the stat summary */
-    const char * gpl_file;	/* filename of the gpl */
-    const char * dot_file;	/* filename of the dot */
-    const char * sqlite_file;	/* filename of the sqlite3 */
-    const char * text_file;	/* filename of the text */
-    const char * nodes_file;	/* filename of the nodes */
-    const char * edges_file;	/* filename of the edges */
-    const char * strings_file;	/* filename of the strings */
-    const char * text_file_sep;	/* separator for text file */
+    const char * dag_file_prefix; /* filename prefix of all files */
+    char dag_file_yes;	          /* filename of the dag */
+    char stat_file_yes;	          /* filename of the stat summary */
+    char gpl_file_yes;	          /* filename of the gpl */
+    char dot_file_yes;	          /* filename of the dot */
+    char sqlite_file_yes;	  /* filename of the sqlite3 */
+    char text_file_yes;	          /* filename of the text */
+    char nodes_file_yes;	  /* filename of the nodes */
+    char edges_file_yes;	  /* filename of the edges */
+    char strings_file_yes;	  /* filename of the strings */
+    const char * text_file_sep;	  /* separator for text file */
 
     dr_clock_t uncollapse_min;	/* minimum length that can be uncollapsed */
     dr_clock_t collapse_max;	/* maximum length that can be collpased */
@@ -106,15 +107,16 @@ extern "C" {
   */
   static dr_options dr_options_default_values 
   __attribute__ ((unused)) = {
-    (const char *)"00dr.dag",  /* dag_file */
-    (const char *)"00dr.stat", /* stat_file */
-    (const char *)"00dr.gpl",  /* gpl_file */
-    (const char *)0,	       /* dot_file */
-    (const char *)0,	       /* sqlite_file */
-    (const char *)0,	       /* text_file */
-    (const char *)0,	       /* nodes_file */	
-    (const char *)0,	       /* edges_file */	
-    (const char *)0,	       /* strings_file */	
+    (const char *)"00dr",       /* dag_file_prefix */
+    1,				/* dag_file_yes */
+    1,				/* stat_file */
+    1,				/* gpl_file */
+    0,				/* dot_file */
+    0,				/* sqlite_file */
+    0,				/* text_file */
+    0,				/* nodes_file */	
+    0,				/* edges_file */	
+    0,			 /* strings_file */	
     (const char *)"|",	       /* text_file_sep */
     0,			       /* uncollapse_min; obsolete. */
     (1L << 60),	/* collapse_max used to be (1L << 60), */

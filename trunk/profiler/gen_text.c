@@ -98,15 +98,20 @@ dr_pi_dag_gen_text(dr_pi_dag * G, FILE * wp, const char * sep) {
 }
 
 int dr_gen_text(dr_pi_dag * G) {
-  const char * text_file = GS.opts.text_file;
-  const char * sep = GS.opts.text_file_sep;
-  int must_close = 0;
-  FILE * wp = dr_pi_dag_open_to_write(text_file, "text", &must_close,
-				      GS.opts.verbose_level >= 1);
-  if (!wp) return 1;		/* do nothing; OK */
-  int r = dr_pi_dag_gen_text(G, wp, sep);
-  if (must_close) fclose(wp);
-  return r;
+  if (!GS.opts.text_file_yes) {
+    return 1;
+  } else {
+    const char * sep = GS.opts.text_file_sep;
+    FILE * wp = dr_pi_dag_open_to_write(GS.opts.dag_file_prefix, ".txt",
+					"text", GS.opts.verbose_level >= 1);
+    if (!wp) {
+      return 0;
+    } else {
+      int r = dr_pi_dag_gen_text(G, wp, sep);
+      fclose(wp);
+      return r;
+    }
+  }
 }
 
 #if 0
