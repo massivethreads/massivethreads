@@ -1190,7 +1190,7 @@ Then you pass the resulting SQLite3 file to 'drview'.
    TODO: We are planning to improve this crude interface, so you can
 directly give a '.dag' file to drview.
 
-     $ dag2any --sqlite 00dr.sqlite 00dr.dag
+     $ dag2any 00dr.dag
      writing sqlite3 to 00dr.sqlite
      basics:  ........................................
      nodes:   ........................................
@@ -1265,6 +1265,6 @@ Node: Viewing Parallelism Profile with gnuplot30733
 Node: Visualizing the DAG via graphviz35497
 Node: Understanding Stat File36825
 Node: Viewing DAG file with drview46848
-Node: Querying Recorded Data49636
+Node: Querying Recorded Data49615
 
 End Tag Table
