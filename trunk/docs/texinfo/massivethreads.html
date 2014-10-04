@@ -327,21 +327,23 @@ OpenMP and Cilk easier.
 <p>Here is the summary of choices of APIs and runtime systems.
 </p>
 <table>
-<thead><tr><th width="40%">API</th><th width="35%">Header file</th><th width="25%">Runtime System</th></tr></thead>
-<tr><td width="40%">TBB-compatible</td><td width="35%">mtbb/task_group.h</td><td width="25%">None (dummy)</td></tr>
-<tr><td width="40%">TBB-compatible</td><td width="35%">mtbb/task_group.h</td><td width="25%">Intel TBB</td></tr>
-<tr><td width="40%">TBB-compatible</td><td width="35%">mtbb/task_group.h</td><td width="25%">MassiveThreads</td></tr>
-<tr><td width="40%">TBB-compatible</td><td width="35%">mtbb/task_group.h</td><td width="25%">Qthreads</td></tr>
-<tr><td width="40%">TBB-compatible</td><td width="35%">mtbb/task_group.h</td><td width="25%">Nanos++</td></tr>
-<tr><td width="40%">OpenMP-like</td><td width="35%">tpswitch/omp_dr.h</td><td width="25%">OpenMP</td></tr>
-<tr><td width="40%">Cilk-like</td><td width="35%">tpswitch/cilk_dr.h</td><td width="25%">Cilk</td></tr>
-<tr><td width="40%">Task Parallel Switcher</td><td width="35%">tpswitch/tpswitch.h</td><td width="25%">None (dummy)</td></tr>
-<tr><td width="40%">Task Parallel Switcher</td><td width="35%">tpswitch/tpswitch.h</td><td width="25%">Intel TBB</td></tr>
-<tr><td width="40%">Task Parallel Switcher</td><td width="35%">tpswitch/tpswitch.h</td><td width="25%">MassiveThreads</td></tr>
-<tr><td width="40%">Task Parallel Switcher</td><td width="35%">tpswitch/tpswitch.h</td><td width="25%">Qthreads</td></tr>
-<tr><td width="40%">Task Parallel Switcher</td><td width="35%">tpswitch/tpswitch.h</td><td width="25%">Nanos++</td></tr>
-<tr><td width="40%">Task Parallel Switcher</td><td width="35%">tpswitch/tpswitch.h</td><td width="25%">OpenMP</td></tr>
-<tr><td width="40%">Task Parallel Switcher</td><td width="35%">tpswitch/tpswitch.h</td><td width="25%">Cilk</td></tr>
+<thead><tr><th width="25%">API</th><th width="20%">Runtime System</th><th width="25%">Header file</th><th width="30%">flags</th></tr></thead>
+<tr><td width="25%">TBB-compatible</td><td width="20%">None (dummy)</td><td width="25%"><code>mtbb/task_group.h</code></td><td width="30%"><code>-DTO_SERIAL</code></td></tr>
+<tr><td width="25%">TBB-compatible</td><td width="20%">Intel TBB</td><td width="25%"><code>mtbb/task_group.h</code></td><td width="30%"><code>-DTO_TBB -ltbb</code></td></tr>
+<tr><td width="25%">TBB-compatible</td><td width="20%">MassiveThreads</td><td width="25%"><code>mtbb/task_group.h</code></td><td width="30%"><code>-lmyth-native</code></td></tr>
+<tr><td width="25%">TBB-compatible</td><td width="20%">Qthreads</td><td width="25%"><code>mtbb/task_group.h</code></td><td width="30%"><code>-DTO_QTHREAD -lqthread</code></td></tr>
+<tr><td width="25%">TBB-compatible</td><td width="20%">Nanos++</td><td width="25%"><code>mtbb/task_group.h</code></td><td width="30%"><code>-DTO_NANOX -lnanox-c</code></td></tr>
+<tr><td width="25%">OpenMP-like</td><td width="20%">OpenMP</td><td width="25%"><code>tpswitch/omp_dr.h</code></td><td width="30%"></td></tr>
+<tr><td width="25%">Cilk-like</td><td width="20%">Cilk</td><td width="25%"><code>tpswitch/cilk_dr.h</code></td><td width="30%"></td></tr>
+<tr><td width="25%">Cilkplus-like</td><td width="20%">Cilkplus</td><td width="25%"><code>tpswitch/cilk_dr.h</code></td><td width="30%"></td></tr>
+<tr><td width="25%">Task Parallel Switcher</td><td width="20%">None (dummy)</td><td width="25%"><code>tpswitch/tpswitch.h</code></td><td width="30%"><code>-DTO_SERIAL</code></td></tr>
+<tr><td width="25%">Task Parallel Switcher</td><td width="20%">Intel TBB</td><td width="25%"><code>tpswitch/tpswitch.h</code></td><td width="30%"><code> -DTO_TBB -ltbb</code></td></tr>
+<tr><td width="25%">Task Parallel Switcher</td><td width="20%">MassiveThreads</td><td width="25%"><code>tpswitch/tpswitch.h</code></td><td width="30%"><code>-DTO_MTHREAD_NATIVE -lmyth-native</code></td></tr>
+<tr><td width="25%">Task Parallel Switcher</td><td width="20%">Qthreads</td><td width="25%"><code>tpswitch/tpswitch.h</code></td><td width="30%"><code>-DTO_QTHREAD -lqthread</code></td></tr>
+<tr><td width="25%">Task Parallel Switcher</td><td width="20%">Nanos++</td><td width="25%"><code>tpswitch/tpswitch.h</code></td><td width="30%"><code>-DTO_NANOX -lnanox-c</code></td></tr>
+<tr><td width="25%">Task Parallel Switcher</td><td width="20%">OpenMP</td><td width="25%"><code>tpswitch/tpswitch.h</code></td><td width="30%"><code>-DTO_OMP</code></td></tr>
+<tr><td width="25%">Task Parallel Switcher</td><td width="20%">Cilk</td><td width="25%"><code>tpswitch/tpswitch.h</code></td><td width="30%"><code>-DTO_CILK</code></td></tr>
+<tr><td width="25%">Task Parallel Switcher</td><td width="20%">Cilkplus</td><td width="25%"><code>tpswitch/tpswitch.h</code></td><td width="30%"><code>-DTO_CILKPLUS</code></td></tr>
 </table>
 
 <hr>
@@ -508,7 +510,7 @@ associated with the task group object to finish via <samp>myth_join</samp>.
 <table>
 <thead><tr><th width="50%">Runtime system</th><th width="50%">Flag</th></tr></thead>
 <tr><td width="50%">Intel TBB</td><td width="50%"><samp>-DTO_TBB</samp></td></tr>
-<tr><td width="50%">MassiveThreads</td><td width="50%"><samp>-DTO_MTHREAD</samp> (or nothing)</td></tr>
+<tr><td width="50%">MassiveThreads</td><td width="50%"><samp>-DTO_MTHREAD_NATIVE</samp> (or nothing)</td></tr>
 <tr><td width="50%">Qthreads</td><td width="50%"><samp>-DTO_QTHREAD</samp></td></tr>
 <tr><td width="50%">Nanos++</td><td width="50%"><samp>-DTO_NANOX</samp></td></tr>
 <tr><td width="50%">None</td><td width="50%"><samp>-DTO_SERIAL</samp></td></tr>
@@ -999,15 +1001,16 @@ list of environment variables and their values printed by
 <div class="example">
 <pre class="verbatim">$ DR_VERBOSE=1 ./bin_mtbb_dr 10
 DAG Recorder Options:
-dag_file (DAG_RECORDER_DAG_FILE,DR_DAG) : 00dr.dag
-stat_file (DAG_RECORDER_STAT_FILE,DR_STAT) : 00dr.stat
-gpl_file (DAG_RECORDER_GPL_FILE,DR_GPL) : 00dr.gpl
-dot_file (DAG_RECORDER_DOT_FILE,DR_DOT) : (null)
-text_file (DAG_RECORDER_TEXT_FILE,DR_TEXT) : (null)
+dag_file_prefix (DAG_RECORDER_DAG_FILE_PREFIX,DR_PREFIX) : 00dr
+dag_file_yes (DAG_RECORDER_DAG_FILE,DR_DAG) : 1
+stat_file_yes (DAG_RECORDER_STAT_FILE,DR_STAT) : 1
+gpl_file_yes (DAG_RECORDER_GPL_FILE,DR_GPL) : 1
+dot_file_yes (DAG_RECORDER_DOT_FILE,DR_DOT) : 0
+text_file_yes (DAG_RECORDER_TEXT_FILE,DR_TEXT) : 0
 gpl_sz (DAG_RECORDER_GPL_SIZE,DR_GPL_SZ) : 4000
-text_file (DAG_RECORDER_TEXT_FILE_SEP,DR_TEXT_SEP) : |
+text_file_sep (DAG_RECORDER_TEXT_FILE_SEP,DR_TEXT_SEP) : |
 dbg_level (DAG_RECORDER_DBG_LEVEL,DR_DBG) : 0
-verbose_level (DAG_RECORDER_VERBOSE_LEVEL,DR_VERBOSE) : 0
+verbose_level (DAG_RECORDER_VERBOSE_LEVEL,DR_VERBOSE) : 1
 chk_level (DAG_RECORDER_CHK_LEVEL,DR_CHK) : 0
 uncollapse_min (DAG_RECORDER_UNCOLLAPSE_MIN,DR_UNCOLLAPSE_MIN) : 0
 collapse_max (DAG_RECORDER_COLLAPSE_MAX,DR_COLLAPSE_MAX) : 1152921504606846976
@@ -1016,12 +1019,10 @@ prune_threshold (DAG_RECORDER_PRUNE_THRESHOLD,DR_PRUNE) : 100000
 alloc_unit_mb (DAG_RECORDER_ALLOC_UNIT_MB,DR_ALLOC_UNIT_MB) : 1
 pre_alloc_per_worker (DAG_RECORDER_PRE_ALLOC_PER_WORKER,DR_PRE_ALLOC_PER_WORKER) : 0
 pre_alloc (DAG_RECORDER_PRE_ALLOC,DR_PRE_ALLOC) : 0
-writing dag to 00dr.dag
+dag_recorder: writing dag to 00dr.dag
 dr_pi_dag_dump: 28648 bytes
-writing stat to 00dr.stat
-writing stat to 00dr.gpl
-not writing dot
-not writing text
+dag recorder: writing stat to 00dr.stat
+dag recorder: writing parallelism to 00dr.gpl
 bin(10) = 1024
 </pre></div>
 
@@ -1033,12 +1034,12 @@ variables (consider other variables are still experimental).
 </p>
 <table>
 <thead><tr><th width="15%">variable</th><th width="15%">default</th><th width="70%">description</th></tr></thead>
-<tr><td width="15%"><code>DR_DAG</code></td><td width="15%"><samp>00dr.dag</samp></td><td width="70%">The name of the DAG file</td></tr>
-<tr><td width="15%"><code>DR_STAT</code></td><td width="15%"><samp>00dr.stat</samp></td><td width="70%">The name of the summary stat file</td></tr>
-<tr><td width="15%"><code>DR_GPL</code></td><td width="15%"><samp>00dr.gpl</samp></td><td width="70%">The name of the parallelism file</td></tr>
-<tr><td width="15%"><code>DR_DOT</code></td><td width="15%"><samp>00dr.gpl</samp></td><td width="70%">The name of the DAG file in a graphviz format, which can be converted into viewable images by the dot command.  You need to have graphviz package installed in yours system</td></tr>
-<tr><td width="15%"><code>DR_TEXT</code></td><td width="15%">none</td><td width="70%">DAG file, but formatted in a human-readable text file.
-Specify this when you want to inspect raw data</td></tr>
+<tr><td width="15%"><code>DR_DAG_PREFIX</code></td><td width="15%"><samp>00dr</samp></td><td width="70%">Prefix of all files below</td></tr>
+<tr><td width="15%"><code>DR_DAG</code></td><td width="15%">1</td><td width="70%">1 if generate a DAG file (to <code>DR_DAG_PREFIX</code>.dag)</td></tr>
+<tr><td width="15%"><code>DR_STAT</code></td><td width="15%">1</td><td width="70%">1 if generate a summary stat file (to <code>DR_DAG_PREFIX</code>.stat)</td></tr>
+<tr><td width="15%"><code>DR_GPL</code></td><td width="15%">1</td><td width="70%">1 if generate a parallelism profile file (to <code>DR_DAG_PREFIX</code>.gpl)</td></tr>
+<tr><td width="15%"><code>DR_DOT</code></td><td width="15%">0</td><td width="70%">1 if generate a DAG file in a graphviz format (to <code>DR_DAG_PREFIX</code>.dot), which can be converted into viewable images by the <samp>dot</samp> command.  You need to have graphviz package installed in yours system</td></tr>
+<tr><td width="15%"><code>DR_TEXT</code></td><td width="15%">0</td><td width="70%">1 if generate a human-readable text-formatted DAG file (to <code>DR_DAG_PREFIX</code>.txt).  Specify this when you want to inspect raw data</td></tr>
 <tr><td width="15%"><code>DR_TEXT_SEP</code></td><td width="15%"><code>|</code></td><td width="70%">The field delimiter used in the text-formatted DAG file</td></tr>
 <tr><td width="15%"><code>DR_VERBOSE</code></td><td width="15%">0</td><td width="70%">Set verbosity</td></tr>
 <tr><td width="15%"><code>DR_COLLAPSE_MAX</code></td><td width="15%">a huge value</td><td width="70%">Determine how aggressively the DAG Recorder collapses subgraphs.  Specifically, the value determines an upper bound of time (in clock cycles) any single node resulted from collapsing a subgraph can span.  In other words, any single node in the DAG represents either a true single node (i.e., performed no tasking primitives) or a subgraph that took shorter than this number of clocks.  The default is a huge value, which means the system can collapse subgraphs as much as it can.  Set it to a small value to guarantee a minimum resolution.</td></tr>
@@ -1051,10 +1052,10 @@ pointer to <code>dr_options</code> structure to <code>dr_start</code>.  See
 that field names were also displayed with <code>DR_VERBOSE=1</code> option
 above.  For example, the line:
 </p><div class="example">
-<pre class="example">dag_file (DAG_RECORDER_DAG_FILE,DR_DAG) : 00dr.dag
+<pre class="example">dag_file_prefix (DAG_RECORDER_DAG_FILE_PREFIX,DR_PREFIX) : 00dr
 </pre></div>
-<p>tells you <code>dag_file</code> is the field name you want to set to change
-the file name of the DAG file.
+<p>tells you <code>dag_file_prefix</code> is the field name you want to set to change
+the prefix of generated files.
 </p>
 <p>When you change some of these fields, you will want to leave other
 fields to their default values.  <code>dr_options_default(opts)</code>
