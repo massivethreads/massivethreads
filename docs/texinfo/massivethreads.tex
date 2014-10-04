@@ -144,22 +144,24 @@ OpenMP and Cilk easier.
 
 Here is the summary of choices of APIs and runtime systems.
 
-@multitable @columnfractions .4 .35 .25
-@headitem API            @tab Header file       @tab Runtime System 
-@item     TBB-compatible @tab mtbb/task_group.h @tab None (dummy)
-@item     TBB-compatible @tab mtbb/task_group.h @tab Intel TBB 
-@item     TBB-compatible @tab mtbb/task_group.h @tab MassiveThreads
-@item     TBB-compatible @tab mtbb/task_group.h @tab Qthreads
-@item     TBB-compatible @tab mtbb/task_group.h @tab Nanos++
-@item     OpenMP-like    @tab tpswitch/omp_dr.h          @tab OpenMP
-@item     Cilk-like      @tab tpswitch/cilk_dr.h         @tab Cilk
-@item     Task Parallel Switcher @tab tpswitch/tpswitch.h @tab None (dummy)
-@item     Task Parallel Switcher @tab tpswitch/tpswitch.h @tab Intel TBB 
-@item     Task Parallel Switcher @tab tpswitch/tpswitch.h @tab MassiveThreads
-@item     Task Parallel Switcher @tab tpswitch/tpswitch.h @tab Qthreads
-@item     Task Parallel Switcher @tab tpswitch/tpswitch.h @tab Nanos++
-@item     Task Parallel Switcher @tab tpswitch/tpswitch.h @tab OpenMP
-@item     Task Parallel Switcher @tab tpswitch/tpswitch.h @tab Cilk
+@multitable @columnfractions .25 .2 .25 .30
+@headitem API            @tab Runtime System  @tab Header file      @tab flags
+@item     TBB-compatible @tab None (dummy)   @tab @code{mtbb/task_group.h} @tab @code{-DTO_SERIAL}
+@item     TBB-compatible @tab Intel TBB      @tab @code{mtbb/task_group.h} @tab @code{-DTO_TBB -ltbb}
+@item     TBB-compatible @tab MassiveThreads @tab @code{mtbb/task_group.h} @tab @code{-lmyth-native}
+@item     TBB-compatible @tab Qthreads       @tab @code{mtbb/task_group.h} @tab @code{-DTO_QTHREAD -lqthread}
+@item     TBB-compatible @tab Nanos++        @tab @code{mtbb/task_group.h} @tab @code{-DTO_NANOX -lnanox-c}
+@item     OpenMP-like    @tab OpenMP @tab @code{tpswitch/omp_dr.h}          @tab
+@item     Cilk-like      @tab Cilk   @tab @code{tpswitch/cilk_dr.h}         @tab
+@item     Cilkplus-like  @tab Cilkplus   @tab @code{tpswitch/cilk_dr.h}         @tab
+@item     Task Parallel Switcher @tab None (dummy) @tab @code{tpswitch/tpswitch.h} @tab @code{-DTO_SERIAL}
+@item     Task Parallel Switcher @tab Intel TBB @tab @code{tpswitch/tpswitch.h} @tab @code{ -DTO_TBB -ltbb}
+@item     Task Parallel Switcher @tab MassiveThreads @tab @code{tpswitch/tpswitch.h} @tab @code{-DTO_MTHREAD_NATIVE -lmyth-native}
+@item     Task Parallel Switcher @tab Qthreads @tab @code{tpswitch/tpswitch.h} @tab @code{-DTO_QTHREAD -lqthread}
+@item     Task Parallel Switcher @tab Nanos++ @tab @code{tpswitch/tpswitch.h} @tab @code{-DTO_NANOX -lnanox-c}
+@item     Task Parallel Switcher @tab OpenMP @tab @code{tpswitch/tpswitch.h} @tab @code{-DTO_OMP}
+@item     Task Parallel Switcher @tab Cilk @tab @code{tpswitch/tpswitch.h} @tab @code{-DTO_CILK}
+@item     Task Parallel Switcher @tab Cilkplus @tab @code{tpswitch/tpswitch.h} @tab @code{-DTO_CILKPLUS}
 @end multitable
 
 @node TBB-Compatible Interface, Task Parallel Switcher, Higher Level Interfaces Overview, Higher-Level Interfaces
@@ -256,7 +258,7 @@ The @file{mtbb/task_group.h} file allows you to use threading libraries other th
 @multitable @columnfractions .5 .5
 @headitem Runtime system @tab Flag 
 @item Intel TBB      @tab @file{-DTO_TBB}
-@item MassiveThreads @tab @file{-DTO_MTHREAD} (or nothing)
+@item MassiveThreads @tab @file{-DTO_MTHREAD_NATIVE} (or nothing)
 @item Qthreads       @tab @file{-DTO_QTHREAD}
 @item Nanos++        @tab @file{-DTO_NANOX}
 @item None           @tab @file{-DTO_SERIAL}
@@ -563,15 +565,16 @@ list of environment variables and their values printed by
 @verbatim
 $ DR_VERBOSE=1 ./bin_mtbb_dr 10
 DAG Recorder Options:
-dag_file (DAG_RECORDER_DAG_FILE,DR_DAG) : 00dr.dag
-stat_file (DAG_RECORDER_STAT_FILE,DR_STAT) : 00dr.stat
-gpl_file (DAG_RECORDER_GPL_FILE,DR_GPL) : 00dr.gpl
-dot_file (DAG_RECORDER_DOT_FILE,DR_DOT) : (null)
-text_file (DAG_RECORDER_TEXT_FILE,DR_TEXT) : (null)
+dag_file_prefix (DAG_RECORDER_DAG_FILE_PREFIX,DR_PREFIX) : 00dr
+dag_file_yes (DAG_RECORDER_DAG_FILE,DR_DAG) : 1
+stat_file_yes (DAG_RECORDER_STAT_FILE,DR_STAT) : 1
+gpl_file_yes (DAG_RECORDER_GPL_FILE,DR_GPL) : 1
+dot_file_yes (DAG_RECORDER_DOT_FILE,DR_DOT) : 0
+text_file_yes (DAG_RECORDER_TEXT_FILE,DR_TEXT) : 0
 gpl_sz (DAG_RECORDER_GPL_SIZE,DR_GPL_SZ) : 4000
-text_file (DAG_RECORDER_TEXT_FILE_SEP,DR_TEXT_SEP) : |
+text_file_sep (DAG_RECORDER_TEXT_FILE_SEP,DR_TEXT_SEP) : |
 dbg_level (DAG_RECORDER_DBG_LEVEL,DR_DBG) : 0
-verbose_level (DAG_RECORDER_VERBOSE_LEVEL,DR_VERBOSE) : 0
+verbose_level (DAG_RECORDER_VERBOSE_LEVEL,DR_VERBOSE) : 1
 chk_level (DAG_RECORDER_CHK_LEVEL,DR_CHK) : 0
 uncollapse_min (DAG_RECORDER_UNCOLLAPSE_MIN,DR_UNCOLLAPSE_MIN) : 0
 collapse_max (DAG_RECORDER_COLLAPSE_MAX,DR_COLLAPSE_MAX) : 1152921504606846976
@@ -580,12 +583,10 @@ prune_threshold (DAG_RECORDER_PRUNE_THRESHOLD,DR_PRUNE) : 100000
 alloc_unit_mb (DAG_RECORDER_ALLOC_UNIT_MB,DR_ALLOC_UNIT_MB) : 1
 pre_alloc_per_worker (DAG_RECORDER_PRE_ALLOC_PER_WORKER,DR_PRE_ALLOC_PER_WORKER) : 0
 pre_alloc (DAG_RECORDER_PRE_ALLOC,DR_PRE_ALLOC) : 0
-writing dag to 00dr.dag
+dag_recorder: writing dag to 00dr.dag
 dr_pi_dag_dump: 28648 bytes
-writing stat to 00dr.stat
-writing stat to 00dr.gpl
-not writing dot
-not writing text
+dag recorder: writing stat to 00dr.stat
+dag recorder: writing parallelism to 00dr.gpl
 bin(10) = 1024
 @end verbatim
 @end example
@@ -598,12 +599,12 @@ variables (consider other variables are still experimental).
 
 @multitable @columnfractions .15 .15 .7
 @headitem variable @tab default @tab description
-@item @code{DR_DAG}  @tab @file{00dr.dag}  @tab The name of the DAG file 
-@item @code{DR_STAT} @tab @file{00dr.stat} @tab The name of the summary stat file 
-@item @code{DR_GPL}  @tab @file{00dr.gpl}  @tab The name of the parallelism file 
-@item @code{DR_DOT}  @tab @file{00dr.gpl}  @tab The name of the DAG file in a graphviz format, which can be converted into viewable images by the dot command.  You need to have graphviz package installed in yours system 
-@item @code{DR_TEXT} @tab none      @tab DAG file, but formatted in a human-readable text file.
-Specify this when you want to inspect raw data 
+@item @code{DR_DAG_PREFIX} @tab @file{00dr}  @tab Prefix of all files below
+@item @code{DR_DAG}  @tab 1 @tab 1 if generate a DAG file (to @code{DR_DAG_PREFIX}.dag)
+@item @code{DR_STAT} @tab 1 @tab 1 if generate a summary stat file (to @code{DR_DAG_PREFIX}.stat)
+@item @code{DR_GPL}  @tab 1 @tab 1 if generate a parallelism profile file (to @code{DR_DAG_PREFIX}.gpl)
+@item @code{DR_DOT}  @tab 0 @tab 1 if generate a DAG file in a graphviz format (to @code{DR_DAG_PREFIX}.dot), which can be converted into viewable images by the @file{dot} command.  You need to have graphviz package installed in yours system 
+@item @code{DR_TEXT} @tab 0 @tab 1 if generate a human-readable text-formatted DAG file (to @code{DR_DAG_PREFIX}.txt).  Specify this when you want to inspect raw data 
 @item @code{DR_TEXT_SEP} @tab @code{|} @tab The field delimiter used in the text-formatted DAG file 
 @item @code{DR_VERBOSE}  @tab 0  @tab Set verbosity 
 @item @code{DR_COLLAPSE_MAX} @tab a huge value @tab Determine how aggressively the DAG Recorder collapses subgraphs.  Specifically, the value determines an upper bound of time (in clock cycles) any single node resulted from collapsing a subgraph can span.  In other words, any single node in the DAG represents either a true single node (i.e., performed no tasking primitives) or a subgraph that took shorter than this number of clocks.  The default is a huge value, which means the system can collapse subgraphs as much as it can.  Set it to a small value to guarantee a minimum resolution.
@@ -616,10 +617,10 @@ pointer to @code{dr_options} structure to @code{dr_start}.  See
 that field names were also displayed with @code{DR_VERBOSE=1} option
 above.  For example, the line:
 @example
-dag_file (DAG_RECORDER_DAG_FILE,DR_DAG) : 00dr.dag
+dag_file_prefix (DAG_RECORDER_DAG_FILE_PREFIX,DR_PREFIX) : 00dr
 @end example
-tells you @code{dag_file} is the field name you want to set to change
-the file name of the DAG file.
+tells you @code{dag_file_prefix} is the field name you want to set to change
+the prefix of generated files.
 
 When you change some of these fields, you will want to leave other
 fields to their default values.  @code{dr_options_default(opts)}
