@@ -105,11 +105,9 @@ void
 dr_pi_dag_chronological_traverse(dr_pi_dag * G,
 				 chronological_traverser * ct);
 
-FILE * 
-dr_pi_dag_open_to_write(const char * filename, 
-			const char * file_kind, 
-			int * must_close_p,
-			int show_message);
+FILE * dr_pi_dag_open_to_write(const char * prefix, const char * ext,
+			       const char * file_kind, 
+			       int show_message);
 
 void dr_opts_init(dr_options * opts);
 void dr_opts_print(dr_options * opts);

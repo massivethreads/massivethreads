@@ -573,62 +573,51 @@ dr_pi_dag_dump(dr_pi_dag * G, FILE * wp,
 
 /* dump the position-independent dag into a file */
 static int dr_gen_pi_dag(dr_pi_dag * G) {
-  FILE * wp = NULL;
-  int must_close = 0;
-  const char * filename = GS.opts.dag_file;
-  if (filename && strcmp(filename, "") != 0) {
-    if (strcmp(filename, "-") == 0) {
-      if (GS.opts.verbose_level >= 1)
-	fprintf(stderr, "writing dag to stdout\n");
-      wp = stdout;
-    } else {
-      if (GS.opts.verbose_level >= 1)
-	fprintf(stderr, "writing dag to %s\n", filename);
-      wp = fopen(filename, "wb");
-      if (!wp) { 
-	fprintf(stderr, "fopen: %s (%s)\n", strerror(errno), filename); 
-	return 0;
-      }
-      must_close = 1;
+  if (GS.opts.dag_file_yes) {
+    const char * prefix = GS.opts.dag_file_prefix;
+    const char * ext = ".dag";
+    const int len = strlen(prefix) + strlen(ext) + 1;
+    char * filename = dr_malloc(len);
+    FILE * wp;
+    strcpy(filename, prefix);
+    strcat(filename, ext);
+    if (GS.opts.verbose_level >= 1)
+      fprintf(stderr, "dag_recorder: writing dag to %s\n", filename);
+    wp = fopen(filename, "wb");
+    if (!wp) { 
+      fprintf(stderr, "error: fopen: %s (%s)\n", strerror(errno), filename); 
+      dr_free(filename, len);
+      return 0;
     }
+    dr_pi_dag_dump(G, wp, filename);
+    dr_free(filename, len);
+    fclose(wp);
   } else {
     if (GS.opts.verbose_level >= 1)
       fprintf(stderr, "not writing dag\n");
   }
-  if (wp) {
-    dr_pi_dag_dump(G, wp, filename);
-  }
-  if (must_close) fclose(wp);
   return 1;
 }
 
 /* open filename to write position independent dag 
    (this function does not belong to this file...) */
-FILE * 
-dr_pi_dag_open_to_write(const char * filename, const char * file_kind, 
-			int * must_close_p, int show_message) {
-  *must_close_p = 0;
-  if (filename && strcmp(filename, "") != 0) {
-    if (strcmp(filename, "-") == 0) {
-      if (show_message) 
-	fprintf(stderr, "writing %s to stdout\n", file_kind);
-      return stdout;
-    } else {
-      FILE * wp = fopen(filename, "wb");
-      if (show_message) 
-	fprintf(stderr, "writing %s to %s\n", file_kind, filename);
-      if (!wp) { 
-	fprintf(stderr, "fopen: %s (%s)\n", strerror(errno), filename); 
-	return (FILE *)0;
-      }
-      * must_close_p = 1;
-      return wp;
-    }
-  } else {
-    if (show_message) 
-      fprintf(stderr, "not writing %s\n", file_kind);
-    return (FILE *)0;
+FILE *
+dr_pi_dag_open_to_write(const char * prefix, const char * ext,
+			const char * file_kind, 
+			int show_message) {
+  int len = strlen(prefix) + strlen(ext) + 1;
+  char * filename = dr_malloc(len);
+  FILE * wp;
+  strcpy(filename, prefix);
+  strcat(filename, ext);
+  if (show_message) 
+    fprintf(stderr, "dag recorder: writing %s to %s\n", file_kind, filename);
+  wp = fopen(filename, "wb");
+  if (!wp) { 
+    fprintf(stderr, "error: fopen: %s (%s)\n", strerror(errno), filename); 
   }
+  dr_free(filename, len);
+  return wp;
 }
 
 /* --------------------- free dag ------------------- */

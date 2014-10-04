@@ -375,18 +375,24 @@ dr_para_prof_process_event(chronological_traverser * pp_,
 
 int 
 dr_gen_gpl(dr_pi_dag * G) {
-  int must_close = 0;
-  FILE * wp = dr_pi_dag_open_to_write(GS.opts.gpl_file, "parallelism", &must_close,
-				      GS.opts.verbose_level >= 1);
-  if (!wp) return 1;
-  dr_pi_dag_node * last = dr_pi_dag_node_last(G->T, G);
-  dr_para_prof pp[1];
-  dr_para_prof_init(pp, GS.opts.gpl_sz, last->info.end.t);
-  dr_pi_dag_chronological_traverse(G, (chronological_traverser *)pp);
-  dr_para_prof_check(pp);
-  int r = dr_para_prof_write_to_file(pp, wp);
-  dr_para_prof_destroy(pp);
-  if (must_close) fclose(wp);
-  return r;
+  if (!GS.opts.gpl_file_yes) {
+    return 1;
+  } else {
+    FILE * wp = dr_pi_dag_open_to_write(GS.opts.dag_file_prefix, ".gpl",
+					"parallelism", GS.opts.verbose_level >= 1);
+    if (!wp) {
+      return 0;
+    } else {
+      dr_pi_dag_node * last = dr_pi_dag_node_last(G->T, G);
+      dr_para_prof pp[1];
+      dr_para_prof_init(pp, GS.opts.gpl_sz, last->info.end.t);
+      dr_pi_dag_chronological_traverse(G, (chronological_traverser *)pp);
+      dr_para_prof_check(pp);
+      int r = dr_para_prof_write_to_file(pp, wp);
+      dr_para_prof_destroy(pp);
+      fclose(wp);
+      return r;
+    }
+  }
 }
 

@@ -309,19 +309,26 @@ dr_basic_stat_write_to_file(dr_basic_stat * bs, FILE * wp) {
 
 int 
 dr_gen_basic_stat(dr_pi_dag * G) {
-  int must_close = 0;
-  FILE * wp = dr_pi_dag_open_to_write(GS.opts.stat_file, "stat", &must_close,
-				      GS.opts.verbose_level >= 1);
-  if (!wp) return 1;
-  dr_basic_stat bs[1];
-  dr_basic_stat_init(bs, G);
-  dr_calc_inner_delay(bs, G);
-  dr_calc_edges(bs, G);
-  dr_pi_dag_chronological_traverse(G, (chronological_traverser *)bs);
-  int r = dr_basic_stat_write_to_file(bs, wp);
-  dr_basic_stat_destroy(bs, G);
-  if (must_close) fclose(wp);
-  return r;
+  if (!GS.opts.stat_file_yes) {
+    return 1;			/* not requested, OK */
+  } else {
+    FILE * wp = dr_pi_dag_open_to_write(GS.opts.dag_file_prefix, ".stat", 
+					"stat", 
+					GS.opts.verbose_level >= 1);
+    if (!wp) {
+      return 0;			/* failed */
+    } else {
+      dr_basic_stat bs[1];
+      dr_basic_stat_init(bs, G);
+      dr_calc_inner_delay(bs, G);
+      dr_calc_edges(bs, G);
+      dr_pi_dag_chronological_traverse(G, (chronological_traverser *)bs);
+      int r = dr_basic_stat_write_to_file(bs, wp);
+      dr_basic_stat_destroy(bs, G);
+      fclose(wp);
+      return r;
+    }
+  }
 }
 
 

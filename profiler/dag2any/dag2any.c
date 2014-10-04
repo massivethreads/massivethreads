@@ -64,14 +64,20 @@ const char * sql_create_basics
 = "create table basics(start_clock,n_workers)";
 
 static struct option dag2a_options[] = {
-  {"dot",         required_argument, 0, 0 },
-  {"stat",        required_argument, 0, 0 },
-  {"parallelism", required_argument, 0, 0 },
-  {"sqlite",      required_argument, 0, 'o' },
-  {"text",        required_argument, 0, 0 },
-  {"nodes",       required_argument, 0, 0 },
-  {"edges",       required_argument, 0, 0 },
-  {"strings",     required_argument, 0, 0 },
+  {"prefix",      required_argument, 0, 'o' },
+  {"dot",         no_argument, 0, 0 },
+  {"nodot",       no_argument, 0, 0 },
+  {"stat",        no_argument, 0, 0 },
+  {"nostat",      no_argument, 0, 0 },
+  {"parallelism", no_argument, 0, 0 },
+  {"noparallelism", no_argument, 0, 0 },
+  {"sqlite",      no_argument, 0, 0 },
+  {"nosqlite",    no_argument, 0, 0 },
+  {"text",        no_argument, 0, 0 },
+  {"notext",      no_argument, 0, 0 },
+  {"nodes",       no_argument, 0, 0 },
+  {"edges",       no_argument, 0, 0 },
+  {"strings",     no_argument, 0, 0 },
   {"help",        no_argument, 0, 0 },
   {0,         0,                 0,  0 }
 };
@@ -82,11 +88,12 @@ static void usage(const char * progname) {
   U("  %s [options] dag_file\n", progname);
   U("\n");
   U("  options:\n");
-  U("    --dot filename\n");
-  U("    --stat filename\n");
-  U("    --parallelism filename\n");
-  U("    -o,--sqlite filename\n");
-  U("    --text filename\n");
+  U("    -o,--prefix file_prefix\n");
+  U("    --[no]dot\n");
+  U("    --[no]stat\n");
+  U("    --[no]parallelism\n");
+  U("    --[no]sqlite\n");
+  U("    --[no]text\n");
   //U("    --nodes filename\n");
   //U("    --edges filename\n");
   //U("    --strings filename\n");
@@ -103,10 +110,11 @@ static int parse_args(int argc, char ** argv,
   dr_options opts[1];
   dr_options_default(opts);
   /* over write some default values */
-  opts->dot_file = 0;	   /* no dot files */
-  opts->stat_file = 0;	   /* no stat files */
-  opts->gpl_file = 0;	/* no parallelism files */
-  opts->text_file = 0;	   /* no text files */
+  opts->sqlite_file_yes = 1;   /* generate sqlite file */
+  opts->dot_file_yes = 0;	   /* no dot files */
+  opts->stat_file_yes = 0;	   /* no stat files */
+  opts->gpl_file_yes = 0;	/* no parallelism files */
+  opts->text_file_yes = 0;	   /* no text files */
 
   dr_opts_init(opts);
   dr_options * o = &GS.opts;
@@ -121,22 +129,40 @@ static int parse_args(int argc, char ** argv,
       {
 	const char * name = dag2a_options[idx].name;
 	const char * a = optarg;
-	if (strcmp(name, "dot") == 0) {
-	  o->dot_file = strdup(a);
+	if (strcmp(name, "prefix") == 0) {
+	  o->dag_file_prefix = strdup(a);
+	} else if (strcmp(name, "dot") == 0) {
+	  o->dot_file_yes = 1;
+	} else if (strcmp(name, "nodot") == 0) {
+	  o->dot_file_yes = 0;
 	} else if (strcmp(name, "stat") == 0) {
-	  o->stat_file = strdup(a);
+	  o->stat_file_yes = 1;
+	} else if (strcmp(name, "nostat") == 0) {
+	  o->stat_file_yes = 0;
 	} else if (strcmp(name, "parallelism") == 0) {
-	  o->gpl_file = strdup(a);
+	  o->gpl_file_yes = 1;
+	} else if (strcmp(name, "noparallelism") == 0) {
+	  o->gpl_file_yes = 0;
 	} else if (strcmp(name, "sqlite") == 0) {
-	  o->sqlite_file = strdup(a);
+	  o->sqlite_file_yes = 1;
+	} else if (strcmp(name, "nosqlite") == 0) {
+	  o->sqlite_file_yes = 0;
 	} else if (strcmp(name, "text") == 0) {
-	  o->text_file = strdup(a);
+	  o->text_file_yes = 1;
+	} else if (strcmp(name, "notext") == 0) {
+	  o->text_file_yes = 0;
 	} else if (strcmp(name, "nodes") == 0) {
-	  o->nodes_file = strdup(a);
+	  o->nodes_file_yes = 1;
+	} else if (strcmp(name, "nonodes") == 0) {
+	  o->nodes_file_yes = 0;
 	} else if (strcmp(name, "edges") == 0) {
-	  o->edges_file = strdup(a);
+	  o->edges_file_yes = 1;
+	} else if (strcmp(name, "noedges") == 0) {
+	  o->edges_file_yes = 0;
 	} else if (strcmp(name, "strings") == 0) {
-	  o->strings_file = strdup(a);
+	  o->strings_file_yes = 1;
+	} else if (strcmp(name, "nostrings") == 0) {
+	  o->strings_file_yes = 0;
 	} else if (strcmp(name, "help") == 0) {
 	  usage(argv[0]);
 	  return 0;
@@ -149,7 +175,7 @@ static int parse_args(int argc, char ** argv,
     case 'o':
       {
 	const char * a = optarg;
-	o->sqlite_file = strdup(a);
+	o->dag_file_prefix = strdup(a);
 	break;
       }
     case '?': 
@@ -172,26 +198,13 @@ static int parse_args(int argc, char ** argv,
 	    "%s: error: you can specify only one"
 	    " DAG file (%d given)\n", 
 	    progname, argc - optind);
+    usage(progname);
     return 0;
   } else {
     /* no filename */
     fprintf(stderr, 
 	    "error: you must specify an input DAG file\n");
-    fprintf(stderr, 
-	    "Usage:\n"
-	    " %s [options] dag_file\n"
-	    "Options:\n"
-	    "  --sqlite F.sqlite :\n"
-	    "    write sqlite file to F.sqlite (default : (do not write))\n"
-	    "  --stat F.stat :\n"
-	    "    write overall stat to F.stat (default : 00dr.stat)\n"
-	    "  --parallelism F.gpl :\n"
-	    "    write parallelism profile (gnuplot file) to F.gpl (default : 00dr.gpl)\n"
-	    "  --text F.txt :\n"
-	    "    write text-formatted DAG file to F.txt (default : (do not write))\n"
-	    "Example:\n"
-	    "  %s --sqlite 00dr.sqlite --parallelism \"\" --stat \"\" 00dr.dag\n",
-	    progname, progname);
+    usage(progname);
     return 0;
   }
   return 1;			/* OK */
@@ -601,24 +614,31 @@ static int dr_pi_dag_gen_sqlite3(dr_pi_dag * G, sqlite3 * db) {
 
 
 static int dr_gen_sqlite3(dr_pi_dag * G) {
-  const char * sqlite3_file = GS.opts.sqlite_file;
-  if (sqlite3_file) {
-    fprintf(stderr, "writing sqlite3 to %s\n", sqlite3_file);
-  } else {
+  if (!GS.opts.sqlite_file_yes) {
     fprintf(stderr, "not writing sqlite3 file\n");
     return 1;	/* OK */
-  }
-  sqlite3 * db = NULL;
+  } else { 
+    const char * prefix = GS.opts.dag_file_prefix;
+    const char * ext = ".sqlite";
+    int len = strlen(prefix) + strlen(ext) + 1;
+    char * filename = dr_malloc(len);
+    sqlite3 * db = NULL;
+    strcpy(filename, prefix);
+    strcpy(filename, ext);
+    fprintf(stderr, "dag2any: writing sqlite3 to %s\n", filename);
 
-  unlink(sqlite3_file);
+    unlink(filename);
 
-  if (sqlite3_open(sqlite3_file, &db) != SQLITE_OK) {
-    fprintf(stderr, 
-	    "dr_gen_sqlite3: could not open %s (%s)\n", 
-	    sqlite3_file, sqlite3_errmsg(db));
-    return 0;			/* NG */
+    if (sqlite3_open(filename, &db) != SQLITE_OK) {
+      fprintf(stderr, 
+	      "dr_gen_sqlite3: could not open %s (%s)\n", 
+	      filename, sqlite3_errmsg(db));
+      dr_free(filename, len);
+      return 0;			/* NG */
+    }
+    dr_free(filename, len);
+    return dr_pi_dag_gen_sqlite3(G, db);
   }
-  return dr_pi_dag_gen_sqlite3(G, db);
 }
 
 

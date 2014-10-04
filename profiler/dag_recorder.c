@@ -25,6 +25,7 @@ dr_global_state GS = {
   0,				/* worker_id_key_valid */
   0,				/* worker_id_counter */
   { /* options */
+    0,	 /* dag_file_prefix */
     0,	 /* dag_file */
     0,	 /* stat_file */
     0,	 /* gpl_file */
