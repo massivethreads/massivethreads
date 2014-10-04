@@ -105,19 +105,36 @@ static void usage(const char * progname) {
 #undef U
 }
 
+static char * get_prefix(const char * filename) {
+  const char * period = strrchr(filename, '.');
+  if (period && strcmp(period, ".dag") == 0) {
+    return strndup(filename, period - filename);
+  } else {
+    return strdup(filename);
+  }
+}
+
 static int parse_args(int argc, char ** argv,
 		      const char ** filename_p) {
   dr_options opts[1];
   dr_options_default(opts);
+
   /* over write some default values */
   opts->sqlite_file_yes = 1;   /* generate sqlite file */
   opts->dot_file_yes = 0;	   /* no dot files */
   opts->stat_file_yes = 0;	   /* no stat files */
   opts->gpl_file_yes = 0;	/* no parallelism files */
   opts->text_file_yes = 0;	   /* no text files */
-
-  dr_opts_init(opts);
-  dr_options * o = &GS.opts;
+  /* we set it to null, so that we can know
+   if it was given by the user (either by
+   environment or --prefix. if given, use
+   it for output filenames; otherwise we take
+   the prefix of the input */
+  opts->dag_file_prefix = 0;
+  /* show messages */
+  opts->verbose_level = 1;
+  //dr_opts_init(opts);
+  dr_options * o = opts;
   const char * progname = argv[0];
   
   while (1) {
@@ -192,6 +209,10 @@ static int parse_args(int argc, char ** argv,
 
   if (optind + 1 == argc) {
     *filename_p = strdup(argv[optind]);
+    if (!o->dag_file_prefix) {
+      o->dag_file_prefix = get_prefix(*filename_p);
+    }
+    dr_opts_init(o);
   } else if (optind + 1 < argc) {
     /* two or more filenames */
     fprintf(stderr, 
@@ -615,7 +636,9 @@ static int dr_pi_dag_gen_sqlite3(dr_pi_dag * G, sqlite3 * db) {
 
 static int dr_gen_sqlite3(dr_pi_dag * G) {
   if (!GS.opts.sqlite_file_yes) {
-    fprintf(stderr, "not writing sqlite3 file\n");
+    if (GS.opts.verbose_level>=1) {
+      fprintf(stderr, "not writing sqlite3 file\n");
+    }
     return 1;	/* OK */
   } else { 
     const char * prefix = GS.opts.dag_file_prefix;
@@ -624,8 +647,10 @@ static int dr_gen_sqlite3(dr_pi_dag * G) {
     char * filename = dr_malloc(len);
     sqlite3 * db = NULL;
     strcpy(filename, prefix);
-    strcpy(filename, ext);
-    fprintf(stderr, "dag2any: writing sqlite3 to %s\n", filename);
+    strcat(filename, ext);
+    if (GS.opts.verbose_level>=1) {
+      fprintf(stderr, "dag recorder: writing sqlite3 to %s\n", filename);
+    }
 
     unlink(filename);
 
