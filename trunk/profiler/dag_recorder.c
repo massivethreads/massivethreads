@@ -269,7 +269,9 @@ dr_init_(dr_options * opts, int num_workers) {
 void dr_stop__(const char * file, int line, int worker) {
   dr_end_task__(file, line, worker);
   (void)dr_check(GS.generation % 2);
-  GS.generation++;
+  /* when dr is running, turn it off */
+  if (GS.generation % 2) 
+    GS.generation++;
 }
 
 /* --- free all descendants of g (and optionally g also) --- */

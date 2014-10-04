@@ -223,28 +223,6 @@ extern "C" {
 #define dr_read_and_analyze_dag(filename) \
   dr_read_and_analyze_dag_(filename)
 
-#else
-
-#define dr_options_default(opts)          (void)0
-#define dr_start_task(parent)             do { } while (0)
-#define dr_start_cilk_proc(parent)        do { } while (0)
-#define dr_begin_section()                do { } while (0)
-#define dr_enter_create_task(create)      do { } while (0)
-#define dr_enter_create_cilk_proc_task()  do { } while (0)
-#define dr_return_from_create_task(task)  do { } while (0)
-#define dr_enter_wait_tasks()             do { } while (0)
-#define dr_return_from_wait_tasks(task)   do { } while (0)
-#define dr_enter_other()                  do { } while (0)
-#define dr_return_from_other(task)        do { } while (0)
-#define dr_end_task()                     do { } while (0)
-#define dr_start(opts)                    do { } while (0)
-#define dr_stop()                         do { } while (0)
-#define dr_cleanup()                      do { } while (0)
-#define dr_dump()                         do { } while (0)
-#define dr_read_and_analyze_dag(filename) 0
-
-#endif
-
   void dr_options_default_(dr_options * opts);
 
   static_if_inline void
@@ -331,6 +309,28 @@ extern "C" {
   /* read dag from filename and produce other files
      (state, gnuplot, ...) */
   int dr_read_and_analyze_dag_(const char * filename);
+
+#else
+
+#define dr_options_default(opts)          (void)0
+#define dr_start_task(parent)             do { } while (0)
+#define dr_start_cilk_proc(parent)        do { } while (0)
+#define dr_begin_section()                do { } while (0)
+#define dr_enter_create_task(create)      do { } while (0)
+#define dr_enter_create_cilk_proc_task()  do { } while (0)
+#define dr_return_from_create_task(task)  do { } while (0)
+#define dr_enter_wait_tasks()             do { } while (0)
+#define dr_return_from_wait_tasks(task)   do { } while (0)
+#define dr_enter_other()                  do { } while (0)
+#define dr_return_from_other(task)        do { } while (0)
+#define dr_end_task()                     do { } while (0)
+#define dr_start(opts)                    do { } while (0)
+#define dr_stop()                         do { } while (0)
+#define dr_cleanup()                      do { } while (0)
+#define dr_dump()                         do { } while (0)
+#define dr_read_and_analyze_dag(filename) 0
+
+#endif
 
 #ifdef __cplusplus
 }
