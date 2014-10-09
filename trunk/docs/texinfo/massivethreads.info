@@ -49,7 +49,7 @@ Writing Programs That Use DAG Recorder
 * Common Basics::
 * Using DAG Recorder with TBB-Compatible Interface::
 * Using DAG Recorder with OpenMP::
-* Using DAG Recorder with Cilk and Cilkplus::
+* Using DAG Recorder with Cilk and CilkPlus::
 * Using DAG Recorder with tpswitch.h::
 
 Running Your Programs with DAG Recorder
@@ -394,7 +394,7 @@ File: massivethreads.info,  Node: Writing Programs That Use DAG Recorder,  Next:
 * Common Basics::
 * Using DAG Recorder with TBB-Compatible Interface::
 * Using DAG Recorder with OpenMP::
-* Using DAG Recorder with Cilk and Cilkplus::
+* Using DAG Recorder with Cilk and CilkPlus::
 * Using DAG Recorder with tpswitch.h::
 
 
@@ -505,7 +505,7 @@ command line.
      g++ --std=c++0x bin_mtbb_dr.cc -DTO_TBB -DDAG_RECORDER=2 -ldr -ltbb
 
 
-File: massivethreads.info,  Node: Using DAG Recorder with OpenMP,  Next: Using DAG Recorder with Cilk and Cilkplus,  Prev: Using DAG Recorder with TBB-Compatible Interface,  Up: Writing Programs That Use DAG Recorder
+File: massivethreads.info,  Node: Using DAG Recorder with OpenMP,  Next: Using DAG Recorder with Cilk and CilkPlus,  Prev: Using DAG Recorder with TBB-Compatible Interface,  Up: Writing Programs That Use DAG Recorder
 
 4.3.3 Using DAG Recorder with OpenMP
 ------------------------------------
@@ -570,7 +570,7 @@ pragmas in an obvious manner:
             statement
           }
 
-   So, here is DAD Recorder-ready version of the above program.
+   So, here is DAG Recorder-ready version of the above program.
 
      #include <stdio.h>
      #include <stdlib.h>
@@ -611,22 +611,242 @@ pragmas in an obvious manner:
           g++ -fopenmp -DDAG_RECORDER=2 bin_omp_dr.cc -ldr
 
 
-File: massivethreads.info,  Node: Using DAG Recorder with Cilk and Cilkplus,  Next: Using DAG Recorder with tpswitch.h,  Prev: Using DAG Recorder with OpenMP,  Up: Writing Programs That Use DAG Recorder
+File: massivethreads.info,  Node: Using DAG Recorder with Cilk and CilkPlus,  Next: Using DAG Recorder with tpswitch.h,  Prev: Using DAG Recorder with OpenMP,  Up: Writing Programs That Use DAG Recorder
 
-4.3.4 Using DAG Recorder with Cilk and Cilkplus
+4.3.4 Using DAG Recorder with Cilk and CilkPlus
 -----------------------------------------------
 
-TODO: write about instrumenting Cilk and Cilkplus
+There are two versions of Cilk; the original MIT Cilk and CilkPlus.  The
+former is implemented as a source to source translator (cilkc) and it is
+a strictly C extension (C++ not supported).  The latter is natively
+supported by Intel C++ Compiler and GCC version $\geq$ 4.9.  It supports
+both C and C++ for writing serial parts.  DAG Recorder supports both
+Cilk and CilkPlus.  Hereafter, when we say Cilk, it means the original
+MIT Cilk version.
 
-   * 'tpswitch/cilk_dr.h'
-   * 'spawn_(spawn f(x))'
-   * 'sync_'
-   * 'cilk_begin'
-   * 'cilk_return(x)'
-   * 'cilk_void_return'
+   CilkPlus uses directives '_Cilk_spawn' and '_Cilk_sync' statements.
+Here is our example in CilkPlus.
+
+     #include <stdio.h>
+     #include <stdlib.h>
+
+     long bin(int n) {
+       if (n == 0) return 1;
+       else {
+         long x, y;
+         x = _Cilk_spawn bin(n - 1);
+         y = _Cilk_spawn bin(n - 1);
+         _Cilk_sync;
+         return x + y;
+       }
+     }
+
+     int main(int argc, char ** argv) {
+       int n = atoi(argv[1]);
+       long x;
+       x = _Cilk_spawn bin(n);
+       _Cilk_sync;
+       printf("bin(%d) = %ld\n", n, x);
+       return 0;
+     }
+
+   Alternatively you can include '<cilk/cilk.h>' and use more human
+friendly 'cilk_spawn' and 'cilk_sync' keywords.
+
+     #include <stdio.h>
+     #include <stdlib.h>
+     #include <cilk/cilk.h>
+
+     long bin(int n) {
+       if (n == 0) return 1;
+       else {
+         long x, y;
+         x = cilk_spawn bin(n - 1);
+         y = cilk_spawn bin(n - 1);
+         cilk_sync;
+         return x + y;
+       }
+     }
+
+     int main(int argc, char ** argv) {
+       int n = atoi(argv[1]);
+       long x;
+       x = cilk_spawn bin(n);
+       cilk_sync;
+       printf("bin(%d) = %ld\n", n, x);
+       return 0;
+     }
+
+   Cilk uses directives 'spawn' and 'sync' statements to create and
+synchronize tasks.  Here is our example in Cilk.
+
+     #include <stdio.h>
+     #include <stdlib.h>
+
+     cilk long bin(int n) {
+       if (n == 0) return 1;
+       else {
+         long x, y;
+         x = spawn bin(n - 1);
+         y = spawn bin(n - 1);
+         sync;
+         return x + y;
+       }
+     }
+
+     cilk int main(int argc, char ** argv) {
+       int n = atoi(argv[1]);
+       long x;
+       x = spawn bin(n);
+       sync;
+       printf("bin(%d) = %ld\n", n, x);
+       return 0;
+     }
+
+   There is a subtle but important difference between Cilk and CilkPlus.
+In Cilk, a function that spawns a task needs to be explicitly marked as
+a cilk procedure by the 'cilk' keyword at function declaration; and,
+once a procedure is marked as a cilk procedure, it cannot be called by a
+regular function call syntax; it must always be spawned.  That is, in
+our example, the following is prohibited.
+     int x = bin(n);
+
+   It must instead be written as
+     int x;
+     x = spawn bin(n);
+     sync;
+   As a result, the enclosing function must also be marked as a cilk
+procedure.
+
+   Whether you use Cilk or CilkPlus, modifications necessary to make
+these programs ready are summarized as follows.
+
+  1. include 'tpswitch/cilk_dr.cilkh' (Cilk) or 'tpswitch/cilkplus_dr.h'
+     (CilkPlus)
+  2. enclose all 'spawn, cilk_spawn,' and '_Cilk_spawn' statements with
+     'spawn_(...)' macro.  e.g.,
+          y = cilk_spawn f(x);
+     should be rewritten to:
+          spawn_(y = cilk_spawn f(x));
+  3. replace all 'sync' and 'cilk_sync' statements with 'sync_' and
+     'cilk_sync_', respectively.
+
+  4. any function that spawns a task needs to begin with 'cilk_begin'.
+     This is to indicate the beginning of a task.  If you forget this, a
+     compilation error should result, complaining "no such variable
+     __cilk_begin__";
+
+  5. replace return statements with either 'cilk_return(val)' or
+     'cilk_void_return', depending on whether the return statement
+     returns a value.  This is to indicate the end of a task.
+
+     (TODO : wish to fix this) If you forget this, a compilation
+     succeeds, but DAG Recorder fails.
+
+  6. (TODO : get rid of this restriction) As of writing, if you insert
+     'cilk_begin' into a function, that function always needs to be
+     spawned.  That is, such a function cannot be called by a normal
+     function call syntax. This is prohibited in MIT Cilk anyways and
+     flagged as a compilation error.  It is on you when you use
+     CilkPlus, which allows task-spawning functions to be called
+     serially without spawn keywords.  If you forget this, there are no
+     compilation errors and DAG Recorder will be confused.
+
+   Here is the modified CilkPlus program.
+
+     #include <stdio.h>
+     #include <stdlib.h>
+     #include <tpswitch/cilkplus_dr.h>
+
+     long bin(int n) {
+       cilk_begin;
+       if (n == 0) cilk_return(1);
+       else {
+         long x, y;
+         spawn_(x = cilk_spawn bin(n - 1));
+         spawn_(y = cilk_spawn bin(n - 1));
+         cilk_sync_;
+         cilk_return(x + y);
+       }
+     }
+
+     int main(int argc, char ** argv) {
+       cilk_begin;
+       int n = atoi(argv[1]);
+       dr_start(0);
+       long x;
+       spawn_(x = cilk_spawn bin(n));
+       cilk_sync_;
+       dr_stop();
+       printf("bin(%d) = %ld\n", n, x);
+       dr_dump();
+       cilk_return(0);
+     }
+
+   And here is Cilk version.
+
+     #include <stdio.h>
+     #include <stdlib.h>
+     #include <cilk/cilk.h>
+
+     long bin(int n) {
+       if (n == 0) return 1;
+       else {
+         long x, y;
+         x = cilk_spawn bin(n - 1);
+         y = cilk_spawn bin(n - 1);
+         cilk_sync;
+         return x + y;
+       }
+     }
+
+     int main(int argc, char ** argv) {
+       int n = atoi(argv[1]);
+       long x;
+       x = cilk_spawn bin(n);
+       cilk_sync;
+       printf("bin(%d) = %ld\n", n, x);
+       return 0;
+     }
+
+   This source code can be compiled with and without DAG Recorder.
+
+   * CilkPlus, without DAG Recorder:
+          g++ -fcilkplus bin_cilkplus_dr.c
+
+   * CilkPlus, with DAG Recorder:
+          g++ -fcilkplus -DDAG_RECORDER=2 bin_cilkplus_dr.c -ldr
+
+   * Cilk, without DAG Recorder:
+          cilkc bin_cilk_dr.cilk
+
+   * Cilk, with DAG Recorder:
+          cilkc -DDAG_RECORDER=2 bin_cilk_dr.cilk -ldr
+
+   Instrumeting Cilk or CilkPlus programs is admittedly more burdensome
+than instrumenting OpenMP or TBB. The main reason for this is that
+Cilk's 'spawn' statement and CilkPlus's 'cilk_spawn' statement create a
+task that executes the body of a procedure, rather than an entire
+procedure call statement, so we need to mark the beginning of the called
+procedure as the beginning of the task.  That's why you need to insert
+'cilk_begin'.  The difference between the two is subtle, but consider
+the following example.
+
+     spawn f(g(x));
+
+   In this Cilk code, evaluation of 'g(x)' is not performed by the
+spawned task, so there is no way to mark the beginning of the task by
+tweaking macros that receive the entire procedure call statement.
+
+   In contrast, a similar TBB code:
+     tg.run([=] { f(g(x)); });
+   spawns a task that performs 'f(g(x))' entirely.  To make matters even
+simpler, the task spawning primitive is just another method rather than
+a builtin syntax, which we can transparently instrument by having
+another class that implements 'run' method.
 
 
-File: massivethreads.info,  Node: Using DAG Recorder with tpswitch.h,  Prev: Using DAG Recorder with Cilk and Cilkplus,  Up: Writing Programs That Use DAG Recorder
+File: massivethreads.info,  Node: Using DAG Recorder with tpswitch.h,  Prev: Using DAG Recorder with Cilk and CilkPlus,  Up: Writing Programs That Use DAG Recorder
 
 4.3.5 Using DAG Recorder with tpswitch.h
 ----------------------------------------
@@ -1254,17 +1474,17 @@ Node: Writing Programs That Use DAG Recorder14117
 Node: Common Basics14580
 Node: Using DAG Recorder with TBB-Compatible Interface15523
 Node: Using DAG Recorder with OpenMP18325
-Node: Using DAG Recorder with Cilk and Cilkplus21285
-Node: Using DAG Recorder with tpswitch.h21769
-Node: Running Your Programs with DAG Recorder22194
-Node: Basics of Running Your Programs with DAG Recorder22577
-Node: Controlling the Behavior of DAG Recorder24118
-Node: dag2any DAG to any data converter29699
-Node: Viewing Recorded Data29959
-Node: Viewing Parallelism Profile with gnuplot30733
-Node: Visualizing the DAG via graphviz35497
-Node: Understanding Stat File36825
-Node: Viewing DAG file with drview46848
-Node: Querying Recorded Data49615
+Node: Using DAG Recorder with Cilk and CilkPlus21285
+Node: Using DAG Recorder with tpswitch.h28633
+Node: Running Your Programs with DAG Recorder29058
+Node: Basics of Running Your Programs with DAG Recorder29441
+Node: Controlling the Behavior of DAG Recorder30982
+Node: dag2any DAG to any data converter36563
+Node: Viewing Recorded Data36823
+Node: Viewing Parallelism Profile with gnuplot37597
+Node: Visualizing the DAG via graphviz42361
+Node: Understanding Stat File43689
+Node: Viewing DAG file with drview53712
+Node: Querying Recorded Data56479
 
 End Tag Table

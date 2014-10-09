@@ -146,7 +146,7 @@ div.example {
     <li><a name="toc-Common-Basics-1" href="#Common-Basics">4.3.1 Common Basics</a></li>
     <li><a name="toc-Using-DAG-Recorder-with-TBB_002dCompatible-Interface-1" href="#Using-DAG-Recorder-with-TBB_002dCompatible-Interface">4.3.2 Using DAG Recorder with TBB-Compatible Interface</a></li>
     <li><a name="toc-Using-DAG-Recorder-with-OpenMP-1" href="#Using-DAG-Recorder-with-OpenMP">4.3.3 Using DAG Recorder with OpenMP</a></li>
-    <li><a name="toc-Using-DAG-Recorder-with-Cilk-and-Cilkplus-1" href="#Using-DAG-Recorder-with-Cilk-and-Cilkplus">4.3.4 Using DAG Recorder with Cilk and Cilkplus</a></li>
+    <li><a name="toc-Using-DAG-Recorder-with-Cilk-and-CilkPlus-1" href="#Using-DAG-Recorder-with-Cilk-and-CilkPlus">4.3.4 Using DAG Recorder with Cilk and CilkPlus</a></li>
     <li><a name="toc-Using-DAG-Recorder-with-tpswitch_002eh-1" href="#Using-DAG-Recorder-with-tpswitch_002eh">4.3.5 Using DAG Recorder with tpswitch.h</a></li>
   </ul></li>
   <li><a name="toc-Running-Your-Programs-with-DAG-Recorder-1" href="#Running-Your-Programs-with-DAG-Recorder">4.4 Running Your Programs with DAG Recorder</a>
@@ -233,7 +233,7 @@ Writing Programs That Use DAG Recorder
 </td></tr>
 <tr><td align="left" valign="top">&bull; <a href="#Using-DAG-Recorder-with-OpenMP">Using DAG Recorder with OpenMP</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">
 </td></tr>
-<tr><td align="left" valign="top">&bull; <a href="#Using-DAG-Recorder-with-Cilk-and-Cilkplus">Using DAG Recorder with Cilk and Cilkplus</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">
+<tr><td align="left" valign="top">&bull; <a href="#Using-DAG-Recorder-with-Cilk-and-CilkPlus">Using DAG Recorder with Cilk and CilkPlus</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">
 </td></tr>
 <tr><td align="left" valign="top">&bull; <a href="#Using-DAG-Recorder-with-tpswitch_002eh">Using DAG Recorder with tpswitch.h</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">
 </td></tr>
@@ -638,7 +638,7 @@ Next: <a href="#Running-Your-Programs-with-DAG-Recorder" accesskey="n" rel="next
 </td></tr>
 <tr><td align="left" valign="top">&bull; <a href="#Using-DAG-Recorder-with-OpenMP" accesskey="3">Using DAG Recorder with OpenMP</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">
 </td></tr>
-<tr><td align="left" valign="top">&bull; <a href="#Using-DAG-Recorder-with-Cilk-and-Cilkplus" accesskey="4">Using DAG Recorder with Cilk and Cilkplus</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">
+<tr><td align="left" valign="top">&bull; <a href="#Using-DAG-Recorder-with-Cilk-and-CilkPlus" accesskey="4">Using DAG Recorder with Cilk and CilkPlus</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">
 </td></tr>
 <tr><td align="left" valign="top">&bull; <a href="#Using-DAG-Recorder-with-tpswitch_002eh" accesskey="5">Using DAG Recorder with tpswitch.h</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">
 </td></tr>
@@ -745,11 +745,11 @@ int main(int argc, char ** argv) {
 </p><ul>
 <li> with DAG Recorder:
 <div class="example">
-<pre class="example">g++ --std=c++0x bin_mtbb_dr.cc -DDAG_RECORDER=2 -ldr -lmyth-native 
+<pre class="verbatim">g++ --std=c++0x bin_mtbb_dr.cc -DDAG_RECORDER=2 -ldr -lmyth-native 
 </pre></div>
 </li><li> without DAG Recorder:
 <div class="example">
-<pre class="example">g++ --std=c++0x bin_mtbb_dr.cc -lmyth-native
+<pre class="verbatim">g++ --std=c++0x bin_mtbb_dr.cc -lmyth-native
 </pre></div>
 </li></ul>
 
@@ -757,14 +757,14 @@ int main(int argc, char ** argv) {
 </p>
 <p>You could switch to other schedulers in the way described already. See <a href="#Choosing-Schedulers-Beneath-the-TBB_002dCompatible-Interface">Choosing Schedulers Beneath the TBB-Compatible Interface</a>.  For example, you will get the original TBB scheduler with the following command line.
 </p><div class="example">
-<pre class="example">g++ --std=c++0x bin_mtbb_dr.cc -DTO_TBB -DDAG_RECORDER=2 -ldr -ltbb 
+<pre class="verbatim">g++ --std=c++0x bin_mtbb_dr.cc -DTO_TBB -DDAG_RECORDER=2 -ldr -ltbb 
 </pre></div>
 
 <hr>
 <a name="Using-DAG-Recorder-with-OpenMP"></a>
 <div class="header">
 <p>
-Next: <a href="#Using-DAG-Recorder-with-Cilk-and-Cilkplus" accesskey="n" rel="next">Using DAG Recorder with Cilk and Cilkplus</a>, Previous: <a href="#Using-DAG-Recorder-with-TBB_002dCompatible-Interface" accesskey="p" rel="prev">Using DAG Recorder with TBB-Compatible Interface</a>, Up: <a href="#Writing-Programs-That-Use-DAG-Recorder" accesskey="u" rel="up">Writing Programs That Use DAG Recorder</a> &nbsp; [<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>]</p>
+Next: <a href="#Using-DAG-Recorder-with-Cilk-and-CilkPlus" accesskey="n" rel="next">Using DAG Recorder with Cilk and CilkPlus</a>, Previous: <a href="#Using-DAG-Recorder-with-TBB_002dCompatible-Interface" accesskey="p" rel="prev">Using DAG Recorder with TBB-Compatible Interface</a>, Up: <a href="#Writing-Programs-That-Use-DAG-Recorder" accesskey="u" rel="up">Writing Programs That Use DAG Recorder</a> &nbsp; [<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>]</p>
 </div>
 <a name="Using-DAG-Recorder-with-OpenMP-1"></a>
 <h4 class="subsection">4.3.3 Using DAG Recorder with OpenMP</h4>
@@ -841,7 +841,7 @@ in an obvious manner:
 </pre></div>
 </li></ul>
 
-<p>So, here is DAD Recorder-ready version of the above program.
+<p>So, here is DAG Recorder-ready version of the above program.
 </p>
 <div class="example">
 <pre class="verbatim">#include &lt;stdio.h&gt;
@@ -890,30 +890,276 @@ int main(int argc, char ** argv) {
 </li></ul>
 
 <hr>
-<a name="Using-DAG-Recorder-with-Cilk-and-Cilkplus"></a>
+<a name="Using-DAG-Recorder-with-Cilk-and-CilkPlus"></a>
 <div class="header">
 <p>
 Next: <a href="#Using-DAG-Recorder-with-tpswitch_002eh" accesskey="n" rel="next">Using DAG Recorder with tpswitch.h</a>, Previous: <a href="#Using-DAG-Recorder-with-OpenMP" accesskey="p" rel="prev">Using DAG Recorder with OpenMP</a>, Up: <a href="#Writing-Programs-That-Use-DAG-Recorder" accesskey="u" rel="up">Writing Programs That Use DAG Recorder</a> &nbsp; [<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>]</p>
 </div>
-<a name="Using-DAG-Recorder-with-Cilk-and-Cilkplus-1"></a>
-<h4 class="subsection">4.3.4 Using DAG Recorder with Cilk and Cilkplus</h4>
+<a name="Using-DAG-Recorder-with-Cilk-and-CilkPlus-1"></a>
+<h4 class="subsection">4.3.4 Using DAG Recorder with Cilk and CilkPlus</h4>
 
-<p>TODO: write about instrumenting Cilk and Cilkplus
+<p>There are two versions of Cilk; the original MIT Cilk and CilkPlus.
+The former is implemented as a source to source translator (cilkc) and it is a strictly C extension (C++ not supported).
+The latter is natively supported by Intel C++ Compiler and GCC version $\geq$ 4.9.  
+It supports both C and C++ for writing serial parts.
+DAG Recorder supports both Cilk and CilkPlus.
+Hereafter, when we say Cilk, it means the original MIT Cilk version.
+</p>
+<p>CilkPlus uses directives <code>_Cilk_spawn</code> and <code>_Cilk_sync</code> statements.
+Here is our example in CilkPlus.
+</p>
+<div class="example">
+<pre class="verbatim">#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+
+long bin(int n) {
+  if (n == 0) return 1;
+  else {
+    long x, y;
+    x = _Cilk_spawn bin(n - 1);
+    y = _Cilk_spawn bin(n - 1);
+    _Cilk_sync;
+    return x + y;
+  }
+}
+
+int main(int argc, char ** argv) {
+  int n = atoi(argv[1]);
+  long x;
+  x = _Cilk_spawn bin(n);
+  _Cilk_sync;
+  printf(&quot;bin(%d) = %ld\n&quot;, n, x);
+  return 0;
+}
+</pre></div>
+
+<p>Alternatively you can include <code>&lt;cilk/cilk.h&gt;</code> and use more human friendly <code>cilk_spawn</code> and <code>cilk_sync</code> keywords.
+</p>
+<div class="example">
+<pre class="verbatim">#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;cilk/cilk.h&gt;
+
+long bin(int n) {
+  if (n == 0) return 1;
+  else {
+    long x, y;
+    x = cilk_spawn bin(n - 1);
+    y = cilk_spawn bin(n - 1);
+    cilk_sync;
+    return x + y;
+  }
+}
+
+int main(int argc, char ** argv) {
+  int n = atoi(argv[1]);
+  long x;
+  x = cilk_spawn bin(n);
+  cilk_sync;
+  printf(&quot;bin(%d) = %ld\n&quot;, n, x);
+  return 0;
+}
+</pre></div>
+
+<p>Cilk uses directives <code>spawn</code> and <code>sync</code> statements to create and synchronize tasks.
+Here is our example in Cilk.
+</p>
+<div class="example">
+<pre class="verbatim">#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+
+cilk long bin(int n) {
+  if (n == 0) return 1;
+  else {
+    long x, y;
+    x = spawn bin(n - 1);
+    y = spawn bin(n - 1);
+    sync;
+    return x + y;
+  }
+}
+
+cilk int main(int argc, char ** argv) {
+  int n = atoi(argv[1]);
+  long x;
+  x = spawn bin(n);
+  sync;
+  printf(&quot;bin(%d) = %ld\n&quot;, n, x);
+  return 0;
+}
+</pre></div>
+
+<p>There is a subtle but important difference between Cilk and CilkPlus.
+In Cilk, a function that spawns a task needs to be explicitly marked as
+a <i>cilk procedure</i> by the <code>cilk</code> keyword at function declaration;
+and, once a procedure is marked as a cilk procedure, it cannot be called
+by a regular function call syntax; <i>it must always be spawned.</i>  That is,
+in our example, the following is prohibited.
+</p><div class="example">
+<pre class="example">int x = bin(n);
+</pre></div>
+
+<p>It must instead be written as
+</p><div class="example">
+<pre class="example">int x;
+x = spawn bin(n);
+sync;
+</pre></div>
+<p>As a result, the enclosing function must also be marked as a cilk procedure.
+</p>
+
+<p>Whether you use Cilk or CilkPlus, modifications necessary to make these
+programs ready are summarized as follows.
+</p>
+<ol>
+<li> include <samp>tpswitch/cilk_dr.cilkh</samp> (Cilk) or <samp>tpswitch/cilkplus_dr.h</samp> (CilkPlus)
+</li><li> enclose all <code>spawn, cilk_spawn,</code> and <code>_Cilk_spawn</code> statements with <code>spawn_(...)</code> macro.  e.g.,
+<div class="example">
+<pre class="example">y = cilk_spawn f(x);
+</pre></div>
+<p>should be rewritten to:
+</p><div class="example">
+<pre class="example">spawn_(y = cilk_spawn f(x));
+</pre></div>
+</li><li> replace all <code>sync</code> and <code>cilk_sync</code> statements with <code>sync_</code> and <code>cilk_sync_</code>, respectively.
+
+</li><li> any function that spawns a task needs to begin with <code>cilk_begin</code>.  This is to indicate the beginning of a task.  If you forget this, a compilation error should result, complaining &ldquo;no such variable __cilk_begin__&rdquo;;
+
+</li><li> replace return statements with either <code>cilk_return(<i>val</i>)</code> or <code>cilk_void_return</code>, depending on whether the return statement returns a value.  This is to indicate the end of a task.  
+
+<p>(TODO : wish to fix this) If you forget this, a compilation
+      succeeds, but DAG Recorder fails.
+</p>
+</li><li> (TODO : get rid of this restriction) As of writing, if you insert <code>cilk_begin</code>
+      into a function, that function always needs to be spawned. That is,
+      such a function cannot be called by a normal function call syntax.  
+      This is prohibited in MIT Cilk
+      anyways and flagged as a compilation error.  It is on you when
+      you use CilkPlus, which allows task-spawning functions to be
+      called serially without spawn keywords.  If you forget this, there
+      are no compilation errors and DAG Recorder will be confused.
+</li></ol>
+
+<p>Here is the modified CilkPlus program.
+</p>
+<div class="example">
+<pre class="verbatim">#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;tpswitch/cilkplus_dr.h&gt;
+
+long bin(int n) {
+  cilk_begin;
+  if (n == 0) cilk_return(1);
+  else {
+    long x, y;
+    spawn_(x = cilk_spawn bin(n - 1));
+    spawn_(y = cilk_spawn bin(n - 1));
+    cilk_sync_;
+    cilk_return(x + y);
+  }
+}
+
+int main(int argc, char ** argv) {
+  cilk_begin;
+  int n = atoi(argv[1]);
+  dr_start(0);
+  long x;
+  spawn_(x = cilk_spawn bin(n));
+  cilk_sync_;
+  dr_stop();
+  printf(&quot;bin(%d) = %ld\n&quot;, n, x);
+  dr_dump();
+  cilk_return(0);
+}
+</pre></div>
+
+<p>And here is Cilk version.
+</p>
+<div class="example">
+<pre class="verbatim">#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;cilk/cilk.h&gt;
+
+long bin(int n) {
+  if (n == 0) return 1;
+  else {
+    long x, y;
+    x = cilk_spawn bin(n - 1);
+    y = cilk_spawn bin(n - 1);
+    cilk_sync;
+    return x + y;
+  }
+}
+
+int main(int argc, char ** argv) {
+  int n = atoi(argv[1]);
+  long x;
+  x = cilk_spawn bin(n);
+  cilk_sync;
+  printf(&quot;bin(%d) = %ld\n&quot;, n, x);
+  return 0;
+}
+</pre></div>
+
+<p>This source code can be compiled with and without DAG Recorder.
 </p>
 <ul>
-<li> <samp>tpswitch/cilk_dr.h</samp>
-</li><li> <samp>spawn_(spawn f(x))</samp>
-</li><li> <samp>sync_</samp>
-</li><li> <samp>cilk_begin</samp>
-</li><li> <samp>cilk_return(x)</samp>
-</li><li> <samp>cilk_void_return</samp>
+<li> CilkPlus, without DAG Recorder:
+<div class="example">
+<pre class="example">g++ -fcilkplus bin_cilkplus_dr.c
+</pre></div>
+
+</li><li> CilkPlus, with DAG Recorder:
+<div class="example">
+<pre class="example">g++ -fcilkplus -DDAG_RECORDER=2 bin_cilkplus_dr.c -ldr
+</pre></div>
+
+</li><li> Cilk, without DAG Recorder:
+<div class="example">
+<pre class="example">cilkc bin_cilk_dr.cilk
+</pre></div>
+
+</li><li> Cilk, with DAG Recorder:
+<div class="example">
+<pre class="example">cilkc -DDAG_RECORDER=2 bin_cilk_dr.cilk -ldr
+</pre></div>
 </li></ul>
+
+<p>Instrumeting Cilk or CilkPlus programs is admittedly more burdensome
+than instrumenting OpenMP or TBB.  The main reason for this is that
+Cilk&rsquo;s <code>spawn</code> statement and CilkPlus&rsquo;s <code>cilk_spawn</code> 
+statement create a task
+that executes <i>the body of a procedure</i>, rather than an entire
+procedure call statement, so we need to mark the beginning of the called
+procedure as the beginning of the task.  That&rsquo;s why you need to insert
+<code>cilk_begin</code>.  The difference between the two is subtle, but
+consider the following example.
+</p>
+<div class="example">
+<pre class="example">spawn f(g(x));
+</pre></div>
+
+<p>In this Cilk code, evaluation of <code>g(x)</code> is <i>not</i> performed by the
+spawned task, so there is no way to mark the beginning of the task by
+tweaking macros that receive the entire procedure call statement.
+</p>
+<p>In contrast, a similar TBB code:
+</p><div class="example">
+<pre class="verbatim">tg.run([=] { f(g(x)); });
+</pre></div>
+<p>spawns a task that performs <code>f(g(x))</code> entirely.  
+To make matters even simpler, the task spawning primitive
+is just another method rather than a builtin syntax, 
+which we can transparently instrument by having another 
+class that implements <code>run</code> method.
+</p>
+
 
 <hr>
 <a name="Using-DAG-Recorder-with-tpswitch_002eh"></a>
 <div class="header">
 <p>
-Previous: <a href="#Using-DAG-Recorder-with-Cilk-and-Cilkplus" accesskey="p" rel="prev">Using DAG Recorder with Cilk and Cilkplus</a>, Up: <a href="#Writing-Programs-That-Use-DAG-Recorder" accesskey="u" rel="up">Writing Programs That Use DAG Recorder</a> &nbsp; [<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>]</p>
+Previous: <a href="#Using-DAG-Recorder-with-Cilk-and-CilkPlus" accesskey="p" rel="prev">Using DAG Recorder with Cilk and CilkPlus</a>, Up: <a href="#Writing-Programs-That-Use-DAG-Recorder" accesskey="u" rel="up">Writing Programs That Use DAG Recorder</a> &nbsp; [<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>]</p>
 </div>
 <a name="Using-DAG-Recorder-with-tpswitch_002eh-1"></a>
 <h4 class="subsection">4.3.5 Using DAG Recorder with tpswitch.h</h4>
