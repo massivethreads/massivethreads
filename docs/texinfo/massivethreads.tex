@@ -79,7 +79,7 @@ Writing Programs That Use DAG Recorder
 * Common Basics::
 * Using DAG Recorder with TBB-Compatible Interface::
 * Using DAG Recorder with OpenMP::
-* Using DAG Recorder with Cilk and Cilkplus::
+* Using DAG Recorder with Cilk and CilkPlus::
 * Using DAG Recorder with tpswitch.h::
 
 Running Your Programs with DAG Recorder
@@ -346,7 +346,7 @@ include it.
 * Common Basics::
 * Using DAG Recorder with TBB-Compatible Interface::
 * Using DAG Recorder with OpenMP::
-* Using DAG Recorder with Cilk and Cilkplus::
+* Using DAG Recorder with Cilk and CilkPlus::
 * Using DAG Recorder with tpswitch.h::
 @end menu
 
@@ -396,11 +396,15 @@ Here are the command lines to compile this program, with and without DAG Recorde
 @itemize @bullet
 @item with DAG Recorder:
 @example
+@verbatim
 g++ --std=c++0x bin_mtbb_dr.cc -DDAG_RECORDER=2 -ldr -lmyth-native 
+@end verbatim
 @end example
 @item without DAG Recorder:
 @example
+@verbatim
 g++ --std=c++0x bin_mtbb_dr.cc -lmyth-native
+@end verbatim
 @end example
 @end itemize
 
@@ -408,10 +412,12 @@ The reason why you set DAG_RECORDER to ``2'' is historical.  There was a version
 
 You could switch to other schedulers in the way described already. @xref{Choosing Schedulers Beneath the TBB-Compatible Interface}.  For example, you will get the original TBB scheduler with the following command line.
 @example
+@verbatim
 g++ --std=c++0x bin_mtbb_dr.cc -DTO_TBB -DDAG_RECORDER=2 -ldr -ltbb 
+@end verbatim
 @end example
 
-@node Using DAG Recorder with OpenMP, Using DAG Recorder with Cilk and Cilkplus, Using DAG Recorder with TBB-Compatible Interface, Writing Programs That Use DAG Recorder
+@node Using DAG Recorder with OpenMP, Using DAG Recorder with Cilk and CilkPlus, Using DAG Recorder with TBB-Compatible Interface, Writing Programs That Use DAG Recorder
 @subsection Using DAG Recorder with OpenMP
 
 OpenMP uses directives (@code{pragma omp task} and @code{pragma omp
@@ -460,7 +466,7 @@ in an obvious manner:
 @end example
 @end itemize
 
-So, here is DAD Recorder-ready version of the above program.
+So, here is DAG Recorder-ready version of the above program.
 
 @example
 @verbatiminclude examples/bin_omp_dr.cc
@@ -480,21 +486,156 @@ g++ -fopenmp -DDAG_RECORDER=2 bin_omp_dr.cc -ldr
 @end example
 @end itemize
 
-@node Using DAG Recorder with Cilk and Cilkplus, Using DAG Recorder with tpswitch.h, Using DAG Recorder with OpenMP, Writing Programs That Use DAG Recorder
-@subsection Using DAG Recorder with Cilk and Cilkplus
+@node Using DAG Recorder with Cilk and CilkPlus, Using DAG Recorder with tpswitch.h, Using DAG Recorder with OpenMP, Writing Programs That Use DAG Recorder
+@subsection Using DAG Recorder with Cilk and CilkPlus
 
-TODO: write about instrumenting Cilk and Cilkplus
+There are two versions of Cilk; the original MIT Cilk and CilkPlus.
+The former is implemented as a source to source translator (cilkc) and it is a strictly C extension (C++ not supported).
+The latter is natively supported by Intel C++ Compiler and GCC version $\geq$ 4.9.  
+It supports both C and C++ for writing serial parts.
+DAG Recorder supports both Cilk and CilkPlus.
+Hereafter, when we say Cilk, it means the original MIT Cilk version.
+
+CilkPlus uses directives @code{_Cilk_spawn} and @code{_Cilk_sync} statements.
+Here is our example in CilkPlus.
+
+@example
+@verbatiminclude examples/bin_cilkplus_raw.c
+@end example
+
+Alternatively you can include @code{<cilk/cilk.h>} and use more human friendly @code{cilk_spawn} and @code{cilk_sync} keywords.
+
+@example
+@verbatiminclude examples/bin_cilkplus.c
+@end example
+
+Cilk uses directives @code{spawn} and @code{sync} statements to create and synchronize tasks.
+Here is our example in Cilk.
+
+@example
+@verbatiminclude examples/bin_cilk.cilk
+@end example
+
+There is a subtle but important difference between Cilk and CilkPlus.
+In Cilk, a function that spawns a task needs to be explicitly marked as
+a @i{cilk procedure} by the @code{cilk} keyword at function declaration;
+and, once a procedure is marked as a cilk procedure, it cannot be called
+by a regular function call syntax; @i{it must always be spawned.}  That is,
+in our example, the following is prohibited.
+@example
+int x = bin(n);
+@end example
+
+It must instead be written as
+@example
+int x;
+x = spawn bin(n);
+sync;
+@end example
+As a result, the enclosing function must also be marked as a cilk procedure.
+
+
+Whether you use Cilk or CilkPlus, modifications necessary to make these
+programs ready are summarized as follows.
+
+@enumerate
+@item include @file{tpswitch/cilk_dr.cilkh} (Cilk) or @file{tpswitch/cilkplus_dr.h} (CilkPlus)
+@item enclose all @code{spawn, cilk_spawn,} and @code{_Cilk_spawn} statements with @code{spawn_(...)} macro.  e.g.,
+@example
+y = cilk_spawn f(x);
+@end example
+should be rewritten to:
+@example
+spawn_(y = cilk_spawn f(x));
+@end example
+@item replace all @code{sync} and @code{cilk_sync} statements with @code{sync_} and @code{cilk_sync_}, respectively.
+
+@item any function that spawns a task needs to begin with @code{cilk_begin}.  This is to indicate the beginning of a task.  If you forget this, a compilation error should result, complaining ``no such variable __cilk_begin__'';
+
+@item replace return statements with either @code{cilk_return(@i{val})} or @code{cilk_void_return}, depending on whether the return statement returns a value.  This is to indicate the end of a task.  
+
+      (TODO : wish to fix this) If you forget this, a compilation
+      succeeds, but DAG Recorder fails.
+
+@item (TODO : get rid of this restriction) As of writing, if you insert @code{cilk_begin}
+      into a function, that function always needs to be spawned. That is,
+      such a function cannot be called by a normal function call syntax.  
+      This is prohibited in MIT Cilk
+      anyways and flagged as a compilation error.  It is on you when
+      you use CilkPlus, which allows task-spawning functions to be
+      called serially without spawn keywords.  If you forget this, there
+      are no compilation errors and DAG Recorder will be confused.
+@end enumerate
+
+Here is the modified CilkPlus program.
+
+@example
+@verbatiminclude examples/bin_cilkplus_dr.c
+@end example
+
+And here is Cilk version.
+
+@example
+@verbatiminclude examples/bin_cilkplus.c
+@end example
+
+This source code can be compiled with and without DAG Recorder.
 
 @itemize @bullet
-@item @file{tpswitch/cilk_dr.h}
-@item @file{spawn_(spawn f(x))}
-@item @file{sync_}
-@item @file{cilk_begin}
-@item @file{cilk_return(x)}
-@item @file{cilk_void_return}
+@item CilkPlus, without DAG Recorder:
+@example
+g++ -fcilkplus bin_cilkplus_dr.c
+@end example
+
+@item CilkPlus, with DAG Recorder:
+@example
+g++ -fcilkplus -DDAG_RECORDER=2 bin_cilkplus_dr.c -ldr
+@end example
+
+@item Cilk, without DAG Recorder:
+@example
+cilkc bin_cilk_dr.cilk
+@end example
+
+@item Cilk, with DAG Recorder:
+@example
+cilkc -DDAG_RECORDER=2 bin_cilk_dr.cilk -ldr
+@end example
 @end itemize
 
-@node Using DAG Recorder with tpswitch.h,  , Using DAG Recorder with Cilk and Cilkplus, Writing Programs That Use DAG Recorder
+Instrumeting Cilk or CilkPlus programs is admittedly more burdensome
+than instrumenting OpenMP or TBB.  The main reason for this is that
+Cilk's @code{spawn} statement and CilkPlus's @code{cilk_spawn} 
+statement create a task
+that executes @i{the body of a procedure}, rather than an entire
+procedure call statement, so we need to mark the beginning of the called
+procedure as the beginning of the task.  That's why you need to insert
+@code{cilk_begin}.  The difference between the two is subtle, but
+consider the following example.
+
+@example
+spawn f(g(x));
+@end example
+
+In this Cilk code, evaluation of @code{g(x)} is @i{not} performed by the
+spawned task, so there is no way to mark the beginning of the task by
+tweaking macros that receive the entire procedure call statement.
+
+In contrast, a similar TBB code:
+@example
+@verbatim
+tg.run([=] { f(g(x)); });
+@end verbatim
+@end example
+spawns a task that performs @code{f(g(x))} entirely.  
+To make matters even simpler, the task spawning primitive
+is just another method rather than a builtin syntax, 
+which we can transparently instrument by having another 
+class that implements @code{run} method.
+
+
+
+@node Using DAG Recorder with tpswitch.h,  , Using DAG Recorder with Cilk and CilkPlus, Writing Programs That Use DAG Recorder
 @subsection Using DAG Recorder with tpswitch.h
 
 Just give @file{-DDAG_RECORDER=2} 
