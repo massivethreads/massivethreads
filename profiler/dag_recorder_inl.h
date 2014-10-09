@@ -1155,6 +1155,7 @@ extern "C" {
 	    /* besides, we need to count edges
 	       from x to its successor */
 	    dr_dag_node * c = x->child;
+	    int i;
 	    (void)dr_check(x->next);
 	    s->info.logical_edge_counts[dr_dag_edge_kind_create]++;
 	    s->info.logical_edge_counts[dr_dag_edge_kind_create_cont]++;
@@ -1166,7 +1167,6 @@ extern "C" {
 	       children */
 	    s->info.end.t = dr_max_clock(c->info.end.t, s->info.end.t);
 	    /* ******************************** */
-	    int i;
 	    for (i = 0; i < dr_max_counters; i++) {
 	      s->info.end.counters[i] = 
 		dr_max_count(c->info.end.counters[i], s->info.end.counters[i]);

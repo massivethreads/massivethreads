@@ -17,7 +17,8 @@ nobase_include_HEADERS = \
 	mtbb/parallel_reduce.h \
 	tpswitch/omp_dr.h \
 	tpswitch/tbb_dr.h \
-	tpswitch/cilk_dr.h \
+	tpswitch/cilkplus_dr.h \
+	tpswitch/cilk_dr.cilkh \
 	tpswitch/serial_dr.h \
 	tpswitch/tpswitch.h
 
