@@ -94,10 +94,17 @@
     return x;						   \
   } while(0)
 
+#define cilk_return_t(type_of_x, x) cilk_return(x)
+
 #define cilk_void_return do {				   \
     (void)__cilk_begin__;				   \
     return;						   \
   } while(0)
+
+#define cilk_spawn
+#define _Cilk_spawn
+#define spawn
+
 
 /* TBB, MassiveThredhads, Qthreads, Nanos++ */
 #elif defined(__cplusplus) && (TO_TBB || TO_MTHREAD || TO_MTHREAD_NATIVE || TO_QTHREAD || TO_NANOX)
@@ -141,10 +148,16 @@
     return x;						   \
   } while(0)
 
+#define cilk_return_t(type_of_x, x) cilk_return(x)
+
 #define cilk_void_return do {				   \
     (void)__cilk_begin__;				   \
     return;						   \
   } while(0)
+
+#define cilk_spawn
+#define _Cilk_spawn
+#define spawn
 
 
 /* No C++ or serial */
@@ -183,15 +196,26 @@
     return x;						   \
   } while(0)
 
+#define cilk_return_t(type_of_x, x) cilk_return(x)
+
 #define cilk_void_return do {				   \
     (void)__cilk_begin__;				   \
     return;						   \
   } while(0)
 
 
+#define cilk_spawn
+#define _Cilk_spawn
+#define spawn
+
 /* Cilk */
 #elif TO_CILK || TO_CILKPLUS
-#include <tpswitch/cilk_dr.h>
+
+#if TO_CILK
+#include <tpswitch/cilk_dr.cilkh>
+#elif TO_CILKPLUS
+#include <tpswitch/cilkplus_dr.h>
+#endif
 
 //#define mk_task_group int __mk_task_group__ __attribute__((unused)) = 0
 #define mk_task_group 

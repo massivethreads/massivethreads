@@ -23,6 +23,7 @@ AC_PROG_CC_C_O
 AM_PROG_CC_C_O
 AM_PROG_AS
 AC_PROG_AWK
+m4_pattern_allow(AM_PROG_AR)
 AM_PROG_AR
 
 # Essential libraries

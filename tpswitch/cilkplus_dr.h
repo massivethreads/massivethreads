@@ -119,7 +119,7 @@ cilk int f(int x) {
 
 #define cilk_begin            cilk_begin_no_prof
 #define cilk_return(x)        cilk_return_no_prof(x)
-#define cilk_return_t(type_of_x, x)   cilk_return_no_prof_t(x)
+#define cilk_return_t(type_of_x, x)   cilk_return_no_prof(x)
 #define cilk_void_return      cilk_void_return_no_prof
 #define spawn_(spawn_stmt)    spawn_no_prof(spawn_stmt)
 #define cilk_sync_            sync_no_prof
