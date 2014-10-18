@@ -84,7 +84,8 @@ dr_opts_init(dr_options * opts) {
 /* fill opts with default values for all options */
 void dr_options_default_(dr_options * opts) {
   * opts = dr_options_default_values;
-
+  if (getenv_bool("DAG_RECORDER",             &opts->on)
+      || getenv_bool("DR",                    &opts->on)) {}
   if (getenv_str("DAG_RECORDER_FILE_PREFIX",  &opts->dag_file_prefix)
       || getenv_str("DR_PREFIX",              &opts->dag_file_prefix)) {}
   if (getenv_bool("DAG_RECORDER_DAG_FILE",    &opts->dag_file_yes)

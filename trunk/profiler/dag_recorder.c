@@ -234,14 +234,10 @@ int dr_nanox_max_workers() {
  */
 static int
 dr_init_(dr_options * opts, int num_workers) {
-  if (GS.initialized) {
-    return 1;			/* already initialized. go ahead */
-  } else {
+  if (!GS.initialized) {
     GS.initialized = 1;
-    const char * dag_recorder = getenv("DAG_RECORDER");
-    if (!dag_recorder) dag_recorder = getenv("DR"); /* abbrev */
-    if (!dag_recorder || atoi(dag_recorder)) {
-      dr_opts_init(opts);
+    dr_opts_init(opts);
+    if (GS.opts.on) {
       dr_opts_print(opts);
       dr_ensure_worker_id_key();
       dr_create_worker_specific_state_key();
@@ -259,11 +255,9 @@ dr_init_(dr_options * opts, int num_workers) {
 		  " resort to linear list\n");
 	}
       }
-      return 1;			/* just initialized */
-    } else {
-      return 0;			/* DAG_RECORDER turned off */
     }
   }
+  return GS.opts.on;			/* already initialized. go ahead */
 }
 
 /* stop profiling */

@@ -86,6 +86,7 @@ extern "C" {
     int gpl_sz;			/* size of gpl file */
     char worker_specific_state_array; 
                                 /* set 1 to use array of worker-specific states */
+    char on;
     char dbg_level;		/* level of debugging features */
     char verbose_level;		/* level of verbosity */
     char chk_level;		/* level of checks during run */
@@ -138,6 +139,8 @@ extern "C" {
     },
     4000,      /* gpl_sz */
     0,	       /* worker_specific_state_array */
+
+    0,	       /* on */
     0,	       /* dbg_level */
     0,	       /* verbose_level */
     0,	       /* chk_level */
