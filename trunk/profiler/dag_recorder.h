@@ -140,7 +140,7 @@ extern "C" {
     4000,      /* gpl_sz */
     0,	       /* worker_specific_state_array */
 
-    0,	       /* on */
+    1,	       /* on */
     0,	       /* dbg_level */
     0,	       /* verbose_level */
     0,	       /* chk_level */
