@@ -4464,7 +4464,6 @@ fi
   test -n "$AWK" && break
 done
 
-# m4_pattern_allow(AM_PROG_AR)
 
 if test -n "$ac_tool_prefix"; then
   for ac_prog in ar lib "link -lib"
