@@ -2,6 +2,9 @@ AC_INIT([massivethreads], [0.21], [massivethreads@eidos.ic.i.u-tokyo.ac.jp], [ma
 AM_INIT_AUTOMAKE([foreign -Wall -Werror])
 # required when you build shared libraries, relying on libtool
 AC_CONFIG_MACRO_DIR([m4])
+# avoid executing autotools on the user side
+AM_MAINTAINER_MODE([disable])
+
 AC_PROG_CC
 # use -O3 optimization instead of -O2
 if test "x$ac_test_CFLAGS" = "xset"; then
@@ -23,7 +26,6 @@ AC_PROG_CC_C_O
 AM_PROG_CC_C_O
 AM_PROG_AS
 AC_PROG_AWK
-m4_pattern_allow(AM_PROG_AR)
 AM_PROG_AR
 
 # Essential libraries
