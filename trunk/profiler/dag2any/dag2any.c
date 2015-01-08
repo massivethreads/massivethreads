@@ -3,7 +3,12 @@
  */
 #include <unistd.h>
 #include <getopt.h>
+#if HAVE_SQLITE3_H
+#define ENABLE_SQLITE3 1
 #include <sqlite3.h>
+#else
+#define ENABLE_SQLITE3 0
+#endif
 
 #include <dag_recorder.h>
 #include <dag_recorder_impl.h>
@@ -230,6 +235,8 @@ static int parse_args(int argc, char ** argv,
   }
   return 1;			/* OK */
 }
+
+#if ENABLE_SQLITE3
 
 static int 
 do_sqlite3_(sqlite3 * db, const char * sql,
@@ -633,6 +640,7 @@ static int dr_pi_dag_gen_sqlite3(dr_pi_dag * G, sqlite3 * db) {
   return 1;
 }
 
+#endif	/* ENABLE_SQLITE3 */
 
 static int dr_gen_sqlite3(dr_pi_dag * G) {
   if (!GS.opts.sqlite_file_yes) {
@@ -641,6 +649,7 @@ static int dr_gen_sqlite3(dr_pi_dag * G) {
     }
     return 1;	/* OK */
   } else { 
+#if ENABLE_SQLITE3
     const char * prefix = GS.opts.dag_file_prefix;
     const char * ext = ".sqlite";
     int len = strlen(prefix) + strlen(ext) + 1;
@@ -663,6 +672,12 @@ static int dr_gen_sqlite3(dr_pi_dag * G) {
     }
     dr_free(filename, len);
     return dr_pi_dag_gen_sqlite3(G, db);
+#else
+    fprintf(stderr, 
+	    "dag2any:error: sqlite3 feature is disabled, "
+	    "presumably because the configure script could not find sqlite3.h\n");
+    return 0;
+#endif
   }
 }
 
