@@ -148,6 +148,8 @@ AM_CONDITIONAL([CXX_AVAILABLE], [test "x$ac_cv_prog_cxx_g" = "xyes"])
 AM_CONDITIONAL([CXX_LAMBDA_AVAILABLE], [test "x$cxx_lambda_available" = "xyes"])
 AC_LANG_POP([C++])
 
+AC_CHECK_HEADERS([sqlite3.h], [AC_SUBST(LIBSQLITE3, [-lsqlite3])])
+
 # initialize libtool
 LT_INIT
 AC_CONFIG_FILES([
