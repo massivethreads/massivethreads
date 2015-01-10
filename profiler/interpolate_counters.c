@@ -190,5 +190,6 @@ interpolate_counters(dr_pi_dag * G) {
      TODO: we always use dr_max_counters,
      which is waste of time. */
   interpolate_all_workers(S, n_points, G->num_workers, dr_max_counters);
+  dr_free(S, sizeof(dr_clock_pos*) * n_points);
   return 1;
 }
