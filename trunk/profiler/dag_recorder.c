@@ -80,6 +80,11 @@ dr_prune_nodes_stack_init(dr_prune_nodes_stack * S) {
   S->n = 0;
 }
 
+static void 
+dr_prune_nodes_stack_cleanup(dr_prune_nodes_stack * S) {
+  dr_free(S->entries, S->sz * sizeof(dr_prune_nodes_stack_ent));
+}
+
 /* destroy prune stack */
 static void 
 dr_prune_nodes_stack_destroy(dr_prune_nodes_stack * S) {
@@ -122,6 +127,10 @@ dr_init_worker_specific_state(dr_worker_specific_state * ts,
   return 1;
 }
 
+static int
+dr_cleanup_worker_specific_state(dr_worker_specific_state * ts) {
+  dr_prune_nodes_stack_cleanup(ts->prune_stack);
+}
 
 dr_worker_specific_state *
 dr_make_worker_specific_state(int worker) {
@@ -151,6 +160,7 @@ dr_free_worker_specific_state_list() {
   dr_worker_specific_state * next;
   for (wss = GS.worker_specific_state_list; wss; wss = next) {
     next = wss->next;
+    dr_cleanup_worker_specific_state(wss);
     dr_free(wss, sizeof(dr_worker_specific_state));
   }
   GS.worker_specific_state_list = 0;
@@ -158,7 +168,11 @@ dr_free_worker_specific_state_list() {
 
 static void
 dr_free_worker_specific_state_array() {
+  int i;
   (void)dr_check(GS.worker_specific_state_array_sz);
+  for (i = 0; i < GS.worker_specific_state_array_sz; i++) {
+    dr_cleanup_worker_specific_state(&GS.worker_specific_state_array[i]);
+  }
   dr_free(GS.worker_specific_state_array, 
 	  sizeof(dr_worker_specific_state) 
 	  * GS.worker_specific_state_array_sz);

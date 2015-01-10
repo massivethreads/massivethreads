@@ -343,8 +343,13 @@ extern "C" {
     (void)dr_check(n > 0);
     /* not necessary, but just in case */
     (void)dr_check(n > 1);
-    for (i = 0; i < n - 1; i++) {
+    for (i = 0; i < n; i++) {
+      int j;
       page->nodes[i].next = &page->nodes[i+1];
+      for (j = 0; j < dr_max_counters; j++) {
+	page->nodes[i].info.start.counters[j] = 0;
+	page->nodes[i].info.end.counters[j] = 0;
+      }
     }
     page->nodes[n - 1].next = 0;
     /* append the list of nodes to the nodes list */

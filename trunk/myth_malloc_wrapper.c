@@ -368,7 +368,7 @@ int posix_memalign(void **memptr,size_t alignment,size_t size)
 
 void *aligned_alloc(size_t alignment, size_t size)
 {
-	void *ret;
+	void *ret = 0;
 	errno=posix_memalign(&ret,alignment,size);
 	return ret;
 }
