@@ -23,7 +23,7 @@
    every time it needs memory.  it is used
    to make it easy to debug leak and invalid
    access by valgrind  */
-#define DAG_RECORDER_VALGRIND_MEM_DBG 0
+#define DAG_RECORDER_VALGRIND_MEM_DBG 1
 
 #if !defined(DAG_RECORDER_VERBOSE_LEVEL)
 #define DAG_RECORDER_VERBOSE_LEVEL GS.opts.verbose_level
@@ -344,12 +344,14 @@ extern "C" {
     /* not necessary, but just in case */
     (void)dr_check(n > 1);
     for (i = 0; i < n; i++) {
-      int j;
       page->nodes[i].next = &page->nodes[i+1];
+#if 0
+      int j;
       for (j = 0; j < dr_max_counters; j++) {
 	page->nodes[i].info.start.counters[j] = 0;
 	page->nodes[i].info.end.counters[j] = 0;
       }
+#endif
     }
     page->nodes[n - 1].next = 0;
     /* append the list of nodes to the nodes list */
@@ -366,39 +368,43 @@ extern "C" {
   /* allocate a node from free list */
   static dr_dag_node *
   dr_dag_node_alloc(dr_dag_node_freelist * fl) {
+    dr_dag_node * ch; int j;
 #if DAG_RECORDER_VALGRIND_MEM_DBG
     /* when debugging with valgrind,
        do not manage memory by ourselves.
        let malloc does everything */
-    dr_dag_node * ch = (dr_dag_node *)dr_malloc(sizeof(dr_dag_node));
+    ch = (dr_dag_node *)dr_malloc(sizeof(dr_dag_node));
     ch->next = 0;
-    return ch;
 #else
-    dr_dag_node * head = fl->head;
-    if (!head) {
+    ch = fl->head;
+    if (!ch) {
       if (DAG_RECORDER_DBG_LEVEL>=1) {
 	fprintf(stderr, 
 		"dr_dag_node_alloc(%p) allocate page\n", fl);
       }
       /* free list empty. supplement it with a page */
-      head = dr_dag_node_freelist_add_page(fl, 
-					   (GS.opts.alloc_unit_mb << 20));
+      ch = dr_dag_node_freelist_add_page(fl, 
+					 (GS.opts.alloc_unit_mb << 20));
     }
 
     {
       /* pop the head element off the list */
-      dr_dag_node * next = head->next;
+      dr_dag_node * next = ch->next;
       (void)dr_check(fl->tail);
       fl->head = next;
       if (!next) fl->tail = 0;
-      head->next = 0;
+      ch->next = 0;
       if (DAG_RECORDER_VERBOSE_LEVEL>=4) {
-	printf("dr_dag_node_alloc(%p) -> %p\n", 
-	       fl, head);
+	printf("dr_dag_node_alloc(%p) -> %p\n", fl, ch);
       }
-      return head;
     }
 #endif
+    /* initialize the node */
+    for (j = 0; j < dr_max_counters; j++) {
+      ch->info.start.counters[j] = 0;
+      ch->info.end.counters[j] = 0;
+    }
+    return ch;
   }
 
   static void 
