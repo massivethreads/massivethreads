@@ -285,7 +285,7 @@ void dr_stop__(const char * file, int line, int worker) {
 
 /* --- free all descendants of g (and optionally g also) --- */
 
-static void 
+void 
 dr_dag_node_free(dr_dag_node * n, 
 		 dr_dag_node_freelist * fl) {
 #if DAG_RECORDER_VALGRIND_MEM_DBG

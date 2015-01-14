@@ -65,7 +65,7 @@ dr_calc_edges(dr_basic_stat * bs, dr_pi_dag * G) {
      (executed by more than one workers);
      we use worker id = nw for such entries
   */
-  long * C_ = (long *)dr_malloc(sizeof(long) * dr_dag_edge_kind_max * nw * nw);
+  long * C_ = (long *)dr_malloc(sizeof(long) * dr_dag_edge_kind_max * (nw + 1) * (nw + 1));
 #define EDGE_COUNTS(k,i,j) C_[k*(nw+1)*(nw+1)+i*(nw+1)+j]
   dr_dag_edge_kind_t k;
   long i, j;
