@@ -38,7 +38,7 @@ dr_calc_inner_delay(dr_basic_stat * bs, dr_pi_dag * G) {
 	|| t->subgraphs_begin_offset == t->subgraphs_end_offset) {
       total_elapsed += t->info.end.t - t->info.start.t;
       total_t_1 += t->info.t_1;
-      if (total_elapsed < total_t_1) {
+      if (total_elapsed < total_t_1 && t->info.worker != -1) {
 	fprintf(stderr,
 		"warning: node %ld has negative"
 		" inner delay (start=%llu, end=%llu,"
@@ -58,13 +58,20 @@ dr_calc_edges(dr_basic_stat * bs, dr_pi_dag * G) {
   long n = G->n;
   long m = G->m;
   long nw = G->num_workers;
+  /* C : a three dimensional array
+     C(kind,i,j) is the number of type k edges from 
+     worker i to worker j.
+     we may counter nodes with worker id = -1
+     (executed by more than one workers);
+     we use worker id = nw for such entries
+  */
   long * C_ = (long *)dr_malloc(sizeof(long) * dr_dag_edge_kind_max * nw * nw);
-#define EDGE_COUNTS(k,i,j) C_[k*nw*nw+i*nw+j]
+#define EDGE_COUNTS(k,i,j) C_[k*(nw+1)*(nw+1)+i*(nw+1)+j]
   dr_dag_edge_kind_t k;
   long i, j;
   for (k = 0; k < dr_dag_edge_kind_max; k++) {
-    for (i = 0; i < nw; i++) {
-      for (j = 0; j < nw; j++) {
+    for (i = 0; i < nw + 1; i++) {
+      for (j = 0; j < nw + 1; j++) {
 	EDGE_COUNTS(k,i,j) = 0;
       }
     }
@@ -76,9 +83,12 @@ dr_calc_edges(dr_basic_stat * bs, dr_pi_dag * G) {
       for (k = 0; k < dr_dag_edge_kind_max; k++) {
 	int w = t->info.worker;
 	if (w == -1) {
+#if 0
 	  fprintf(stderr, 
 		  "warning: node %ld (kind=%s) has worker = %d)\n",
 		  i, dr_dag_node_kind_to_str(t->info.kind), w);
+#endif
+	  EDGE_COUNTS(k, nw, nw) += t->info.logical_edge_counts[k];
 	} else {
 	  (void)dr_check(w >= 0);
 	  (void)dr_check(w < nw);
@@ -92,26 +102,30 @@ dr_calc_edges(dr_basic_stat * bs, dr_pi_dag * G) {
     int uw = G->T[e->u].info.worker;
     int vw = G->T[e->v].info.worker;
     if (uw == -1) {
+#if 0
       fprintf(stderr, "warning: source node (%ld) of edge %ld %ld (kind=%s) -> %ld (kind=%s) has worker = %d\n",
 	      e->u,
 	      i, 
 	      e->u, dr_dag_node_kind_to_str(G->T[e->u].info.kind), 
 	      e->v, dr_dag_node_kind_to_str(G->T[e->v].info.kind), uw);
+#endif
+      uw = nw;
     }
     if (vw == -1) {
+#if 0
       fprintf(stderr, "warning: dest node (%ld) of edge %ld %ld (kind=%s) -> %ld (kind=%s) has worker = %d\n",
 	      e->v,
 	      i, 
 	      e->u, dr_dag_node_kind_to_str(G->T[e->u].info.kind), 
 	      e->v, dr_dag_node_kind_to_str(G->T[e->v].info.kind), vw);
+#endif
+      vw = nw;
     }
-    if (uw != -1 && vw != -1) {
-      (void)dr_check(uw >= 0);
-      (void)dr_check(uw < nw);
-      (void)dr_check(vw >= 0);
-      (void)dr_check(vw < nw);
-      EDGE_COUNTS(e->kind, uw, vw)++;
-    }
+    (void)dr_check(uw >= 0);
+    (void)dr_check(uw <= nw);
+    (void)dr_check(vw >= 0);
+    (void)dr_check(vw <= nw);
+    EDGE_COUNTS(e->kind, uw, vw)++;
   }
 #undef EDGE_COUNTS
   bs->edge_counts = C_;
@@ -135,7 +149,7 @@ static void
 dr_basic_stat_destroy(dr_basic_stat * bs, dr_pi_dag * G) {
   long nw = G->num_workers;
   dr_free(bs->edge_counts, 
-	  sizeof(long) * dr_dag_edge_kind_max * nw * nw);
+	  sizeof(long) * dr_dag_edge_kind_max * (nw + 1) * (nw + 1));
 }
 
 static void 
@@ -201,7 +215,7 @@ dr_write_edge_counts(dr_basic_stat * bs, FILE * wp) {
   int i, j;
   int nw = bs->n_workers;
   long * C_ = bs->edge_counts;
-#define EDGE_COUNTS(k,i,j) C_[k*nw*nw+i*nw+j]
+#define EDGE_COUNTS(k,i,j) C_[k*(nw+1)*(nw+1)+i*(nw+1)+j]
   for (k = 0; k < dr_dag_edge_kind_max; k++) {
     switch (k) {
     case dr_dag_edge_kind_end:
@@ -223,8 +237,8 @@ dr_write_edge_counts(dr_basic_stat * bs, FILE * wp) {
       (void)dr_check(0);
       break;
     }
-    for (i = 0; i < nw; i++) {
-      for (j = 0; j < nw; j++) {
+    for (i = 0; i < nw + 1; i++) {
+      for (j = 0; j < nw + 1; j++) {
 	long c = EDGE_COUNTS(k,i,j);
 	fprintf(wp, " %ld", c);
       }

@@ -46,7 +46,7 @@ extern "C" {
   typedef unsigned long long dr_clock_t;
   /* dag node */
   typedef struct dr_dag_node dr_dag_node;
-  /* hook */
+  /* user-defined hooks called on actions */
   typedef int (*dr_hook)(dr_dag_node * node);
 
   typedef struct {
@@ -64,15 +64,15 @@ extern "C" {
   /* runtime-settable options */
   typedef struct dr_options {
     const char * dag_file_prefix; /* filename prefix of all files */
-    char dag_file_yes;	          /* filename of the dag */
-    char stat_file_yes;	          /* filename of the stat summary */
-    char gpl_file_yes;	          /* filename of the gpl */
-    char dot_file_yes;	          /* filename of the dot */
-    char sqlite_file_yes;	  /* filename of the sqlite3 */
-    char text_file_yes;	          /* filename of the text */
-    char nodes_file_yes;	  /* filename of the nodes */
-    char edges_file_yes;	  /* filename of the edges */
-    char strings_file_yes;	  /* filename of the strings */
+    char dag_file_yes;	          /* if set, save the dag */
+    char stat_file_yes;	          /* if set, save the stat summary */
+    char gpl_file_yes;	          /* if set, save parallelism (gnuplot) */
+    char dot_file_yes;	          /* if set, save dot file */
+    char sqlite_file_yes;	  /* if set, save sqlite3 db */
+    char text_file_yes;	          /* if set, save the text version of dag */
+    char nodes_file_yes;	  /* if set, save nodes separately */
+    char edges_file_yes;	  /* if set, save edges separately */
+    char strings_file_yes;	  /* if set, save strings separately */
     const char * text_file_sep;	  /* separator for text file */
 
     dr_clock_t uncollapse_min;	/* minimum length that can be uncollapsed */
@@ -173,7 +173,7 @@ extern "C" {
   dr_start_cilk_proc_(__FILE__, __LINE__)
 
   /* call this at the beginning of a section. a section begins
-     when you create a task right after task */
+     when you create a task right after taskwait */
 #define dr_begin_section() \
   dr_begin_section__(dr_get_worker())
 
@@ -193,7 +193,7 @@ extern "C" {
 #define dr_enter_wait_tasks() \
   dr_enter_wait_tasks_(__FILE__, __LINE__)
 
-  /* called after you return from waiting child tasks */
+  /* call this after you return from waiting child tasks */
 #define dr_return_from_wait_tasks(task) \
   dr_return_from_wait_tasks_(task, __FILE__, __LINE__)
 
@@ -223,11 +223,14 @@ extern "C" {
 #define dr_cleanup() \
   dr_cleanup__(__FILE__, __LINE__, dr_get_worker(), dr_get_max_workers())
 
+  /* dump trace results (between the last dr_start()/dr_stop() */
 #define dr_dump() dr_dump_()
 
+  /* read the dag file and convert it into various other formats */
 #define dr_read_and_analyze_dag(filename) \
   dr_read_and_analyze_dag_(filename)
 
+  /* declarations of functions (used in the above macro definitions) */
   void dr_options_default_(dr_options * opts);
 
   static_if_inline void
