@@ -23,7 +23,7 @@
    every time it needs memory.  it is used
    to make it easy to debug leak and invalid
    access by valgrind  */
-#define DAG_RECORDER_VALGRIND_MEM_DBG 1
+#define DAG_RECORDER_VALGRIND_MEM_DBG 0
 
 #if !defined(DAG_RECORDER_VERBOSE_LEVEL)
 #define DAG_RECORDER_VERBOSE_LEVEL GS.opts.verbose_level
