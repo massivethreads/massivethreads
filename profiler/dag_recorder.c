@@ -127,7 +127,7 @@ dr_init_worker_specific_state(dr_worker_specific_state * ts,
   return 1;
 }
 
-static int
+static void
 dr_cleanup_worker_specific_state(dr_worker_specific_state * ts) {
   dr_prune_nodes_stack_cleanup(ts->prune_stack);
 }
