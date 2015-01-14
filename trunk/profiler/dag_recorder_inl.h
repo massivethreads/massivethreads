@@ -1664,8 +1664,11 @@ extern "C" {
 	dr_prune_nodes(S, s, GS.opts.node_count_target, fl, 0);
 	(void)dr_check(dr_cur_nodes_below(s) == dr_check_node_counts(s));
       }
-    } else if (s->info.worker != -1
-	       && s->info.end.t - s->info.start.t < GS.opts.collapse_max) {
+    } else if (s->info.end.t - s->info.start.t 
+	       < GS.opts.uncollapse_min
+	       || (s->info.worker != -1
+		   && s->info.end.t - s->info.start.t 
+		   < GS.opts.collapse_max)) {
       /* otherwise we simply collapse it,
 	 unless it is below the specified threshold */
       /* TODO: consider how to collapse a subgraph involving
