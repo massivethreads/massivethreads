@@ -117,6 +117,11 @@ void dr_options_default_(dr_options * opts) {
       || getenv_long("DR_NC",                 &opts->node_count_target)) {}
   if (getenv_long("DAG_RECORDER_PRUNE_THRESHOLD",  &opts->prune_threshold)
       || getenv_long("DR_PRUNE",              &opts->prune_threshold)) {}
+
+  if (getenv_long("DAG_RECORDER_COLLAPSE_MAX_COUNT",  &opts->collapse_max_count)
+      || getenv_long("DR_COLLAPSE_MAX_COUNT", &opts->collapse_max_count)) {}
+
+
   if (getenv_long("DAG_RECORDER_ALLOC_UNIT_MB", &opts->alloc_unit_mb)
       || getenv_long("DR_ALLOC_UNIT_MB",      &opts->alloc_unit_mb)) {}
   if (getenv_long("DAG_RECORDER_PRE_ALLOC_PER_WORKER",   

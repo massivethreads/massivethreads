@@ -14,9 +14,11 @@
 
 dr_pi_dag * 
 dr_read_dag(const char * filename) {
+  /* open the file */
   int fd = open(filename, O_RDONLY);
   void * a;
   dr_pi_dag * G = dr_malloc(sizeof(dr_pi_dag));
+  /* buffer to read the first line */
   char header_buf[DAG_RECORDER_HEADER_LEN+1];
   if (fd == -1) {
     fprintf(stderr, "open: %s (%s)\n", 
@@ -25,6 +27,7 @@ dr_read_dag(const char * filename) {
   }
   header_buf[DAG_RECORDER_HEADER_LEN] = 0;
   ssize_t r;
+  /* read headers and meta info */
   if ((r = read(fd, header_buf, DAG_RECORDER_HEADER_LEN)) 
       != DAG_RECORDER_HEADER_LEN
       || (r = read(fd, &G->n, sizeof(G->n))) != sizeof(G->n)
@@ -40,6 +43,7 @@ dr_read_dag(const char * filename) {
     close(fd);
     return 0;
   }
+  /* check version mismatch */
   if (strcmp(header_buf, DAG_RECORDER_HEADER)) {
     fprintf(stderr, 
 	    "error: format version mismatch. expected %s, read %s\n", 
@@ -53,6 +57,7 @@ dr_read_dag(const char * filename) {
   (void)dr_check(header_sz 
 		 == DAG_RECORDER_HEADER_LEN + sizeof(G->n) + sizeof(G->m) 
 		 + sizeof(G->start_clock) + sizeof(G->num_workers));
+  /* mmap the entire file */
   a = mmap(NULL, file_sz, PROT_READ | PROT_WRITE,
 	   MAP_PRIVATE, fd, 0);
   if (a == MAP_FAILED) {

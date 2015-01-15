@@ -176,14 +176,19 @@ dr_string_table_flatten(dr_string_table * t) {
   }
 }
 
-/* copy g into p */
+/* copy g into p;
+   basically we just bitcopy g->info into p->info;
+   but in order to dump pi_dag later into a flat array,
+   we relocate file/function name strings of g
+   into a table
+ */
 static void
-dr_pi_dag_copy_1(dr_dag_node * g, 
-		 dr_pi_dag_node * p, dr_pi_dag_node * lim,
-		 dr_string_table * st) {
+dr_copy_dag_node_1(dr_dag_node * g, 
+		   dr_pi_dag_node * p, dr_pi_dag_node * lim,
+		   dr_string_table * st) {
   assert(p < lim);
-  p->info = g->info;
-  p->info.start.pos.file = 0;
+  p->info = g->info;		/* copy info */
+  p->info.start.pos.file = 0;	/* don't use the original string */
   assert(g->info.start.pos.file);
   assert(strlen(g->info.start.pos.file) > 0);
   p->info.start.pos.file_idx
@@ -194,17 +199,19 @@ dr_pi_dag_copy_1(dr_dag_node * g,
   g->forward = p;		/* record g was copied to p */
 }
 
+
+
 /* g has been copied, but its children have not been.
    copy g's children into q,
    and set g's children pointers to the copy,
    making g truly position independent now
  */
 static dr_pi_dag_node * 
-dr_pi_dag_copy_children(dr_dag_node * g, 
-			dr_pi_dag_node * p, 
-			dr_pi_dag_node * lim,
-			dr_clock_t start_clock,
-			dr_string_table * st) {
+dr_copy_children_nodes(dr_dag_node * g, 
+		       dr_pi_dag_node * p, 
+		       dr_pi_dag_node * lim,
+		       dr_clock_t start_clock,
+		       dr_string_table * st) {
   /* where g has been copied */
   dr_pi_dag_node * g_pi = g->forward;
   /* sanity check. g_pi should be a copy of g */
@@ -218,7 +225,7 @@ dr_pi_dag_copy_children(dr_dag_node * g,
   if (g_pi->info.kind < dr_dag_node_kind_section) {
     /* copy the child if it is a create_task node */
     if (g_pi->info.kind == dr_dag_node_kind_create_task) {
-      dr_pi_dag_copy_1(g->child, p, lim, st);
+      dr_copy_dag_node_1(g->child, p, lim, st);
       /* install the (relative) pointer to the child */
       g_pi->child_offset = p - g_pi;
       p++;
@@ -228,7 +235,7 @@ dr_pi_dag_copy_children(dr_dag_node * g,
     dr_dag_node * ch;
     g_pi->subgraphs_begin_offset = p - g_pi;
     for (ch = head; ch; ch = ch->next) {
-      dr_pi_dag_copy_1(ch, p, lim, st);
+      dr_copy_dag_node_1(ch, p, lim, st);
       p++;
     }
     g_pi->subgraphs_end_offset = p - g_pi;
@@ -287,12 +294,12 @@ dr_pi_dag_enum_nodes(dr_pi_dag * G,
   memset(T, 0, sizeof(dr_pi_dag_node) * n);
 
   dr_dag_node_stack_init(s);
-  dr_pi_dag_copy_1(g, p, lim, st);
+  dr_copy_dag_node_1(g, p, lim, st);
   p++;
   dr_dag_node_stack_push(s, g);
   while (s->top) {
     dr_dag_node * x = dr_dag_node_stack_pop(s);
-    p = dr_pi_dag_copy_children(x, p, lim, start_clock, st);
+    p = dr_copy_children_nodes(x, p, lim, start_clock, st);
     dr_dag_node_stack_push_children(s, x);
   }
   //dr_dag_node_stack_clear(s);
@@ -523,6 +530,166 @@ dr_make_pi_dag(dr_pi_dag * G, dr_dag_node * g,
   dr_string_table_destroy(st);
 }
 
+
+enum { 
+  map_init = -1,
+  map_copy = -2,
+  map_no_copy = -3
+};
+
+static long dr_pi_dag_get_logical_node_counts(dr_pi_dag_node * s) {
+  int k;
+  long c = 0;
+  for (k = 0; k < dr_dag_node_kind_section; k++) {
+    c += s->info.logical_node_counts[k];
+  }
+  return c;
+}
+
+/* copy nodes of G and make it nodes of G_ (under construction) */
+void dr_pi_dag_copy_and_prune_nodes(dr_pi_dag * G_, dr_pi_dag * G, 
+				    dr_string_table * st) {
+  /* n : original number of nodes */
+  long n = G->n;
+  dr_pi_dag_node * T = G->T;
+  long i;
+  /* n_, T_ : number of nodes after shrink */
+  long n_;
+  dr_pi_dag_node * T_;
+  
+  /* step 1 : count how many nodes will remain and
+     make a mapping from the old index to the new index.
+     scan all nodes. for each node, decide we should
+     copy it or not. along the way, map[i] indicates
+     what we should do on node T[i];
+
+     map[i] = map_init    --> should not happen
+     map[i] = map_copy    --> node i need be copied
+     map[i] = map_no_copy --> node i need not be copied
+
+     when we encounter map[i] = map_copy, decide at that
+     point the destination index for T[i] and write
+     the index to map[i]
+
+     map[i] = x >= 0      --> node i should be copied to x
+  */
+  long * map = dr_malloc(sizeof(long) * n);
+  for (i = 0; i < n; i++) {
+    map[i] = map_init;
+  }
+  map[0] = map_copy;		/* node 0 should always be copied */
+  n_ = 0;			/* count how many nodes to copy */
+  for (i = 0; i < n; i++) {
+    dr_pi_dag_node * t = &T[i];
+    int copy_children = 0;
+    (void)dr_check(map[i] != map_init);
+    if (map[i] == map_copy) {
+      /* we should copy T[i]; record its destination index */
+      map[i] = n_;
+      n_++;
+      /* check if we copy its children or collapse it */
+      if (t->info.kind == dr_dag_node_kind_create_task) {
+	copy_children = 1;
+      } else if (t->info.kind >= dr_dag_node_kind_section) {
+	/* apply node-count-based contraction
+	   or span-based contraction */
+	if (GS.opts.collapse_max_count
+	    && (dr_pi_dag_get_logical_node_counts(t) >= GS.opts.collapse_max_count)) {
+	  copy_children = 1;
+	} else if (t->info.end.t - t->info.start.t >= GS.opts.uncollapse_min
+		   && (t->info.worker == -1
+		       || t->info.end.t - t->info.start.t >= GS.opts.collapse_max)) {
+	  copy_children = 1;
+	}
+      }
+    } else {
+      (void)dr_check(map[i] == map_no_copy);
+      /* copy_children = 0 */
+    }
+    long copy_or_no_copy = (copy_children ? map_copy : map_no_copy);
+    if (t->info.kind == dr_dag_node_kind_create_task) {
+      long k = i + t->child_offset;
+      (void)dr_check(k < n);
+      map[k] = copy_or_no_copy;
+    } else if (t->info.kind >= dr_dag_node_kind_section) {
+      long k;
+      long c_begin = i + t->subgraphs_begin_offset;
+      long c_end   = i + t->subgraphs_end_offset;
+      for (k = c_begin; k < c_end; k++) {
+	(void)dr_check(k < n);
+	map[k] = copy_or_no_copy;
+      }
+    }
+  }
+  /* now we know the number of nodes to remain.
+     actually copy nodes */
+  T_ = dr_malloc(sizeof(dr_pi_dag_node) * n_);
+  for (i = 0; i < n; i++) {
+    if (map[i] >= 0) {
+      /* T[i] should be copied */
+      (void)dr_check(map[i] < n_);
+      dr_pi_dag_node * src = &T[i];
+      dr_pi_dag_node * to  = &T_[map[i]];
+      *to = *src; /* bitcopy */
+      /* fix pointer(s) to children */
+      if (src->info.kind == dr_dag_node_kind_create_task) {
+	long c = i + src->child_offset;
+	/* create_task's child is always copied */
+	(void)dr_check(c >= 0);
+	(void)dr_check(c > i);
+	(void)dr_check(c < n);
+	(void)dr_check(map[c] >= 0);
+	(void)dr_check(map[c] > map[i]);
+	(void)dr_check(map[c] < n_);
+	to->child_offset = map[c] - map[i];
+      } else if (src->info.kind >= dr_dag_node_kind_section) {
+	long c_begin = i + src->subgraphs_begin_offset;
+	long c_end   = i + src->subgraphs_end_offset;
+	(void)dr_check(c_begin >= 0);
+	(void)dr_check(c_begin <= n);
+	(void)dr_check(c_end >= 0);
+	(void)dr_check(c_end <= n);
+	if (c_begin < c_end) {
+	  if (map[c_begin] >= 0) {
+	    (void)dr_check(map[c_end - 1] >= 0);
+	    (void)dr_check(map[c_begin] > map[i]);
+	    (void)dr_check(map[c_end - 1] > map[i]);
+	    (void)dr_check(map[c_begin] < n_);
+	    (void)dr_check(map[c_end - 1] < n_);
+	    (void)dr_check(map[c_end - 1] - map[c_begin] == (c_end - 1) - c_begin);
+	    to->subgraphs_begin_offset = map[c_begin] - map[i];
+	    to->subgraphs_end_offset   = map[c_end - 1] - map[i] + 1;
+	  } else {
+	    to->subgraphs_begin_offset = 0;
+	    to->subgraphs_end_offset   = 0;
+	  }
+	}
+      }
+    }
+  }  
+  dr_free(map, sizeof(long) * n);
+
+  G_->n = n_;
+  G_->T = T_;
+}
+
+/* make a shrinked pi_dag G_ from the original pi_dag G */
+void
+dr_copy_pi_dag(dr_pi_dag * G_, dr_pi_dag * G) {
+  dr_string_table st[1];
+  dr_string_table_init(st);
+  G_->num_workers = G->num_workers;
+  G_->start_clock = G->start_clock;
+  dr_pi_dag_init(G_);
+  dr_pi_dag_copy_and_prune_nodes(G_, G, st); /* G_->T */
+  dr_pi_dag_enum_edges(G_);	   /* G_->E */
+  dr_pi_dag_sort_edges(G_);
+  dr_pi_dag_set_edge_ptrs(G_);
+  dr_pi_dag_set_string_table(G_, st); /* G_->S */
+  dr_string_table_destroy(st);
+}
+
+
 static void
 dr_destroy_pi_dag(dr_pi_dag * G) {
   dr_free(G->T, G->n * sizeof(dr_pi_dag_node));
@@ -572,7 +739,7 @@ dr_pi_dag_dump(dr_pi_dag * G, FILE * wp,
 }
 
 /* dump the position-independent dag into a file */
-static int dr_gen_pi_dag(dr_pi_dag * G) {
+int dr_gen_pi_dag(dr_pi_dag * G) {
   if (GS.opts.dag_file_yes) {
     const char * prefix = GS.opts.dag_file_prefix;
     const char * ext = ".dag";
