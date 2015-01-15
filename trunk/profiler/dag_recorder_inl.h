@@ -1259,6 +1259,16 @@ extern "C" {
     s->info.cur_node_count = 1;
   }
 
+  /* sum of all logical node counts */
+  static long dr_get_logical_node_counts(dr_dag_node * s) {
+    int k;
+    long c = 0;
+    for (k = 0; k < dr_dag_node_kind_section; k++) {
+      c += s->info.logical_node_counts[k];
+    }
+    return c;
+  }
+
   /* node count of s and its descendants */
   static long dr_cur_nodes_below(dr_dag_node * s) {
     if (s->info.kind == dr_dag_node_kind_create_task) {
@@ -1663,11 +1673,20 @@ extern "C" {
     (void)dr_check(dr_cur_nodes_below(s) == dr_check_node_counts(s));
     /* now check if we should collapse it */
     if (GS.opts.node_count_target) {
-      /* when node_count_target is given,
+      /* a collapse method (I).
+	 target a particular number of nodes.
+	 when node_count_target is given,
 	 make S withing the target.
 	 (this is expensive. not recommended) */
       if (s->info.cur_node_count > GS.opts.prune_threshold) {
 	dr_prune_nodes(S, s, GS.opts.node_count_target, fl, 0);
+	(void)dr_check(dr_cur_nodes_below(s) == dr_check_node_counts(s));
+      }
+    } else if (GS.opts.collapse_max_count) { 
+      /* collapse method (II)
+	 node count based */
+      if (dr_get_logical_node_counts(s) < GS.opts.collapse_max_count) {
+	dr_collapse_subgraph(s, fl);
 	(void)dr_check(dr_cur_nodes_below(s) == dr_check_node_counts(s));
       }
     } else if (s->info.end.t - s->info.start.t 
@@ -1675,10 +1694,10 @@ extern "C" {
 	       || (s->info.worker != -1
 		   && s->info.end.t - s->info.start.t 
 		   < GS.opts.collapse_max)) {
-      /* otherwise we simply collapse it,
-	 unless it is below the specified threshold */
-      /* TODO: consider how to collapse a subgraph involving
-	 multiple workers */
+      /* we collapse a subgraph when 
+	 (i) its span is too short (< GS.opts.uncollapse_min), or
+	 (ii) its span is not too long and it is worked on by a single worker
+      */
       dr_collapse_subgraph(s, fl);
       (void)dr_check(dr_cur_nodes_below(s) == dr_check_node_counts(s));
     }

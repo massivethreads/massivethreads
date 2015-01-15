@@ -1,6 +1,7 @@
 /* 
  * 
  */
+#include <config.h>
 #include <unistd.h>
 #include <getopt.h>
 #if HAVE_SQLITE3_H
@@ -83,6 +84,8 @@ static struct option dag2a_options[] = {
   {"nodes",       no_argument, 0, 0 },
   {"edges",       no_argument, 0, 0 },
   {"strings",     no_argument, 0, 0 },
+  {"shrink",      no_argument, 0, 0 },
+  {"noshrink",    no_argument, 0, 0 },
   {"help",        no_argument, 0, 0 },
   {0,         0,                 0,  0 }
 };
@@ -99,6 +102,7 @@ static void usage(const char * progname) {
   U("    --[no]parallelism\n");
   U("    --[no]sqlite\n");
   U("    --[no]text\n");
+  U("    --[no]shrink\n");
   //U("    --nodes filename\n");
   //U("    --edges filename\n");
   //U("    --strings filename\n");
@@ -138,6 +142,8 @@ static int parse_args(int argc, char ** argv,
   opts->dag_file_prefix = 0;
   /* show messages */
   opts->verbose_level = 1;
+  /* shrink dag */
+  opts->shrink = 0;
   //dr_opts_init(opts);
   dr_options * o = opts;
   const char * progname = argv[0];
@@ -185,6 +191,10 @@ static int parse_args(int argc, char ** argv,
 	  o->strings_file_yes = 1;
 	} else if (strcmp(name, "nostrings") == 0) {
 	  o->strings_file_yes = 0;
+	} else if (strcmp(name, "shrink") == 0) {
+	  o->shrink = 1;
+	} else if (strcmp(name, "noshrink") == 0) {
+	  o->shrink = 0;
 	} else if (strcmp(name, "help") == 0) {
 	  usage(argv[0]);
 	  return 0;
@@ -685,11 +695,19 @@ static int dr_gen_sqlite3(dr_pi_dag * G) {
 static int read_and_analyze_dag(const char * filename) {
   dr_pi_dag * G = dr_read_dag(filename);
   if (G) {
+    dr_pi_dag G_[1];
+    if (GS.opts.shrink) {
+      dr_copy_pi_dag(G_, G);
+      G = G_;
+    }
     if (dr_gen_basic_stat(G) == 0) return 0;
     if (dr_gen_gpl(G) == 0) return 0;
     if (dr_gen_dot(G) == 0) return 0;
     if (dr_gen_text(G) == 0) return 0;
     if (dr_gen_sqlite3(G) == 0) return 0;
+    if (GS.opts.shrink) {
+      if (dr_gen_pi_dag(G) == 0) return 0;
+    }
     return 1;
   } else {
     return 0;

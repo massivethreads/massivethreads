@@ -40,6 +40,7 @@ dr_global_state GS = {
     0,	 /* collapse_max used to be (1L << 60), */
     0,	 /* node_count_target */
     0,	 /* prune_threshold */
+    0,	 /* collapse_max_count */
     0,	 /* alloc unit in MB */
     0,	 /* pre-alloc per worker */
     0,	 /* pre-alloc */

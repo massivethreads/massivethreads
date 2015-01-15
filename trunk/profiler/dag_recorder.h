@@ -75,10 +75,17 @@ extern "C" {
     char strings_file_yes;	  /* if set, save strings separately */
     const char * text_file_sep;	  /* separator for text file */
 
+    /* span-based contraction */
     dr_clock_t uncollapse_min;	/* minimum length that can be uncollapsed */
     dr_clock_t collapse_max;	/* maximum length that can be collpased */
+
+    /* contraction to target a given number of nodes */
     long node_count_target;	/* desired number of nodes */
     long prune_threshold;	/* prune nodes larger than node_count_target * prune_threshold */
+
+    /* max count based contraction */
+    long collapse_max_count;	/* if logical node < this value, collapse */
+
     long alloc_unit_mb;	        /* node allocation unit in bytes */
     long pre_alloc_per_worker;  /* pre-allocated units per worker */
     long pre_alloc;	        /* pre-allocated units */
@@ -91,6 +98,7 @@ extern "C" {
     char verbose_level;		/* level of verbosity */
     char chk_level;		/* level of checks during run */
     char record_cpu;		/* 1 if we record cpu */
+    char shrink;		/* 1 if we shrink dag (effective only in dag2any) */
   } dr_options;
 
   /* default values for runtime options. 
@@ -119,10 +127,13 @@ extern "C" {
     0,				/* edges_file */	
     0,			 /* strings_file */	
     (const char *)"|",	       /* text_file_sep */
-    0,			       /* uncollapse_min; obsolete. */
+    0,			       /* uncollapse_min */
     (1L << 60),	/* collapse_max used to be (1L << 60), */
     0,		/* node_count_target */
     100000,	/* prune_threshold */
+
+    0,		/* collapse_max_count */
+
     1,		/* alloc unit in MB */
     0,	       /* the number of pre-allocations */
     0,	       /* the number of pre-allocations per worker */
@@ -145,6 +156,7 @@ extern "C" {
     0,	       /* verbose_level */
     0,	       /* chk_level */
     0,	       /* record_cpu */
+    0,	       /* shrink */
   };
   
   /* all instrumentation functions are defined as
