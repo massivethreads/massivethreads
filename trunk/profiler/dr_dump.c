@@ -631,6 +631,20 @@ void dr_pi_dag_copy_and_prune_nodes(dr_pi_dag * G_, dr_pi_dag * G,
       dr_pi_dag_node * src = &T[i];
       dr_pi_dag_node * to  = &T_[map[i]];
       *to = *src; /* bitcopy */
+
+      {
+	/* intern strings */
+	dr_pi_string_table * S = G->S;
+	long s_idx = src->info.start.pos.file_idx;
+	const char * s_file = S->C + S->I[s_idx];
+	long e_idx = src->info.end.pos.file_idx;
+	const char * e_file = S->C + S->I[e_idx];
+	(void)dr_check(to->info.start.pos.file == 0);
+	(void)dr_check(to->info.end.pos.file == 0);
+	to->info.start.pos.file_idx = dr_string_table_intern(st, s_file);
+	to->info.end.pos.file_idx   = dr_string_table_intern(st, e_file);
+      }
+
       /* fix pointer(s) to children */
       if (src->info.kind == dr_dag_node_kind_create_task) {
 	long c = i + src->child_offset;
@@ -676,17 +690,17 @@ void dr_pi_dag_copy_and_prune_nodes(dr_pi_dag * G_, dr_pi_dag * G,
 /* make a shrinked pi_dag G_ from the original pi_dag G */
 void
 dr_copy_pi_dag(dr_pi_dag * G_, dr_pi_dag * G) {
-  dr_string_table st[1];
-  dr_string_table_init(st);
+  dr_string_table st_[1];
+  dr_string_table_init(st_);
   G_->num_workers = G->num_workers;
   G_->start_clock = G->start_clock;
   dr_pi_dag_init(G_);
-  dr_pi_dag_copy_and_prune_nodes(G_, G, st); /* G_->T */
+  dr_pi_dag_copy_and_prune_nodes(G_, G, st_); /* G_->T */
   dr_pi_dag_enum_edges(G_);	   /* G_->E */
   dr_pi_dag_sort_edges(G_);
   dr_pi_dag_set_edge_ptrs(G_);
-  dr_pi_dag_set_string_table(G_, st); /* G_->S */
-  dr_string_table_destroy(st);
+  dr_pi_dag_set_string_table(G_, st_); /* G_->S */
+  dr_string_table_destroy(st_);
 }
 
 
