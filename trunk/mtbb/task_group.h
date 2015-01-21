@@ -22,7 +22,6 @@
 #include <functional>
 #include <new>
 
-
 /* 
  * 
  */
@@ -78,10 +77,6 @@
 #define TASK_GROUP_NULL_CREATE 0
 #endif
 
-/* version number. 2 is recommended */
-#if !defined(TASK_GROUP_VER)
-#define TASK_GROUP_VER 2
-#endif
 
 #if !defined(TASK_MEMORY_CHUNK_SZ)
 #define TASK_MEMORY_CHUNK_SZ 256
@@ -139,11 +134,7 @@ namespace mtbb {
      a subclass of a task should implement 
      execute() method, just as in tbb */
   struct task {
-#if TASK_GROUP_VER >= 2
     virtual void * execute() = 0;
-#else
-    std::function<void ()> f;
-#endif
 #if TO_SERIAL
     
 #elif TO_MTHREAD
@@ -160,14 +151,12 @@ namespace mtbb {
   };
 
   /* a wrapper that makes any callable object a task */
-#if TASK_GROUP_VER >= 2
   template<typename F>
   struct callable_task : task {
     F f;
     callable_task(F f_) : f(f_) {}
     void * execute() { f(); return NULL; }
   };
-#endif
 
   /* an implementation of a list of tasks;
      used inside task_group class to store 
@@ -176,11 +165,7 @@ namespace mtbb {
     task_list_node * next;
     int capacity;
     int n;
-#if TASK_GROUP_VER >= 2
     task * a[TASK_GROUP_INIT_SZ];
-#else
-    task a[TASK_GROUP_INIT_SZ];
-#endif
     void init() {
       next = NULL;
       capacity = TASK_GROUP_INIT_SZ;
@@ -210,21 +195,9 @@ namespace mtbb {
       tail->next = new_node_;
       tail = new_node_;
     }
-    task * add(
-#if TASK_GROUP_VER >= 2
-	       task * t
-#else
-	       std::function<void ()> f
-#endif
-	       ) {
+    task * add(task * t) {
       if (tail->n == tail->capacity) new_node();
-
-#if TASK_GROUP_VER >= 2
       tail->a[tail->n] = t;
-#else
-      task * t = &tail->a[tail->n];
-      t->f = f;
-#endif
       tail->n++;
       return t;
     }
@@ -232,7 +205,6 @@ namespace mtbb {
 
   /* roll a memory allocator for tasks, so that
      we call system malloc (new) only occasionally */
-#if TASK_GROUP_VER >= 2
   struct task_memory_chunk {
     char a_[TASK_MEMORY_CHUNK_SZ];
     char * a;
@@ -287,7 +259,6 @@ namespace mtbb {
       init();
     }
   };
-#endif
 
   /* receive a task object and invoke it.
      invoke_task is the one passed to the 
@@ -295,12 +266,7 @@ namespace mtbb {
      e.g., pthread_create(invoke_task, task_obj) */
   static th_func_ret_type invoke_task(void * arg_) {
     task * arg = (task *)arg_;
-#if TASK_GROUP_VER >= 2
     arg->execute();
-#else
-    std::function<void()> f = arg->f;
-    f();
-#endif
 #if TO_SERIAL || TO_MTHREAD || TO_QTHREAD || TO_MTHREAD_NATIVE
     return 0;
 #elif TO_NANOX
@@ -343,28 +309,22 @@ namespace mtbb {
   /* task group object. no profiler version */
   struct task_group_no_prof {
     task_list tasks;
-#if TASK_GROUP_VER >= 2
     task_memory_allocator mem;
-#endif
     task_group_no_prof() {
       tasks.init();
-#if TASK_GROUP_VER >= 2
       mem.init();
-#endif
     }
 
     void 
-#if TASK_GROUP_VER >= 2
     run_task(task * t)  
-#else
-      run(std::function<void ()> f) 
-#endif
     {
-#if TASK_GROUP_VER >= 2
-      tasks.add(t);
-#else
-      task * t = tasks.add(f);
+#if EASY_PAPI2 || EASY_PAPI
+      /* if you get a "no such function" error,
+	 it's because you didn't include easy_papi2.c 
+	 BEFORE you include this file. */
+      epapi_read();
 #endif
+      tasks.add(t);
 #if TASK_GROUP_NULL_CREATE
       invoke_task((void *)t);
 #elif TO_SERIAL
@@ -399,58 +359,44 @@ namespace mtbb {
 #endif
     }
 
-#if TASK_GROUP_VER >= 2
     void run_task_if(bool x, task * t) {
       if (x) run_task(t);
       else t->execute();
     }
-#endif
 
     /* run any callable object (e.g., closure) */
-#if TASK_GROUP_VER >= 2
     template<typename C>
     void run(C c) {
       void * a = mem.alloc(sizeof(mtbb::callable_task<C>));
       mtbb::callable_task<C> * ct = new (a) mtbb::callable_task<C>(c);
       run_task(ct);
     }
-#endif
 
     /* run if x is true. otherwise call it in serial */
-#if TASK_GROUP_VER >= 2
     template<typename C>
     void run_if(bool x, C c) {
       if (x) c();
       else run(c);
     }
-#else
-    void run_if(bool x, std::function<void ()> f) {
-      if (x) f();
-      else run(f);
-    }
-#endif
 
     void wait() {
       int n_joined = 0;
+#if EASY_PAPI2 || EASY_PAPI
+      epapi_read();
+#endif
       for (task_list_node * p = tasks.head; p; p = p->next) {
 	for (int i = 0; i < p->n; i++) {
-#if TASK_GROUP_VER >= 2
-#define DOT ->
-#else
-#define DOT .
-#endif
-
 #if TASK_GROUP_NULL_CREATE 
 	  /* noop */
 #elif TO_SERIAL
 	  /* noop */
 #elif TO_MTHREAD
-	  pthread_join(p->a[i] DOT tid, NULL);
+	  pthread_join(p->a[i]->tid, NULL);
 #elif TO_MTHREAD_NATIVE
-	  myth_join(p->a[i] DOT hthread,NULL);
+	  myth_join(p->a[i]->hthread,NULL);
 #elif TO_QTHREAD
 	  aligned_t ret;
-	  qthread_readFF(&ret,&p->a[i] DOT ret);
+	  qthread_readFF(&ret,&p->a[i]->ret);
 #elif TO_NANOX
 	  if (n_joined == 0) {
 	    NANOS_SAFE(nanos_wg_wait_completion(nanos_current_wd(), 1));
@@ -464,11 +410,8 @@ namespace mtbb {
 	}
       }
       tasks.reset();
-#if TASK_GROUP_VER >= 2
       mem.reset();
-#endif
     }
-
 
     template<typename C>
     void run_(C c, const char * file, int line) {
@@ -543,6 +486,9 @@ namespace mtbb {
 
     template <typename Callable>
       void run_(Callable c, const char * file, int line) {
+#if EASY_PAPI2 || EASY_PAPI
+      epapi_read();
+#endif
       if (n_outstanding_children == 0) dr_begin_section();
       n_outstanding_children++;
       dr_dag_node * ci = 0;
@@ -557,6 +503,9 @@ namespace mtbb {
     }
 
     void wait_(const char * file, int line) {
+#if EASY_PAPI2 || EASY_PAPI
+      epapi_read();
+#endif
       if (n_outstanding_children == 0) dr_begin_section();
       dr_dag_node * t = dr_enter_wait_tasks_(file, line);
       task_group_no_prof::wait();
