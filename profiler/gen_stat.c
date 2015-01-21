@@ -32,22 +32,33 @@ dr_calc_inner_delay(dr_basic_stat * bs, dr_pi_dag * G) {
   dr_clock_t total_elapsed = 0;
   dr_clock_t total_t_1 = 0;
   dr_pi_dag_node * T = G->T;
+  long n_negative_inner_delays = 0;
   for (i = 0; i < n; i++) {
     dr_pi_dag_node * t = &T[i];
+    dr_clock_t t_1 = t->info.t_1;
+    dr_clock_t elapsed = t->info.end.t - t->info.start.t;
     if (t->info.kind < dr_dag_node_kind_section
 	|| t->subgraphs_begin_offset == t->subgraphs_end_offset) {
-      total_elapsed += t->info.end.t - t->info.start.t;
-      total_t_1 += t->info.t_1;
-      if (total_elapsed < total_t_1 && t->info.worker != -1) {
-	fprintf(stderr,
-		"warning: node %ld has negative"
-		" inner delay (start=%llu, end=%llu,"
-		" t_1=%llu, end - start - t_1 = -%llu\n",
-		i,
-		t->info.start.t, t->info.end.t, t->info.t_1,
-		total_t_1 - total_elapsed);
+      total_elapsed += elapsed;
+      total_t_1 += t_1;
+      if (elapsed < t_1 && t->info.worker != -1) {
+	if (1 || (n_negative_inner_delays == 0)) {
+	  fprintf(stderr,
+		  "warning: node %ld has negative"
+		  " inner delay (worker=%d, start=%llu, end=%llu,"
+		  " t_1=%llu, end - start - t_1 = -%llu\n",
+		  i, t->info.worker,
+		  t->info.start.t, t->info.end.t, t->info.t_1,
+		  t_1 - elapsed);
+	}
+	n_negative_inner_delays++;
       }
     }
+  }
+  if (n_negative_inner_delays > 0) {
+    fprintf(stderr,
+	    "warning: there are %ld nodes that have negative delays",
+	    n_negative_inner_delays);
   }
   bs->total_elapsed = total_elapsed;
   bs->total_t_1 = total_t_1;
