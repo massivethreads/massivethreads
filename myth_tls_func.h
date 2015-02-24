@@ -113,6 +113,7 @@ static inline int myth_setspecific_body(myth_key_t __key,void *__pointer)
 			}
 		}
 		else{
+		        g_myth_tls_list_size = 1;
 			g_myth_tls_list=real_malloc(sizeof(myth_tls_entry));
 			g_myth_tls_list[0].key=__key;
 			g_myth_tls_list[0].th=myth_self_body();
