@@ -19,6 +19,7 @@ typedef struct {
   dr_clock_t total_elapsed;
   dr_clock_t total_t_1;
   long * edge_counts;		/* kind,u,v */
+  int warnings_n_running;
 } dr_basic_stat;
 
 static void 
@@ -154,6 +155,7 @@ dr_basic_stat_init(dr_basic_stat * bs, dr_pi_dag * G) {
   bs->cum_delay = 0;		/* cumulative delay cpu time */
   bs->cum_no_work = 0;		/* cumulative no_work cpu time */
   bs->t = 0;			/* time of the last event */
+  bs->warnings_n_running = 0;	/* we have not warned warnings_n_running > n_workers */
 }
 
 static void
@@ -176,10 +178,13 @@ dr_basic_stat_process_event(chronological_traverser * ct,
     n_delay = 0;
     n_no_work = 0;
     if (bs->n_running > bs->n_workers) {
-      fprintf(stderr, 
-	      "warning: n_running = %ld"
-	      " > n_workers = %ld (clock skew?)\n",
-	      bs->n_running, bs->n_workers);
+      if (bs->warnings_n_running == 0) {
+	fprintf(stderr, 
+		"warning: n_running = %ld"
+		" > n_workers = %ld (clock skew?)\n",
+		bs->n_running, bs->n_workers);
+	bs->warnings_n_running++;
+      }
     }
     n_delay = 0;
     n_no_work = 0;
