@@ -185,7 +185,7 @@ dr_basic_stat_process_event(chronological_traverser * ct,
 		bs->n_running, bs->n_workers);
 	if (bs->warnings_n_running > 0) {
 	  fprintf(stderr, 
-		  "further occurrences of this warning will be suppressed\n");
+		  "note: further occurrences of this warning will be suppressed\n");
 	}
 	bs->warnings_n_running++;
       }
