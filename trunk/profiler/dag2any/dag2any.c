@@ -45,7 +45,12 @@ const char * sql_create_nodes
    "start_file,"
    "start_line,"
    "end_file,"
-   "end_line"
+   "end_line,"
+   "edges_begin,"
+   "edges_end,"
+   "child_offset,"
+   "subgraphs_begin_offset,"
+   "subgraphs_end_offset"
    ")"
    );
 
@@ -377,7 +382,20 @@ insert_into_nodes(sqlite3 * db, sqlite3_stmt * stmt,
   if (!blong(g->info.start.pos.line)) return 0;
   if (!blong(g->info.end.pos.file_idx)) return 0;
   if (!blong(g->info.end.pos.line)) return 0;
-
+  if (!blong(g->edges_begin)) return 0;
+  if (!blong(g->edges_end)) return 0;
+  if (g->info.kind == dr_dag_node_kind_create_task) {
+    if (!blong(g->child_offset)) return 0;
+  } else {
+    if (!blong(0)) return 0;
+  }
+  if (g->info.kind >= dr_dag_node_kind_section) {
+    if (!blong(g->subgraphs_begin_offset)) return 0;
+    if (!blong(g->subgraphs_end_offset)) return 0;
+  } else {
+    if (!blong(0)) return 0;
+    if (!blong(0)) return 0;
+  }
   if (0) {
     r = SQLITE_DONE;
   } else {
@@ -415,7 +433,8 @@ gen_sqlite3_create_nodes_table(dr_pi_dag * G, sqlite3 * db) {
     "insert into nodes values("
     "?,?,?,?,?,?,?,?,?,?,"
     "?,?,?,?,?,?,?,?,?,?,"
-    "?,?,?,?,?,?,?,?,?,?)";
+    "?,?,?,?,?,?,?,?,?,?,"
+    "?,?,?,?,?)";
   sqlite3_stmt * insert_stmt = 0;
   int r = sqlite3_prepare(db, insert_sql, strlen(insert_sql), 
 			  &insert_stmt, NULL);
