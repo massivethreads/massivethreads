@@ -178,11 +178,15 @@ dr_basic_stat_process_event(chronological_traverser * ct,
     n_delay = 0;
     n_no_work = 0;
     if (bs->n_running > bs->n_workers) {
-      if (bs->warnings_n_running == 0) {
+      if (bs->warnings_n_running < 2) {
 	fprintf(stderr, 
 		"warning: n_running = %ld"
 		" > n_workers = %ld (clock skew?)\n",
 		bs->n_running, bs->n_workers);
+	if (bs->warnings_n_running > 0) {
+	  fprintf(stderr, 
+		  "further occurrences of this warning will be suppressed\n");
+	}
 	bs->warnings_n_running++;
       }
     }
