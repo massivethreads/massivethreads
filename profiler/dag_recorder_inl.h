@@ -162,6 +162,8 @@ extern "C" {
     int cpu;
     dr_dag_node_kind_t kind;
     dr_dag_edge_kind_t in_edge_kind;
+    long long counters_1[dr_max_counters];
+    long long counters_inf[dr_max_counters];
   } dr_dag_node_info;
 
   typedef struct dr_pi_dag_node dr_pi_dag_node;
@@ -658,7 +660,7 @@ extern "C" {
     return (x < y ? x : y);
   }
 
-  static inline dr_clock_t
+  static inline long long //dr_clock_t
   dr_max_count(long long x, long long y) {
     return (x < y ? y : x);
   }
@@ -1084,18 +1086,18 @@ extern "C" {
       /* s's start time is it's first nodes' start time */
       s->info.start   = first->info.start;
       /* s's end time is it's last nodes' end time */
-      s->info.end     = last->info.end;
+      s->info.end     = last->info.end;      
       /* s's worker is temporarily first node's worker.
-	 later we may set it to -1 when other nodes' workers
-	 are different */
+         later we may set it to -1 when other nodes' workers
+         are different */
       s->info.worker  = first->info.worker;
       /* similar to worker */
       s->info.cpu     = first->info.cpu;
       /* s's earliest start time is its first node's 
-	 earliest start time */
+         earliest start time */
       s->info.est     = first->info.est;
       /* s's ready time is its first node's
-	 ready time */
+         ready time */
       s->info.in_edge_kind = first->info.in_edge_kind;
       s->info.first_ready_t = first->info.first_ready_t;
       s->info.last_start_t = last->info.start.t;
@@ -1103,141 +1105,155 @@ extern "C" {
       
       s->info.t_1     = 0;
       s->info.t_inf   = 0;
+      int j;
+      for (j = 0; j < dr_max_counters; j++) {
+        s->info.counters_1[j] = s->info.counters_inf[j] = 0;
+      }
       /* accumulate ready times */
       for (i = 0; i < dr_dag_edge_kind_max; i++) {
-	s->info.t_ready[i] = 0;
+        s->info.t_ready[i] = 0;
       }
       /* initialize node/edge counts (we later accumulate 
-	 subgraphs's results into them) */
+         subgraphs's results into them) */
       for (i = 0; i < dr_dag_node_kind_section; i++) {
-	s->info.logical_node_counts[i] = 0;
+        s->info.logical_node_counts[i] = 0;
       }
       s->info.logical_node_counts[s->info.kind] = 1;
       for (i = 0; i < dr_dag_edge_kind_max; i++) {
-	s->info.logical_edge_counts[i] = 0;
+        s->info.logical_edge_counts[i] = 0;
       }
       s->info.cur_node_count = 1;
       s->info.min_node_count = 1;
       s->info.n_child_create_tasks = 0;
       
       {
-	/* look through all subgraphs */
-	dr_clock_t t_inf = 0;
-	dr_dag_node * head = s->subgraphs->head;
-	dr_dag_node * ch;
-	for (ch = head; ch; ch = ch->next) {
-	  dr_dag_node * x = ch;
-	  int k;
-	  /* accumulate t_1 */
-	  s->info.t_1     += x->info.t_1;
-	  /* accumulate t_inf along the sequential chain */
-	  s->info.t_inf   += x->info.t_inf;
-	  
-	  /* accumulate ready along the sequential chain */
-	  for (k = 0; k < dr_dag_edge_kind_max; k++) {
-	    if (DAG_RECORDER_VERBOSE_LEVEL>=3) {
-	      printf(" [%p].t_ready[%s] (%llu) += [%p].t_ready[%s] (%llu) -> %llu\n", 
-		     s, dr_dag_edge_kind_to_str((dr_dag_edge_kind_t)k), 
-		     s->info.t_ready[k], 
-		     x, dr_dag_edge_kind_to_str((dr_dag_edge_kind_t)k), 
-		     x->info.t_ready[k], 
-		     s->info.t_ready[k] + x->info.t_ready[k]);
-	    }
-	    s->info.t_ready[k] += x->info.t_ready[k];
-	  }
-	  
-	  /* meet workers and cpus */
-	  s->info.worker = dr_meet_ints(s->info.worker, x->info.worker);
-	  s->info.cpu    = dr_meet_ints(s->info.cpu, x->info.cpu);
-	  /* accumulate node counts of each type */
-	  for (k = 0; k < dr_dag_node_kind_section; k++) {
-	    s->info.logical_node_counts[k] += x->info.logical_node_counts[k];
-	  }
-	  /* accumulate edge counts of each type */
-	  for (k = 0; k < dr_dag_edge_kind_max; k++) {
-	    s->info.logical_edge_counts[k] += x->info.logical_edge_counts[k];
-	  }
-	  s->info.cur_node_count += x->info.cur_node_count;
-	  /* at this point, we assume s is not collapsable,
-	     so its minimum number of nodes is the sum of its children */
-	  s->info.min_node_count += x->info.min_node_count;
-	  switch (x->info.kind) {
-	  case dr_dag_node_kind_create_task: {
-	    /* besides, we need to count edges
-	       from x to its successor */
-	    dr_dag_node * c = x->child;
-	    int i;
-	    (void)dr_check(x->next);
-	    s->info.logical_edge_counts[dr_dag_edge_kind_create]++;
-	    s->info.logical_edge_counts[dr_dag_edge_kind_create_cont]++;
-	    s->info.n_child_create_tasks++;
-	    /* similar accumulation for x's child task */
-	    (void)dr_check(c);
-	    /* s is a section; s's last node may
-	       have finished eariler than one of its
-	       children */
-	    s->info.end.t = dr_max_clock(c->info.end.t, s->info.end.t);
-	    /* ******************************** */
-	    for (i = 0; i < dr_max_counters; i++) {
-	      s->info.end.counters[i] = 
-		dr_max_count(c->info.end.counters[i], s->info.end.counters[i]);
-	    }
-	    s->info.last_start_t 
-	      = dr_max_clock(c->info.last_start_t, s->info.last_start_t);
-	    s->info.t_1     += c->info.t_1;
-	    t_inf = dr_max_clock(s->info.t_inf + c->info.t_inf, t_inf);
-	    
-	    /* count "ready" tasks.  the task c is
-	       "ready" from the point it is created
-	       (x->info.end.t) to the point it is
-	       finished c->info.end.t */
-	    for (k = 0; k < dr_dag_edge_kind_max; k++) {
-	      if (DAG_RECORDER_VERBOSE_LEVEL>=3) {
-		printf("  [%p].t_ready[%s] (%llu)"
-		       " += [%p].t_ready[%s] (%llu) -> %llu\n", 
-		       s, dr_dag_edge_kind_to_str((dr_dag_edge_kind_t)k), 
-		       s->info.t_ready[k], 
-		       c, dr_dag_edge_kind_to_str((dr_dag_edge_kind_t)k), 
-		       c->info.t_ready[k],
-		       s->info.t_ready[k] + c->info.t_ready[k]);
-	      }
-	      s->info.t_ready[k] += c->info.t_ready[k];
-	    }
-	    
-	    s->info.worker = dr_meet_ints(s->info.worker, c->info.worker);
-	    s->info.cpu    = dr_meet_ints(s->info.cpu, c->info.cpu);
-	    /* if a section contains a create task node,
-	       count its children as well */
-	    for (k = 0; k < dr_dag_node_kind_section; k++) {
-	      s->info.logical_node_counts[k] += c->info.logical_node_counts[k];
-	    }
-	    for (k = 0; k < dr_dag_edge_kind_max; k++) {
-	      s->info.logical_edge_counts[k] += c->info.logical_edge_counts[k];
-	    }
-	    s->info.cur_node_count += c->info.cur_node_count;
-	    s->info.min_node_count += c->info.min_node_count;
-	    break;
-	  }
-	  case dr_dag_node_kind_wait_tasks: 
-	  case dr_dag_node_kind_end_task: {
-	    (void)dr_check(!x->next);
-	    break;
-	  }
-	  case dr_dag_node_kind_other: 
-	    break;
-	  case dr_dag_node_kind_section:
-	    if (x->next) {
-	      s->info.logical_edge_counts[dr_dag_edge_kind_wait_cont]++;
-	      s->info.logical_edge_counts[dr_dag_edge_kind_end] 
-		+= x->info.n_child_create_tasks;
-	    }
-	    break;
-	  default:
-	    (void)dr_check(0);
-	    break;
-	  }
-	}
-	s->info.t_inf = dr_max_clock(t_inf, s->info.t_inf);
+        /* look through all subgraphs */
+        dr_clock_t t_inf = 0;
+        long long counters_inf[dr_max_counters];
+        for (j = 0; j < dr_max_counters; j++) {
+          counters_inf[j] = 0;
+        }
+        dr_dag_node * head = s->subgraphs->head;
+        dr_dag_node * ch;
+        for (ch = head; ch; ch = ch->next) {
+          dr_dag_node * x = ch;
+          int k;
+          /* accumulate t_1 */
+          s->info.t_1     += x->info.t_1;
+          /* accumulate t_inf along the sequential chain */
+          s->info.t_inf   += x->info.t_inf;
+          for (j = 0; j < dr_max_counters; j++) {
+            s->info.counters_1[j] += x->info.counters_1[j];
+            s->info.counters_inf[j] += x->info.counters_inf[j];
+          }
+          
+          /* accumulate ready along the sequential chain */
+          for (k = 0; k < dr_dag_edge_kind_max; k++) {
+            if (DAG_RECORDER_VERBOSE_LEVEL>=3) {
+              printf(" [%p].t_ready[%s] (%llu) += [%p].t_ready[%s] (%llu) -> %llu\n", 
+                     s, dr_dag_edge_kind_to_str((dr_dag_edge_kind_t)k), 
+                     s->info.t_ready[k], 
+                     x, dr_dag_edge_kind_to_str((dr_dag_edge_kind_t)k), 
+                     x->info.t_ready[k], 
+                     s->info.t_ready[k] + x->info.t_ready[k]);
+            }
+            s->info.t_ready[k] += x->info.t_ready[k];
+          }
+          
+          /* meet workers and cpus */
+          s->info.worker = dr_meet_ints(s->info.worker, x->info.worker);
+          s->info.cpu    = dr_meet_ints(s->info.cpu, x->info.cpu);
+          /* accumulate node counts of each type */
+          for (k = 0; k < dr_dag_node_kind_section; k++) {
+            s->info.logical_node_counts[k] += x->info.logical_node_counts[k];
+          }
+          /* accumulate edge counts of each type */
+          for (k = 0; k < dr_dag_edge_kind_max; k++) {
+            s->info.logical_edge_counts[k] += x->info.logical_edge_counts[k];
+          }
+          s->info.cur_node_count += x->info.cur_node_count;
+          /* at this point, we assume s is not collapsable,
+             so its minimum number of nodes is the sum of its children */
+          s->info.min_node_count += x->info.min_node_count;
+          switch (x->info.kind) {
+          case dr_dag_node_kind_create_task: {
+            /* besides, we need to count edges
+               from x to its successor */
+            dr_dag_node * c = x->child;
+            (void)dr_check(x->next);
+            s->info.logical_edge_counts[dr_dag_edge_kind_create]++;
+            s->info.logical_edge_counts[dr_dag_edge_kind_create_cont]++;
+            s->info.n_child_create_tasks++;
+            /* similar accumulation for x's child task */
+            (void)dr_check(c);
+            /* s is a section; s's last node may
+               have finished eariler than one of its
+               children */
+            s->info.end.t = dr_max_clock(c->info.end.t, s->info.end.t);
+            /* ******************************** */
+            s->info.last_start_t 
+              = dr_max_clock(c->info.last_start_t, s->info.last_start_t);
+            s->info.t_1     += c->info.t_1;
+            t_inf = dr_max_clock(s->info.t_inf + c->info.t_inf, t_inf);
+            for (j = 0; j < dr_max_counters; j++) {
+              s->info.counters_1[j] += c->info.counters_1[j];
+              counters_inf[j] = dr_max_count(counters_inf[j], s->info.counters_inf[j] + c->info.counters_inf[j]);
+            }
+            
+            /* count "ready" tasks.  the task c is
+               "ready" from the point it is created
+               (x->info.end.t) to the point it is
+               finished c->info.end.t */
+            for (k = 0; k < dr_dag_edge_kind_max; k++) {
+              if (DAG_RECORDER_VERBOSE_LEVEL>=3) {
+                printf("  [%p].t_ready[%s] (%llu)"
+                       " += [%p].t_ready[%s] (%llu) -> %llu\n", 
+                       s, dr_dag_edge_kind_to_str((dr_dag_edge_kind_t)k), 
+                       s->info.t_ready[k], 
+                       c, dr_dag_edge_kind_to_str((dr_dag_edge_kind_t)k), 
+                       c->info.t_ready[k],
+                       s->info.t_ready[k] + c->info.t_ready[k]);
+              }
+              s->info.t_ready[k] += c->info.t_ready[k];
+            }
+            
+            s->info.worker = dr_meet_ints(s->info.worker, c->info.worker);
+            s->info.cpu    = dr_meet_ints(s->info.cpu, c->info.cpu);
+            /* if a section contains a create task node,
+               count its children as well */
+            for (k = 0; k < dr_dag_node_kind_section; k++) {
+              s->info.logical_node_counts[k] += c->info.logical_node_counts[k];
+            }
+            for (k = 0; k < dr_dag_edge_kind_max; k++) {
+              s->info.logical_edge_counts[k] += c->info.logical_edge_counts[k];
+            }
+            s->info.cur_node_count += c->info.cur_node_count;
+            s->info.min_node_count += c->info.min_node_count;
+            break;
+          }
+          case dr_dag_node_kind_wait_tasks: 
+          case dr_dag_node_kind_end_task: {
+            (void)dr_check(!x->next);
+            break;
+          }
+          case dr_dag_node_kind_other: 
+            break;
+          case dr_dag_node_kind_section:
+            if (x->next) {
+              s->info.logical_edge_counts[dr_dag_edge_kind_wait_cont]++;
+              s->info.logical_edge_counts[dr_dag_edge_kind_end] 
+                += x->info.n_child_create_tasks;
+            }
+            break;
+          default:
+            (void)dr_check(0);
+            break;
+          }
+        }
+        s->info.t_inf = dr_max_clock(t_inf, s->info.t_inf);
+        for (j = 0; j < dr_max_counters; j++) {
+          s->info.counters_inf[j] = dr_max_count(counters_inf[j], s->info.counters_inf[j]);
+        }
       }
       /* turned out we can collapse this node. */
       if (s->info.worker != -1) s->info.min_node_count = 1;
