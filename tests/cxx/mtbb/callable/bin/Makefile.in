@@ -95,7 +95,7 @@ CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 am_bin_mth_compat_OBJECTS = bin_mth_compat-bin.$(OBJEXT)
 bin_mth_compat_OBJECTS = $(am_bin_mth_compat_OBJECTS)
-bin_mth_compat_DEPENDENCIES = ../../../../../libmyth.la
+bin_mth_compat_DEPENDENCIES = $(abs_top_srcdir)/src/libmyth.la
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
 am__v_lt_0 = --silent
@@ -106,7 +106,7 @@ bin_mth_compat_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX \
 	$(LDFLAGS) -o $@
 am_bin_mth_native_OBJECTS = bin_mth_native-bin.$(OBJEXT)
 bin_mth_native_OBJECTS = $(am_bin_mth_native_OBJECTS)
-bin_mth_native_DEPENDENCIES = ../../../../../libmyth.la
+bin_mth_native_DEPENDENCIES = $(abs_top_srcdir)/src/libmyth.la
 bin_mth_native_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CXXLD) \
 	$(bin_mth_native_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) \
@@ -511,11 +511,11 @@ top_srcdir = @top_srcdir@
 bin_serial_SOURCES = bin.cc
 bin_mth_native_SOURCES = bin.cc
 bin_mth_compat_SOURCES = bin.cc
-bin_serial_CXXFLAGS = -I../../../../../mtbb -DTO_SERIAL
-bin_mth_native_CXXFLAGS = -I../../../../../mtbb -DTO_MTHREAD_NATIVE
-bin_mth_compat_CXXFLAGS = -I../../../../../mtbb -DTO_MTHREAD
-bin_mth_native_LDADD = ../../../../../libmyth.la 
-bin_mth_compat_LDADD = ../../../../../libmyth.la 
+bin_serial_CXXFLAGS = -I$(abs_top_srcdir)/include -I$(abs_top_srcdir)/src/profiler -I$(abs_top_srcdir)/src/mtbb -DTO_SERIAL
+bin_mth_native_CXXFLAGS = -I$(abs_top_srcdir)/include -I$(abs_top_srcdir)/src/profiler -I$(abs_top_srcdir)/src/mtbb -DTO_MTHREAD_NATIVE
+bin_mth_compat_CXXFLAGS = -I$(abs_top_srcdir)/include -I$(abs_top_srcdir)/src/profiler -I$(abs_top_srcdir)/src/mtbb -DTO_MTHREAD
+bin_mth_native_LDADD = $(abs_top_srcdir)/src/libmyth.la 
+bin_mth_compat_LDADD = $(abs_top_srcdir)/src/libmyth.la 
 TESTS = $(check_PROGRAMS)
 all: all-am
 

@@ -1,4 +1,4 @@
-SUBDIRS = c
+SUBDIRS = c native
 if CXX_AVAILABLE
 SUBDIRS += cxx
 endif

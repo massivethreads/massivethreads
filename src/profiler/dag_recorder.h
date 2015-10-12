@@ -334,14 +334,14 @@ extern "C" {
 
 #define dr_options_default(opts)          (void)0
 #define dr_start_task(parent)             do { } while (0)
-#define dr_start_cilk_proc(parent)        do { } while (0)
+#define dr_start_cilk_proc(parent)        0
 #define dr_begin_section()                do { } while (0)
-#define dr_enter_create_task(create)      do { } while (0)
-#define dr_enter_create_cilk_proc_task()  do { } while (0)
+#define dr_enter_create_task(create)      ((dr_dag_node*)0)
+#define dr_enter_create_cilk_proc_task()  ((dr_dag_node*)0)
 #define dr_return_from_create_task(task)  do { } while (0)
-#define dr_enter_wait_tasks()             do { } while (0)
+#define dr_enter_wait_tasks()             ((dr_dag_node*)0)
 #define dr_return_from_wait_tasks(task)   do { } while (0)
-#define dr_enter_other()                  do { } while (0)
+#define dr_enter_other()                  ((dr_dag_node*)0)
 #define dr_return_from_other(task)        do { } while (0)
 #define dr_end_task()                     do { } while (0)
 #define dr_start(opts)                    do { } while (0)

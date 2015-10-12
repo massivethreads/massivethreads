@@ -94,7 +94,7 @@ CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 am_fib_OBJECTS = fib.$(OBJEXT)
 fib_OBJECTS = $(am_fib_OBJECTS)
-fib_DEPENDENCIES = ../../../libmyth.la
+fib_DEPENDENCIES = $(abs_top_srcdir)/src/libmyth.la
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
 am__v_lt_0 = --silent
@@ -489,7 +489,7 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 fib_SOURCES = fib.c
-fib_LDADD = ../../../libmyth.la 
+fib_LDADD = $(abs_top_srcdir)/src/libmyth.la 
 TESTS = $(check_PROGRAMS)
 all: all-am
 

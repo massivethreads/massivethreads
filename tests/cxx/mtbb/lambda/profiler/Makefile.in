@@ -96,8 +96,9 @@ CONFIG_CLEAN_VPATH_FILES =
 am_lambda_profiler_mth_OBJECTS =  \
 	lambda_profiler_mth-lambda_profiler.$(OBJEXT)
 lambda_profiler_mth_OBJECTS = $(am_lambda_profiler_mth_OBJECTS)
-lambda_profiler_mth_DEPENDENCIES = $(top)/profiler/libdr.la \
-	$(top)/libmyth.la
+lambda_profiler_mth_DEPENDENCIES =  \
+	$(abs_top_srcdir)/src/profiler/libdr.la \
+	$(abs_top_srcdir)/src/libmyth.la
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
 am__v_lt_0 = --silent
@@ -109,7 +110,8 @@ lambda_profiler_mth_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX \
 am_lambda_profiler_serial_OBJECTS =  \
 	lambda_profiler_serial-lambda_profiler.$(OBJEXT)
 lambda_profiler_serial_OBJECTS = $(am_lambda_profiler_serial_OBJECTS)
-lambda_profiler_serial_DEPENDENCIES = $(top)/profiler/libdr.la
+lambda_profiler_serial_DEPENDENCIES =  \
+	$(abs_top_srcdir)/src/profiler/libdr.la
 lambda_profiler_serial_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CXXLD) \
 	$(lambda_profiler_serial_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) \
@@ -505,13 +507,12 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-top = ../../../../..
 lambda_profiler_serial_SOURCES = lambda_profiler.cc
 lambda_profiler_mth_SOURCES = lambda_profiler.cc
-lambda_profiler_serial_CXXFLAGS = -I$(top)/mtbb -I$(top)/profiler -std=c++0x -DTO_SERIAL
-lambda_profiler_mth_CXXFLAGS = -I$(top)/mtbb -I$(top)/profiler -std=c++0x -DTO_MTHREAD_NATIVE
-lambda_profiler_serial_LDADD = $(top)/profiler/libdr.la 
-lambda_profiler_mth_LDADD = $(top)/profiler/libdr.la $(top)/libmyth.la
+lambda_profiler_serial_CXXFLAGS = -I$(abs_top_srcdir)/include -I$(abs_top_srcdir)/src/profiler -I$(abs_top_srcdir)/src/mtbb -std=c++0x -DTO_SERIAL
+lambda_profiler_mth_CXXFLAGS = -I$(abs_top_srcdir)/include -I$(abs_top_srcdir)/src/profiler -I$(abs_top_srcdir)/src/mtbb -std=c++0x -DTO_MTHREAD_NATIVE
+lambda_profiler_serial_LDADD = $(abs_top_srcdir)/src/profiler/libdr.la 
+lambda_profiler_mth_LDADD = $(abs_top_srcdir)/src/profiler/libdr.la $(abs_top_srcdir)/src/libmyth.la
 TESTS = $(check_PROGRAMS)
 all: all-am
 

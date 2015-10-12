@@ -16266,7 +16266,7 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 # Only expand once:
 
 
-ac_config_files="$ac_config_files Makefile include/Makefile src/Makefile src/profiler/Makefile src/profiler/dag2any/Makefile src/profiler/drview/Makefile tests/Makefile tests/c/Makefile tests/c/fib/Makefile tests/c/profiler/Makefile tests/c/profiler/minimum/Makefile tests/cxx/Makefile tests/cxx/mtbb/Makefile tests/cxx/mtbb/callable/Makefile tests/cxx/mtbb/callable/bin/Makefile tests/cxx/mtbb/callable/profiler/Makefile tests/cxx/mtbb/lambda/Makefile tests/cxx/mtbb/lambda/bin/Makefile tests/cxx/mtbb/lambda/profiler/Makefile"
+ac_config_files="$ac_config_files Makefile include/Makefile src/Makefile src/profiler/Makefile src/profiler/dag2any/Makefile src/profiler/drview/Makefile tests/Makefile tests/native/Makefile tests/c/Makefile tests/c/fib/Makefile tests/c/profiler/Makefile tests/c/profiler/minimum/Makefile tests/cxx/Makefile tests/cxx/mtbb/Makefile tests/cxx/mtbb/callable/Makefile tests/cxx/mtbb/callable/bin/Makefile tests/cxx/mtbb/callable/profiler/Makefile tests/cxx/mtbb/lambda/Makefile tests/cxx/mtbb/lambda/bin/Makefile tests/cxx/mtbb/lambda/profiler/Makefile"
 
 ac_config_headers="$ac_config_headers src/config.h"
 
@@ -17400,6 +17400,7 @@ do
     "src/profiler/dag2any/Makefile") CONFIG_FILES="$CONFIG_FILES src/profiler/dag2any/Makefile" ;;
     "src/profiler/drview/Makefile") CONFIG_FILES="$CONFIG_FILES src/profiler/drview/Makefile" ;;
     "tests/Makefile") CONFIG_FILES="$CONFIG_FILES tests/Makefile" ;;
+    "tests/native/Makefile") CONFIG_FILES="$CONFIG_FILES tests/native/Makefile" ;;
     "tests/c/Makefile") CONFIG_FILES="$CONFIG_FILES tests/c/Makefile" ;;
     "tests/c/fib/Makefile") CONFIG_FILES="$CONFIG_FILES tests/c/fib/Makefile" ;;
     "tests/c/profiler/Makefile") CONFIG_FILES="$CONFIG_FILES tests/c/profiler/Makefile" ;;

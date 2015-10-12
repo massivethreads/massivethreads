@@ -160,6 +160,7 @@ AC_CONFIG_FILES([
 	src/profiler/dag2any/Makefile
 	src/profiler/drview/Makefile
 	tests/Makefile 
+	tests/native/Makefile 
 	tests/c/Makefile 
 	tests/c/fib/Makefile 
 	tests/c/profiler/Makefile 
