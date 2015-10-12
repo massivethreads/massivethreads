@@ -11,8 +11,8 @@
 #define ENABLE_SQLITE3 0
 #endif
 
-#include <dag_recorder.h>
-#include <dag_recorder_impl.h>
+#include <../dag_recorder.h>
+#include <../dag_recorder_impl.h>
 
 const char * sql_create_nodes
 = ("create table nodes("

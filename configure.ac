@@ -1,4 +1,4 @@
-AC_INIT([massivethreads], [0.21], [massivethreads@eidos.ic.i.u-tokyo.ac.jp], [massivethreads], [http://code.google.com/p/massivethreads/])
+AC_INIT([massivethreads], [0.31], [massivethreads@eidos.ic.i.u-tokyo.ac.jp], [massivethreads], [http://code.google.com/p/massivethreads/])
 AM_INIT_AUTOMAKE([foreign -Wall -Werror])
 # required when you build shared libraries, relying on libtool
 AC_CONFIG_MACRO_DIR([m4])
@@ -154,9 +154,11 @@ AC_CHECK_HEADERS([sqlite3.h], [AC_SUBST(LIBSQLITE3, [-lsqlite3])])
 LT_INIT
 AC_CONFIG_FILES([
 	Makefile 
-	profiler/Makefile
-	profiler/dag2any/Makefile
-	profiler/drview/Makefile
+	include/Makefile
+	src/Makefile
+	src/profiler/Makefile
+	src/profiler/dag2any/Makefile
+	src/profiler/drview/Makefile
 	tests/Makefile 
 	tests/c/Makefile 
 	tests/c/fib/Makefile 
@@ -171,5 +173,5 @@ AC_CONFIG_FILES([
 	tests/cxx/mtbb/lambda/bin/Makefile
 	tests/cxx/mtbb/lambda/profiler/Makefile
 ])
-AC_CONFIG_HEADERS([config.h])
+AC_CONFIG_HEADERS([src/config.h])
 AC_OUTPUT
