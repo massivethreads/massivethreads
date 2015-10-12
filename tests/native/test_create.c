@@ -2,6 +2,7 @@
  * test myth_create and join
  */
 
+#include <assert.h>
 #include "myth.h"
 
 void * f(void * a) {
