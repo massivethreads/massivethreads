@@ -1,5 +1,9 @@
 # MassiveThreads - a Lightweight Thread Library for High Productivity Languages
 
+# API reference
+
+ * http://www.eidos.ic.i.u-tokyo.ac.jp/massivethreads/massivethreads/docs/reference/
+
 # System Requirements
 
 Massivethreads is mainly developed and tested on the following environment:
