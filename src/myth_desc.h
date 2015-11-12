@@ -26,38 +26,39 @@ typedef enum
 //Thread descriptor
 typedef struct myth_thread
 {
-	struct myth_thread* join_thread;//8//A thread which is waiting for this
-	myth_func_t entry_func;
-	void *result;//16//Return value
-	myth_context context;//24//Context
-	void *stack;//32//Pointer to stack
-	struct myth_running_env* env;//40//Pointer to worker thread
-	//struct myth_pickle *pickle_ptr;
-	myth_internal_lock_t lock;//48//Lock
-	myth_queue_data queue_data;//48//Data for runqueue
-	volatile myth_status_t status;//56//Status
-	uint8_t detached;//57
-	uint8_t cancelled;//58
-	uint8_t cancel_enabled;//59
+  struct myth_thread * next;
+  struct myth_thread* join_thread;//8//A thread which is waiting for this
+  myth_func_t entry_func;
+  void *result;//16//Return value
+  myth_context context;//24//Context
+  void *stack;//32//Pointer to stack
+  struct myth_running_env* env;//40//Pointer to worker thread
+  //struct myth_pickle *pickle_ptr;
+  myth_internal_lock_t lock;//48//Lock
+  myth_queue_data queue_data;//48//Data for runqueue
+  volatile myth_status_t status;//56//Status
+  uint8_t detached;//57
+  uint8_t cancelled;//58
+  uint8_t cancel_enabled;//59
 #if defined MYTH_ENABLE_THREAD_ANNOTATION && defined MYTH_COLLECT_LOG
-	char annotation_str[MYTH_THREAD_ANNOTATION_MAXLEN];
-	int recycle_count;
+  char annotation_str[MYTH_THREAD_ANNOTATION_MAXLEN];
+  int recycle_count;
 #endif
 #ifdef MYTH_DESC_REUSE_CHECK
-	myth_internal_lock_t sanity_check;
+  myth_internal_lock_t sanity_check;
 #endif
-	void *custom_data_ptr;
-	int custom_data_size;
-}__attribute__((aligned(CACHE_LINE_SIZE))) myth_thread,*myth_thread_t;
+  void *custom_data_ptr;
+  int custom_data_size;
+} __attribute__((aligned(CACHE_LINE_SIZE))) myth_thread,*myth_thread_t;
 
 #ifndef MYTH_THREAD_OPTION_DEFINED
 #define MYTH_THREAD_OPTION_DEFINED
-typedef struct myth_thread_option{
+typedef struct myth_thread_attr{
 	size_t stack_size;
 	int switch_immediately;
 	size_t custom_data_size;
 	void *custom_data;
-}myth_thread_option,*myth_thread_option_t;
+} myth_thread_attr_t;
 #endif
 
 static inline myth_thread_t myth_context_to_thread(myth_running_env_t env,myth_context_t ctx)

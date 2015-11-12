@@ -400,6 +400,7 @@ dr_destroy_prune_stacks() {
 /* completely uninitialize */
 void dr_cleanup__(const char * file, int line, 
 		  int worker, int num_workers) {
+  (void)num_workers;
   if (GS.initialized) {
     if (GS.generation % 2) {
       dr_stop__(file, line, worker);

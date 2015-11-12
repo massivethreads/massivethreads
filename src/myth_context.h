@@ -231,6 +231,7 @@ static inline void myth_make_context_voidcall(myth_context_t ctx,
   void_func_t func, void *stack, size_t stacksize)
 {
 #if defined MYTH_CONTEXT_ARCH_i386
+  (void)stacksize;
 	//Get stack tail
 	uint32_t stack_tail = (uint32_t) stack;
 	stack_tail -= 4;
@@ -243,6 +244,7 @@ static inline void myth_make_context_voidcall(myth_context_t ctx,
 	//Set retuen address
 	*dest_addr = (uint32_t) func;
 #elif defined MYTH_CONTEXT_ARCH_amd64
+  (void)stacksize;
 	//Get stack tail
 	uint64_t stack_tail = (uint64_t) stack;
 	stack_tail -= 8;
@@ -255,6 +257,7 @@ static inline void myth_make_context_voidcall(myth_context_t ctx,
 	//Set retuen address
 	*dest_addr = (uint64_t) func;
 #elif defined MYTH_CONTEXT_ARCH_sparc 
+  (void)stacksize;
 #ifdef MYTH_ARCH_sparc_v9
   uint64_t stack_tail = (uint64_t) stack;
   stack_tail -= 8;
@@ -297,6 +300,7 @@ static inline void myth_make_context_empty(myth_context_t ctx, void *stack,
   size_t stacksize)
 {
 #if defined MYTH_CONTEXT_ARCH_i386
+  (void)stacksize;
 	//Get stack tail
 	uint32_t stack_tail = (uint32_t) stack;
 	//Align
@@ -304,6 +308,7 @@ static inline void myth_make_context_empty(myth_context_t ctx, void *stack,
 	//Set stack pointer
 	ctx->esp = stack_tail;
 #elif defined MYTH_CONTEXT_ARCH_amd64
+  (void)stacksize;
 	//Get stack tail
 	uint64_t stack_tail = (uint64_t) stack;
 	//Align
@@ -311,6 +316,7 @@ static inline void myth_make_context_empty(myth_context_t ctx, void *stack,
 	//Set stack pointer
 	ctx->rsp = stack_tail;
 #elif defined MYTH_CONTEXT_ARCH_sparc
+  (void)stacksize;
 #ifdef MYTH_ARCH_sparc_v9
   uint64_t stack_tail = (uint64_t) stack;
   uint64_t *fp;

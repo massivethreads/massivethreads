@@ -103,7 +103,7 @@
 #define MYTH_UNSAFE_MUTEX_INITIALIZER
 
 //Use spinlock as mutex, faster but higher risk of deadlock
-#define MYTH_MUTEX_BY_SPIN
+///////////////#define MYTH_MUTEX_BY_SPIN
 
 //Debug log setting
 //#define FREE_MYTH_THREAD_STRUCT_DEBUG
@@ -216,7 +216,7 @@
 //#define MYTH_FLMALLOC_TLS
 
 //Inline context switching codes by inline assembler
-#define MYTH_INLINE_CONTEXT
+///////////////#define MYTH_INLINE_CONTEXT
 //At inlined codes, save callee-saved registers explicitly
 #define MYTH_INLINE_PUSH_CALLEE_SAVED
 

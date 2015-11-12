@@ -289,6 +289,7 @@ MYTH_CTX_CALLBACK void myth_startpoint_init_ex_1(void *arg1,void *arg2,void *arg
 {
 	myth_running_env_t env=(myth_running_env_t)arg1;
 	myth_thread_t this_th=(myth_thread_t)arg2;
+	(void)arg3;
 	//Add to runqueue
 	myth_queue_push(&env->runnable_q,this_th);
 }
@@ -325,6 +326,7 @@ MYTH_CTX_CALLBACK void myth_startpoint_exit_ex_1(void *arg1,void *arg2,void *arg
 {
 	myth_thread_t th=arg1;
 	intptr_t rank=(intptr_t)arg2;
+	(void)arg3;
 	myth_running_env_t target=&g_envs[rank];
 	th->env=target;
 	while (!myth_queue_trypass(&target->runnable_q,th)){

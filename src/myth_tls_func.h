@@ -10,8 +10,8 @@ extern myth_tls_entry *g_myth_tls_list;
 extern int g_myth_tls_list_size;
 extern int g_myth_tls_key_status[MYTH_TLS_KEY_SIZE];
 
-static inline void myth_tls_init(int nworkers)
-{
+static inline void myth_tls_init(int nworkers) {
+  (void)nworkers;
 	assert(real_malloc);
 	myth_internal_lock_init(&g_myth_tls_lock);
 	g_myth_tls_list=NULL;

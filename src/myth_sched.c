@@ -46,8 +46,10 @@ __thread int g_worker_rank;
 #error
 #endif
 
-void myth_alrm_sighandler(int signum,siginfo_t *sinfo,void* ctx)
-{
+void myth_alrm_sighandler(int signum, siginfo_t *sinfo, void* ctx) {
+  (void)signum;
+  (void)sinfo;
+  (void)ctx;
 	myth_running_env_t env;
 	int errno_bk;
 	errno_bk=errno;

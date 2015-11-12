@@ -422,6 +422,8 @@ static inline myth_thread_t myth_create_body(myth_func_t func,
 
 	// Allocate new thread descriptor
 	new_thread = get_new_myth_thread_struct_desc(env);
+	new_thread->next = 0;
+
 #ifdef MYTH_SPLIT_STACK_DESC /* default */
 	// allocate stack and get pointer
 	stk = get_new_myth_thread_struct_stack(env, stack_size);
@@ -482,7 +484,9 @@ static inline myth_thread_t myth_create_body(myth_func_t func,
 
 //Create a thread without switching context
 static inline myth_thread_t myth_create_ex_body(myth_func_t func,
-  void *arg, myth_thread_option_t opt)
+						void *arg, 
+						myth_thread_attr_t * attr
+						)
 {
 	MAY_BE_UNUSED uint64_t t0, t1;
 	myth_thread_t new_thread;
@@ -495,17 +499,17 @@ static inline myth_thread_t myth_create_ex_body(myth_func_t func,
 	size_t custom_data_size;
 	void *custom_data_ptr;
 	int switch_immediately;
-	if (!opt){
+	if (!attr){
 		stack_size=0;
 		custom_data_size=0;
 		custom_data_ptr=NULL;
 		switch_immediately=1;
 	}
 	else{
-		stack_size=opt->stack_size;
-		custom_data_size=opt->custom_data_size;
-		custom_data_ptr=opt->custom_data;
-		switch_immediately=opt->switch_immediately;
+		stack_size=attr->stack_size;
+		custom_data_size=attr->custom_data_size;
+		custom_data_ptr=attr->custom_data;
+		switch_immediately=attr->switch_immediately;
 	}
 
 #ifdef MYTH_CREATE_PROF
@@ -521,6 +525,8 @@ static inline myth_thread_t myth_create_ex_body(myth_func_t func,
 
 	// Allocate new thread descriptor
 	new_thread = get_new_myth_thread_struct_desc(env);
+	new_thread->next = 0;
+
 #ifdef MYTH_SPLIT_STACK_DESC /* default */
 	// allocate stack and get pointer
 	stk = get_new_myth_thread_struct_stack(env, stack_size);
@@ -593,7 +599,10 @@ static inline myth_thread_t myth_create_ex_body(myth_func_t func,
 	return new_thread;
 }
 
-static inline myth_thread_t myth_create_nosched_body(myth_func_t func,void *arg,myth_thread_option_t opt)
+static inline myth_thread_t myth_create_nosched_body(myth_func_t func,
+						     void *arg,
+						     myth_thread_attr_t * attr
+						     )
 {
 	MAY_BE_UNUSED uint64_t t0,t1;
 	myth_thread_t new_thread;
@@ -603,15 +612,15 @@ static inline myth_thread_t myth_create_nosched_body(myth_func_t func,void *arg,
 	size_t stack_size;
 	size_t custom_data_size;
 	void *custom_data_ptr;
-	if (!opt){
+	if (!attr){
 		stack_size=0;
 		custom_data_size=0;
 		custom_data_ptr=NULL;
 	}
 	else{
-		stack_size=opt->stack_size;
-		custom_data_size=opt->custom_data_size;
-		custom_data_ptr=opt->custom_data;
+		stack_size=attr->stack_size;
+		custom_data_size=attr->custom_data_size;
+		custom_data_ptr=attr->custom_data;
 	}
 	t0=0;
 	t1=0;
@@ -749,6 +758,7 @@ MYTH_CTX_CALLBACK void myth_join_2(void *arg1,void *arg2,void *arg3)
 MYTH_CTX_CALLBACK void myth_join_3(void *arg1,void *arg2,void *arg3)
 {
 	myth_thread_t this_thread=arg1,th=arg2;
+	(void)arg3;
 	//Set join target
 	myth_desc_join_set(th,this_thread);
 	//Change current running thread
@@ -984,6 +994,7 @@ MYTH_CTX_CALLBACK void myth_entry_point_2(void *arg1,void *arg2,void *arg3)
 	MAY_BE_UNUSED uint64_t t0,t1;
 	myth_running_env_t env=arg1;
 	myth_thread_t this_thread=arg2;
+	(void)arg3;
 	t0=0;t1=0;
 #ifdef MYTH_EP_PROF_DETAIL
 	t1=myth_get_rdtsc();

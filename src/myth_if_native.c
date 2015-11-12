@@ -13,441 +13,102 @@
 #include "myth_sched_func.h"
 #include "myth_tls_func.h"
 
-/*
-   Function: myth_init
-
-   TODO: description.
-
-   Parameters:
-
-      x - TODO: parameters.
-
-   Returns:
-
-      TODO: return value.
-
-   See Also:
-
-      TODO: see also.
-*/
 void myth_init(void)
 {
 	myth_init_body(0,0);
 }
 
-/*
-   Function: myth_init_withparam
-
-   TODO: description.
-
-   Parameters:
-
-      x - TODO: parameters.
-
-   Returns:
-
-      TODO: return value.
-
-   See Also:
-
-      TODO: see also.
-*/
 void myth_init_withparam(int worker_num,size_t def_stack_size)
 {
 	myth_init_body(worker_num,def_stack_size);
 }
 
-/*
-   Function: myth_fini
-
-   TODO: description.
-
-   Parameters:
-
-      x - TODO: parameters.
-
-   Returns:
-
-      TODO: return value.
-
-   See Also:
-
-      TODO: see also.
-*/
 void myth_fini(void)
 {
 	myth_fini_body();
 }
 
-/*
-   Function: myth_init_ex
-
-   TODO: description.
-
-   Parameters:
-
-      x - TODO: parameters.
-
-   Returns:
-
-      TODO: return value.
-
-   See Also:
-
-      TODO: see also.
-*/
 int myth_init_ex(int worker_num,size_t def_stack_size)
 {
 	return myth_init_ex_body(worker_num,def_stack_size);
 }
 
-/*
-   Function: myth_fini_ex
-
-   TODO: description.
-
-   Parameters:
-
-      x - TODO: parameters.
-
-   Returns:
-
-      TODO: return value.
-
-   See Also:
-
-      TODO: see also.
-*/
 void myth_fini_ex(void)
 {
 	myth_fini_ex_body();
 }
 
-/*
-   Function: myth_exit_workers_ex
-
-   TODO: description.
-
-   Parameters:
-
-      x - TODO: parameters.
-
-   Returns:
-
-      TODO: return value.
-
-   See Also:
-
-      TODO: see also.
-*/
 void myth_exit_workers_ex(void)
 {
 	myth_notify_workers_exit();
 }
 
-/*
-   Function: myth_ext_exit_workers_ex
-
-   TODO: description.
-
-   Parameters:
-
-      x - TODO: parameters.
-
-   Returns:
-
-      TODO: return value.
-
-   See Also:
-
-      TODO: see also.
-*/
 void myth_ext_exit_workers_ex(void)
 {
 	myth_exit_workers_ex();
 }
 
-/*
-   Function: myth_worker_start_ex
-
-   TODO: description.
-
-   Parameters:
-
-      x - TODO: parameters.
-
-   Returns:
-
-      TODO: return value.
-
-   See Also:
-
-      TODO: see also.
-*/
 void myth_worker_start_ex(int rank)
 {
 	myth_worker_start_ex_body(rank);
 }
 
-/*
-   Function: myth_startpoint_init_ex
-
-   TODO: description.
-
-   Parameters:
-
-      x - TODO: parameters.
-
-   Returns:
-
-      TODO: return value.
-
-   See Also:
-
-      TODO: see also.
-*/
 void myth_startpoint_init_ex(int rank)
 {
 	myth_startpoint_init_ex_body(rank);
 }
 
-/*
-   Function: myth_startpoint_exit_ex
-
-   TODO: description.
-
-   Parameters:
-
-      x - TODO: parameters.
-
-   Returns:
-
-      TODO: return value.
-
-   See Also:
-
-      TODO: see also.
-*/
 void myth_startpoint_exit_ex(int rank)
 {
 	myth_startpoint_exit_ex_body(rank);
 }
 
-/*
-   Function: myth_get_worker_num
-
-   TODO: description.
-
-   Parameters:
-
-      x - TODO: parameters.
-
-   Returns:
-
-      TODO: return value.
-
-   See Also:
-
-      TODO: see also.
-*/
 int myth_get_worker_num(void)
 {
 	return myth_get_worker_num_body();
 }
 
-/*
-   Function: myth_get_num_workers
-
-   TODO: description.
-
-   Parameters:
-
-      x - TODO: parameters.
-
-   Returns:
-
-      TODO: return value.
-
-   See Also:
-
-      TODO: see also.
-*/
 int myth_get_num_workers(void)
 {
 	return myth_get_num_workers_body();
 }
 
-/*
-   Function: myth_self
-
-   TODO: description.
-
-   Parameters:
-
-      x - TODO: parameters.
-
-   Returns:
-
-      TODO: return value.
-
-   See Also:
-
-      TODO: see also.
-*/
 myth_thread_t myth_self(void)
 {
 	return myth_self_body();
 }
 
-/*
-   Function: myth_create
-
-   TODO: description.
-
-   Parameters:
-
-      x - TODO: parameters.
-
-   Returns:
-
-      TODO: return value.
-
-   See Also:
-
-      TODO: see also.
-*/
 myth_thread_t myth_create(myth_func_t func,void *arg)
 {
-	return myth_create_body(func,arg,0);
+  return myth_create_body(func,arg,0);
 }
 
-/*
-   Function: myth_create_ex
-
-   TODO: description.
-
-   Parameters:
-
-      x - TODO: parameters.
-
-   Returns:
-
-      TODO: return value.
-
-   See Also:
-
-      TODO: see also.
-*/
-myth_thread_t myth_create_ex(myth_func_t func,void *arg,myth_thread_option_t opt)
+myth_thread_t myth_create_ex(myth_func_t func, void *arg, 
+			     myth_thread_attr_t * attr)
 {
-	return myth_create_ex_body(func,arg,opt);
+  return myth_create_ex_body(func, arg, attr);
 }
 
-/*
-   Function: myth_exit
-
-   TODO: description.
-
-   Parameters:
-
-      x - TODO: parameters.
-
-   Returns:
-
-      TODO: return value.
-
-   See Also:
-
-      TODO: see also.
-*/
 void myth_exit(void *ret)
 {
 	myth_exit_body(ret);
 }
 
-/*
-   Function: myth_detach
-
-   TODO: description.
-
-   Parameters:
-
-      x - TODO: parameters.
-
-   Returns:
-
-      TODO: return value.
-
-   See Also:
-
-      TODO: see also.
-*/
 void myth_detach(myth_thread_t th)
 {
 	myth_detach_body(th);
 }
 
-/*
-   Function: myth_yield
-
-   TODO: description.
-
-   Parameters:
-
-      x - TODO: parameters.
-
-   Returns:
-
-      TODO: return value.
-
-   See Also:
-
-      TODO: see also.
-*/
 void myth_yield(int force_worksteal)
 {
 	myth_yield_body(force_worksteal);
 }
 
-/*
-   Function: myth_yield2
-
-   TODO: description.
-
-   Parameters:
-
-      x - TODO: parameters.
-
-   Returns:
-
-      TODO: return value.
-
-   See Also:
-
-      TODO: see also.
-*/
 void myth_yield2(void)
 {
 	myth_yield2_body();
 }
 
-/*
-   Function: myth_join
-
-   TODO: description.
-
-   Parameters:
-
-      x - TODO: parameters.
-
-   Returns:
-
-      TODO: return value.
-
-   See Also:
-
-      TODO: see also.
-*/
 void myth_join(myth_thread_t th,void **result)
 {
 	myth_join_body(th,result);
@@ -473,111 +134,26 @@ void myth_testcancel(void)
 	myth_testcancel_body();
 }
 
-/*
-   Function: myth_key_create
-
-   TODO: description.
-
-   Parameters:
-
-      x - TODO: parameters.
-
-   Returns:
-
-      TODO: return value.
-
-   See Also:
-
-      TODO: see also.
-*/
 int myth_key_create(myth_key_t *__key,void (*__destr_function) (void *))
 {
 	return myth_key_create_body(__key,__destr_function);
 }
 
-/*
-   Function: myth_key_delete
-
-   TODO: description.
-
-   Parameters:
-
-      x - TODO: parameters.
-
-   Returns:
-
-      TODO: return value.
-
-   See Also:
-
-      TODO: see also.
-*/
 int myth_key_delete(myth_key_t __key)
 {
 	return myth_key_delete_body(__key);
 }
 
-/*
-   Function: myth_getspecific
-
-   TODO: description.
-
-   Parameters:
-
-      x - TODO: parameters.
-
-   Returns:
-
-      TODO: return value.
-
-   See Also:
-
-      TODO: see also.
-*/
 void *myth_getspecific(myth_key_t __key)
 {
 	return myth_getspecific_body(__key);
 }
 
-/*
-   Function: myth_setspecific
-
-   TODO: description.
-
-   Parameters:
-
-      x - TODO: parameters.
-
-   Returns:
-
-      TODO: return value.
-
-   See Also:
-
-      TODO: see also.
-*/
 int myth_setspecific(myth_key_t __key,void *__pointer)
 {
 	return myth_setspecific_body(__key,__pointer);
 }
 
-/*
-   Function: myth_set_def_stack_size
-
-   TODO: description.
-
-   Parameters:
-
-      x - TODO: parameters.
-
-   Returns:
-
-      TODO: return value.
-
-   See Also:
-
-      TODO: see also.
-*/
 void myth_set_def_stack_size(size_t newsize)
 {
 	myth_set_def_stack_size_body(newsize);
@@ -643,525 +219,138 @@ void myth_sched_prof_pause(void)
 #endif
 }*/
 
-/*
-   Function: myth_barrier_create
-
-   TODO: description.
-
-   Parameters:
-
-      x - TODO: parameters.
-
-   Returns:
-
-      TODO: return value.
-
-   See Also:
-
-      TODO: see also.
-*/
-myth_barrier_t myth_barrier_create(int nthreads)
+int myth_mutex_init(myth_mutex_t * mutex, const myth_mutexattr_t * attr)
 {
-	return myth_barrier_create_body(nthreads);
+  return myth_mutex_init_body(mutex, attr);
 }
 
-/*
-   Function: myth_barrier_wait
-
-   TODO: description.
-
-   Parameters:
-
-      x - TODO: parameters.
-
-   Returns:
-
-      TODO: return value.
-
-   See Also:
-
-      TODO: see also.
-*/
-int myth_barrier_wait(myth_barrier_t bar)
+int myth_mutex_destroy(myth_mutex_t * mutex)
 {
-	return myth_barrier_wait_body(bar);
+  return myth_mutex_destroy_body(mutex);
 }
 
-/*
-   Function: myth_barrier_destroy
-
-   TODO: description.
-
-   Parameters:
-
-      x - TODO: parameters.
-
-   Returns:
-
-      TODO: return value.
-
-   See Also:
-
-      TODO: see also.
-*/
-int myth_barrier_destroy(myth_barrier_t bar)
+int myth_mutex_trylock(myth_mutex_t * mutex)
 {
-	return myth_barrier_destroy_body(bar);
+  return myth_mutex_trylock_body(mutex);
+}
+
+int myth_mutex_lock(myth_mutex_t * mutex)
+{
+  return myth_mutex_lock_body(mutex);
+}
+
+int myth_mutex_unlock(myth_mutex_t * mutex)
+{
+  return myth_mutex_unlock_body(mutex);
+}
+
+int myth_cond_init(myth_cond_t * cond, const myth_condattr_t * attr)
+{
+  return myth_cond_init_body(cond, attr);
+}
+
+int myth_cond_destroy(myth_cond_t * cond)
+{
+  return myth_cond_destroy_body(cond);
+}
+
+int myth_cond_signal(myth_cond_t * cond)
+{
+  return myth_cond_signal_body(cond);
+}
+
+int myth_cond_broadcast(myth_cond_t * cond)
+{
+  return myth_cond_broadcast_body(cond);
+}
+
+int myth_cond_wait(myth_cond_t * cond, myth_mutex_t * mutex)
+{
+  return myth_cond_wait_body(cond, mutex);
+}
+
+int myth_barrier_init(myth_barrier_t * barrier,
+		      const myth_barrierattr_t * attr,
+		      unsigned int nthreads)
+{
+  return myth_barrier_init_body(barrier, attr, nthreads);
+}
+
+int myth_barrier_destroy(myth_barrier_t * barrier)
+{
+  return myth_barrier_destroy_body(barrier);
+}
+
+int myth_barrier_wait(myth_barrier_t * barrier)
+{
+  return myth_barrier_wait_body(barrier);
 }
 
 //join counter:Implementation is not complete, not recommended for use
-myth_jc_t myth_jc_create(int val)
+int myth_join_counter_init(myth_join_counter_t * jc, 
+			   const myth_join_counterattr_t * attr, int val)
 {
-	return myth_jc_create_body(val);
+  return myth_join_counter_init_body(jc, attr, val);
 }
 
-void myth_jc_wait(myth_jc_t jc)
+int myth_join_counter_wait(myth_join_counter_t * jc)
 {
-	myth_jc_wait_body(jc);
+  return myth_join_counter_wait_body(jc);
 }
 
-void myth_jc_dec(myth_jc_t jc)
+int myth_join_counter_dec(myth_join_counter_t * jc)
 {
-	myth_jc_dec_body(jc);
+  return myth_join_counter_dec_body(jc);
 }
 
-/*
-   Function: myth_felock_create
-
-   TODO: description.
-
-   Parameters:
-
-      x - TODO: parameters.
-
-   Returns:
-
-      TODO: return value.
-
-   See Also:
-
-      TODO: see also.
-*/
-myth_felock_t myth_felock_create(void)
+/* felock */
+int myth_felock_init(myth_felock_t * felock, const myth_felockattr_t * attr)
 {
-	return myth_felock_create_body();
+  return myth_felock_init_body(felock, attr);
 }
 
-/*
-   Function: myth_felock_destroy
-
-   TODO: description.
-
-   Parameters:
-
-      x - TODO: parameters.
-
-   Returns:
-
-      TODO: return value.
-
-   See Also:
-
-      TODO: see also.
-*/
-int myth_felock_destroy(myth_felock_t fe)
+int myth_felock_destroy(myth_felock_t * felock)
 {
-	return myth_felock_destroy_body(fe);
+  return myth_felock_destroy_body(felock);
 }
 
-/*
-   Function: myth_felock_lock
-
-   TODO: description.
-
-   Parameters:
-
-      x - TODO: parameters.
-
-   Returns:
-
-      TODO: return value.
-
-   See Also:
-
-      TODO: see also.
-*/
-int myth_felock_lock(myth_felock_t fe)
+int myth_felock_lock(myth_felock_t * felock)
 {
-	return myth_felock_lock_body(fe);
+  return myth_felock_lock_body(felock);
 }
 
-/*
-   Function: myth_felock_wait_lock
-
-   TODO: description.
-
-   Parameters:
-
-      x - TODO: parameters.
-
-   Returns:
-
-      TODO: return value.
-
-   See Also:
-
-      TODO: see also.
-*/
-int myth_felock_wait_lock(myth_felock_t fe,int val)
+int myth_felock_wait_lock(myth_felock_t * felock, int val)
 {
-	return myth_felock_wait_lock_body(fe,val);
+  return myth_felock_wait_lock_body(felock, val);
 }
 
-/*
-   Function: myth_felock_unlock
-
-   TODO: description.
-
-   Parameters:
-
-      x - TODO: parameters.
-
-   Returns:
-
-      TODO: return value.
-
-   See Also:
-
-      TODO: see also.
-*/
-int myth_felock_unlock(myth_felock_t fe)
+int myth_felock_unlock(myth_felock_t * felock)
 {
-	return myth_felock_unlock_body(fe);
+  return myth_felock_unlock_body(felock);
 }
 
-/*
-   Function: myth_felock_status
-
-   TODO: description.
-
-   Parameters:
-
-      x - TODO: parameters.
-
-   Returns:
-
-      TODO: return value.
-
-   See Also:
-
-      TODO: see also.
-*/
-int myth_felock_status(myth_felock_t fe)
+int myth_felock_status(myth_felock_t * felock)
 {
-	return myth_felock_status_body(fe);
+  return myth_felock_status_body(felock);
 }
 
-/*
-   Function: myth_felock_set_unlock
-
-   TODO: description.
-
-   Parameters:
-
-      x - TODO: parameters.
-
-   Returns:
-
-      TODO: return value.
-
-   See Also:
-
-      TODO: see also.
-*/
-int myth_felock_set_unlock(myth_felock_t fe,int val)
+int myth_felock_set_unlock(myth_felock_t * felock, int val)
 {
-	return myth_felock_set_unlock_body(fe,val);
+  return myth_felock_set_unlock_body(felock, val);
 }
 
-/*
-   Function: myth_mutex_create
-
-   TODO: description.
-
-   Parameters:
-
-      x - TODO: parameters.
-
-   Returns:
-
-      TODO: return value.
-
-   See Also:
-
-      TODO: see also.
-*/
-myth_mutex_t myth_mutex_create(void)
-{
-	return myth_mutex_create_body();
-}
-
-/*
-   Function: myth_mutex_destroy
-
-   TODO: description.
-
-   Parameters:
-
-      x - TODO: parameters.
-
-   Returns:
-
-      TODO: return value.
-
-   See Also:
-
-      TODO: see also.
-*/
-void myth_mutex_destroy(myth_mutex_t mtx)
-{
-	myth_mutex_destroy_body(mtx);
-}
-
-/*
-   Function: myth_mutex_trylock
-
-   TODO: description.
-
-   Parameters:
-
-      x - TODO: parameters.
-
-   Returns:
-
-      TODO: return value.
-
-   See Also:
-
-      TODO: see also.
-*/
-int myth_mutex_trylock(myth_mutex_t mtx)
-{
-	return myth_mutex_trylock_body(mtx);
-}
-
-/*
-   Function: myth_mutex_lock
-
-   TODO: description.
-
-   Parameters:
-
-      x - TODO: parameters.
-
-   Returns:
-
-      TODO: return value.
-
-   See Also:
-
-      TODO: see also.
-*/
-void myth_mutex_lock(myth_mutex_t mtx)
-{
-	myth_mutex_lock_body(mtx);
-}
-
-/*
-   Function: myth_mutex_unlock
-
-   TODO: description.
-
-   Parameters:
-
-      x - TODO: parameters.
-
-   Returns:
-
-      TODO: return value.
-
-   See Also:
-
-      TODO: see also.
-*/
-void myth_mutex_unlock(myth_mutex_t mtx)
-{
-	myth_mutex_unlock_body(mtx);
-}
-
-/*
-   Function: myth_cond_create
-
-   TODO: description.
-
-   Parameters:
-
-      x - TODO: parameters.
-
-   Returns:
-
-      TODO: return value.
-
-   See Also:
-
-      TODO: see also.
-*/
-myth_cond_t myth_cond_create(void)
-{
-	return myth_cond_create_body();
-}
-
-/*
-   Function: myth_cond_destroy
-
-   TODO: description.
-
-   Parameters:
-
-      x - TODO: parameters.
-
-   Returns:
-
-      TODO: return value.
-
-   See Also:
-
-      TODO: see also.
-*/
-void myth_cond_destroy(myth_cond_t c)
-{
-	myth_cond_destroy_body(c);
-}
-
-/*
-   Function: myth_cond_signal
-
-   TODO: description.
-
-   Parameters:
-
-      x - TODO: parameters.
-
-   Returns:
-
-      TODO: return value.
-
-   See Also:
-
-      TODO: see also.
-*/
-void myth_cond_signal(myth_cond_t c)
-{
-	myth_cond_signal_body(c);
-}
-
-/*
-   Function: myth_cond_broadcast
-
-   TODO: description.
-
-   Parameters:
-
-      x - TODO: parameters.
-
-   Returns:
-
-      TODO: return value.
-
-   See Also:
-
-      TODO: see also.
-*/
-void myth_cond_broadcast(myth_cond_t c)
-{
-	myth_cond_broadcast_body(c);
-}
-
-/*
-   Function: myth_cond_wait
-
-   TODO: description.
-
-   Parameters:
-
-      x - TODO: parameters.
-
-   Returns:
-
-      TODO: return value.
-
-   See Also:
-
-      TODO: see also.
-*/
-void myth_cond_wait (myth_cond_t c,myth_mutex_t mtx)
-{
-	myth_cond_wait_body(c,mtx);
-}
-
-/*
-   Function: myth_custom_data_size
-
-   TODO: description.
-
-   Parameters:
-
-      x - TODO: parameters.
-
-   Returns:
-
-      TODO: return value.
-
-   See Also:
-
-      TODO: see also.
-*/
 size_t myth_wsapi_get_hint_size(myth_thread_t th)
 {
 	if (th==NULL)th=myth_self();
 	return th->custom_data_size;
 }
 
-/*
-   Function: myth_custom_data_ptr
-
-   TODO: description.
-
-   Parameters:
-
-      x - TODO: parameters.
-
-   Returns:
-
-      TODO: return value.
-
-   See Also:
-
-      TODO: see also.
-*/
 void *myth_wsapi_get_hint_ptr(myth_thread_t th)
 {
 	if (th==NULL)th=myth_self();
 	return th->custom_data_ptr;
 }
 
-/*
-   Function: myth_set_custom_data
-
-   TODO: description.
-
-   Parameters:
-
-      x - TODO: parameters.
-
-   Returns:
-
-      TODO: return value.
-
-   See Also:
-
-      TODO: see also.
-*/
 void myth_wsapi_set_hint(myth_thread_t th,void **data,size_t *size)
 {
 	if (th==NULL)th=myth_self();
@@ -1170,45 +359,11 @@ void myth_wsapi_set_hint(myth_thread_t th,void **data,size_t *size)
 	th->custom_data_ptr=newdata;th->custom_data_size=newsize;
 }
 
-/*
-   Function: myth_wsapi_rand
-
-   TODO: description.
-
-   Parameters:
-
-      x - TODO: parameters.
-
-   Returns:
-
-      TODO: return value.
-
-   See Also:
-
-      TODO: see also.
-*/
 int myth_wsapi_rand(void)
 {
 	return myth_random(0,myth_get_num_workers());
 }
 
-/*
-   Function: myth_wsapi_randarr
-
-   TODO: description.
-
-   Parameters:
-
-      x - TODO: parameters.
-
-   Returns:
-
-      TODO: return value.
-
-   See Also:
-
-      TODO: see also.
-*/
 void myth_wsapi_randarr(int *ret,int n)
 {
 	int i,j;
@@ -1228,23 +383,6 @@ void myth_wsapi_randarr(int *ret,int n)
 	}
 }
 
-/*
-   Function: myth_wsapi_runqueue_take_ex
-
-   TODO: description.
-
-   Parameters:
-
-      x - TODO: parameters.
-
-   Returns:
-
-      TODO: return value.
-
-   See Also:
-
-      TODO: see also.
-*/
 myth_thread_t myth_wsapi_runqueue_take(int victim,myth_wsapi_decidefn_t decidefn,void *udata)
 {
 	myth_thread_queue_t q;
@@ -1307,23 +445,6 @@ myth_thread_t myth_wsapi_runqueue_take(int victim,myth_wsapi_decidefn_t decidefn
 }
 
 #if 1
-/*
-   Function: myth_wsapi_runqueue_peek
-
-   TODO: description.
-
-   Parameters:
-
-      x - TODO: parameters.
-
-   Returns:
-
-      TODO: return value.
-
-   See Also:
-
-      TODO: see also.
-*/
 myth_thread_t myth_wsapi_runqueue_peek(int victim,void *ptr,size_t *psize)
 {
 	myth_thread_queue_t q;

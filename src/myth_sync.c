@@ -3,7 +3,7 @@
 #include "myth_desc.h"
 #include "myth_worker.h"
 #include "myth_sync.h"
-#include "myth_sync_proto.h"
+//#include "myth_sync_proto.h"
 
 #include "myth_worker_func.h"
 #include "myth_sync_func.h"

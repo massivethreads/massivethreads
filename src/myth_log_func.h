@@ -368,33 +368,44 @@ static inline void myth_log_flush_body(void)
 }
 
 #else
-static inline void myth_log_add_ws(myth_running_env_t env,myth_log_type_t type,int ws_victim)
-{
+static inline void myth_log_add_ws(myth_running_env_t env,
+				   myth_log_type_t type,
+				   int ws_victim) {
+  (void)env;
+  (void)type;
+  (void)ws_victim;
 }
-static inline void myth_log_add(myth_running_env_t env,myth_log_type_t type)
-{
+static inline void myth_log_add(myth_running_env_t env,
+				myth_log_type_t type) {
+  (void)env;
+  (void)type;
 }
-static inline void myth_log_add_context_switch(myth_running_env_t env,myth_thread_t th)
-{
+static inline void myth_log_add_context_switch(myth_running_env_t env, 
+					       myth_thread_t th) {
+  (void)env;
+  (void)th;
+}
 
-}
 static inline void myth_log_init(void)
 {
 }
 static inline void myth_log_fini(void)
 {
 }
-static inline void myth_log_worker_init(myth_running_env_t env)
-{
+static inline void myth_log_worker_init(myth_running_env_t env) {
+  (void)env;
 }
-static inline void myth_log_worker_fini(myth_running_env_t env)
-{
+static inline void myth_log_worker_fini(myth_running_env_t env) {
+  (void)env;
 }
-static inline void myth_log_annotate_thread_body(myth_thread_t th,char *name)
-{
+static inline void myth_log_annotate_thread_body(myth_thread_t th, char *name) {
+  (void)th;
+  (void)name;
 }
-static inline void myth_log_get_thread_annotation_body(myth_thread_t th,char *name)
-{
+static inline void myth_log_get_thread_annotation_body(myth_thread_t th, 
+						       char *name) {
+  (void)th;
+  (void)name;
 }
 static inline void myth_log_start_body(void)
 {

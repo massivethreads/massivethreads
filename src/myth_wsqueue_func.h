@@ -7,8 +7,12 @@
 #include "myth_wsqueue_proto.h"
 
 //Initialize thread-local data
-static inline void myth_queue_init_thread_data(myth_queue_data_t th){}
-static inline void myth_queue_fini_thread_data(myth_queue_data_t th){}
+static inline void myth_queue_init_thread_data(myth_queue_data_t th){
+  (void)th;
+}
+static inline void myth_queue_fini_thread_data(myth_queue_data_t th){
+  (void)th;
+}
 
 //critical section for signal
 static inline void myth_queue_enter_operation(myth_thread_queue_t q)
@@ -17,9 +21,13 @@ static inline void myth_queue_enter_operation(myth_thread_queue_t q)
 	assert(q->op_flag==0);
 	q->op_flag=1;
 	myth_wsqueue_wbarrier();
+#else
+	(void)q;
 #endif
 #ifdef USE_THREAD_CS
 	real_pthread_mutex_lock(&q->mtx);
+#else
+	(void)q;
 #endif
 }
 
@@ -29,9 +37,13 @@ static inline void myth_queue_exit_operation(myth_thread_queue_t q)
 	assert(q->op_flag==1);
 	myth_wsqueue_wbarrier();
 	q->op_flag=0;
+#else
+	(void)q;
 #endif
 #ifdef USE_THREAD_CS
 	real_pthread_mutex_unlock(&q->mtx);
+#else
+	(void)q;
 #endif
 }
 
@@ -40,6 +52,8 @@ static inline int myth_queue_is_operating(myth_thread_queue_t q)
 	int ret=0;
 #ifdef USE_SIGNAL_CS
 	ret=ret && q->op_flag;
+#else
+	(void)q;
 #endif
 	return ret;
 }

@@ -356,6 +356,7 @@ static inline void *myth_malloc(size_t size)
 }
 static inline void myth_free(void *ptr,size_t size)
 {
+  (void)size;
 	real_free(ptr);
 }
 static inline void *myth_realloc(void *ptr,size_t size)

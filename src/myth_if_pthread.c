@@ -31,8 +31,10 @@ pthread_t pthread_self(void)
 	return (pthread_t)myth_self_body();
 }
 
-int pthread_create(pthread_t *pth,const pthread_attr_t * attr,void *(*func)(void*),void *args)
+int pthread_create(pthread_t *pth, const pthread_attr_t * attr, 
+		   void *(*func)(void*),void *args)
 {
+  (void)attr;
 	myth_thread_t mt;
 	mt=myth_create_body(func,args,0);
 	*pth=(pthread_t)mt;
@@ -49,7 +51,7 @@ void pthread_exit(void *ret)
 {
 	myth_exit_body(ret);
 	//To avoid warning, this code is unreachable
-	while (1);
+	while (1) { }
 }
 
 int pthread_detach (pthread_t th)
@@ -98,175 +100,100 @@ int pthread_setspecific (pthread_key_t key,const void *ptr)
 	return myth_setspecific_body((myth_key_t)key,(void*)ptr);
 }
 
-//TODO:these functions are too linux-dependent, need to make more portable
-
-int pthread_barrier_init (pthread_barrier_t *barrier,const pthread_barrierattr_t *attr, unsigned int count)
-{
-	*((myth_barrier_t*)barrier)=myth_barrier_create_body(count);
-	return 0;
-}
-
-/* Destroy a previously dynamically initialized barrier BARRIER.  */
-int pthread_barrier_destroy (pthread_barrier_t *barrier)
-{
-	return myth_barrier_destroy_body(*((myth_barrier_t*)barrier));
-}
-
-/* Wait on barrier BARRIER.  */
-int pthread_barrier_wait (pthread_barrier_t *barrier)
-{
-	return myth_barrier_wait_body(*((myth_barrier_t*)barrier));
-}
+/* ---------- pthread_mutex ---------- */
 
 static inline void handle_mutex_initializer(pthread_mutex_t *mtx)
 {
 #ifdef MYTH_SUPPORT_MUTEX_INITIALIZER
-  //#ifdef MYTH_UNSAFE_MUTEX_INITIALIZER
-	myth_mutex_t *m=(myth_mutex_t*)&(mtx->__size[0]);
-#ifdef MYTH_UNSAFE_MUTEX_INITIALIZER
-	if (*m)return;
-#else
-	static const pthread_mutex_t s_mtx_init=PTHREAD_MUTEX_INITIALIZER;
-	if (mtx->data.lock!=s_mtx_init.data.lock)return;
-	if (mtx->data.count!=s_mtx_init.data.count)return;
-	if (mtx->data.owner!=s_mtx_init.data.owner)return;
-	if (mtx->data.nusers!=s_mtx_init.data.nusers)return;
-	//if (mtx->data.kind!=s_mtx_init.data.kind)return;
-	if (mtx->data.spins!=s_mtx_init.data.spins)return;
-	if (mtx->data.list.next!=s_mtx_init.data.list.next)return;
-	if (mtx->data.list.prev!=s_mtx_init.data.list.prev)return;
-#endif
-	//real_pthread_mutex_init(mtx,NULL);
-	*m=myth_mutex_create_body();
+  pthread_mutex_t m = PTHREAD_MUTEX_INITIALIZER;
+  if (memcmp(&m, mtx, sizeof(pthread_mutex_t)) == 0) {
+    /* mtx appears to have been initialized by PTHREAD_MUTEX_INITIALIZER */
+    pthread_mutex_init(mtx, 0);
+  }
 #endif
 }
 
-int pthread_mutex_init (pthread_mutex_t *mutex,
-			       const pthread_mutexattr_t *attr)
-{
-	myth_mutex_t *mtx=(myth_mutex_t*)&(mutex->__size[0]);
-	*mtx=myth_mutex_create_body();
-	return 0;
+int pthread_mutex_init(pthread_mutex_t *mutex,
+		       const pthread_mutexattr_t *attr) {
+  assert(sizeof(myth_mutex_t) <= sizeof(pthread_mutex_t));
+  assert(sizeof(myth_mutexattr_t) <= sizeof(pthread_mutexattr_t));
+  return myth_mutex_init_body((myth_mutex_t *)mutex, 
+			      (const myth_mutexattr_t *)attr);
 }
 
-int pthread_mutex_destroy (pthread_mutex_t *mutex)
-{
-	handle_mutex_initializer(mutex);
-	myth_mutex_t *mtx=(myth_mutex_t*)&(mutex->__size[0]);
-	myth_mutex_destroy_body(*mtx);
-	return 0;
+int pthread_mutex_destroy(pthread_mutex_t *mutex) {
+  assert(sizeof(myth_mutex_t) <= sizeof(pthread_mutex_t));
+  handle_mutex_initializer(mutex);
+  return myth_mutex_destroy_body((myth_mutex_t *)mutex);
 }
 
-int pthread_mutex_trylock (pthread_mutex_t *mutex)
-{
-	handle_mutex_initializer(mutex);
-	myth_mutex_t *mtx=(myth_mutex_t*)&(mutex->__size[0]);
-	return myth_mutex_trylock_body(*mtx)?0:EBUSY;
+int pthread_mutex_trylock(pthread_mutex_t *mutex) {
+  assert(sizeof(myth_mutex_t) <= sizeof(pthread_mutex_t));
+  handle_mutex_initializer(mutex);
+  return myth_mutex_trylock_body((myth_mutex_t *)mutex);
 }
 
-int pthread_mutex_lock (pthread_mutex_t *mutex)
-{
-	handle_mutex_initializer(mutex);
-	myth_mutex_t *mtx=(myth_mutex_t*)&(mutex->__size[0]);
-	myth_mutex_lock_body(*mtx);
-	return 0;
+int pthread_mutex_lock(pthread_mutex_t *mutex) {
+  assert(sizeof(myth_mutex_t) <= sizeof(pthread_mutex_t));
+  handle_mutex_initializer(mutex);
+  return myth_mutex_lock_body((myth_mutex_t *)mutex);
 }
 
-int pthread_mutex_unlock (pthread_mutex_t *mutex)
-{
-	handle_mutex_initializer(mutex);
-	myth_mutex_t *mtx=(myth_mutex_t*)&(mutex->__size[0]);
-	myth_mutex_unlock_body(*mtx);
-	return 0;
-}
-
-//Previously needed for Chapel Tasking Layer. No longer needed
-#if 0
-int pthread_felock_init (pthread_mutex_t *mutex,
-			       const pthread_mutexattr_t *mutexattr)
-{
-	myth_felock_t *mtx=(myth_felock_t*)&(mutex->__size[0]);
-	*mtx=myth_felock_create_body();
-	return 0;
-}
-
-int pthread_felock_destroy (pthread_mutex_t *mutex)
-{
-	myth_felock_t *mtx=(myth_felock_t*)&(mutex->__size[0]);
-	myth_felock_destroy_body(*mtx);
-	return 0;
-}
-
-int pthread_felock_lock (pthread_mutex_t *mutex)
-{
-	myth_felock_t *mtx=(myth_felock_t*)&(mutex->__size[0]);
-	myth_felock_lock_body(*mtx);
-	return 0;
-}
-
-int pthread_felock_wait_lock (pthread_mutex_t *mutex,int val)
-{
-	myth_felock_t *mtx=(myth_felock_t*)&(mutex->__size[0]);
-	myth_felock_wait_lock_body(*mtx,val);
-	return 0;
-}
-
-int pthread_felock_unlock (pthread_mutex_t *mutex)
-{
-	myth_felock_t *mtx=(myth_felock_t*)&(mutex->__size[0]);
-	myth_felock_unlock_body(*mtx);
-	return 0;
-}
-
-int pthread_felock_set_unlock (pthread_mutex_t *mutex,int val)
-{
-	myth_felock_t *mtx=(myth_felock_t*)&(mutex->__size[0]);
-	myth_felock_set_unlock_body(*mtx,val);
-	return 0;
-}
-
-int pthread_felock_status (pthread_mutex_t *mutex)
-{
-	myth_felock_t *mtx=(myth_felock_t*)&(mutex->__size[0]);
-	return myth_felock_status_body(*mtx);
-}
-#endif
-
-int pthread_cond_init (pthread_cond_t * c,
-			      const pthread_condattr_t *cond_attr)
-{
-	myth_cond_t *cond=(myth_cond_t*)&(c->__size[0]);
-	*cond=myth_cond_create_body();
-	return 0;
+int pthread_mutex_unlock (pthread_mutex_t *mutex) {
+  assert(sizeof(myth_mutex_t) <= sizeof(pthread_mutex_t));
+  handle_mutex_initializer(mutex);
+  return myth_mutex_unlock_body((myth_mutex_t *)mutex);
 }
 
 
-int pthread_cond_destroy (pthread_cond_t *c)
-{
-	myth_cond_t *cond=(myth_cond_t*)&(c->__size[0]);
-	myth_cond_destroy_body(*cond);
-	return 0;
+int pthread_cond_init (pthread_cond_t * cond,
+		       const pthread_condattr_t *cond_attr) {
+  assert(sizeof(myth_cond_t) <= sizeof(pthread_cond_t));
+  assert(sizeof(myth_condattr_t) <= sizeof(pthread_condattr_t));
+  return myth_cond_init_body((myth_cond_t *)cond, 
+			     (const myth_condattr_t *)cond_attr);
 }
 
-int pthread_cond_signal (pthread_cond_t *c)
-{
-	myth_cond_t *cond=(myth_cond_t*)&(c->__size[0]);
-	myth_cond_signal_body(*cond);
-	return 0;
+int pthread_cond_destroy(pthread_cond_t *cond) {
+  assert(sizeof(myth_cond_t) <= sizeof(pthread_cond_t));
+  return myth_cond_destroy_body((myth_cond_t *)cond);
 }
 
-int pthread_cond_broadcast (pthread_cond_t *c)
+int pthread_cond_signal(pthread_cond_t * cond)
 {
-	myth_cond_t *cond=(myth_cond_t*)&(c->__size[0]);
-	myth_cond_broadcast_body(*cond);
-	return 0;
+  assert(sizeof(myth_cond_t) <= sizeof(pthread_cond_t));
+  return myth_cond_signal_body((myth_cond_t *)cond);
 }
 
-int pthread_cond_wait (pthread_cond_t * c,
-			      pthread_mutex_t *mutex)
-{
-	myth_cond_t *cond=(myth_cond_t*)&(c->__size[0]);
-	myth_mutex_t *mtx=(myth_mutex_t*)&(mutex->__size[0]);
-	myth_cond_wait_body(*cond,*mtx);
-	return 0;
+int pthread_cond_broadcast(pthread_cond_t * cond) {
+  assert(sizeof(myth_cond_t) <= sizeof(pthread_cond_t));
+  return myth_cond_broadcast_body((myth_cond_t *)cond);
 }
+
+int pthread_cond_wait(pthread_cond_t * cond, pthread_mutex_t * mutex) {
+  assert(sizeof(myth_cond_t) <= sizeof(pthread_cond_t));
+  assert(sizeof(myth_mutex_t) <= sizeof(pthread_mutex_t));
+  return myth_cond_wait_body((myth_cond_t *)cond, (myth_mutex_t *)mutex);
+}
+
+int pthread_barrier_init(pthread_barrier_t *barrier,
+			 const pthread_barrierattr_t *attr, 
+			 unsigned int count) {
+  assert(sizeof(myth_barrier_t) <= sizeof(pthread_barrier_t));
+  assert(sizeof(myth_barrierattr_t) <= sizeof(pthread_barrierattr_t));
+  return myth_barrier_init_body((myth_barrier_t *)barrier,
+				(myth_barrierattr_t *)attr,
+				count);
+}
+
+/* Destroy a previously dynamically initialized barrier BARRIER.  */
+int pthread_barrier_destroy(pthread_barrier_t *barrier) {
+  assert(sizeof(myth_barrier_t) <= sizeof(pthread_barrier_t));
+  return myth_barrier_destroy_body((myth_barrier_t *)barrier);
+}
+
+/* Wait on barrier BARRIER.  */
+int pthread_barrier_wait (pthread_barrier_t *barrier) {
+  return myth_barrier_wait_body((myth_barrier_t*)barrier);
+}
+
