@@ -1,3 +1,7 @@
+/* 
+ * myth_malloc_wrapper.h
+ */
+#pragma once
 #ifndef MYTH_MALLOC_WRAPPER_H_
 #define MYTH_MALLOC_WRAPPER_H_
 

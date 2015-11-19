@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <myth.h>
+#include <myth/myth.h>
 
 typedef struct {
   long ninc_per_thread;
@@ -44,7 +44,7 @@ void * f(void * arg_) {
 myth_mutex_t m[1];
 
 int main(int argc, char ** argv) {
-  int nthreads         = (argc > 1 ? atoi(argv[1]) : 4);
+  long nthreads        = (argc > 1 ? atol(argv[1]) : 100);
   long ninc_per_thread = (argc > 2 ? atol(argv[2]) : 10000);
 
   myth_mutex_init(m, 0);
@@ -58,7 +58,8 @@ int main(int argc, char ** argv) {
     printf("OK\n");
     return 0;
   } else {
-    printf("NG\n");
+    printf("NG: p = %ld != nthreads * ninc_per_thread = %ld\n",
+	   arg->p[0], nthreads * ninc_per_thread);
     return 1;
   }
 }

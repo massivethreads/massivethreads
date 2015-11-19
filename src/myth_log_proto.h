@@ -4,7 +4,7 @@
  *  Created on: 2010/12/08
  *      Author: jnakashima
  */
-
+#pragma once
 #ifndef MYTH_LOG_PROTO_H_
 #define MYTH_LOG_PROTO_H_
 

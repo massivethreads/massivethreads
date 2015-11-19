@@ -1,3 +1,7 @@
+/* 
+ * myth_wsqueue_proto.h
+ */
+#pragma once
 #ifndef MYTH_WSQUEUE_PROTO_H_
 #define MYTH_WSQUEUE_PROTO_H_
 
@@ -11,8 +15,10 @@ static inline struct myth_thread* myth_queue_take(myth_thread_queue_t q);
 static inline int myth_queue_trypass(myth_thread_queue_t q,struct myth_thread* th);
 static inline void myth_queue_pass(myth_thread_queue_t q,struct myth_thread* th);
 
+#if 0
 static inline void myth_queue_init_thread_data(myth_queue_data_t th);
 static inline void myth_queue_fini_thread_data(myth_queue_data_t th);
+#endif
 
 static inline int myth_queue_is_operating(myth_thread_queue_t q);
 

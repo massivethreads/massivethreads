@@ -1,9 +1,13 @@
+/* 
+ * myth_eco.h
+ */
+#pragma once
 #ifndef _MYTH_ECO_H_
 #define _MYTH_ECO_H_
 
+#include "myth_desc.h"
 #include "myth_original_lib.h"
 #include "myth_worker.h"
-#include "myth_desc.h"
 #include <linux/futex.h>
 #include <limits.h>
 #include <semaphore.h>

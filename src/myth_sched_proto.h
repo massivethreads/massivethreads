@@ -1,8 +1,13 @@
+/* 
+ * myth_sched_proto.h
+ */
+#pragma once
 #ifndef MYTH_SCHED_PROTO_H_
 #define MYTH_SCHED_PROTO_H_
 
 #include "myth_worker.h"
 #include "myth_desc.h"
+#include "myth_context_func.h"
 
 static inline void myth_env_init(void);
 static inline void myth_env_fini(void);

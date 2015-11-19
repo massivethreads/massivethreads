@@ -1,7 +1,11 @@
+/* 
+ * myth_mem_barrier.h
+ */
+#pragma once
 #ifndef MYTH_MEM_BARRIER_H_
 #define MYTH_MEM_BARRIER_H_
 
-#include "myth_config.h"
+#include "myth/myth_config.h"
 
 //A macro for supressing optimization
 #define myth_loop_barrier() asm volatile("":::"memory")

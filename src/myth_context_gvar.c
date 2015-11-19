@@ -1,4 +1,7 @@
-#include "myth_config.h"
+/* 
+ * myth_context_gvar.h
+ */
+#include "myth/myth_config.h"
 #include "myth_context.h"
 
 #if defined MYTH_CONTEXT_ARCH_UNIVERSAL

@@ -1,20 +1,33 @@
+/* 
+ * myth_sleep_queue_func.h
+ */
+#pragma once
 #ifndef MYTH_SLEEP_QUEUE_FUNC_H_
 #define MYTH_SLEEP_QUEUE_FUNC_H_
 
-#include "myth_desc.h"
-#include "myth_sleep_queue.h"
+#include <assert.h>
+#include "myth/myth_sleep_queue.h"
 
-static inline myth_thread_t load_(volatile myth_thread_t * p) {
-  myth_thread_t q = *p;
+#if MYTH_SLEEP_QUEUE_LOCK
+#include "myth_internal_lock_func.h"
+#endif
+
+#if !MYTH_SLEEP_QUEUE_LOCK
+/* stuff needed for non-blocking version */
+
+static inline myth_sleep_queue_item_t load_(volatile myth_sleep_queue_item_t * p) {
+  myth_sleep_queue_item_t q = *p;
   return q;
 }
 
-static inline void store_(volatile myth_thread_t * p, myth_thread_t t) {
+static inline void store_(volatile myth_sleep_queue_item_t * p, 
+			  myth_sleep_queue_item_t t) {
   *p = t;
 }
 
-static inline int cas_(volatile myth_thread_t * p, 
-		       myth_thread_t old, myth_thread_t val) {
+static inline int cas_(volatile myth_sleep_queue_item_t * p, 
+		       myth_sleep_queue_item_t old, 
+		       myth_sleep_queue_item_t val) {
   return __sync_bool_compare_and_swap(p, old, val);
 } 
 
@@ -35,14 +48,14 @@ static inline myth_queue_dbg_print_first(int x, int _) {
 #endif	/* MYTH_QUEUE_DBG */
 
 /* 1 if p's last bit is set */
-static inline size_t last_bit(myth_thread_t p) {
+static inline size_t last_bit(myth_sleep_queue_item_t p) {
   size_t q = (size_t)p;
   return (q & 1);
 }
 
 /* assuming p's last bit is zero, return p but whose
    last bit is set */
-static inline myth_thread_t set_last_bit(myth_thread_t p) {
+static inline myth_sleep_queue_item_t set_last_bit(myth_sleep_queue_item_t p) {
   assert(last_bit(p) == 0);
   void * q = p;
   return q + 1;
@@ -50,28 +63,67 @@ static inline myth_thread_t set_last_bit(myth_thread_t p) {
 
 /* assuming p's last bit is set, return p but whose
    last bit is cleared */
-static inline myth_thread_t clear_last_bit(myth_thread_t p) {
+static inline myth_sleep_queue_item_t clear_last_bit(myth_sleep_queue_item_t p) {
   assert(last_bit(p));
   void * q = p;
   return q - 1;
 }
+#endif	/* ! MYTH_SLEEP_QUEUE_LOCK */
 
 static inline void myth_sleep_queue_init(myth_sleep_queue_t * q) {
   q->head = q->tail = 0;
+#if MYTH_SLEEP_QUEUE_LOCK
+  myth_internal_lock_init(q->ilock);
+#endif
 }
 
 static inline void myth_sleep_queue_destroy(myth_sleep_queue_t * q) {
   assert(q->head == 0);
   assert(q->tail == 0);
+#if MYTH_SLEEP_QUEUE_LOCK
+  myth_internal_lock_destroy(q->ilock);
+#endif
 }
 
+#if MYTH_SLEEP_QUEUE_LOCK
+
+static inline long myth_sleep_queue_enq(myth_sleep_queue_t * q, 
+					myth_sleep_queue_item_t t) {
+  t->next = 0;
+  myth_internal_lock_lock(q->ilock);
+  myth_sleep_queue_item_t tail = q->tail;
+  if (tail) {
+    tail->next = t;
+  } else {
+    q->head = t;
+  }
+  q->tail = t;
+  myth_internal_lock_unlock(q->ilock);
+  return 0;		/* done */
+}
+
+static inline myth_sleep_queue_item_t myth_sleep_queue_deq(myth_sleep_queue_t * q) {
+  myth_internal_lock_lock(q->ilock);
+  myth_sleep_queue_item_t head = q->head;
+  if (head) {
+    myth_sleep_queue_item_t next = head->next;
+    q->head = next;
+    if (!next) {
+      q->tail = 0;
+    }
+  }
+  myth_internal_lock_unlock(q->ilock);
+  return head;		/* done */
+}
+
+#else  /* MYTH_SLEEP_QUEUE_LOCK */
 /* enqueue an element t to q.  */
 static inline long myth_sleep_queue_enq(myth_sleep_queue_t * q, 
-					myth_thread_t t) {
+					myth_sleep_queue_item_t t) {
   t->next = 0;
   while (1) {
     /* look at tail */
-    myth_thread_t tail = load(&q->tail);
+    myth_sleep_queue_item_t tail = load(&q->tail);
     if (!tail) {
       /* empty. try to let tail point to t */
       if (cas(&q->tail, 0, t)) {
@@ -79,14 +131,14 @@ static inline long myth_sleep_queue_enq(myth_sleep_queue_t * q,
 	   let head also point to t. 
 	   head MUST ALSO BE NULL, but to catch
 	   a bug, we check it is in fact a NULL */
-	myth_thread_t head = q->head;
+	myth_sleep_queue_item_t head = load(&q->head);
 	assert(!head);
-	q->head = t;
+	store(&q->head, t);
 	return 0;		/* done */
       } 
     } else {
       /* not empty */
-      myth_thread_t next = load(&tail->next);
+      myth_sleep_queue_item_t next = load(&tail->next);
       if (last_bit(next)) {
 	/* the last bit of the next field is
 	   set, which means this item just
@@ -124,25 +176,29 @@ static inline long myth_sleep_queue_enq(myth_sleep_queue_t * q,
 	cas(&q->tail, tail, clear_last_bit(next));
 	continue;
       }
-      
       /* advance tail pointer */
       cas(&q->tail, tail, next);
     }
   }
 }
 
-static inline myth_thread_t myth_sleep_queue_deq(myth_sleep_queue_t * q) {
+static inline myth_sleep_queue_item_t myth_sleep_queue_deq(myth_sleep_queue_t * q) {
   while (1) {
     /* check head pointer */
-    myth_thread_t head = load(&q->head);
+    myth_sleep_queue_item_t head = load(&q->head);
     /* empty */
     if (!head) return 0;
+    if (last_bit(head)) continue;
+    myth_sleep_queue_item_t head_ = set_last_bit(head);
+    if (!cas(&q->head, head, head_)) continue;
+
     /* check if head has been deleted */
-    myth_thread_t next = load(&head->next);
+    myth_sleep_queue_item_t next = load(&head->next);
     if (last_bit(next)) {
       /* yes, advance head pointer. if tail 
 	 points to the same node, advance tail also */
-      cas(&q->head, head, clear_last_bit(next));
+      int x = cas(&q->head, head_, clear_last_bit(next));
+      assert(x);
       cas(&q->tail, head, clear_last_bit(next));
       continue;
     }
@@ -152,11 +208,16 @@ static inline myth_thread_t myth_sleep_queue_deq(myth_sleep_queue_t * q) {
       /* I won. try to swing the head pointer.
 	 enqueuer may have helped this thread by
 	 advancing the head */
-      cas(&q->head, head, next);
+      int x = cas(&q->head, head_, next);
+      assert(x);
       cas(&q->tail, head, next);
       return head;
     }
+    int x = cas(&q->head, head_, head);
+    assert(x);
   }
 }
+
+#endif	/* MYTH_SLEEP_QUEUE_LOCK */
 
 #endif	/* MYTH_SLEEP_QUEUE_FUNC_H_ */

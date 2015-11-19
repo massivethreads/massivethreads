@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <myth.h>
+#include <myth/myth.h>
 
 typedef struct {
   long a;

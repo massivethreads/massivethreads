@@ -1,3 +1,7 @@
+/* 
+ * myth_sync_proto.h
+ */
+#pragma once
 #ifndef MYTH_SYNC_PROTO_H_
 #define MYTH_SYNC_PROTO_H_
 

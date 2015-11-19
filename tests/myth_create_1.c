@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <myth.h>
+#include <myth/myth.h>
 
 void * f(void * x) {
   long y = (long)x;

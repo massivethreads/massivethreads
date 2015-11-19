@@ -1,9 +1,13 @@
+/* 
+ * myth_init.c
+ */
 #include <sys/time.h>
 #include <sched.h>
 
+#include "myth/myth.h"
+
 #include "myth_worker.h"
 #include "myth_worker_proto.h"
-#include "myth_tls.h"
 #include "myth_malloc_wrapper.h"
 
 #include "myth_io.h"
@@ -15,73 +19,71 @@
 
 //Initialize specifying the number of worker threads
 //If specified less than 1, MYTH_WORKER_NUM or the number of CPU cores used instead.
-int myth_init_ex_body(int worker_num, size_t def_stack_size)
-{
-	intptr_t nthreads;
-	myth_init_process_affinity_info();
-	//Load original functions
-	//myth_get_original_funcs();
-	//Decide the number of worker threads.
-	//If environment variable is set, use it. Otherwise use the number of CPU cores.
-	char *env;
-	env=getenv(ENV_MYTH_WORKER_NUM);
-	nthreads=(worker_num>0)?worker_num:-1;
-	if (nthreads<=0 && env){nthreads=atoi(env);}
-	if (nthreads<=0){nthreads=myth_get_cpu_num();}
-	g_worker_thread_num=nthreads;
-	//set default stack size
-	size_t s;
-	env=getenv(ENV_MYTH_DEF_STKSIZE);
-	s=def_stack_size;
-	if (s==0 && env){
-		s=atoi(env);
-	}
-	if (s>0){myth_set_def_stack_size_body(s);}
-	//Initialize logger
-	myth_log_init();
-	//Initialize memory allocators
-	myth_flmalloc_init(nthreads);
-	myth_malloc_wrapper_init(nthreads);
+int myth_init_ex_body(int worker_num, size_t def_stack_size) {
+  intptr_t nthreads;
+  myth_init_process_affinity_info();
+  //Load original functions
+  //myth_get_original_funcs();
+  //Decide the number of worker threads.
+  //If environment variable is set, use it. Otherwise use the number of CPU cores.
+  char *env;
+  env=getenv(ENV_MYTH_WORKER_NUM);
+  nthreads=(worker_num>0)?worker_num:-1;
+  if (nthreads<=0 && env){nthreads=atoi(env);}
+  if (nthreads<=0){nthreads=myth_get_cpu_num();}
+  g_worker_thread_num=nthreads;
+  //set default stack size
+  size_t s;
+  env=getenv(ENV_MYTH_DEF_STKSIZE);
+  s=def_stack_size;
+  if (s==0 && env){
+    s=atoi(env);
+  }
+  if (s>0){myth_set_def_stack_size_body(s);}
+  //Initialize logger
+  myth_log_init();
+  //Initialize memory allocators
+  myth_flmalloc_init(nthreads);
+  myth_malloc_wrapper_init(nthreads);
 #ifdef MYTH_WRAP_SOCKIO
-	//Initialize I/O
-	myth_io_init();
+  //Initialize I/O
+  myth_io_init();
 #endif
-	//Initialize TLS
-	myth_tls_init(nthreads);
-	//Create barrier
-	real_pthread_barrier_init(&g_worker_barrier,NULL,nthreads);
-	//Allocate worker thread descriptors
-	g_envs=myth_malloc(sizeof(myth_running_env)*nthreads);
-	//Initialize TLS for worker thread descriptor
-	myth_env_init();
+  //Initialize TLS
+  myth_tls_init(nthreads);
+  //Create barrier
+  real_pthread_barrier_init(&g_worker_barrier,NULL,nthreads);
+  //Allocate worker thread descriptors
+  g_envs=myth_malloc(sizeof(myth_running_env)*nthreads);
+  //Initialize TLS for worker thread descriptor
+  myth_env_init();
 #ifdef MYTH_ECO_MODE
-	myth_eco_init();
+  myth_eco_init();
 #endif
-	return nthreads;
+  return nthreads;
 }
 
 int g_myth_initialized=0;
 cpu_set_t g_proc_cpuset;
 
 //Initialize
-void myth_init_body(int worker_num,size_t def_stack_size)
-{
-	if (g_myth_initialized){
-		myth_fini_body();
-	}
-	// Backup affinity mask
-	sched_getaffinity(getpid(), sizeof(cpu_set_t), &g_proc_cpuset);
-	assert(g_myth_initialized==0);
-	g_myth_initialized=1;
-	myth_init_ex_body(worker_num,def_stack_size);
-	//Create worker threads
-	intptr_t i;
-	for (i=1;i<g_worker_thread_num;i++){
-		real_pthread_create(&g_envs[i].worker,NULL,myth_worker_thread_fn,(void*)i);
-	}
-	g_envs[0].worker=real_pthread_self();
-	//Initialize each worker threads
-	myth_worker_thread_fn((void*)(intptr_t)0);
+void myth_init_body(int worker_num,size_t def_stack_size) {
+  if (g_myth_initialized){
+    myth_fini_body();
+  }
+  // Backup affinity mask
+  sched_getaffinity(getpid(), sizeof(cpu_set_t), &g_proc_cpuset);
+  assert(g_myth_initialized==0);
+  g_myth_initialized=1;
+  myth_init_ex_body(worker_num,def_stack_size);
+  //Create worker threads
+  intptr_t i;
+  for (i=1;i<g_worker_thread_num;i++){
+    real_pthread_create(&g_envs[i].worker,NULL,myth_worker_thread_fn,(void*)i);
+  }
+  g_envs[0].worker=real_pthread_self();
+  //Initialize each worker threads
+  myth_worker_thread_fn((void*)(intptr_t)0);
 }
 
 void myth_emit_log(FILE *fp_prof_out) {
@@ -324,73 +326,70 @@ void myth_emit_log(FILE *fp_prof_out) {
 #endif
 }
 
-void myth_fini_ex_body(void)
-{
-	//Output Log
-	myth_emit_log(stderr);
-	//Destroy barrier
-	real_pthread_barrier_destroy(&g_worker_barrier);
-	//Unload DLL and functions
-	//myth_free_original_funcs();
-	myth_tls_fini();
+void myth_fini_ex_body(void) {
+  //Output Log
+  myth_emit_log(stderr);
+  //Destroy barrier
+  real_pthread_barrier_destroy(&g_worker_barrier);
+  //Unload DLL and functions
+  //myth_free_original_funcs();
+  myth_tls_fini();
 #ifdef MYTH_WRAP_SOCKIO
-	myth_io_fini();
+  myth_io_fini();
 #endif
-	//Finalize logger
-	myth_log_fini();
-	//Release worker thread descriptors
-	myth_free(g_envs,sizeof(myth_running_env)*g_worker_thread_num);
-	//Release allocator
-	myth_flmalloc_fini();
-	myth_malloc_wrapper_fini();
-	//Release TLS
-	myth_env_fini();
+  //Finalize logger
+  myth_log_fini();
+  //Release worker thread descriptors
+  myth_free(g_envs,sizeof(myth_running_env)*g_worker_thread_num);
+  //Release allocator
+  myth_flmalloc_fini();
+  myth_malloc_wrapper_fini();
+  //Release TLS
+  myth_env_fini();
 }
 
 //Termination
-void myth_fini_body(void)
-{
-	if (!g_myth_initialized)return;
-	//add context switch as a sentinel for emitting logs
-	int i;
-	for (i=0;i<g_worker_thread_num;i++){
-		myth_log_add_context_switch(&g_envs[i],THREAD_PTR_SCHED_TERM);
-	}
-	myth_startpoint_exit_ex_body(0);
-	myth_running_env_t env;
-	int rank;
-	env=myth_get_current_env();
-	rank=env->rank;
-	assert(rank==0);
-	//Wait for other worker threads
-	for (i=1;i<g_worker_thread_num;i++){
-		real_pthread_join(g_envs[i].worker,NULL);
-	}
-	myth_fini_ex_body();
-	// Restore affinity
-	sched_setaffinity(getpid(), sizeof(cpu_set_t), &g_proc_cpuset);
-	g_myth_initialized=0;
+void myth_fini_body(void) {
+  if (!g_myth_initialized)return;
+  //add context switch as a sentinel for emitting logs
+  int i;
+  for (i=0;i<g_worker_thread_num;i++){
+    myth_log_add_context_switch(&g_envs[i],THREAD_PTR_SCHED_TERM);
+  }
+  myth_startpoint_exit_ex_body(0);
+  myth_running_env_t env;
+  int rank;
+  env=myth_get_current_env();
+  rank=env->rank;
+  assert(rank==0);
+  //Wait for other worker threads
+  for (i=1;i<g_worker_thread_num;i++){
+    real_pthread_join(g_envs[i].worker,NULL);
+  }
+  myth_fini_ex_body();
+  // Restore affinity
+  sched_setaffinity(getpid(), sizeof(cpu_set_t), &g_proc_cpuset);
+  g_myth_initialized=0;
 }
 
 //Tell all the worker threads to terminate
 //Worker threads initialized by "myth_startpoint_init_ex" is NOT terminated by this function
 //To terminate them, call "myth_startpoint_exit_ex" from the context that "myth_startpoint_init_ex" called
-void myth_notify_workers_exit(void)
-{
-	int i;
-	for (i=0;i<g_worker_thread_num;i++){
+void myth_notify_workers_exit(void) {
+  int i;
+  for (i=0;i<g_worker_thread_num;i++){
 #ifdef MYTH_ECO_MODE
-		if (g_eco_mode_enabled){
-			//	  if (g_envs[i].exit_flag==0){
-			g_envs[i].exit_flag=1;
-			g_envs[i].c = FINISH;
-		}
+    if (g_eco_mode_enabled){
+      //	  if (g_envs[i].exit_flag==0){
+      g_envs[i].exit_flag=1;
+      g_envs[i].c = FINISH;
+    }
 #else
-		if (0){}
+    if (0){}
 #endif
-		else{
-			if (g_envs[i].exit_flag==0)
-				g_envs[i].exit_flag=1;
-		}
-	}
+    else{
+      if (g_envs[i].exit_flag==0)
+	g_envs[i].exit_flag=1;
+    }
+  }
 }

@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <time.h>
 
-#include <myth.h>
+#include <myth/myth.h>
 
 typedef unsigned long long ts_t;
 

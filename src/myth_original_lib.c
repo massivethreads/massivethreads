@@ -1,6 +1,9 @@
+/* 
+ * myth_original_lib.c
+ */
 #include <assert.h>
 #include <dlfcn.h>
-#include "myth_config.h"
+#include "myth/myth_config.h"
 #include "myth_misc.h"
 #include "myth_original_lib.h"
 
@@ -49,42 +52,42 @@ int g_wrap_malloc = 0;
 //Load original pthread functions
 static void myth_get_pthread_funcs(void)
 {
-	static int done=0;
-	if (done)return;
-	done=1;
-	LOAD_FN(malloc);
-	LOAD_FN(calloc);
-	LOAD_FN(free);
-	LOAD_FN(realloc);
+  static int done=0;
+  if (done)return;
+  done=1;
+  LOAD_FN(malloc);
+  LOAD_FN(calloc);
+  LOAD_FN(free);
+  LOAD_FN(realloc);
 #ifdef MYTH_WRAP_MALLOC_RUNTIME
-	LOAD_FN(posix_memalign);
-	LOAD_FN(valloc);
-	char * e = getenv(ENV_MYTH_DONT_WRAP_MALLOC);
-	if (!e || e[0] != '1') g_wrap_malloc = 1;
-	g_wrap_malloc_completed = 1;
+  LOAD_FN(posix_memalign);
+  LOAD_FN(valloc);
+  char * e = getenv(ENV_MYTH_DONT_WRAP_MALLOC);
+  if (!e || e[0] != '1') g_wrap_malloc = 1;
+  g_wrap_malloc_completed = 1;
 #endif
-	LOAD_FN(sched_yield);
+  LOAD_FN(sched_yield);
 
-	//Basic operation
-	LOAD_PTHREAD_FN(create);LOAD_PTHREAD_FN(join);LOAD_PTHREAD_FN(self);
-	//TLS
-	LOAD_PTHREAD_FN(key_create);LOAD_PTHREAD_FN(key_delete);
-	LOAD_PTHREAD_FN(getspecific);LOAD_PTHREAD_FN(setspecific);
-	//Mutex
-	LOAD_PTHREAD_FN(mutex_init);LOAD_PTHREAD_FN(mutex_destroy);
-	LOAD_PTHREAD_FN(mutex_lock);LOAD_PTHREAD_FN(mutex_trylock);LOAD_PTHREAD_FN(mutex_unlock);
-	//Mutex attributes
-	//LOAD_PTHREAD_FN(mutexattr_init);LOAD_PTHREAD_FN(mutexattr_destroy);LOAD_PTHREAD_FN(mutexattr_settype);
-	//Barrier
-	LOAD_PTHREAD_FN(barrier_init);LOAD_PTHREAD_FN(barrier_destroy);LOAD_PTHREAD_FN(barrier_wait);
-	//Spinlock
-	LOAD_PTHREAD_FN(spin_init);LOAD_PTHREAD_FN(spin_destroy);
-	LOAD_PTHREAD_FN(spin_lock);LOAD_PTHREAD_FN(spin_unlock);LOAD_PTHREAD_FN(spin_trylock);
-	//Misc.
-	LOAD_PTHREAD_FN(setaffinity_np);
-	//signal
-	LOAD_PTHREAD_FN(kill);
-	LOAD_PTHREAD_FN(sigmask);
+  //Basic operation
+  LOAD_PTHREAD_FN(create);LOAD_PTHREAD_FN(join);LOAD_PTHREAD_FN(self);
+  //TLS
+  LOAD_PTHREAD_FN(key_create);LOAD_PTHREAD_FN(key_delete);
+  LOAD_PTHREAD_FN(getspecific);LOAD_PTHREAD_FN(setspecific);
+  //Mutex
+  LOAD_PTHREAD_FN(mutex_init);LOAD_PTHREAD_FN(mutex_destroy);
+  LOAD_PTHREAD_FN(mutex_lock);LOAD_PTHREAD_FN(mutex_trylock);LOAD_PTHREAD_FN(mutex_unlock);
+  //Mutex attributes
+  //LOAD_PTHREAD_FN(mutexattr_init);LOAD_PTHREAD_FN(mutexattr_destroy);LOAD_PTHREAD_FN(mutexattr_settype);
+  //Barrier
+  LOAD_PTHREAD_FN(barrier_init);LOAD_PTHREAD_FN(barrier_destroy);LOAD_PTHREAD_FN(barrier_wait);
+  //Spinlock
+  LOAD_PTHREAD_FN(spin_init);LOAD_PTHREAD_FN(spin_destroy);
+  LOAD_PTHREAD_FN(spin_lock);LOAD_PTHREAD_FN(spin_unlock);LOAD_PTHREAD_FN(spin_trylock);
+  //Misc.
+  LOAD_PTHREAD_FN(setaffinity_np);
+  //signal
+  LOAD_PTHREAD_FN(kill);
+  LOAD_PTHREAD_FN(sigmask);
 }
 
 static void myth_free_pthread_funcs(void)
@@ -107,36 +110,36 @@ ssize_t (*real_recvfrom)(int , void *, size_t , int ,struct sockaddr *, socklen_
 
 static void myth_get_io_funcs(void)
 {
-	static int done=0;
-	if (done)return;
-	done=1;
-	LOAD_FN(socket);
-	LOAD_FN(connect);
-	LOAD_FN(accept);
-	LOAD_FN(close);
-	LOAD_FN(listen);
-	LOAD_FN(bind);
-	LOAD_FN(select);
-	LOAD_FN(send);
-	LOAD_FN(recv);
-	LOAD_FN(sendto);
-	LOAD_FN(recvfrom);
-	LOAD_FN(fcntl);
+  static int done=0;
+  if (done)return;
+  done=1;
+  LOAD_FN(socket);
+  LOAD_FN(connect);
+  LOAD_FN(accept);
+  LOAD_FN(close);
+  LOAD_FN(listen);
+  LOAD_FN(bind);
+  LOAD_FN(select);
+  LOAD_FN(send);
+  LOAD_FN(recv);
+  LOAD_FN(sendto);
+  LOAD_FN(recvfrom);
+  LOAD_FN(fcntl);
 }
 
 static void myth_free_io_funcs(void)
 {
-	//Do nothing
+  //Do nothing
 }
 
 void __attribute__((constructor)) myth_get_original_funcs(void)
 {
-	myth_get_pthread_funcs();
-	myth_get_io_funcs();
+  myth_get_pthread_funcs();
+  myth_get_io_funcs();
 }
 
 void __attribute__((destructor)) myth_free_original_funcs(void)
 {
-	myth_free_pthread_funcs();
-	myth_free_io_funcs();
+  myth_free_pthread_funcs();
+  myth_free_io_funcs();
 }

@@ -1,3 +1,7 @@
+/* 
+ * myth_original_lib.h
+ */
+#pragma once
 #ifndef MYTH_ORIGINAL_LIB_H_
 #define MYTH_ORIGINAL_LIB_H_
 
@@ -8,11 +12,9 @@
 #include <errno.h>
 #include <sys/syscall.h>
 #include <sys/types.h>
-
-#include <sys/types.h>
 #include <sys/socket.h>
 
-#include "myth_config.h"
+#include "myth/myth_config.h"
 
 //pthread functions
 extern int (*real_pthread_key_create) (pthread_key_t *,void (*)(void *));

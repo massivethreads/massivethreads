@@ -1,3 +1,7 @@
+/* 
+ * myth_worker_proto.h
+ */
+#pragma once
 #ifndef MYTH_WORKER_PROTO_H_
 #define MYTH_WORKER_PROTO_H_
 

@@ -5,8 +5,9 @@
  *      Author: jnakashima
  */
 
+#include "myth/myth.h"
+#include "myth_tls_func.h"
 #include "myth_internal_lock.h"
-#include "myth_tls.h"
 
 //Global variable declarations
 

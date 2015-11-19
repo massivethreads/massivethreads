@@ -1,3 +1,7 @@
+/* 
+ * myth_io_proto.h
+ */
+#pragma once
 #ifndef MYTH_IO_PROTO_H_
 #define MYTH_IO_PROTO_H_
 

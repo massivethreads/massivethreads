@@ -1,16 +1,20 @@
+/* 
+ * myth_wsqueue.h
+ */
+#pragma once
 #ifndef MYTH_WSQUEUE_H_
 #define MYTH_WSQUEUE_H_
-
-#include "myth_config.h"
-#include "myth_internal_lock.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+
+#include "myth/myth_config.h"
+
+#include "myth_internal_lock.h"
 #include "myth_mem_barrier.h"
 #include "myth_original_lib.h"
-#include "myth_config.h"
 #include "myth_misc.h"
 
 #include <pthread.h>
@@ -56,10 +60,10 @@
 
 //cache
 typedef struct{
-	char data[WS_CACHE_SIZE];
-	size_t size;
-	volatile void* ptr;
-	volatile int seq;
+  char data[WS_CACHE_SIZE];
+  size_t size;
+  volatile void* ptr;
+  volatile int seq;
 }__attribute__((aligned(CACHE_LINE_SIZE))) myth_wscache,*myth_wscache_t;
 
 #if defined MYTH_USE_ITIMER || defined MYTH_USE_SIGIO
@@ -74,33 +78,35 @@ typedef struct{
 //Runqueue data structure
 typedef struct myth_thread_queue
 {
-       /* FIXME: align top/base and allocate only CACHE_LINE_SIZE for them */
+  /* FIXME: align top/base and allocate only CACHE_LINE_SIZE for them */
 #ifdef PAD_MYTH_THREAD_QUEUE_TOP_BASE
-       char pad0[CACHE_LINE_SIZE];
+  char pad0[CACHE_LINE_SIZE];
 #endif
-       volatile int top;
-       volatile int base;
+  volatile int top;
+  volatile int base;
 #ifdef PAD_MYTH_THREAD_QUEUE_TOP_BASE
-       char pad1[CACHE_LINE_SIZE];
+  char pad1[CACHE_LINE_SIZE];
 #endif
-	struct myth_thread** ptr;
-	int size;
-	myth_internal_lock_t lock;
+  struct myth_thread** ptr;
+  int size;
+  myth_internal_lock_t lock;
 #if defined USE_LOCK || defined USE_LOCK_ANY
-	myth_internal_lock_t m_lock;
+  myth_internal_lock_t m_lock;
 #endif
 #ifdef USE_SIGNAL_CS
-	volatile int8_t op_flag;
+  volatile int8_t op_flag;
 #endif
 #ifdef USE_THREAD_CS
-	pthread_mutex_t mtx;
+  pthread_mutex_t mtx;
 #endif
-	myth_wscache wc;
+  myth_wscache wc;
 }myth_thread_queue,*myth_thread_queue_t;
 
+#if 0
 //User-thread local structure for queue operation: Currently not used
 typedef struct myth_queue_data
 {
 }myth_queue_data,*myth_queue_data_t;
+#endif
 
 #endif /* MYTH_QUEUE_H_ */

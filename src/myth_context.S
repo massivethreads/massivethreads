@@ -1,4 +1,5 @@
-#include "myth_config.h"
+
+#include "myth/myth_config.h"
 
 .text
 

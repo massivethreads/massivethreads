@@ -1,10 +1,12 @@
-//myth_pthread_if.c : pthread-like interface
+/* 
+ * myth_pthread_if.c : pthread-like interface
+ */
+#include "myth/myth.h"
 
 #include "myth_init.h"
 #include "myth_sched.h"
 #include "myth_worker.h"
 #include "myth_io.h"
-#include "myth_tls.h"
 
 #include "myth_sched_proto.h"
 #include "myth_io_proto.h"
@@ -18,92 +20,76 @@
 
 #include "myth_if_pthread.h"
 
-int sched_yield(void)
-{
-
-	real_sched_yield();
-	myth_yield_body(1);
-	return 0;
+int sched_yield(void) {
+  real_sched_yield();
+  myth_yield_body(1);
+  return 0;
 }
 
-pthread_t pthread_self(void)
-{
-	return (pthread_t)myth_self_body();
+pthread_t pthread_self(void) {
+  return (pthread_t)myth_self_body();
 }
 
 int pthread_create(pthread_t *pth, const pthread_attr_t * attr, 
-		   void *(*func)(void*),void *args)
-{
+		   void *(*func)(void*),void *args) {
   (void)attr;
-	myth_thread_t mt;
-	mt=myth_create_body(func,args,0);
-	*pth=(pthread_t)mt;
-	return 0;
+  myth_thread_t mt;
+  mt=myth_create_body(func,args,0);
+  *pth=(pthread_t)mt;
+  return 0;
 }
 
-int pthread_join(pthread_t th,void**ret)
-{
-	myth_join_body((myth_thread_t)th,ret);
-	return 0;
+int pthread_join(pthread_t th,void**ret) {
+  myth_join_body((myth_thread_t)th,ret);
+  return 0;
 }
 
-void pthread_exit(void *ret)
-{
-	myth_exit_body(ret);
-	//To avoid warning, this code is unreachable
-	while (1) { }
+void pthread_exit(void *ret) {
+  myth_exit_body(ret);
+  //To avoid warning, this code is unreachable
+  while (1) { }
 }
 
-int pthread_detach (pthread_t th)
-{
-	myth_detach_body((myth_thread_t)th);
-	return 0;
+int pthread_detach (pthread_t th) {
+  myth_detach_body((myth_thread_t)th);
+  return 0;
 }
 
-int pthread_setcancelstate (int state, int *oldstate)
-{
-	return myth_setcancelstate_body(state,oldstate);
+int pthread_setcancelstate (int state, int *oldstate) {
+  return myth_setcancelstate_body(state,oldstate);
 }
 
-int pthread_setcanceltype (int type, int *oldtype)
-{
-	return myth_setcanceltype_body(type,oldtype);
+int pthread_setcanceltype (int type, int *oldtype) {
+  return myth_setcanceltype_body(type,oldtype);
 }
 
-int pthread_cancel (pthread_t th)
-{
-	return myth_cancel_body((myth_thread_t)th);
+int pthread_cancel (pthread_t th) {
+  return myth_cancel_body((myth_thread_t)th);
 }
 
-void pthread_testcancel(void)
-{
-	myth_testcancel_body();
+void pthread_testcancel(void) {
+  myth_testcancel_body();
 }
 
-int pthread_key_create (pthread_key_t *key,void (*destructor) (void *))
-{
-	return myth_key_create_body((myth_key_t*)key,destructor);
+int pthread_key_create (pthread_key_t *key,void (*destructor) (void *)) {
+  return myth_key_create_body((myth_key_t*)key,destructor);
 }
 
-int pthread_key_delete (pthread_key_t key)
-{
-	return myth_key_delete_body((myth_key_t)key);
+int pthread_key_delete (pthread_key_t key) {
+  return myth_key_delete_body((myth_key_t)key);
 }
 
-void *pthread_getspecific (pthread_key_t key)
-{
-	return myth_getspecific_body((myth_key_t)key);
+void *pthread_getspecific (pthread_key_t key) {
+  return myth_getspecific_body((myth_key_t)key);
 }
 
-int pthread_setspecific (pthread_key_t key,const void *ptr)
-{
-	return myth_setspecific_body((myth_key_t)key,(void*)ptr);
+int pthread_setspecific (pthread_key_t key,const void *ptr) {
+  return myth_setspecific_body((myth_key_t)key,(void*)ptr);
 }
 
 /* ---------- pthread_mutex ---------- */
 
-static inline void handle_mutex_initializer(pthread_mutex_t *mtx)
-{
+static inline void handle_mutex_initializer(pthread_mutex_t *mtx) {
 #ifdef MYTH_SUPPORT_MUTEX_INITIALIZER
   pthread_mutex_t m = PTHREAD_MUTEX_INITIALIZER;
   if (memcmp(&m, mtx, sizeof(pthread_mutex_t)) == 0) {

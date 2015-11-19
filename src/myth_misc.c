@@ -1,3 +1,6 @@
+/* 
+ * myth_misc.c
+ */
 #include "myth_misc.h"
 #include <ctype.h>
 
@@ -33,8 +36,8 @@ static int available_cores=-1;
    worker 5 is bound to 5, 
    worker 6 is bound to 7, 
    worker 7 is bound to 9,
-     ...
- */
+   ...
+*/
 
 /* character stream */
 typedef struct char_stream {
@@ -195,49 +198,49 @@ void myth_init_process_affinity_info(void)
   if (n == -1) {
     fprintf(stderr, "MYTH_CPU_LIST ignored\n");
   }
-	cpu_set_t cset;
-	sched_getaffinity(getpid(),sizeof(cpu_set_t),&cset);
-	int i;
-	for (i=0;i<CPU_SETSIZE;i++){
-		CPU_ZERO(&worker_cpusets[i]);
-	}
-	available_cores=0;
-	int sz = (n ? n : CPU_SETSIZE);
-	for (i=0;i<sz;i++){
-		if (CPU_ISSET((n>0)?myth_cpu_list[i]:i,&cset)){
-			CPU_SET((n>0)?myth_cpu_list[i]:i,&worker_cpusets[available_cores]);
-			available_cores++;
-		}
-	}
+  cpu_set_t cset;
+  sched_getaffinity(getpid(),sizeof(cpu_set_t),&cset);
+  int i;
+  for (i=0;i<CPU_SETSIZE;i++){
+    CPU_ZERO(&worker_cpusets[i]);
+  }
+  available_cores=0;
+  int sz = (n ? n : CPU_SETSIZE);
+  for (i=0;i<sz;i++){
+    if (CPU_ISSET((n>0)?myth_cpu_list[i]:i,&cset)){
+      CPU_SET((n>0)?myth_cpu_list[i]:i,&worker_cpusets[available_cores]);
+      available_cores++;
+    }
+  }
 #if 0
-	printf("%d available cores:", available_cores);
-	for (i = 0; i < available_cores; i++) {
-	  int x;
-	  int nx = 0;
-	  printf(" ");
-	  printf("{");
-	  for (x = 0; x < CPU_SETSIZE; x++) {
-	    if (CPU_ISSET(x, &worker_cpusets[i])) {
-	      if (nx > 0) printf(",");
-	      printf("%d", x);
-	    }
-	  }
-	  printf("}");
-	}
-	printf("\n");
+  printf("%d available cores:", available_cores);
+  for (i = 0; i < available_cores; i++) {
+    int x;
+    int nx = 0;
+    printf(" ");
+    printf("{");
+    for (x = 0; x < CPU_SETSIZE; x++) {
+      if (CPU_ISSET(x, &worker_cpusets[i])) {
+	if (nx > 0) printf(",");
+	printf("%d", x);
+      }
+    }
+    printf("}");
+  }
+  printf("\n");
 #endif
 }
 
 //Return the number of CPU cores
 int myth_get_cpu_num(void)
 {
-	assert(available_cores>0);
-	return available_cores;
+  assert(available_cores>0);
+  return available_cores;
 }
 
 //Return cpu_set
 cpu_set_t myth_get_worker_cpuset(int rank)
 {
-	assert(available_cores>0);
-	return worker_cpusets[rank%available_cores];
+  assert(available_cores>0);
+  return worker_cpusets[rank%available_cores];
 }

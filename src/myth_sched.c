@@ -1,20 +1,15 @@
-//#include <stdio.h>
-//#include <stdlib.h>
-//#include <string.h>
-//#include <stdarg.h>
-//#include <assert.h>
-//#include <errno.h>
-//#include <unistd.h>
-//#include <sys/syscall.h>
-//#include <sys/types.h>
+/* 
+ * myth_sched.c
+ */
+
 #include <signal.h>
-#include "myth_config.h"
+#include "myth/myth.h"
 
 #include "myth_wsqueue.h"
 #include "myth_sched.h"
-
 #include "myth_wsqueue_func.h"
 #include "myth_sched_func.h"
+
 
 //Global variable declarations
 //Global thread index
@@ -50,42 +45,42 @@ void myth_alrm_sighandler(int signum, siginfo_t *sinfo, void* ctx) {
   (void)signum;
   (void)sinfo;
   (void)ctx;
-	myth_running_env_t env;
-	int errno_bk;
-	errno_bk=errno;
-	env=myth_get_current_env();
-	int i;
-	if (env->rank==0){
-		//broadcast signal
-		for (i=0;i<g_worker_thread_num;i++){
-			if (i!=env->rank){
-				real_pthread_kill(g_envs[i].worker,SIGVTALRM);
-			}
-		}
-	}
+  myth_running_env_t env;
+  int errno_bk;
+  errno_bk=errno;
+  env=myth_get_current_env();
+  int i;
+  if (env->rank==0){
+    //broadcast signal
+    for (i=0;i<g_worker_thread_num;i++){
+      if (i!=env->rank){
+	real_pthread_kill(g_envs[i].worker,SIGVTALRM);
+      }
+    }
+  }
 #if 0
-	int ret;
-	char str[100];
-	strcpy(str,"1 SIGALRM IO:X Q:X\n");
-	//check for I/O
-	if (!env->io_checking_flag){
-		str[13]='O';
-		//Do I/O checking
-	}
-	if (!myth_queue_is_operating(&env->runnable_q)){
-		str[17]='O';
-	}
-	str[0]='0'+(char)env->rank;
-	ret=write(1,str,strlen(str));
+  int ret;
+  char str[100];
+  strcpy(str,"1 SIGALRM IO:X Q:X\n");
+  //check for I/O
+  if (!env->io_checking_flag){
+    str[13]='O';
+    //Do I/O checking
+  }
+  if (!myth_queue_is_operating(&env->runnable_q)){
+    str[17]='O';
+  }
+  str[0]='0'+(char)env->rank;
+  ret=write(1,str,strlen(str));
 #endif
-	if (!myth_queue_is_operating(&env->runnable_q))
-	{
+  if (!myth_queue_is_operating(&env->runnable_q))
+    {
 #ifdef MYTH_WRAP_SOCKIO
-		myth_thread_t ret;
-		ret=myth_io_polling_sig(env);
-		if (ret)myth_queue_push(&env->runnable_q,ret);
+      myth_thread_t ret;
+      ret=myth_io_polling_sig(env);
+      if (ret)myth_queue_push(&env->runnable_q,ret);
 #endif
-	}
-	errno=errno_bk;
+    }
+  errno=errno_bk;
 }
 

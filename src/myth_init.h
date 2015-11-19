@@ -1,3 +1,7 @@
+/* 
+ * myth_init.h
+ */
+#pragma once
 #ifndef MYTH_INIT_H
 #define MYTH_INIT_H
 
