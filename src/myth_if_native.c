@@ -80,15 +80,13 @@ myth_thread_t myth_self(void)
   return myth_self_body();
 }
 
-myth_thread_t myth_create(myth_func_t func,void *arg)
-{
+myth_thread_t myth_create(myth_func_t func,void *arg) {
   return myth_create_body(func,arg,0);
 }
 
-myth_thread_t myth_create_ex(myth_func_t func, void *arg, 
-			     myth_thread_attr_t * attr)
-{
-  return myth_create_ex_body(func, arg, attr);
+int myth_create_ex(myth_thread_t * id, myth_thread_attr_t * attr, 
+		   myth_func_t func, void *arg) {
+  return myth_create_ex_body(id, attr, func, arg);
 }
 
 void myth_exit(void *ret)
@@ -114,6 +112,38 @@ void myth_yield2(void)
 void myth_join(myth_thread_t th,void **result)
 {
   myth_join_body(th,result);
+}
+
+int myth_create_join_many_ex(myth_thread_t * ids,
+			     myth_thread_attr_t * attrs,
+			     myth_func_t func,
+			     void * args,
+			     void * results,
+			     size_t id_stride,
+			     size_t attr_stride,
+			     size_t arg_stride,
+			     size_t result_stride,
+			     long nthreads) {
+  return myth_create_join_many_ex_body(ids, attrs, func, args, results,
+				       id_stride, attr_stride, arg_stride, result_stride,
+				       nthreads);
+}
+
+int myth_create_join_various_ex(myth_thread_t * ids,
+				myth_thread_attr_t * attrs,
+				myth_func_t * funcs,
+				void * args,
+				void * results,
+				size_t id_stride,
+				size_t attr_stride,
+				size_t func_stride,
+				size_t arg_stride,
+				size_t result_stride,
+				long nthreads) {
+  return myth_create_join_various_ex_body(ids, attrs, funcs, args, results,
+					  id_stride, attr_stride, func_stride,
+					  arg_stride, result_stride,
+					  nthreads);
 }
 
 int myth_setcancelstate(int state, int *oldstate)
@@ -305,14 +335,12 @@ int myth_join_counter_dec(myth_join_counter_t * jc)
   return myth_join_counter_dec_body(jc);
 }
 
-#if 1
-
 int myth_felock_init(myth_felock_t * fe, const myth_felockattr_t * attr) {
   return myth_felock_init_body(fe, attr);
 }
 
 int myth_felock_destroy(myth_felock_t * fe) {
-  myth_felock_destroy_body(fe);
+  return myth_felock_destroy_body(fe);
 }
 
 int myth_felock_lock(myth_felock_t * fe) {
@@ -335,44 +363,6 @@ int myth_felock_status(myth_felock_t * fe) {
   return myth_felock_status_body(fe);
 }
 
-#else
-
-/* felock */
-int myth_felock_init(myth_felock_t * felock, const myth_felockattr_t * attr)
-{
-  return myth_felock_init_body(felock, attr);
-}
-
-int myth_felock_destroy(myth_felock_t * felock)
-{
-  return myth_felock_destroy_body(felock);
-}
-
-int myth_felock_lock(myth_felock_t * felock)
-{
-  return myth_felock_lock_body(felock);
-}
-
-int myth_felock_wait_lock(myth_felock_t * felock, int val)
-{
-  return myth_felock_wait_lock_body(felock, val);
-}
-
-int myth_felock_unlock(myth_felock_t * felock)
-{
-  return myth_felock_unlock_body(felock);
-}
-
-int myth_felock_status(myth_felock_t * felock)
-{
-  return myth_felock_status_body(felock);
-}
-
-int myth_felock_set_unlock(myth_felock_t * felock, int val)
-{
-  return myth_felock_set_unlock_body(felock, val);
-}
-#endif
 
 size_t myth_wsapi_get_hint_size(myth_thread_t th)
 {

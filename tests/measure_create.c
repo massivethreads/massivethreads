@@ -25,6 +25,7 @@ void * f(void * arg_) {
     myth_join(tid, 0);
     arg->r = cargs[0].r + cargs[1].r;
   }
+  return 0;
 }
 
 double cur_time() {

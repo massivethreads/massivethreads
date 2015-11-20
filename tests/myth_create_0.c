@@ -8,7 +8,7 @@ void * f(void * x) {
   return x + 34;
 }
 
-int main(int argc, char ** argv) {
+int main() {
   void * ret[1];
   myth_thread_t th = myth_create(f, (void *)12);
   myth_join(th, ret);

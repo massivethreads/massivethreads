@@ -3,6 +3,7 @@
  */
 #include <pthread.h>
 #include <stdio.h>
+#include <stdlib.h>
 //#include <myth/myth.h>
 #include <myth_sleep_queue_func.h>
 
@@ -23,12 +24,6 @@ typedef struct {
   queue_item * last_item;
 } arg_t;
 
-void spin_barrier(long nthreads) {
-  static volatile long spin_barrier_count = 0;
-  long x = __sync_fetch_and_add(&spin_barrier_count, 1);
-  //printf("spin barrier = %ld\n", x);
-  while (spin_barrier_count < nthreads) { }
-}
 
 void * worker(void * arg_) {
   arg_t * arg = arg_;
@@ -38,7 +33,6 @@ void * worker(void * arg_) {
   arg->my_item.val = 0;
   arg->my_item.last = 0;
   queue_item * item = &arg->my_item;
-  spin_barrier(arg->nthreads);
   for (i = 0; i < n; i++) {
     myth_sleep_queue_enq(q, (myth_sleep_queue_item *)item);
     item = (queue_item *)myth_sleep_queue_deq(q);
@@ -50,6 +44,7 @@ void * worker(void * arg_) {
   if (item) {
     item->last = 1;
   }
+  return 0;
 }
 
 int main(int argc, char ** argv) {

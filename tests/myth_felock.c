@@ -32,6 +32,7 @@ void * incrementer(void * arg_) {
     /* mark it's full */
     myth_felock_mark_and_signal(fe, 1);
   }
+  return 0;
 }
 
 int main(int argc, char ** argv) {

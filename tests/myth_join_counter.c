@@ -25,6 +25,7 @@ void * producer(void * arg_) {
   arg_t * arg = arg_;
   arg->y = f(arg->x);
   myth_join_counter_dec(j);
+  return 0;
 }
 
 void * consumer(void * arg_) {
@@ -34,6 +35,7 @@ void * consumer(void * arg_) {
   for (i = 1; i < arg->n_producers; i++) {
     assert(arg[i].y == f(arg[i].x));
   }
+  return 0;
 }
 
 int main(int argc, char ** argv) {

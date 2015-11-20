@@ -110,7 +110,7 @@ extern "C" {
   void myth_startpoint_exit_ex(int rank);
 
   /* 
-     Type: myth_thread_option
+     Type: myth_thread_attr_t
 
      This is given to myth_thread
 
@@ -121,13 +121,19 @@ extern "C" {
      void *custom_data - 
   */
 
-  typedef struct myth_thread_attr{
+  typedef struct myth_thread_attr { 
     size_t stack_size;
     int switch_immediately;
     size_t custom_data_size;
     void *custom_data;
   } myth_thread_attr_t;
   
+  /* Type: myth_func_t 
+
+     a type of function taking an argument of
+     type (void *) and returning a value of
+     type (void *);
+  */
   typedef void*(*myth_func_t)(void*);
   
   /* 
@@ -154,6 +160,12 @@ extern "C" {
 
     The identifier of the newly created user-level thread.
 
+    Bug:
+
+    Should any error occur, it terminates the
+    program rather than returning an error
+    code.
+
     See Also:
     <myth_create_ex>, <myth_join>
   */
@@ -167,24 +179,199 @@ extern "C" {
 
     Parameters:
 
+    id - a pointer, if not NULL, to which id of the created thread will be stored.
     func - a pointer to a function.
     arg - a pointer given to func.
-    opt - a pointer to a data structure
-    of type <myth_thread_option>
+    attr - a pointer to a data structure
+    of type <myth_thread_attr_t>
     specifying thread attributes, or NULL
     to mean the deafult.
 
     Returns:
 
-    The identifier of the newly created user-level thread.
+    0 if succeed.
+
+    Bug:
+
+    Should any error occur, it terminates the
+    program rather than returning an error
+    code.
 
     See Also:
     <myth_create>, <myth_join>, <myth_thread_option>
   */
-  myth_thread_t myth_create_ex(myth_func_t func, void * arg,
-			       myth_thread_attr_t * attr);
+  int myth_create_ex(myth_thread_t * id, myth_thread_attr_t * attr,
+		     myth_func_t func, void * arg);
   myth_thread_t myth_create_nosched(myth_func_t func, void * arg,
 				    myth_thread_attr_t * attr);
+
+  /*
+    Function: myth_create_join_many_ex
+
+    Create many user-level threads executing the same function
+    with various arguments and attributes and wait for them
+    to complete.
+
+    Parameters:
+
+    ids -           base pointer to a (strided) array, to which thread ids of
+                    the created threads wll be stored (may be NULL)
+    attrs -         base pointer to a (strided) array specifying attributes of
+                    threads to create (may be NULL)
+    func -          a function to execute by each thread
+    args -          base pointer to a (strided) array specifying arguments to func
+    results -       base pointer to a (strided) array to which results of the
+                    function call will be stored (may be NULL)
+    id_stride -     the stride of the ids array, in bytes
+    attr_stride -   the stride of the attrs array, in bytes
+    arg_stride -    the stride of the args array, in bytes
+    result_stride - the stride of the results array, in bytes
+    long nthreads - number of threads to execute f
+
+    in its simplest form,
+
+        myth_create_join_many_ex(0, 0, f, X, 0, 
+                                 0, 0,    s, 0, n);
+
+    will execute f(args), f(args+s), f(args+2*s), ..., and f(args+(n-1)*s),
+    each by a separate thread and discard their return values. 
+    if you want to get return values, give results and result_stride. e.g.,
+
+        myth_create_join_many_ex(0, 0, f, X,  Y, 
+                                 0, 0,    xs, t, n);
+
+    is equivalent to:			     
+
+    for all i = 0, ..., n - 1
+        ((void **)(Y + i * t))[0] = f(args + i * s);
+
+    note that all stride arguments must be given in bytes.
+    this is to allow you to receive results in a field of 
+    an enclosing structure. e.g.,
+
+     struct { char stuff[100]; void * result } args[nthreads];
+
+    in this case you want to call this function with 
+    results = &args[0].result and result_stride = sizeof(args[0]);
+
+    consistent with this policy, results is a void pointer,
+    although it is internally used as (void **).
+
+    You can similarly specify addresses of attributes and thread ids,
+    using the base pointer and the stride.
+
+    Returns:
+
+    0 if succeed.
+
+    Bug:
+
+    Should any error occur, it terminates the
+    program rather than returning an error
+    code.
+
+    See Also:
+    <myth_create>, <myth_join>, <myth_thread_attr>
+  */
+
+  int myth_create_join_many_ex(myth_thread_t * ids,
+			       myth_thread_attr_t * attrs,
+			       myth_func_t func,
+			       void * args,
+			       void * results,
+			       size_t id_stride,
+			       size_t attr_stride,
+			       size_t arg_stride,
+			       size_t result_stride,
+			       long nthreads);
+  
+  /*
+    Function: myth_create_join_various_ex
+
+    Create many user-level threads executing
+    various functions with various arguments
+    and attributes and wait for them to
+    complete.  This is almost the same with
+    myth_create_join_many_ex, except that you
+    can have threads execute different
+    functions.
+
+    Parameters:
+
+    ids -           base pointer to a (strided) array, to which thread ids of
+                    the created threads wll be stored (may be NULL)
+    attrs -         base pointer to a (strided) array specifying attributes of
+                    threads to create (may be NULL)
+    funcs -         base pointer to a (strided) array specifying functions
+                    to execute
+    args -          base pointer to a (strided) array specifying arguments to func
+    results -       base pointer to a (strided) array to which results of the
+                    function call will be stored (may be NULL)
+    id_stride -     the stride of the ids array, in bytes
+    attr_stride -   the stride of the attrs array, in bytes
+    func_stride -   the stride of the funcs array, in bytes
+    arg_stride -    the stride of the args array, in bytes
+    result_stride - the stride of the results array, in bytes
+    long nthreads - number of threads to execute f
+
+    in its simplest form,
+
+        myth_create_join_many_ex(0, 0, F,  X,  0, 
+                                 0, 0, fs, xs, 0, n);
+
+    will execute f_0(args), f_1(args+xs), f_2(args+2*xs), ..., 
+    where f_i = *((myth_func_t *)(F + fs * i)),
+    each by a separate thread and discard their return values.
+    if you want to get return values, give results and result_stride. e.g.,
+
+        myth_create_join_many_ex(0, 0, f, X, Y, 
+                                 0, 0,    s, t, n);
+
+    is equivalent to:			     
+
+    for all i = 0, ..., n - 1
+        ((void **)(Y + i * t))[0] = f(args + i * s);
+
+    note that all stride arguments must be given in bytes.
+    this is to allow you to receive results in a field of 
+    an enclosing structure. e.g.,
+
+     struct { char stuff[100]; void * result } args[nthreads];
+
+    in this case you want to call this function with 
+    results = &args[0].result and result_stride = sizeof(args[0]);
+
+    consistent with this policy, results is a void pointer,
+    although it is internally used as (void **).
+
+    You can similarly specify addresses of attributes and thread ids,
+    using the base pointer and the stride.
+
+    Returns:
+
+    0 if succeed.
+
+    Bug:
+
+    Should any error occur, it terminates the
+    program rather than returning an error
+    code.
+
+    See Also:
+    <myth_create>, <myth_join>, <myth_thread_attr>
+  */
+
+  int myth_create_join_various_ex(myth_thread_t * ids,
+				  myth_thread_attr_t * attrs,
+				  myth_func_t * funcs,
+				  void * args,
+				  void * results,
+				  size_t id_stride,
+				  size_t attr_stride,
+				  size_t func_stride,
+				  size_t arg_stride,
+				  size_t result_stride,
+				  long nthreads);
 
   /*
     Function: myth_join

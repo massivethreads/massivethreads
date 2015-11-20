@@ -24,7 +24,7 @@ static inline void myth_yield2_body(void);
 static inline void myth_join_1(myth_running_env_t e,myth_thread_t th,void **result);
 MYTH_CTX_CALLBACK void myth_join_2(void *arg1,void *arg2,void *arg3);
 MYTH_CTX_CALLBACK void myth_join_3(void *arg1,void *arg2,void *arg3);
-static inline void myth_join_body(myth_thread_t th,void **result);
+static inline int myth_join_body(myth_thread_t th,void **result);
 static inline void myth_detach_body(myth_thread_t th);
 static void myth_sched_loop(void);
 MYTH_CTX_CALLBACK void myth_entry_point_1(void *arg1,void *arg2,void *arg3);

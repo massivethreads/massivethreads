@@ -15,6 +15,8 @@ volatile long x, y; /* x : consumed. y : produced */
 /* consume n_consumers items, to be consumed
    by the consumers (one by each) */
 void produce(long n_producers, long n_consumers, long buffer_size) {
+  (void)n_producers;
+  (void)n_consumers;
   myth_mutex_lock(m);
   /* wait until all I have produced so far
      have been consumed */
@@ -30,6 +32,8 @@ void produce(long n_producers, long n_consumers, long buffer_size) {
 
 /* consume an item */
 void consume(long batch_id, long n_consumers) {
+  (void)batch_id;
+  (void)n_consumers;
   myth_mutex_lock(m);
   while (y == x) {
     myth_cond_wait(c, m);

@@ -406,7 +406,7 @@ static inline int myth_cond_signal_body(myth_cond_t * cond) {
 
 static inline int myth_cond_wait_body(myth_cond_t * cond, myth_mutex_t * mutex) {
   myth_block_on_queue(cond->sleep_q, mutex);
-  myth_mutex_lock(mutex);
+  return myth_mutex_lock(mutex);
 }
 
 /* ----------- barrier ----------- */
@@ -539,6 +539,7 @@ static inline int myth_felock_init_body(myth_felock_t * fe,
   myth_cond_init_body(&fe->cond[0], 0);
   myth_cond_init_body(&fe->cond[1], 0);
   fe->status = 0;
+  return 0;
 }
 
 static inline int myth_felock_destroy_body(myth_felock_t * fe) {
@@ -549,11 +550,11 @@ static inline int myth_felock_destroy_body(myth_felock_t * fe) {
 }
 
 static inline int myth_felock_lock_body(myth_felock_t * fe) {
-  myth_mutex_lock_body(fe->mutex);
+  return myth_mutex_lock_body(fe->mutex);
 }
 
 static inline int myth_felock_unlock_body(myth_felock_t * fe) {
-  myth_mutex_unlock_body(fe->mutex);
+  return myth_mutex_unlock_body(fe->mutex);
 }
 
 static inline int myth_felock_wait_and_lock_body(myth_felock_t * fe, 
@@ -562,13 +563,14 @@ static inline int myth_felock_wait_and_lock_body(myth_felock_t * fe,
   while (fe->status != status_to_wait) {
     myth_cond_wait(&fe->cond[status_to_wait], fe->mutex);
   }
+  return 0;
 }
 
 static inline int myth_felock_mark_and_signal_body(myth_felock_t * fe,
 						   int status_to_signal) {
   fe->status = status_to_signal;
   myth_cond_signal(&fe->cond[status_to_signal]);
-  myth_mutex_unlock_body(fe->mutex);
+  return myth_mutex_unlock_body(fe->mutex);
 }
 
 static inline int myth_felock_status_body(myth_felock_t * fe) {

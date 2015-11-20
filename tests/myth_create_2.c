@@ -24,11 +24,11 @@ void * f(void * arg_) {
     myth_join(tid, 0);
     arg->r = cargs[0].r + cargs[1].r;
   }
+  return 0;
 }
 
-#define nthreads 100
-
 int main(int argc, char ** argv) {
+  long nthreads = (argc > 1 ? atol(argv[1]) : 100);
   arg_t arg[1] = { { 0, nthreads, 0 } };
   myth_thread_t tid = myth_create(f, arg);
   myth_join(tid, 0);

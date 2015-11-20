@@ -491,10 +491,8 @@ static inline myth_thread_t myth_create_body(myth_func_t func,
 }
 
 //Create a thread without switching context
-static inline myth_thread_t myth_create_ex_body(myth_func_t func,
-						void *arg, 
-						myth_thread_attr_t * attr
-						) {
+static inline int myth_create_ex_body(myth_thread_t * id, myth_thread_attr_t * attr,
+				      myth_func_t func, void *arg) {
   MAY_BE_UNUSED uint64_t t0, t1;
   myth_thread_t new_thread;
   myth_running_env_t env;
@@ -603,14 +601,13 @@ static inline myth_thread_t myth_create_ex_body(myth_func_t func,
 #endif /* MYTH_CREATE_PROF */
   }
 
-  return new_thread;
+  *id = new_thread;
+  return 0;
 }
 
 static inline myth_thread_t myth_create_nosched_body(myth_func_t func,
 						     void *arg,
-						     myth_thread_attr_t * attr
-						     )
-{
+						     myth_thread_attr_t * attr) {
   MAY_BE_UNUSED uint64_t t0,t1;
   myth_thread_t new_thread;
   myth_running_env_t env;
@@ -773,59 +770,58 @@ MYTH_CTX_CALLBACK void myth_join_3(void *arg1,void *arg2,void *arg3)
 }
 
 //Wait until the finish of a thread
-static inline void myth_join_body(myth_thread_t th,void **result)
-{
+static inline int myth_join_body(myth_thread_t th,void **result) {
   //TODO:Fix th->status is blocked after join
   MAY_BE_UNUSED uint64_t t0,t1;
   myth_running_env_t env;
   myth_thread_t this_thread;
-  t0=0;t1=0;
+  t0 = 0; t1 = 0;
 #ifdef MYTH_NO_JOIN
   {
-    if (result)*result=th;
-    return;
+    if (result) *result = th;
+    return 0;
   }
 #endif
 #ifdef MYTH_JOIN_PROF
-  uint64_t t0,t1,t2,t3;
-  t0=myth_get_rdtsc();
+  uint64_t t0, t1, t2, t3;
+  t0 = myth_get_rdtsc();
 #endif
 #ifdef MYTH_JOIN_PROF_DETAIL
-  t0=myth_get_rdtsc();
+  t0 = myth_get_rdtsc();
 #endif
-  env=myth_get_current_env();
+  env = myth_get_current_env();
   //myth_log_add(env,MYTH_LOG_INT);
-  this_thread=env->this_thread;
+  this_thread = env->this_thread;
 #ifdef MYTH_JOIN_DEBUG
   myth_dprintf("myth_join:join started\n");
 #endif
 #ifdef QUICK_CHECK_ON_JOIN
   //If target is finished, return immediately
-  if (th->status==MYTH_STATUS_FREE_READY2){
+  if (th->status == MYTH_STATUS_FREE_READY2){
 #ifdef MYTH_JOIN_DEBUG
     myth_dprintf("myth_join:join thread (%p) is already finished. Return immediately\n",th);
 #endif
     //guarantee that successive read starts after this line
     myth_rbarrier();
 #ifdef MYTH_JOIN_PROF_DETAIL
-    if (result!=NULL)*result=th->result;
-    t1=myth_get_rdtsc();
-    env->prof_data.join_join+=t1-t0;
-    t0=myth_get_rdtsc();
+    if (result) *result = th->result;
+    t1 = myth_get_rdtsc();
+    env->prof_data.join_join += t1 - t0;
+    t0 = myth_get_rdtsc();
     free_myth_thread_struct_desc(env,th);
-    t1=myth_get_rdtsc();
-    env->prof_data.join_release+=t1-t0;
+    t1 = myth_get_rdtsc();
+    env->prof_data.join_release += t1 - t0;
     env->prof_data.join_d_cnt++;
 #else
     myth_join_1(env,th,result);
 #endif
 #ifdef MYTH_JOIN_PROF
-    t1=myth_get_rdtsc();
-    env->prof_data.join_cycles+=t1-t0;
+    t1 = myth_get_rdtsc();
+    env->prof_data.join_cycles += t1-t0;
     env->prof_data.join_cnt++;
 #endif
     //myth_log_add(env,MYTH_LOG_USER);
-    return;
+    return 0;
   }
 #endif
   //Obtain lock and check again
@@ -836,26 +832,26 @@ static inline void myth_join_body(myth_thread_t th,void **result)
     myth_dprintf("myth_join:join thread (%p) is already finished. Return immediately\n",th);
 #endif
     myth_internal_lock_unlock(&th->lock);
-    while (th->status!=MYTH_STATUS_FREE_READY2);
+    while (th->status != MYTH_STATUS_FREE_READY2);
 #ifdef MYTH_JOIN_PROF_DETAIL
-    if (result!=NULL)*result=th->result;
-    t1=myth_get_rdtsc();
-    env->prof_data.join_join+=t1-t0;
-    t0=myth_get_rdtsc();
+    if (result) *result = th->result;
+    t1 = myth_get_rdtsc();
+    env->prof_data.join_join += t1 - t0;
+    t0 = myth_get_rdtsc();
     free_myth_thread_struct_desc(env,th);
-    t1=myth_get_rdtsc();
-    env->prof_data.join_release+=t1-t0;
+    t1 = myth_get_rdtsc();
+    env->prof_data.join_release += t1-t0;
     env->prof_data.join_d_cnt++;
 #else
     myth_join_1(env,th,result);
 #endif
 #ifdef MYTH_JOIN_PROF
-    t1=myth_get_rdtsc();
-    env->prof_data.join_cycles+=t1-t0;
+    t1 = myth_get_rdtsc();
+    env->prof_data.join_cycles += t1-t0;
     env->prof_data.join_cnt++;
 #endif
     //myth_log_add(env,MYTH_LOG_USER);
-    return;
+    return 0;
   }
   //Set current thread as blocked
   myth_desc_set_not_runnable(this_thread);
@@ -864,22 +860,24 @@ static inline void myth_join_body(myth_thread_t th,void **result)
 #endif
   //Get next runnable thread
   myth_thread_t next;
-  next=myth_queue_pop(&env->runnable_q);
+  next = myth_queue_pop(&env->runnable_q);
 #ifdef MYTH_JOIN_PROF
-  t1=myth_get_rdtsc();
+  t1 = myth_get_rdtsc();
 #endif
   if (next){
     next->env=env;
     //Switch to next runnable thread
-    myth_swap_context_withcall(&this_thread->context,&next->context,myth_join_2,(void*)env,(void*)th,(void*)next);
+    myth_swap_context_withcall(&this_thread->context,&next->context,myth_join_2,
+			       (void*)env,(void*)th,(void*)next);
   }
   else{
     //myth_log_add(this_thread->env,MYTH_LOG_WS);
     //Since there is no runnable thread, switch to scheduler and do work-steaing
-    myth_swap_context_withcall(&this_thread->context,&env->sched.context,myth_join_3,(void*)this_thread,(void*)th,NULL);
+    myth_swap_context_withcall(&this_thread->context,&env->sched.context,myth_join_3,
+			       (void*)this_thread,(void*)th,NULL);
   }
 #ifdef MYTH_JOIN_PROF
-  t2=myth_get_rdtsc();
+  t2 = myth_get_rdtsc();
 #endif
   //myth_log_add(this_thread->env,MYTH_LOG_INT);
 #ifdef MYTH_JOIN_DEBUG
@@ -893,15 +891,126 @@ static inline void myth_join_body(myth_thread_t th,void **result)
   //Get return value
   myth_internal_lock_unlock(&th->lock);
 #endif
-  while (th->status!=MYTH_STATUS_FREE_READY2);
+  while (th->status != MYTH_STATUS_FREE_READY2) { }
   myth_join_1(myth_get_current_env(),th,result);
 #ifdef MYTH_JOIN_PROF
-  t3=myth_get_rdtsc();
-  env->prof_data.join_cycles+=(t1-t0)+(t3-t2);
+  t3 = myth_get_rdtsc();
+  env->prof_data.join_cycles += (t1 - t0) + (t3 - t2);
   env->prof_data.join_cnt++;
 #endif
   //myth_log_add(this_thread->env,MYTH_LOG_USER);
+  return 0;
 }
+
+
+typedef struct {
+  void * ids;                   /* base pointer to strided array of myth_thread_t */
+  void * attrs;			/* base pointer to strided array of myth_attr_t */
+  void * funcs;			/* base pointer to strided array of myth_func_t */
+  void * args;			/* base pointer to strided array of args */
+  void * results;		/* base pointer to strided array of results */
+  size_t id_stride;		/* stride of ids   between consecutive threads */
+  size_t attr_stride;		/* stride of attrs between consecutive threads */
+  size_t func_stride;		/* stride of funcs between consecutive threads */
+  size_t arg_stride;            /* stride of args  between consecutive threads */
+  size_t result_stride;		/* stride of results between consecutive threads */
+  long a;			/* from  */
+  long b;			/* to */
+} myth_create_join_various_arg;
+
+static inline void * myth_create_join_various_ex_aux(void * meta_arg_) {
+  myth_create_join_various_arg * meta_arg = meta_arg_;
+  long a               = meta_arg->a;
+  long b               = meta_arg->b;
+  size_t id_stride     = meta_arg->id_stride;
+  size_t attr_stride   = meta_arg->attr_stride;
+  size_t func_stride   = meta_arg->func_stride;
+  size_t arg_stride    = meta_arg->arg_stride;
+  size_t result_stride = meta_arg->result_stride;
+
+  if (b - a == 1) {
+    void * ids     = (meta_arg->ids   ? meta_arg->ids   + a * id_stride : 0);
+    void * funcs   = meta_arg->funcs   + a * func_stride;
+    void * args    = meta_arg->args    + a * arg_stride; 
+    void * results = (meta_arg->results ? meta_arg->results + a * result_stride : 0);  
+    if (ids) {
+      ((myth_thread_t *)ids)[0] = myth_self();
+    }
+    myth_func_t func = ((myth_func_t *)funcs)[0]; /* call f(x) */
+    void * y = func(args);
+    if (results) {
+      ((void **)results)[0] = y;
+    }
+  } else {
+    long c = (a + b) / 2;
+    void * ids    = meta_arg->ids;
+    void * attrs  = meta_arg->attrs;
+    void * funcs  = meta_arg->funcs;
+    void * args   = meta_arg->args;
+    void * results = meta_arg->results;
+    myth_create_join_various_arg carg[2] = { 
+      { ids, attrs, funcs, args, results, 
+	id_stride, attr_stride, func_stride, arg_stride, result_stride, 
+	a, c },
+      { ids, attrs, funcs, args, results, 
+	id_stride, attr_stride, func_stride, arg_stride, result_stride, 
+	c, b }
+    };
+    myth_thread_attr_t * attr_a = (attrs ? attrs + a * attr_stride : 0);
+    myth_thread_t cid = 0;
+    int r0 = myth_create_ex_body(&cid, attr_a, myth_create_join_various_ex_aux, carg);
+    assert(r0 == 0); /* TODO : better communicate error */
+    void * r1 = myth_create_join_various_ex_aux(carg + 1);
+    assert(r1 == 0); /* TODO : better communicate error */
+    int r2 = myth_join_body(cid, 0);
+    assert(r2 == 0); /* TODO : better communicate error */
+  }
+  return 0;
+}
+
+static inline int myth_create_join_various_ex_body(myth_thread_t * ids,
+						   myth_thread_attr_t * attrs,
+						   myth_func_t * funcs,
+						   void * args,
+						   void * results,
+						   size_t id_stride,
+						   size_t attr_stride,
+						   size_t func_stride,
+						   size_t arg_stride,
+						   size_t result_stride,
+						   long nthreads) {
+  if (nthreads == 0) return 0;
+  myth_create_join_various_arg arg[1] = {
+    { 
+      ids,       attrs,       funcs,       args,       results, 
+      id_stride, attr_stride, func_stride, arg_stride, result_stride,
+      0, nthreads 
+    }
+  };
+  void * r = myth_create_join_various_ex_aux(arg);
+  assert(r == 0);
+  return 0;
+}
+
+static inline int myth_create_join_many_ex_body(myth_thread_t * ids,
+						myth_thread_attr_t * attrs,
+						myth_func_t func,
+						void * args,
+						void * results,
+						size_t id_stride,
+						size_t attr_stride,
+						size_t arg_stride,
+						size_t result_stride,
+						long nthreads) {
+  myth_func_t funcs[1] = { func };
+  return myth_create_join_various_ex_body(ids, attrs, funcs, args, results,
+					  id_stride, attr_stride, 0, arg_stride, result_stride,
+					  nthreads);
+}
+
+
+
+
 
 //Detach a thread. The resource of detached thread is freed immediately after it finishes.
 static inline void myth_detach_body(myth_thread_t th)

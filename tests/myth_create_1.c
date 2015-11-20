@@ -10,7 +10,7 @@ void * f(void * x) {
 }
 
 #define nthreads 100
-int main(int argc, char ** argv) {
+int main() {
   myth_thread_t th[nthreads];
   long i;
   for (i = 0; i < nthreads; i++) {

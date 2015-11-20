@@ -22,17 +22,16 @@ void * f(void * arg_) {
   if (b - a == 1) {
     int i;
     for (i = 0; i < ninc_per_thread; ) {
-      long x;
       if (i % 2 == 0) {
 	//printf("f(%ld,%ld) : lock\n", a, b);
 	myth_mutex_lock(arg->m);
-	x = arg->p[0]++;
+	arg->p[0]++;
 	myth_mutex_unlock(arg->m);
 	i++;
       } else {
 	//printf("f(%ld,%ld) : trylock\n", a, b);
 	if (myth_mutex_trylock(arg->m) == 0) {
-	  x = arg->p[0]++;
+	  arg->p[0]++;
 	  myth_mutex_unlock(arg->m);
 	  i++;
 	}

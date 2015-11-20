@@ -33,6 +33,7 @@ void * f(void * arg_) {
     }
     myth_barrier_wait(b);
   }
+  return 0;
 }
 
 int main(int argc, char ** argv) {

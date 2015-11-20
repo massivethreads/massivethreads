@@ -6,6 +6,7 @@ check_PROGRAMS = \
 	myth_create_0 \
 	myth_create_1 \
 	myth_create_2 \
+	myth_create_join_many \
 	myth_yield_0 \
 	myth_yield_1 \
 	myth_yield_2 \
@@ -19,11 +20,13 @@ check_PROGRAMS = \
 	myth_barrier \
 	myth_join_counter \
 	myth_felock \
+	myth_dag_1d \
+	myth_dag_2d \
+	myth_dag_random \
 	measure_create \
 	measure_latency \
 	measure_wakeup_latency
 
-#	new_test
 
 # check_PROGRAMS = myth_lock myth_trylock myth_mixlock
 
@@ -41,6 +44,10 @@ myth_create_1_LDADD  = $(common_ldadd)
 myth_create_2_SOURCES = myth_create_2.c
 myth_create_2_CFLAGS = $(common_cflags)
 myth_create_2_LDADD  = $(common_ldadd)
+
+myth_create_join_many_SOURCES = myth_create_join_many.c
+myth_create_join_many_CFLAGS = $(common_cflags)
+myth_create_join_many_LDADD  = $(common_ldadd)
 
 myth_yield_0_SOURCES = myth_yield_0.c
 myth_yield_0_CFLAGS = $(common_cflags)
@@ -94,6 +101,18 @@ myth_felock_SOURCES = myth_felock.c
 myth_felock_CFLAGS = $(common_cflags)
 myth_felock_LDADD  = $(common_ldadd)
 
+myth_dag_1d_SOURCES = myth_dag_1d.c
+myth_dag_1d_CFLAGS = $(common_cflags)
+myth_dag_1d_LDADD  = $(common_ldadd)
+
+myth_dag_2d_SOURCES = myth_dag_2d.c
+myth_dag_2d_CFLAGS = $(common_cflags)
+myth_dag_2d_LDADD  = $(common_ldadd)
+
+myth_dag_random_SOURCES = myth_dag_random.c
+myth_dag_random_CFLAGS = $(common_cflags)
+myth_dag_random_LDADD  = $(common_ldadd)
+
 measure_create_SOURCES = measure_create.c
 measure_create_CFLAGS = $(common_cflags)
 measure_create_LDADD  = $(common_ldadd)
@@ -106,8 +125,8 @@ measure_wakeup_latency_SOURCES = measure_wakeup_latency.c
 measure_wakeup_latency_CFLAGS = $(common_cflags)
 measure_wakeup_latency_LDADD  = $(common_ldadd)
 
-# new_test_SOURCES = new_test.c
-# new_test_CFLAGS = $(common_cflags)
-# new_test_LDADD  = $(common_ldadd)
+#new_test_SOURCES = new_test.c
+#new_test_CFLAGS = $(common_cflags)
+#new_test_LDADD  = $(common_ldadd)
 
 TESTS = $(check_PROGRAMS)

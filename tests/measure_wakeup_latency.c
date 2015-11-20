@@ -54,6 +54,7 @@ void * f(void * arg_) {
   while (! arg->parent_resumed) { }
   wait_a_while();
   arg->child_finished = cur_time();
+  return 0;
 }
 
 void bench(long n) {
@@ -71,7 +72,6 @@ void bench(long n) {
     myth_thread_t c = myth_create(f, arg);
     ts_t t1 = cur_time();
     arg->parent_resumed = 1;
-    ts_t t2 = cur_time();
     myth_join(c, 0);
     ts_t t3 = cur_time();
     child_latency_sum += (arg->child_started - t0);
@@ -87,7 +87,6 @@ void bench(long n) {
 
 int main(int argc, char ** argv) {
   long n = (argc > 1 ? atol(argv[1]) : 100000);
-  arg_t arg[1] = { { 0, 0 } };
   long i;
   for (i = 0; i < 3; i++) {
     bench(n);

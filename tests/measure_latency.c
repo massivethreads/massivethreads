@@ -48,6 +48,7 @@ void * f(void * arg_) {
   arg->child_started = cur_time();
   while (! arg->parent_resumed) { }
   arg->child_almost_finished = 1;
+  return 0;
 }
 
 void wait_a_while() {
@@ -89,7 +90,6 @@ void bench(long n) {
 
 int main(int argc, char ** argv) {
   long n = (argc > 1 ? atol(argv[1]) : 100000);
-  arg_t arg[1] = { { 0, 0 } };
   long i;
   for (i = 0; i < 3; i++) {
     bench(n);
