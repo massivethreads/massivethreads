@@ -26,7 +26,7 @@ node * V;
 long N;
 
 void * visit_node(void * arg_) {
-  node * u = arg_;
+  node * u = (node *)arg_;
   long x = u->x;
   myth_join_counter_wait(u->jc);
   if (x == N - 1) {
@@ -42,7 +42,7 @@ void * visit_node(void * arg_) {
 
 void make_graph(long n) {
   N = n;
-  V = calloc(sizeof(node), n);
+  V = (node *)calloc(sizeof(node), n);
   long i;
   for (i = 0; i < n; i++) {
     V[i].x = i;

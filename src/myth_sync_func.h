@@ -16,13 +16,25 @@
 /* put this thread in the q of waiting threads */
 static inline long myth_sleep_queue_enq_th(myth_sleep_queue_t * q, 
 					   myth_thread_t t) {
-  return myth_sleep_queue_enq(q, (myth_sleep_queue_item *)t);
+  return myth_sleep_queue_enq(q, (myth_sleep_queue_item_t)t);
 }
 
 /* dequeue a thread from the q of waiting threads;
    it returns null if q is found empty. */
 static inline myth_thread_t myth_sleep_queue_deq_th(myth_sleep_queue_t * q) {
   return (myth_thread_t)myth_sleep_queue_deq(q);
+}
+
+/* put this thread in the q of waiting threads */
+static inline long myth_sleep_stack_push_th(myth_sleep_stack_t * s, 
+					    myth_thread_t t) {
+  return myth_sleep_stack_push(s, (myth_sleep_queue_item_t)t);
+}
+
+/* dequeue a thread from the q of waiting threads;
+   it returns null if q is found empty. */
+static inline myth_thread_t myth_sleep_stack_pop_th(myth_sleep_stack_t * s) {
+  return (myth_thread_t)myth_sleep_stack_pop(s);
 }
 
 /* called back right before switching context
@@ -82,6 +94,55 @@ static inline void myth_block_on_queue(myth_sleep_queue_t * q,
 			     myth_block_on_queue_cb, q, cur, m);
 }
 
+
+MYTH_CTX_CALLBACK void myth_block_on_stack_cb(void *arg1,void *arg2,void *arg3) {
+  myth_sleep_stack_t * s = arg1;
+  myth_thread_t cur = arg2;
+  myth_mutex_t * m = arg3;
+  /* put the current thread to the sleep
+     queue here.  it is important not to have
+     done this until this point (i.e., after
+     current thread's conetxt has been
+     saved).  if we put it in the queue
+     before calling context switch
+     (myth_swap_context_withcall), another
+     thread might unlock the mutex right
+     after it enters the queue and access
+     cur data structure before the context
+     has been saved  */
+  myth_sleep_stack_push_th(s, cur);
+  if (m) {
+    myth_mutex_unlock_body(m);
+  }
+}
+
+
+/* block the current thread on sleep_queue q */
+static inline void myth_block_on_stack(myth_sleep_stack_t * s,
+				       myth_mutex_t * m) {
+  myth_running_env_t env = myth_get_current_env();
+  myth_thread_t cur = env->this_thread;
+  /* pop next thread to run */
+  myth_thread_t next = myth_queue_pop(&env->runnable_q);
+  /* next context to run. either another thread
+     or the scheduler */
+  myth_context_t next_ctx;
+  env->this_thread = next;
+  if (next) {
+    /* a runnable thread */
+    next->env = env;
+    next_ctx = &next->context;
+  } else {
+    /* no runnable thread -> scheduler */
+    next_ctx = &env->sched.context;
+  }
+  /* now save the current context, myth_sleep_queue_enq_th(q, cur)
+     to put cur in the q, and jump to next_ctx */
+  myth_swap_context_withcall(&cur->context, next_ctx,
+			     myth_block_on_stack_cb, s, cur, m);
+}
+
+
 typedef void * (*callback_on_wakeup_t)(void *);
 
 /* wake up exactly one thread from the queue.
@@ -132,7 +193,6 @@ static inline int myth_wake_many_from_queue(myth_sleep_queue_t * q,
 					    callback_on_wakeup_t callback,
 					    void * arg,
 					    long n) {
-#if 0
   /* the following works only when some measures are taken to 
      guarantee that thread to wake up do not reenter the queue.
      currently, this procedure is called from barrier wait,
@@ -159,13 +219,6 @@ static inline int myth_wake_many_from_queue(myth_sleep_queue_t * q,
      alternatively, we could (i) dequeue all threads without
      waking them up and (ii) putting them in the run queue.
   */
-  long i;
-  for (i = 0; i < n; i++) {
-    int r = myth_wake_one_from_queue(q, callback, arg);
-    assert(r == 1);
-  }
-  return n;
-#else
   myth_running_env_t env = myth_get_current_env();
   /* wait until the queue becomes non-empty.
      necessary for example when lock/unlock
@@ -212,7 +265,6 @@ static inline int myth_wake_many_from_queue(myth_sleep_queue_t * q,
     to_wake = next;
   }
   return n;
-#endif
 }
 
 /* wake up if any thread in the queue.
@@ -249,6 +301,87 @@ static inline int myth_wake_all_from_queue(myth_sleep_queue_t * q,
   }
   return n;			
 }
+
+
+static inline int myth_wake_many_from_stack(myth_sleep_stack_t * s,
+					    callback_on_wakeup_t callback,
+					    void * arg,
+					    long n) {
+  /* the following works only when some measures are taken to 
+     guarantee that thread to wake up do not reenter the queue.
+     currently, this procedure is called from barrier wait,
+     when the caller finds it is the last guy so needs to 
+     wake up others. a race would arise if those waking threads
+     call barrier_wait again on the same barrier and reenter
+     the queue, possibly BEFORE threads that should wake up now.
+
+     thread 1 .. n
+        barrier_wait
+     thread 0
+        barrier_wait -> wake up 1 .. n, but a thread, say thread 1,
+                        has not yet entered the queue
+     thread 1
+        woke up and barrier_wait again
+
+     in our current implementation, barrier_wait ensures that
+     threads that enter barrier_wait while the wake up is
+     in progress waits until all threads have been dequeued
+     from the sleep queue.  this is done by temporarily making
+     the state of barrier invalid, and having threads that
+     see invalid state wait for it to become valid again.
+
+     alternatively, we could (i) dequeue all threads without
+     waking them up and (ii) putting them in the run queue.
+  */
+  myth_running_env_t env = myth_get_current_env();
+  /* wait until the queue becomes non-empty.
+     necessary for example when lock/unlock
+     are called almost at the same time on 
+     a mutex. if lock was slightly ahead, the
+     unlocker may observe the queue before
+     the locker enters the queue */
+  myth_thread_t to_wake_head = 0;
+  myth_thread_t to_wake_tail = 0;
+  long i;
+  for (i = 0; i < n; i++) {
+    myth_thread_t to_wake = 0;
+    while (!to_wake) {
+      to_wake = myth_sleep_stack_pop_th(s);
+    }
+    to_wake->env = env;
+    to_wake->next = 0;
+    if (to_wake_tail) {
+      to_wake_tail->next = to_wake;
+    } else {
+      to_wake_head = to_wake;
+    }
+    to_wake_tail = to_wake;
+  }
+  /* do any action after dequeueing from the sleep queue
+     but before really putting it in the run queue.
+     (for mutex, we need to clear the locked flag
+     exactly at this moment; (i) doing so before
+     dequeueing from the sleep queue allows other
+     thread to lock the mutex, unlock it, and dequeue
+     the thread I am trying to wake; (ii) doing so
+     after putting it in the run queue will allow
+     the to_wake to run (by another worker), observe
+     the lock bit still set, and sleep again. */
+  if (callback) {
+    callback(arg);
+  }
+  /* put the thread to wake up in run queue */
+  myth_thread_t to_wake = to_wake_head;
+  for (i = 0; i < n; i++) {
+    assert(to_wake);
+    myth_thread_t next = to_wake->next;
+    myth_queue_push(&env->runnable_q, to_wake);
+    to_wake = next;
+  }
+  return n;
+}
+
+
 
 /* ----------- mutex ----------- */
 
@@ -418,13 +551,15 @@ static inline int myth_barrier_init_body(myth_barrier_t * barrier,
   /* 2 *(number of threads that reached) + invalid */
   barrier->state = 0;
   barrier->n_threads = n_threads;
-  myth_sleep_queue_init(barrier->sleep_q);
+  //myth_sleep_queue_init(barrier->sleep_q);
+  myth_sleep_stack_init(barrier->sleep_s);
   return 0;
 }
 
 static inline int myth_barrier_destroy_body(myth_barrier_t * barrier) {
   assert(barrier->state == 0);
-  myth_sleep_queue_destroy(barrier->sleep_q);
+  //myth_sleep_queue_destroy(barrier->sleep_q);
+  myth_sleep_stack_destroy(barrier->sleep_s);
   return 0;
 }
 
@@ -445,10 +580,12 @@ static inline int myth_barrier_wait_body(myth_barrier_t * barrier) {
       /* I am the last one. wake up all guys.
 	 TODO: spin block */
       barrier->state = 0;	/* reset state */
-      myth_wake_many_from_queue(barrier->sleep_q, 0, 0, c);
+      //myth_wake_many_from_queue(barrier->sleep_q, 0, 0, c);
+      myth_wake_many_from_stack(barrier->sleep_s, 0, 0, c);
       return MYTH_BARRIER_SERIAL_THREAD;
     } else {
-      myth_block_on_queue(barrier->sleep_q, 0);
+      //myth_block_on_queue(barrier->sleep_q, 0);
+      myth_block_on_stack(barrier->sleep_s, 0);
       return 0;
     }
   }

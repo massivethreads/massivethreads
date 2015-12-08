@@ -26,44 +26,46 @@ typedef struct {
 node * V1;
 long M, N;
 
+#define V(i,j) V1[(i)*N+(j)]
+
 void * visit_node(void * arg_) {
-  node * u = arg_;
+  node * u = (node *)arg_;
   long x = u->x;
   long y = u->y;
   myth_join_counter_wait(u->jc);
-  node (*V)[N] = (node (*)[N])V1;
+  //node (*V)[N] = (node (*)[N])V1;
 
   if (x == M - 1 || y == N - 1) {
     u->r = 1;
   } else {
-    u->r = V[x + 1][y].r + V[x][y + 1].r;
+    u->r = V(x + 1,y).r + V(x,y + 1).r;
   }
   if (x > 0) {
-    myth_join_counter_dec(V[x - 1][y].jc);
+    myth_join_counter_dec(V(x - 1,y).jc);
   }
   if (y > 0) {
-    myth_join_counter_dec(V[x][y - 1].jc);
+    myth_join_counter_dec(V(x,y - 1).jc);
   }
   return 0;
 }
 
-void init_graph(long m, long n, node V[m][n]) {
+void init_graph(long m, long n, node * V1) {
   long i, j;
   for (i = 0; i < m; i++) {
     for (j = 0; j < n; j++) {
-      V[i][j].x = i;
-      V[i][j].y = j;
-      V[i][j].r = -1;
+      V(i,j).x = i;
+      V(i,j).y = j;
+      V(i,j).r = -1;
       long c = (i < m - 1) + (j < n - 1);
-      myth_join_counter_init(V[i][j].jc, 0, c);
+      myth_join_counter_init(V(i,j).jc, 0, c);
     }
   }
 }
 
 node * make_graph(long m, long n) {
-  node * V = calloc(sizeof(node), m * n);
-  init_graph(m, n, (node (*)[n])V);
-  return V;
+  node * V1 = (node *)calloc(sizeof(node), m * n);
+  init_graph(m, n, V1);
+  return V1;
 }
 
 long choose(long a, long b) {
@@ -87,7 +89,7 @@ int main(int argc, char ** argv) {
 			   0, 0,             sizeof(node), 0,
 			   M * N);
   assert(V1[0].r == choose(M + N - 2, M - 1));
-  printf("ans = %ld\n", V1[0].r);
+  printf("ans = %ld\n", V(0,0).r);
   printf("OK\n");
   return 0;
 }

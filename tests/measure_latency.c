@@ -44,7 +44,7 @@ typedef struct {
 } arg_t;
  
 void * f(void * arg_) {
-  arg_t * arg = arg_;
+  arg_t * arg = (arg_t *)arg_;
   arg->child_started = cur_time();
   while (! arg->parent_resumed) { }
   arg->child_almost_finished = 1;

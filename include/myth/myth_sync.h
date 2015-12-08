@@ -5,10 +5,6 @@
 
 #include "myth/myth_config.h"
 #include "myth/myth_sleep_queue.h"
-#if 0
-/* TODO: get rid of it */
-#include "myth_internal_lock.h"
-#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -26,6 +22,8 @@ extern "C" {
     volatile long state;		/* n_waiters|locked */
   } myth_mutex_t;
 
+#define MYTH_MUTEX_INITIALIZER { { MYTH_SLEEP_QUEUE_INITIALIZER }, 0 }
+
   /* ----------- condition variable ----------- */
 
   typedef struct myth_condattr {
@@ -34,7 +32,9 @@ extern "C" {
   //Conditional variable data structure
   typedef struct myth_cond {
     myth_sleep_queue_t sleep_q[1];
-  }__attribute__((aligned(CACHE_LINE_SIZE))) myth_cond_t;
+  } myth_cond_t;
+
+#define MYTH_COND_INITIALIZER { { MYTH_SLEEP_QUEUE_INITIALIZER } }
 
   /* ----------- barrier ----------- */
 
@@ -42,8 +42,9 @@ extern "C" {
   typedef struct myth_barrier {
     long n_threads;
     volatile long state;
-    myth_sleep_queue_t sleep_q[1];
-  } __attribute__((aligned(CACHE_LINE_SIZE))) myth_barrier_t;
+    //myth_sleep_queue_t sleep_q[1];
+    myth_sleep_stack_t sleep_s[1];
+  } myth_barrier_t;
 
 #define MYTH_BARRIER_SERIAL_THREAD PTHREAD_BARRIER_SERIAL_THREAD
 
@@ -58,7 +59,7 @@ extern "C" {
     long state_mask;		/* (1 << n_threads_bits) - 1 */
     volatile long state;
     myth_sleep_queue_t sleep_q[1];
-  } __attribute__((aligned(CACHE_LINE_SIZE))) myth_join_counter_t;
+  } myth_join_counter_t;
 
   /* ----------- full empty lock ----------- */
 
@@ -69,7 +70,7 @@ extern "C" {
     myth_mutex_t mutex[1];
     myth_cond_t cond[2];
     int status;
-  } __attribute__((aligned(CACHE_LINE_SIZE))) myth_felock_t;
+  } myth_felock_t;
 
 #ifdef __cplusplus
 } // extern "C"

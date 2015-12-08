@@ -52,7 +52,7 @@ typedef struct {
 } arg_t;
 
 void * producer(void * arg_) {
-  arg_t * arg = arg_;
+  arg_t * arg = (arg_t *)arg_;
   long n = arg->n;
   long n_consumers = arg->n_consumers;
   long buffer_size = arg->buffer_size;
@@ -64,7 +64,7 @@ void * producer(void * arg_) {
 }
 
 void * consumer(void * arg_) {
-  arg_t * arg = arg_;
+  arg_t * arg = (arg_t *)arg_;
   long n = arg->n;
   long n_consumers = arg->n_consumers;
   long i;

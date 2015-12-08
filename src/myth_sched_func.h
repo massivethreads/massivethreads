@@ -1013,12 +1013,12 @@ static inline int myth_create_join_many_ex_body(myth_thread_t * ids,
 
 
 //Detach a thread. The resource of detached thread is freed immediately after it finishes.
-static inline void myth_detach_body(myth_thread_t th)
+static inline int myth_detach_body(myth_thread_t th)
 {
   if (th->status==MYTH_STATUS_FREE_READY2){
     //If a thread is finished, just release resource
     free_myth_thread_struct_desc(myth_get_current_env(),th);
-    return;
+    return 0;
   }
   //Obtain lock
   myth_internal_lock_lock(&th->lock);
@@ -1031,6 +1031,7 @@ static inline void myth_detach_body(myth_thread_t th)
     myth_desc_set_detached(th);
     myth_internal_lock_unlock(&th->lock);
   }
+  return 0;
 }
 
 //Entry point of threads

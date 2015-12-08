@@ -5,7 +5,7 @@
 #include <myth/myth.h>
 
 void * f(void * x) {
-  return x + 34;
+  return (void *)((size_t)x + 34);
 }
 
 int main() {

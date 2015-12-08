@@ -220,4 +220,34 @@ static inline myth_sleep_queue_item_t myth_sleep_queue_deq(myth_sleep_queue_t * 
 
 #endif	/* MYTH_SLEEP_QUEUE_LOCK */
 
+
+static inline void myth_sleep_stack_init(myth_sleep_stack_t * s) {
+  s->top = 0;
+} 
+
+static inline void myth_sleep_stack_destroy(myth_sleep_stack_t * s) {
+  assert(s->top == 0);
+} 
+
+static inline myth_sleep_queue_item_t myth_sleep_stack_pop(myth_sleep_stack_t * s) {
+  while (1) {
+    myth_sleep_queue_item_t x = s->top;
+    if (x == 0) return x;
+    if (__sync_bool_compare_and_swap(&s->top, x, x->next)) {
+      return x;
+    }
+  }
+} 
+
+static inline long myth_sleep_stack_push(myth_sleep_stack_t * s, myth_sleep_queue_item_t x) {
+  while (1) {
+    myth_sleep_queue_item_t t = s->top;
+    x->next = t;
+    if (__sync_bool_compare_and_swap(&s->top, t, x)) {
+      return 0;
+    }
+  }
+} 
+
+
 #endif	/* MYTH_SLEEP_QUEUE_FUNC_H_ */

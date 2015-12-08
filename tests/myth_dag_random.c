@@ -36,7 +36,7 @@ node * V;
 long * E;
 
 void * visit_node(void * arg_) {
-  node * u = arg_;
+  node * u = (node *)arg_;
   long i;
   for (i = u->edges_begin; i < u->edges_end; i++) {
     myth_join_counter_dec(V[E[i]].jc);
@@ -45,8 +45,8 @@ void * visit_node(void * arg_) {
 }
 
 void make_graph(long n, long m) {
-  V = calloc(sizeof(node), n);
-  E = calloc(sizeof(long), m);
+  V = (node *)calloc(sizeof(node), n);
+  E = (long *)calloc(sizeof(long), m);
   long i;
   unsigned short rg0[3] = { 9, 1, 8 };
   unsigned short rg[3];

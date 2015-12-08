@@ -49,7 +49,7 @@ void wait_a_while() {
 }
 
 void * f(void * arg_) {
-  arg_t * arg = arg_;
+  arg_t * arg = (arg_t *)arg_;
   arg->child_started = cur_time();
   while (! arg->parent_resumed) { }
   wait_a_while();

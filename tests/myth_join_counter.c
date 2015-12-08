@@ -22,14 +22,14 @@ long f(long x) {
 }
 
 void * producer(void * arg_) {
-  arg_t * arg = arg_;
+  arg_t * arg = (arg_t *)arg_;
   arg->y = f(arg->x);
   myth_join_counter_dec(j);
   return 0;
 }
 
 void * consumer(void * arg_) {
-  arg_t * arg = arg_;
+  arg_t * arg = (arg_t *)arg_;
   myth_join_counter_wait(j);
   long i;
   for (i = 1; i < arg->n_producers; i++) {
@@ -42,7 +42,7 @@ int main(int argc, char ** argv) {
   long n_producers = (argc > 1 ? atol(argv[1]) : 1000);
   long i;
   arg_t arg = { 0, -1, -1, n_producers };
-  arg_t * args = calloc(sizeof(arg_t), (n_producers + 1));
+  arg_t * args = (arg_t *)calloc(sizeof(arg_t), (n_producers + 1));
 
   myth_join_counter_init(j, 0, n_producers);
   for (i = 0; i < n_producers + 1; i++) {

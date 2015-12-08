@@ -15,7 +15,7 @@ typedef struct {
 } arg_t;
  
 void * f(void * arg_) {
-  arg_t * arg = arg_;
+  arg_t * arg = (arg_t *)arg_;
   long a = arg->a, b = arg->b;
   long ninc_per_thread = arg->ninc_per_thread;
   if (b - a == 1) {

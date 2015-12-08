@@ -531,7 +531,7 @@ extern "C" {
   */
   void *myth_getspecific(myth_key_t key);
 
-  void myth_detach(myth_thread_t th);
+  int myth_detach(myth_thread_t th);
   int myth_setcancelstate(int state, int *oldstate);
   int myth_setcanceltype(int type, int *oldtype);
   int myth_cancel(myth_thread_t th);

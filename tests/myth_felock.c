@@ -17,7 +17,7 @@ typedef struct {
 } arg_t;
 
 void * incrementer(void * arg_) {
-  arg_t * arg = arg_;
+  arg_t * arg = (arg_t *)arg_;
   long n = arg->n;
   long i;
   for (i = 0; i < n; i++) {
@@ -40,7 +40,7 @@ int main(int argc, char ** argv) {
   long n = (argc > 2 ? atol(argv[2]) : 1000);
   long i;
   arg_t arg = { 0, n };
-  arg_t * args = calloc(sizeof(arg_t), n_threads);
+  arg_t * args = (arg_t *)calloc(sizeof(arg_t), n_threads);
 
   myth_felock_init(fe, 0);
   for (i = 0; i < n_threads; i++) {

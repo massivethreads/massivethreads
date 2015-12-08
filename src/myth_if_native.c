@@ -94,9 +94,8 @@ void myth_exit(void *ret)
   myth_exit_body(ret);
 }
 
-void myth_detach(myth_thread_t th)
-{
-  myth_detach_body(th);
+int myth_detach(myth_thread_t th) {
+  return myth_detach_body(th);
 }
 
 void myth_yield(int force_worksteal)

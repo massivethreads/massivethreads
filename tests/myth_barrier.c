@@ -18,7 +18,7 @@ typedef struct {
 } arg_t;
 
 void * f(void * arg_) {
-  arg_t * arg = arg_;
+  arg_t * arg = (arg_t *)arg_;
   long id = arg->id;
   long n_threads = arg->n_threads;
   long n = arg->n;
@@ -40,8 +40,8 @@ int main(int argc, char ** argv) {
   long n_threads = (argc > 1 ? atol(argv[1]) : 1000);
   long n         = (argc > 2 ? atol(argv[2]) : 1000);
   myth_thread_t tids[n_threads];
-  long * a = calloc(sizeof(long), n_threads);
-  arg_t * args = calloc(sizeof(arg_t), n_threads);
+  long * a = (long *)calloc(sizeof(long), n_threads);
+  arg_t * args = (arg_t *)calloc(sizeof(arg_t), n_threads);
   arg_t arg = { -1, n_threads, n, a };
   long i;
   myth_barrier_init(b, 0, n_threads);

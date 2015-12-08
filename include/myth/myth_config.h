@@ -99,8 +99,6 @@
 
 //Enable PTHREAD_MUTEX_INITIALIZER
 #define MYTH_SUPPORT_MUTEX_INITIALIZER
-//This option makes mutex operation faster but may be unsafe in some platform
-#define MYTH_UNSAFE_MUTEX_INITIALIZER
 
 //Use spinlock as mutex, faster but higher risk of deadlock
 ///////////////#define MYTH_MUTEX_BY_SPIN

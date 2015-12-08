@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 //#include <myth/myth.h>
-#include <myth_sleep_queue_func.h>
+#include "../src/myth_sleep_queue_func.h"
 
 myth_sleep_queue_t q[1];
 
@@ -26,7 +26,7 @@ typedef struct {
 
 
 void * worker(void * arg_) {
-  arg_t * arg = arg_;
+  arg_t * arg = (arg_t *)arg_;
   long n = arg->n;
   long i;
   arg->my_item.next = 0;

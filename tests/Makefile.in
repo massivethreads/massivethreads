@@ -86,8 +86,27 @@ check_PROGRAMS = myth_create_0$(EXEEXT) myth_create_1$(EXEEXT) \
 	myth_cond_broadcast_1$(EXEEXT) myth_barrier$(EXEEXT) \
 	myth_join_counter$(EXEEXT) myth_felock$(EXEEXT) \
 	myth_dag_1d$(EXEEXT) myth_dag_2d$(EXEEXT) \
-	myth_dag_random$(EXEEXT) measure_create$(EXEEXT) \
-	measure_latency$(EXEEXT) measure_wakeup_latency$(EXEEXT)
+	myth_dag_random$(EXEEXT) pth_create_0$(EXEEXT) \
+	pth_create_1$(EXEEXT) pth_create_2$(EXEEXT) pth_yield$(EXEEXT) \
+	pth_lock$(EXEEXT) pth_trylock$(EXEEXT) pth_mixlock$(EXEEXT) \
+	pth_barrier$(EXEEXT) measure_create$(EXEEXT) \
+	measure_latency$(EXEEXT) measure_wakeup_latency$(EXEEXT) \
+	myth_create_0_cc$(EXEEXT) myth_create_1_cc$(EXEEXT) \
+	myth_create_2_cc$(EXEEXT) myth_create_join_many_cc$(EXEEXT) \
+	myth_yield_0_cc$(EXEEXT) myth_yield_1_cc$(EXEEXT) \
+	myth_yield_2_cc$(EXEEXT) myth_sleep_queue_cc$(EXEEXT) \
+	myth_lock_cc$(EXEEXT) myth_trylock_cc$(EXEEXT) \
+	myth_mixlock_cc$(EXEEXT) myth_cond_signal_cc$(EXEEXT) \
+	myth_cond_broadcast_0_cc$(EXEEXT) \
+	myth_cond_broadcast_1_cc$(EXEEXT) myth_barrier_cc$(EXEEXT) \
+	myth_join_counter_cc$(EXEEXT) myth_felock_cc$(EXEEXT) \
+	myth_dag_1d_cc$(EXEEXT) myth_dag_2d_cc$(EXEEXT) \
+	myth_dag_random_cc$(EXEEXT) pth_create_0_cc$(EXEEXT) \
+	pth_create_1_cc$(EXEEXT) pth_create_2_cc$(EXEEXT) \
+	pth_yield_cc$(EXEEXT) pth_lock_cc$(EXEEXT) \
+	pth_trylock_cc$(EXEEXT) pth_mixlock_cc$(EXEEXT) \
+	pth_barrier_cc$(EXEEXT) measure_create_cc$(EXEEXT) \
+	measure_latency_cc$(EXEEXT) measure_wakeup_latency_cc$(EXEEXT)
 subdir = tests
 DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/Makefile.am \
 	$(top_srcdir)/depcomp $(top_srcdir)/test-driver
@@ -113,6 +132,14 @@ measure_create_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
 	$(measure_create_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o \
 	$@
+am_measure_create_cc_OBJECTS =  \
+	measure_create_cc-measure_create_cc.$(OBJEXT)
+measure_create_cc_OBJECTS = $(am_measure_create_cc_OBJECTS)
+measure_create_cc_DEPENDENCIES = $(common_ldadd)
+measure_create_cc_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX \
+	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CXXLD) \
+	$(measure_create_cc_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) \
+	$(LDFLAGS) -o $@
 am_measure_latency_OBJECTS =  \
 	measure_latency-measure_latency.$(OBJEXT)
 measure_latency_OBJECTS = $(am_measure_latency_OBJECTS)
@@ -121,6 +148,14 @@ measure_latency_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
 	$(measure_latency_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) \
 	-o $@
+am_measure_latency_cc_OBJECTS =  \
+	measure_latency_cc-measure_latency_cc.$(OBJEXT)
+measure_latency_cc_OBJECTS = $(am_measure_latency_cc_OBJECTS)
+measure_latency_cc_DEPENDENCIES = $(common_ldadd)
+measure_latency_cc_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX \
+	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CXXLD) \
+	$(measure_latency_cc_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) \
+	$(LDFLAGS) -o $@
 am_measure_wakeup_latency_OBJECTS =  \
 	measure_wakeup_latency-measure_wakeup_latency.$(OBJEXT)
 measure_wakeup_latency_OBJECTS = $(am_measure_wakeup_latency_OBJECTS)
@@ -129,12 +164,29 @@ measure_wakeup_latency_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
 	$(measure_wakeup_latency_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
+am_measure_wakeup_latency_cc_OBJECTS =  \
+	measure_wakeup_latency_cc-measure_wakeup_latency_cc.$(OBJEXT)
+measure_wakeup_latency_cc_OBJECTS =  \
+	$(am_measure_wakeup_latency_cc_OBJECTS)
+measure_wakeup_latency_cc_DEPENDENCIES = $(common_ldadd)
+measure_wakeup_latency_cc_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX \
+	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CXXLD) \
+	$(measure_wakeup_latency_cc_CXXFLAGS) $(CXXFLAGS) \
+	$(AM_LDFLAGS) $(LDFLAGS) -o $@
 am_myth_barrier_OBJECTS = myth_barrier-myth_barrier.$(OBJEXT)
 myth_barrier_OBJECTS = $(am_myth_barrier_OBJECTS)
 myth_barrier_DEPENDENCIES = $(common_ldadd)
 myth_barrier_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(myth_barrier_CFLAGS) \
 	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
+am_myth_barrier_cc_OBJECTS =  \
+	myth_barrier_cc-myth_barrier_cc.$(OBJEXT)
+myth_barrier_cc_OBJECTS = $(am_myth_barrier_cc_OBJECTS)
+myth_barrier_cc_DEPENDENCIES = $(common_ldadd)
+myth_barrier_cc_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX \
+	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CXXLD) \
+	$(myth_barrier_cc_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) \
+	$(LDFLAGS) -o $@
 am_myth_cond_broadcast_0_OBJECTS =  \
 	myth_cond_broadcast_0-myth_cond_broadcast_0.$(OBJEXT)
 myth_cond_broadcast_0_OBJECTS = $(am_myth_cond_broadcast_0_OBJECTS)
@@ -142,6 +194,15 @@ myth_cond_broadcast_0_DEPENDENCIES = $(common_ldadd)
 myth_cond_broadcast_0_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
 	$(myth_cond_broadcast_0_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
+	$(LDFLAGS) -o $@
+am_myth_cond_broadcast_0_cc_OBJECTS =  \
+	myth_cond_broadcast_0_cc-myth_cond_broadcast_0_cc.$(OBJEXT)
+myth_cond_broadcast_0_cc_OBJECTS =  \
+	$(am_myth_cond_broadcast_0_cc_OBJECTS)
+myth_cond_broadcast_0_cc_DEPENDENCIES = $(common_ldadd)
+myth_cond_broadcast_0_cc_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX \
+	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CXXLD) \
+	$(myth_cond_broadcast_0_cc_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
 am_myth_cond_broadcast_1_OBJECTS =  \
 	myth_cond_broadcast_1-myth_cond_broadcast_1.$(OBJEXT)
@@ -151,6 +212,15 @@ myth_cond_broadcast_1_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
 	$(myth_cond_broadcast_1_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
+am_myth_cond_broadcast_1_cc_OBJECTS =  \
+	myth_cond_broadcast_1_cc-myth_cond_broadcast_1_cc.$(OBJEXT)
+myth_cond_broadcast_1_cc_OBJECTS =  \
+	$(am_myth_cond_broadcast_1_cc_OBJECTS)
+myth_cond_broadcast_1_cc_DEPENDENCIES = $(common_ldadd)
+myth_cond_broadcast_1_cc_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX \
+	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CXXLD) \
+	$(myth_cond_broadcast_1_cc_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) \
+	$(LDFLAGS) -o $@
 am_myth_cond_signal_OBJECTS =  \
 	myth_cond_signal-myth_cond_signal.$(OBJEXT)
 myth_cond_signal_OBJECTS = $(am_myth_cond_signal_OBJECTS)
@@ -159,24 +229,56 @@ myth_cond_signal_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
 	$(myth_cond_signal_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) \
 	-o $@
+am_myth_cond_signal_cc_OBJECTS =  \
+	myth_cond_signal_cc-myth_cond_signal_cc.$(OBJEXT)
+myth_cond_signal_cc_OBJECTS = $(am_myth_cond_signal_cc_OBJECTS)
+myth_cond_signal_cc_DEPENDENCIES = $(common_ldadd)
+myth_cond_signal_cc_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX \
+	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CXXLD) \
+	$(myth_cond_signal_cc_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) \
+	$(LDFLAGS) -o $@
 am_myth_create_0_OBJECTS = myth_create_0-myth_create_0.$(OBJEXT)
 myth_create_0_OBJECTS = $(am_myth_create_0_OBJECTS)
 myth_create_0_DEPENDENCIES = $(common_ldadd)
 myth_create_0_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(myth_create_0_CFLAGS) \
 	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
+am_myth_create_0_cc_OBJECTS =  \
+	myth_create_0_cc-myth_create_0_cc.$(OBJEXT)
+myth_create_0_cc_OBJECTS = $(am_myth_create_0_cc_OBJECTS)
+myth_create_0_cc_DEPENDENCIES = $(common_ldadd)
+myth_create_0_cc_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX \
+	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CXXLD) \
+	$(myth_create_0_cc_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) \
+	$(LDFLAGS) -o $@
 am_myth_create_1_OBJECTS = myth_create_1-myth_create_1.$(OBJEXT)
 myth_create_1_OBJECTS = $(am_myth_create_1_OBJECTS)
 myth_create_1_DEPENDENCIES = $(common_ldadd)
 myth_create_1_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(myth_create_1_CFLAGS) \
 	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
+am_myth_create_1_cc_OBJECTS =  \
+	myth_create_1_cc-myth_create_1_cc.$(OBJEXT)
+myth_create_1_cc_OBJECTS = $(am_myth_create_1_cc_OBJECTS)
+myth_create_1_cc_DEPENDENCIES = $(common_ldadd)
+myth_create_1_cc_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX \
+	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CXXLD) \
+	$(myth_create_1_cc_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) \
+	$(LDFLAGS) -o $@
 am_myth_create_2_OBJECTS = myth_create_2-myth_create_2.$(OBJEXT)
 myth_create_2_OBJECTS = $(am_myth_create_2_OBJECTS)
 myth_create_2_DEPENDENCIES = $(common_ldadd)
 myth_create_2_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(myth_create_2_CFLAGS) \
 	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
+am_myth_create_2_cc_OBJECTS =  \
+	myth_create_2_cc-myth_create_2_cc.$(OBJEXT)
+myth_create_2_cc_OBJECTS = $(am_myth_create_2_cc_OBJECTS)
+myth_create_2_cc_DEPENDENCIES = $(common_ldadd)
+myth_create_2_cc_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX \
+	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CXXLD) \
+	$(myth_create_2_cc_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) \
+	$(LDFLAGS) -o $@
 am_myth_create_join_many_OBJECTS =  \
 	myth_create_join_many-myth_create_join_many.$(OBJEXT)
 myth_create_join_many_OBJECTS = $(am_myth_create_join_many_OBJECTS)
@@ -185,18 +287,41 @@ myth_create_join_many_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
 	$(myth_create_join_many_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
+am_myth_create_join_many_cc_OBJECTS =  \
+	myth_create_join_many_cc-myth_create_join_many_cc.$(OBJEXT)
+myth_create_join_many_cc_OBJECTS =  \
+	$(am_myth_create_join_many_cc_OBJECTS)
+myth_create_join_many_cc_DEPENDENCIES = $(common_ldadd)
+myth_create_join_many_cc_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX \
+	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CXXLD) \
+	$(myth_create_join_many_cc_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) \
+	$(LDFLAGS) -o $@
 am_myth_dag_1d_OBJECTS = myth_dag_1d-myth_dag_1d.$(OBJEXT)
 myth_dag_1d_OBJECTS = $(am_myth_dag_1d_OBJECTS)
 myth_dag_1d_DEPENDENCIES = $(common_ldadd)
 myth_dag_1d_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(myth_dag_1d_CFLAGS) \
 	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
+am_myth_dag_1d_cc_OBJECTS = myth_dag_1d_cc-myth_dag_1d_cc.$(OBJEXT)
+myth_dag_1d_cc_OBJECTS = $(am_myth_dag_1d_cc_OBJECTS)
+myth_dag_1d_cc_DEPENDENCIES = $(common_ldadd)
+myth_dag_1d_cc_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX \
+	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CXXLD) \
+	$(myth_dag_1d_cc_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) \
+	$(LDFLAGS) -o $@
 am_myth_dag_2d_OBJECTS = myth_dag_2d-myth_dag_2d.$(OBJEXT)
 myth_dag_2d_OBJECTS = $(am_myth_dag_2d_OBJECTS)
 myth_dag_2d_DEPENDENCIES = $(common_ldadd)
 myth_dag_2d_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(myth_dag_2d_CFLAGS) \
 	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
+am_myth_dag_2d_cc_OBJECTS = myth_dag_2d_cc-myth_dag_2d_cc.$(OBJEXT)
+myth_dag_2d_cc_OBJECTS = $(am_myth_dag_2d_cc_OBJECTS)
+myth_dag_2d_cc_DEPENDENCIES = $(common_ldadd)
+myth_dag_2d_cc_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX \
+	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CXXLD) \
+	$(myth_dag_2d_cc_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) \
+	$(LDFLAGS) -o $@
 am_myth_dag_random_OBJECTS =  \
 	myth_dag_random-myth_dag_random.$(OBJEXT)
 myth_dag_random_OBJECTS = $(am_myth_dag_random_OBJECTS)
@@ -205,12 +330,27 @@ myth_dag_random_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
 	$(myth_dag_random_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) \
 	-o $@
+am_myth_dag_random_cc_OBJECTS =  \
+	myth_dag_random_cc-myth_dag_random_cc.$(OBJEXT)
+myth_dag_random_cc_OBJECTS = $(am_myth_dag_random_cc_OBJECTS)
+myth_dag_random_cc_DEPENDENCIES = $(common_ldadd)
+myth_dag_random_cc_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX \
+	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CXXLD) \
+	$(myth_dag_random_cc_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) \
+	$(LDFLAGS) -o $@
 am_myth_felock_OBJECTS = myth_felock-myth_felock.$(OBJEXT)
 myth_felock_OBJECTS = $(am_myth_felock_OBJECTS)
 myth_felock_DEPENDENCIES = $(common_ldadd)
 myth_felock_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(myth_felock_CFLAGS) \
 	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
+am_myth_felock_cc_OBJECTS = myth_felock_cc-myth_felock_cc.$(OBJEXT)
+myth_felock_cc_OBJECTS = $(am_myth_felock_cc_OBJECTS)
+myth_felock_cc_DEPENDENCIES = $(common_ldadd)
+myth_felock_cc_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX \
+	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CXXLD) \
+	$(myth_felock_cc_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) \
+	$(LDFLAGS) -o $@
 am_myth_join_counter_OBJECTS =  \
 	myth_join_counter-myth_join_counter.$(OBJEXT)
 myth_join_counter_OBJECTS = $(am_myth_join_counter_OBJECTS)
@@ -219,18 +359,40 @@ myth_join_counter_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
 	$(myth_join_counter_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) \
 	-o $@
+am_myth_join_counter_cc_OBJECTS =  \
+	myth_join_counter_cc-myth_join_counter_cc.$(OBJEXT)
+myth_join_counter_cc_OBJECTS = $(am_myth_join_counter_cc_OBJECTS)
+myth_join_counter_cc_DEPENDENCIES = $(common_ldadd)
+myth_join_counter_cc_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX \
+	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CXXLD) \
+	$(myth_join_counter_cc_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) \
+	$(LDFLAGS) -o $@
 am_myth_lock_OBJECTS = myth_lock-myth_lock.$(OBJEXT)
 myth_lock_OBJECTS = $(am_myth_lock_OBJECTS)
 myth_lock_DEPENDENCIES = $(common_ldadd)
 myth_lock_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(myth_lock_CFLAGS) \
 	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
+am_myth_lock_cc_OBJECTS = myth_lock_cc-myth_lock_cc.$(OBJEXT)
+myth_lock_cc_OBJECTS = $(am_myth_lock_cc_OBJECTS)
+myth_lock_cc_DEPENDENCIES = $(common_ldadd)
+myth_lock_cc_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CXXLD) $(myth_lock_cc_CXXFLAGS) \
+	$(CXXFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
 am_myth_mixlock_OBJECTS = myth_mixlock-myth_mixlock.$(OBJEXT)
 myth_mixlock_OBJECTS = $(am_myth_mixlock_OBJECTS)
 myth_mixlock_DEPENDENCIES = $(common_ldadd)
 myth_mixlock_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(myth_mixlock_CFLAGS) \
 	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
+am_myth_mixlock_cc_OBJECTS =  \
+	myth_mixlock_cc-myth_mixlock_cc.$(OBJEXT)
+myth_mixlock_cc_OBJECTS = $(am_myth_mixlock_cc_OBJECTS)
+myth_mixlock_cc_DEPENDENCIES = $(common_ldadd)
+myth_mixlock_cc_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX \
+	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CXXLD) \
+	$(myth_mixlock_cc_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) \
+	$(LDFLAGS) -o $@
 am_myth_sleep_queue_OBJECTS =  \
 	myth_sleep_queue-myth_sleep_queue.$(OBJEXT)
 myth_sleep_queue_OBJECTS = $(am_myth_sleep_queue_OBJECTS)
@@ -239,30 +401,175 @@ myth_sleep_queue_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
 	$(myth_sleep_queue_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) \
 	-o $@
+am_myth_sleep_queue_cc_OBJECTS =  \
+	myth_sleep_queue_cc-myth_sleep_queue_cc.$(OBJEXT)
+myth_sleep_queue_cc_OBJECTS = $(am_myth_sleep_queue_cc_OBJECTS)
+myth_sleep_queue_cc_DEPENDENCIES = $(common_ldadd)
+myth_sleep_queue_cc_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX \
+	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CXXLD) \
+	$(myth_sleep_queue_cc_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) \
+	$(LDFLAGS) -o $@
 am_myth_trylock_OBJECTS = myth_trylock-myth_trylock.$(OBJEXT)
 myth_trylock_OBJECTS = $(am_myth_trylock_OBJECTS)
 myth_trylock_DEPENDENCIES = $(common_ldadd)
 myth_trylock_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(myth_trylock_CFLAGS) \
 	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
+am_myth_trylock_cc_OBJECTS =  \
+	myth_trylock_cc-myth_trylock_cc.$(OBJEXT)
+myth_trylock_cc_OBJECTS = $(am_myth_trylock_cc_OBJECTS)
+myth_trylock_cc_DEPENDENCIES = $(common_ldadd)
+myth_trylock_cc_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX \
+	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CXXLD) \
+	$(myth_trylock_cc_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) \
+	$(LDFLAGS) -o $@
 am_myth_yield_0_OBJECTS = myth_yield_0-myth_yield_0.$(OBJEXT)
 myth_yield_0_OBJECTS = $(am_myth_yield_0_OBJECTS)
 myth_yield_0_DEPENDENCIES = $(common_ldadd)
 myth_yield_0_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(myth_yield_0_CFLAGS) \
 	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
+am_myth_yield_0_cc_OBJECTS =  \
+	myth_yield_0_cc-myth_yield_0_cc.$(OBJEXT)
+myth_yield_0_cc_OBJECTS = $(am_myth_yield_0_cc_OBJECTS)
+myth_yield_0_cc_DEPENDENCIES = $(common_ldadd)
+myth_yield_0_cc_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX \
+	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CXXLD) \
+	$(myth_yield_0_cc_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) \
+	$(LDFLAGS) -o $@
 am_myth_yield_1_OBJECTS = myth_yield_1-myth_yield_1.$(OBJEXT)
 myth_yield_1_OBJECTS = $(am_myth_yield_1_OBJECTS)
 myth_yield_1_DEPENDENCIES = $(common_ldadd)
 myth_yield_1_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(myth_yield_1_CFLAGS) \
 	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
+am_myth_yield_1_cc_OBJECTS =  \
+	myth_yield_1_cc-myth_yield_1_cc.$(OBJEXT)
+myth_yield_1_cc_OBJECTS = $(am_myth_yield_1_cc_OBJECTS)
+myth_yield_1_cc_DEPENDENCIES = $(common_ldadd)
+myth_yield_1_cc_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX \
+	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CXXLD) \
+	$(myth_yield_1_cc_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) \
+	$(LDFLAGS) -o $@
 am_myth_yield_2_OBJECTS = myth_yield_2-myth_yield_2.$(OBJEXT)
 myth_yield_2_OBJECTS = $(am_myth_yield_2_OBJECTS)
 myth_yield_2_DEPENDENCIES = $(common_ldadd)
 myth_yield_2_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(myth_yield_2_CFLAGS) \
 	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
+am_myth_yield_2_cc_OBJECTS =  \
+	myth_yield_2_cc-myth_yield_2_cc.$(OBJEXT)
+myth_yield_2_cc_OBJECTS = $(am_myth_yield_2_cc_OBJECTS)
+myth_yield_2_cc_DEPENDENCIES = $(common_ldadd)
+myth_yield_2_cc_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX \
+	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CXXLD) \
+	$(myth_yield_2_cc_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) \
+	$(LDFLAGS) -o $@
+am_pth_barrier_OBJECTS = pth_barrier-pth_barrier.$(OBJEXT)
+pth_barrier_OBJECTS = $(am_pth_barrier_OBJECTS)
+pth_barrier_DEPENDENCIES = $(common_ldadd)
+pth_barrier_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(pth_barrier_CFLAGS) \
+	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
+am_pth_barrier_cc_OBJECTS = pth_barrier_cc-pth_barrier_cc.$(OBJEXT)
+pth_barrier_cc_OBJECTS = $(am_pth_barrier_cc_OBJECTS)
+pth_barrier_cc_DEPENDENCIES = $(common_ldadd)
+pth_barrier_cc_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX \
+	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CXXLD) \
+	$(pth_barrier_cc_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) \
+	$(LDFLAGS) -o $@
+am_pth_create_0_OBJECTS = pth_create_0-pth_create_0.$(OBJEXT)
+pth_create_0_OBJECTS = $(am_pth_create_0_OBJECTS)
+pth_create_0_DEPENDENCIES = $(common_ldadd)
+pth_create_0_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(pth_create_0_CFLAGS) \
+	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
+am_pth_create_0_cc_OBJECTS =  \
+	pth_create_0_cc-pth_create_0_cc.$(OBJEXT)
+pth_create_0_cc_OBJECTS = $(am_pth_create_0_cc_OBJECTS)
+pth_create_0_cc_DEPENDENCIES = $(common_ldadd)
+pth_create_0_cc_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX \
+	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CXXLD) \
+	$(pth_create_0_cc_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) \
+	$(LDFLAGS) -o $@
+am_pth_create_1_OBJECTS = pth_create_1-pth_create_1.$(OBJEXT)
+pth_create_1_OBJECTS = $(am_pth_create_1_OBJECTS)
+pth_create_1_DEPENDENCIES = $(common_ldadd)
+pth_create_1_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(pth_create_1_CFLAGS) \
+	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
+am_pth_create_1_cc_OBJECTS =  \
+	pth_create_1_cc-pth_create_1_cc.$(OBJEXT)
+pth_create_1_cc_OBJECTS = $(am_pth_create_1_cc_OBJECTS)
+pth_create_1_cc_DEPENDENCIES = $(common_ldadd)
+pth_create_1_cc_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX \
+	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CXXLD) \
+	$(pth_create_1_cc_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) \
+	$(LDFLAGS) -o $@
+am_pth_create_2_OBJECTS = pth_create_2-pth_create_2.$(OBJEXT)
+pth_create_2_OBJECTS = $(am_pth_create_2_OBJECTS)
+pth_create_2_DEPENDENCIES = $(common_ldadd)
+pth_create_2_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(pth_create_2_CFLAGS) \
+	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
+am_pth_create_2_cc_OBJECTS =  \
+	pth_create_2_cc-pth_create_2_cc.$(OBJEXT)
+pth_create_2_cc_OBJECTS = $(am_pth_create_2_cc_OBJECTS)
+pth_create_2_cc_DEPENDENCIES = $(common_ldadd)
+pth_create_2_cc_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX \
+	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CXXLD) \
+	$(pth_create_2_cc_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) \
+	$(LDFLAGS) -o $@
+am_pth_lock_OBJECTS = pth_lock-pth_lock.$(OBJEXT)
+pth_lock_OBJECTS = $(am_pth_lock_OBJECTS)
+pth_lock_DEPENDENCIES = $(common_ldadd)
+pth_lock_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(pth_lock_CFLAGS) \
+	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
+am_pth_lock_cc_OBJECTS = pth_lock_cc-pth_lock_cc.$(OBJEXT)
+pth_lock_cc_OBJECTS = $(am_pth_lock_cc_OBJECTS)
+pth_lock_cc_DEPENDENCIES = $(common_ldadd)
+pth_lock_cc_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CXXLD) $(pth_lock_cc_CXXFLAGS) \
+	$(CXXFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
+am_pth_mixlock_OBJECTS = pth_mixlock-pth_mixlock.$(OBJEXT)
+pth_mixlock_OBJECTS = $(am_pth_mixlock_OBJECTS)
+pth_mixlock_DEPENDENCIES = $(common_ldadd)
+pth_mixlock_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(pth_mixlock_CFLAGS) \
+	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
+am_pth_mixlock_cc_OBJECTS = pth_mixlock_cc-pth_mixlock_cc.$(OBJEXT)
+pth_mixlock_cc_OBJECTS = $(am_pth_mixlock_cc_OBJECTS)
+pth_mixlock_cc_DEPENDENCIES = $(common_ldadd)
+pth_mixlock_cc_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX \
+	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CXXLD) \
+	$(pth_mixlock_cc_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) \
+	$(LDFLAGS) -o $@
+am_pth_trylock_OBJECTS = pth_trylock-pth_trylock.$(OBJEXT)
+pth_trylock_OBJECTS = $(am_pth_trylock_OBJECTS)
+pth_trylock_DEPENDENCIES = $(common_ldadd)
+pth_trylock_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(pth_trylock_CFLAGS) \
+	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
+am_pth_trylock_cc_OBJECTS = pth_trylock_cc-pth_trylock_cc.$(OBJEXT)
+pth_trylock_cc_OBJECTS = $(am_pth_trylock_cc_OBJECTS)
+pth_trylock_cc_DEPENDENCIES = $(common_ldadd)
+pth_trylock_cc_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX \
+	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CXXLD) \
+	$(pth_trylock_cc_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) \
+	$(LDFLAGS) -o $@
+am_pth_yield_OBJECTS = pth_yield-pth_yield.$(OBJEXT)
+pth_yield_OBJECTS = $(am_pth_yield_OBJECTS)
+pth_yield_DEPENDENCIES = $(common_ldadd)
+pth_yield_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(pth_yield_CFLAGS) \
+	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
+am_pth_yield_cc_OBJECTS = pth_yield_cc-pth_yield_cc.$(OBJEXT)
+pth_yield_cc_OBJECTS = $(am_pth_yield_cc_OBJECTS)
+pth_yield_cc_DEPENDENCIES = $(common_ldadd)
+pth_yield_cc_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CXXLD) $(pth_yield_cc_CXXFLAGS) \
+	$(CXXFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
 am__v_P_0 = false
@@ -297,30 +604,92 @@ AM_V_CCLD = $(am__v_CCLD_@AM_V@)
 am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
-SOURCES = $(measure_create_SOURCES) $(measure_latency_SOURCES) \
-	$(measure_wakeup_latency_SOURCES) $(myth_barrier_SOURCES) \
-	$(myth_cond_broadcast_0_SOURCES) \
-	$(myth_cond_broadcast_1_SOURCES) $(myth_cond_signal_SOURCES) \
-	$(myth_create_0_SOURCES) $(myth_create_1_SOURCES) \
-	$(myth_create_2_SOURCES) $(myth_create_join_many_SOURCES) \
-	$(myth_dag_1d_SOURCES) $(myth_dag_2d_SOURCES) \
-	$(myth_dag_random_SOURCES) $(myth_felock_SOURCES) \
-	$(myth_join_counter_SOURCES) $(myth_lock_SOURCES) \
-	$(myth_mixlock_SOURCES) $(myth_sleep_queue_SOURCES) \
-	$(myth_trylock_SOURCES) $(myth_yield_0_SOURCES) \
-	$(myth_yield_1_SOURCES) $(myth_yield_2_SOURCES)
-DIST_SOURCES = $(measure_create_SOURCES) $(measure_latency_SOURCES) \
-	$(measure_wakeup_latency_SOURCES) $(myth_barrier_SOURCES) \
-	$(myth_cond_broadcast_0_SOURCES) \
-	$(myth_cond_broadcast_1_SOURCES) $(myth_cond_signal_SOURCES) \
-	$(myth_create_0_SOURCES) $(myth_create_1_SOURCES) \
-	$(myth_create_2_SOURCES) $(myth_create_join_many_SOURCES) \
-	$(myth_dag_1d_SOURCES) $(myth_dag_2d_SOURCES) \
-	$(myth_dag_random_SOURCES) $(myth_felock_SOURCES) \
-	$(myth_join_counter_SOURCES) $(myth_lock_SOURCES) \
-	$(myth_mixlock_SOURCES) $(myth_sleep_queue_SOURCES) \
-	$(myth_trylock_SOURCES) $(myth_yield_0_SOURCES) \
-	$(myth_yield_1_SOURCES) $(myth_yield_2_SOURCES)
+CXXCOMPILE = $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
+	$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
+LTCXXCOMPILE = $(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) \
+	$(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) \
+	$(AM_CXXFLAGS) $(CXXFLAGS)
+AM_V_CXX = $(am__v_CXX_@AM_V@)
+am__v_CXX_ = $(am__v_CXX_@AM_DEFAULT_V@)
+am__v_CXX_0 = @echo "  CXX     " $@;
+am__v_CXX_1 = 
+CXXLD = $(CXX)
+CXXLINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CXXLD) $(AM_CXXFLAGS) \
+	$(CXXFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
+AM_V_CXXLD = $(am__v_CXXLD_@AM_V@)
+am__v_CXXLD_ = $(am__v_CXXLD_@AM_DEFAULT_V@)
+am__v_CXXLD_0 = @echo "  CXXLD   " $@;
+am__v_CXXLD_1 = 
+SOURCES = $(measure_create_SOURCES) $(measure_create_cc_SOURCES) \
+	$(measure_latency_SOURCES) $(measure_latency_cc_SOURCES) \
+	$(measure_wakeup_latency_SOURCES) \
+	$(measure_wakeup_latency_cc_SOURCES) $(myth_barrier_SOURCES) \
+	$(myth_barrier_cc_SOURCES) $(myth_cond_broadcast_0_SOURCES) \
+	$(myth_cond_broadcast_0_cc_SOURCES) \
+	$(myth_cond_broadcast_1_SOURCES) \
+	$(myth_cond_broadcast_1_cc_SOURCES) \
+	$(myth_cond_signal_SOURCES) $(myth_cond_signal_cc_SOURCES) \
+	$(myth_create_0_SOURCES) $(myth_create_0_cc_SOURCES) \
+	$(myth_create_1_SOURCES) $(myth_create_1_cc_SOURCES) \
+	$(myth_create_2_SOURCES) $(myth_create_2_cc_SOURCES) \
+	$(myth_create_join_many_SOURCES) \
+	$(myth_create_join_many_cc_SOURCES) $(myth_dag_1d_SOURCES) \
+	$(myth_dag_1d_cc_SOURCES) $(myth_dag_2d_SOURCES) \
+	$(myth_dag_2d_cc_SOURCES) $(myth_dag_random_SOURCES) \
+	$(myth_dag_random_cc_SOURCES) $(myth_felock_SOURCES) \
+	$(myth_felock_cc_SOURCES) $(myth_join_counter_SOURCES) \
+	$(myth_join_counter_cc_SOURCES) $(myth_lock_SOURCES) \
+	$(myth_lock_cc_SOURCES) $(myth_mixlock_SOURCES) \
+	$(myth_mixlock_cc_SOURCES) $(myth_sleep_queue_SOURCES) \
+	$(myth_sleep_queue_cc_SOURCES) $(myth_trylock_SOURCES) \
+	$(myth_trylock_cc_SOURCES) $(myth_yield_0_SOURCES) \
+	$(myth_yield_0_cc_SOURCES) $(myth_yield_1_SOURCES) \
+	$(myth_yield_1_cc_SOURCES) $(myth_yield_2_SOURCES) \
+	$(myth_yield_2_cc_SOURCES) $(pth_barrier_SOURCES) \
+	$(pth_barrier_cc_SOURCES) $(pth_create_0_SOURCES) \
+	$(pth_create_0_cc_SOURCES) $(pth_create_1_SOURCES) \
+	$(pth_create_1_cc_SOURCES) $(pth_create_2_SOURCES) \
+	$(pth_create_2_cc_SOURCES) $(pth_lock_SOURCES) \
+	$(pth_lock_cc_SOURCES) $(pth_mixlock_SOURCES) \
+	$(pth_mixlock_cc_SOURCES) $(pth_trylock_SOURCES) \
+	$(pth_trylock_cc_SOURCES) $(pth_yield_SOURCES) \
+	$(pth_yield_cc_SOURCES)
+DIST_SOURCES = $(measure_create_SOURCES) $(measure_create_cc_SOURCES) \
+	$(measure_latency_SOURCES) $(measure_latency_cc_SOURCES) \
+	$(measure_wakeup_latency_SOURCES) \
+	$(measure_wakeup_latency_cc_SOURCES) $(myth_barrier_SOURCES) \
+	$(myth_barrier_cc_SOURCES) $(myth_cond_broadcast_0_SOURCES) \
+	$(myth_cond_broadcast_0_cc_SOURCES) \
+	$(myth_cond_broadcast_1_SOURCES) \
+	$(myth_cond_broadcast_1_cc_SOURCES) \
+	$(myth_cond_signal_SOURCES) $(myth_cond_signal_cc_SOURCES) \
+	$(myth_create_0_SOURCES) $(myth_create_0_cc_SOURCES) \
+	$(myth_create_1_SOURCES) $(myth_create_1_cc_SOURCES) \
+	$(myth_create_2_SOURCES) $(myth_create_2_cc_SOURCES) \
+	$(myth_create_join_many_SOURCES) \
+	$(myth_create_join_many_cc_SOURCES) $(myth_dag_1d_SOURCES) \
+	$(myth_dag_1d_cc_SOURCES) $(myth_dag_2d_SOURCES) \
+	$(myth_dag_2d_cc_SOURCES) $(myth_dag_random_SOURCES) \
+	$(myth_dag_random_cc_SOURCES) $(myth_felock_SOURCES) \
+	$(myth_felock_cc_SOURCES) $(myth_join_counter_SOURCES) \
+	$(myth_join_counter_cc_SOURCES) $(myth_lock_SOURCES) \
+	$(myth_lock_cc_SOURCES) $(myth_mixlock_SOURCES) \
+	$(myth_mixlock_cc_SOURCES) $(myth_sleep_queue_SOURCES) \
+	$(myth_sleep_queue_cc_SOURCES) $(myth_trylock_SOURCES) \
+	$(myth_trylock_cc_SOURCES) $(myth_yield_0_SOURCES) \
+	$(myth_yield_0_cc_SOURCES) $(myth_yield_1_SOURCES) \
+	$(myth_yield_1_cc_SOURCES) $(myth_yield_2_SOURCES) \
+	$(myth_yield_2_cc_SOURCES) $(pth_barrier_SOURCES) \
+	$(pth_barrier_cc_SOURCES) $(pth_create_0_SOURCES) \
+	$(pth_create_0_cc_SOURCES) $(pth_create_1_SOURCES) \
+	$(pth_create_1_cc_SOURCES) $(pth_create_2_SOURCES) \
+	$(pth_create_2_cc_SOURCES) $(pth_lock_SOURCES) \
+	$(pth_lock_cc_SOURCES) $(pth_mixlock_SOURCES) \
+	$(pth_mixlock_cc_SOURCES) $(pth_trylock_SOURCES) \
+	$(pth_trylock_cc_SOURCES) $(pth_yield_SOURCES) \
+	$(pth_yield_cc_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -675,8 +1044,22 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 
+#	new_test
+# three programs that fail for now
+#	pth_cond_signal
+#	pth_cond_broadcast_0
+#	pth_cond_broadcast_1
+# don't know why, but they succeed (examine later)
+#	pth_cond_signal_cc
+#	pth_cond_broadcast_0_cc
+#	pth_cond_broadcast_1_cc
+#
+
 # check_PROGRAMS = myth_lock myth_trylock myth_mixlock
-common_cflags = -I$(abs_top_srcdir)/include -I$(abs_top_srcdir)/src
+
+#  -I$(abs_top_srcdir)/src
+common_cflags = -I$(abs_top_srcdir)/include
+common_cxxflags = $(common_cflags)
 common_ldadd = $(abs_top_srcdir)/src/libmyth.la 
 myth_create_0_SOURCES = myth_create_0.c
 myth_create_0_CFLAGS = $(common_cflags)
@@ -738,6 +1121,42 @@ myth_dag_2d_LDADD = $(common_ldadd)
 myth_dag_random_SOURCES = myth_dag_random.c
 myth_dag_random_CFLAGS = $(common_cflags)
 myth_dag_random_LDADD = $(common_ldadd)
+pth_create_0_SOURCES = pth_create_0.c
+pth_create_0_CFLAGS = $(common_cflags)
+pth_create_0_LDADD = $(common_ldadd)
+pth_create_1_SOURCES = pth_create_1.c
+pth_create_1_CFLAGS = $(common_cflags)
+pth_create_1_LDADD = $(common_ldadd)
+pth_create_2_SOURCES = pth_create_2.c
+pth_create_2_CFLAGS = $(common_cflags)
+pth_create_2_LDADD = $(common_ldadd)
+pth_yield_SOURCES = pth_yield.c
+pth_yield_CFLAGS = $(common_cflags)
+pth_yield_LDADD = $(common_ldadd)
+pth_lock_SOURCES = pth_lock.c
+pth_lock_CFLAGS = $(common_cflags)
+pth_lock_LDADD = $(common_ldadd)
+pth_trylock_SOURCES = pth_trylock.c
+pth_trylock_CFLAGS = $(common_cflags)
+pth_trylock_LDADD = $(common_ldadd)
+pth_mixlock_SOURCES = pth_mixlock.c
+pth_mixlock_CFLAGS = $(common_cflags)
+pth_mixlock_LDADD = $(common_ldadd)
+
+#pth_cond_signal_SOURCES = pth_cond_signal.c
+#pth_cond_signal_CFLAGS = $(common_cflags)
+#pth_cond_signal_LDADD  = $(common_ldadd)
+
+#pth_cond_broadcast_0_SOURCES = pth_cond_broadcast_0.c
+#pth_cond_broadcast_0_CFLAGS = $(common_cflags)
+#pth_cond_broadcast_0_LDADD  = $(common_ldadd)
+
+#pth_cond_broadcast_1_SOURCES = pth_cond_broadcast_1.c
+#pth_cond_broadcast_1_CFLAGS = $(common_cflags)
+#pth_cond_broadcast_1_LDADD  = $(common_ldadd)
+pth_barrier_SOURCES = pth_barrier.c
+pth_barrier_CFLAGS = $(common_cflags)
+pth_barrier_LDADD = $(common_ldadd)
 measure_create_SOURCES = measure_create.c
 measure_create_CFLAGS = $(common_cflags)
 measure_create_LDADD = $(common_ldadd)
@@ -748,14 +1167,123 @@ measure_wakeup_latency_SOURCES = measure_wakeup_latency.c
 measure_wakeup_latency_CFLAGS = $(common_cflags)
 measure_wakeup_latency_LDADD = $(common_ldadd)
 
-#new_test_SOURCES = new_test.c
-#new_test_CFLAGS = $(common_cflags)
-#new_test_LDADD  = $(common_ldadd)
+#
+# C++
+#
+myth_create_0_cc_SOURCES = myth_create_0_cc.cc
+myth_create_0_cc_CXXFLAGS = $(common_cflags)
+myth_create_0_cc_LDADD = $(common_ldadd)
+myth_create_1_cc_SOURCES = myth_create_1_cc.cc
+myth_create_1_cc_CXXFLAGS = $(common_cflags)
+myth_create_1_cc_LDADD = $(common_ldadd)
+myth_create_2_cc_SOURCES = myth_create_2_cc.cc
+myth_create_2_cc_CXXFLAGS = $(common_cxxflags)
+myth_create_2_cc_LDADD = $(common_ldadd)
+myth_create_join_many_cc_SOURCES = myth_create_join_many_cc.cc
+myth_create_join_many_cc_CXXFLAGS = $(common_cxxflags)
+myth_create_join_many_cc_LDADD = $(common_ldadd)
+myth_yield_0_cc_SOURCES = myth_yield_0_cc.cc
+myth_yield_0_cc_CXXFLAGS = $(common_cxxflags)
+myth_yield_0_cc_LDADD = $(common_ldadd)
+myth_yield_1_cc_SOURCES = myth_yield_1_cc.cc
+myth_yield_1_cc_CXXFLAGS = $(common_cxxflags)
+myth_yield_1_cc_LDADD = $(common_ldadd)
+myth_yield_2_cc_SOURCES = myth_yield_2_cc.cc
+myth_yield_2_cc_CXXFLAGS = $(common_cxxflags)
+myth_yield_2_cc_LDADD = $(common_ldadd)
+myth_sleep_queue_cc_SOURCES = myth_sleep_queue_cc.cc
+myth_sleep_queue_cc_CXXFLAGS = $(common_cxxflags)
+myth_sleep_queue_cc_LDADD = $(common_ldadd)
+myth_lock_cc_SOURCES = myth_lock_cc.cc
+myth_lock_cc_CXXFLAGS = $(common_cxxflags)
+myth_lock_cc_LDADD = $(common_ldadd)
+myth_trylock_cc_SOURCES = myth_trylock_cc.cc
+myth_trylock_cc_CXXFLAGS = $(common_cxxflags)
+myth_trylock_cc_LDADD = $(common_ldadd)
+myth_mixlock_cc_SOURCES = myth_mixlock_cc.cc
+myth_mixlock_cc_CXXFLAGS = $(common_cxxflags)
+myth_mixlock_cc_LDADD = $(common_ldadd)
+myth_cond_signal_cc_SOURCES = myth_cond_signal_cc.cc
+myth_cond_signal_cc_CXXFLAGS = $(common_cxxflags)
+myth_cond_signal_cc_LDADD = $(common_ldadd)
+myth_cond_broadcast_0_cc_SOURCES = myth_cond_broadcast_0_cc.cc
+myth_cond_broadcast_0_cc_CXXFLAGS = $(common_cxxflags)
+myth_cond_broadcast_0_cc_LDADD = $(common_ldadd)
+myth_cond_broadcast_1_cc_SOURCES = myth_cond_broadcast_1_cc.cc
+myth_cond_broadcast_1_cc_CXXFLAGS = $(common_cxxflags)
+myth_cond_broadcast_1_cc_LDADD = $(common_ldadd)
+myth_barrier_cc_SOURCES = myth_barrier_cc.cc
+myth_barrier_cc_CXXFLAGS = $(common_cxxflags)
+myth_barrier_cc_LDADD = $(common_ldadd)
+myth_join_counter_cc_SOURCES = myth_join_counter_cc.cc
+myth_join_counter_cc_CXXFLAGS = $(common_cxxflags)
+myth_join_counter_cc_LDADD = $(common_ldadd)
+myth_felock_cc_SOURCES = myth_felock_cc.cc
+myth_felock_cc_CXXFLAGS = $(common_cxxflags)
+myth_felock_cc_LDADD = $(common_ldadd)
+myth_dag_1d_cc_SOURCES = myth_dag_1d_cc.cc
+myth_dag_1d_cc_CXXFLAGS = $(common_cxxflags)
+myth_dag_1d_cc_LDADD = $(common_ldadd)
+myth_dag_2d_cc_SOURCES = myth_dag_2d_cc.cc
+myth_dag_2d_cc_CXXFLAGS = $(common_cxxflags)
+myth_dag_2d_cc_LDADD = $(common_ldadd)
+myth_dag_random_cc_SOURCES = myth_dag_random_cc.cc
+myth_dag_random_cc_CXXFLAGS = $(common_cxxflags)
+myth_dag_random_cc_LDADD = $(common_ldadd)
+pth_create_0_cc_SOURCES = pth_create_0_cc.cc
+pth_create_0_cc_CXXFLAGS = $(common_cxxflags)
+pth_create_0_cc_LDADD = $(common_ldadd)
+pth_create_1_cc_SOURCES = pth_create_1_cc.cc
+pth_create_1_cc_CXXFLAGS = $(common_cxxflags)
+pth_create_1_cc_LDADD = $(common_ldadd)
+pth_create_2_cc_SOURCES = pth_create_2_cc.cc
+pth_create_2_cc_CXXFLAGS = $(common_cxxflags)
+pth_create_2_cc_LDADD = $(common_ldadd)
+pth_yield_cc_SOURCES = pth_yield_cc.cc
+pth_yield_cc_CXXFLAGS = $(common_cxxflags)
+pth_yield_cc_LDADD = $(common_ldadd)
+pth_lock_cc_SOURCES = pth_lock_cc.cc
+pth_lock_cc_CXXFLAGS = $(common_cxxflags)
+pth_lock_cc_LDADD = $(common_ldadd)
+pth_trylock_cc_SOURCES = pth_trylock_cc.cc
+pth_trylock_cc_CXXFLAGS = $(common_cxxflags)
+pth_trylock_cc_LDADD = $(common_ldadd)
+pth_mixlock_cc_SOURCES = pth_mixlock_cc.cc
+pth_mixlock_cc_CXXFLAGS = $(common_cxxflags)
+pth_mixlock_cc_LDADD = $(common_ldadd)
+
+# pth_cond_signal_cc_SOURCES = pth_cond_signal_cc.cc
+# pth_cond_signal_cc_CXXFLAGS = $(common_cxxflags)
+# pth_cond_signal_cc_LDADD  = $(common_ldadd)
+
+# pth_cond_broadcast_0_cc_SOURCES = pth_cond_broadcast_0_cc.cc
+# pth_cond_broadcast_0_cc_CXXFLAGS = $(common_cxxflags)
+# pth_cond_broadcast_0_cc_LDADD  = $(common_ldadd)
+
+# pth_cond_broadcast_1_cc_SOURCES = pth_cond_broadcast_1_cc.cc
+# pth_cond_broadcast_1_cc_CXXFLAGS = $(common_cxxflags)
+# pth_cond_broadcast_1_cc_LDADD  = $(common_ldadd)
+pth_barrier_cc_SOURCES = pth_barrier_cc.cc
+pth_barrier_cc_CXXFLAGS = $(common_cxxflags)
+pth_barrier_cc_LDADD = $(common_ldadd)
+measure_create_cc_SOURCES = measure_create_cc.cc
+measure_create_cc_CXXFLAGS = $(common_cxxflags)
+measure_create_cc_LDADD = $(common_ldadd)
+measure_latency_cc_SOURCES = measure_latency_cc.cc
+measure_latency_cc_CXXFLAGS = $(common_cxxflags)
+measure_latency_cc_LDADD = $(common_ldadd)
+measure_wakeup_latency_cc_SOURCES = measure_wakeup_latency_cc.cc
+measure_wakeup_latency_cc_CXXFLAGS = $(common_cxxflags)
+measure_wakeup_latency_cc_LDADD = $(common_ldadd)
+
+# new_test_SOURCES = new_test.c
+# new_test_CXXFLAGS = $(common_cflags)
+# new_test_LDADD  = $(common_ldadd)
 TESTS = $(check_PROGRAMS)
 all: all-am
 
 .SUFFIXES:
-.SUFFIXES: .c .lo .log .o .obj .test .test$(EXEEXT) .trs
+.SUFFIXES: .c .cc .lo .log .o .obj .test .test$(EXEEXT) .trs
 $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
@@ -800,93 +1328,249 @@ measure_create$(EXEEXT): $(measure_create_OBJECTS) $(measure_create_DEPENDENCIES
 	@rm -f measure_create$(EXEEXT)
 	$(AM_V_CCLD)$(measure_create_LINK) $(measure_create_OBJECTS) $(measure_create_LDADD) $(LIBS)
 
+measure_create_cc$(EXEEXT): $(measure_create_cc_OBJECTS) $(measure_create_cc_DEPENDENCIES) $(EXTRA_measure_create_cc_DEPENDENCIES) 
+	@rm -f measure_create_cc$(EXEEXT)
+	$(AM_V_CXXLD)$(measure_create_cc_LINK) $(measure_create_cc_OBJECTS) $(measure_create_cc_LDADD) $(LIBS)
+
 measure_latency$(EXEEXT): $(measure_latency_OBJECTS) $(measure_latency_DEPENDENCIES) $(EXTRA_measure_latency_DEPENDENCIES) 
 	@rm -f measure_latency$(EXEEXT)
 	$(AM_V_CCLD)$(measure_latency_LINK) $(measure_latency_OBJECTS) $(measure_latency_LDADD) $(LIBS)
+
+measure_latency_cc$(EXEEXT): $(measure_latency_cc_OBJECTS) $(measure_latency_cc_DEPENDENCIES) $(EXTRA_measure_latency_cc_DEPENDENCIES) 
+	@rm -f measure_latency_cc$(EXEEXT)
+	$(AM_V_CXXLD)$(measure_latency_cc_LINK) $(measure_latency_cc_OBJECTS) $(measure_latency_cc_LDADD) $(LIBS)
 
 measure_wakeup_latency$(EXEEXT): $(measure_wakeup_latency_OBJECTS) $(measure_wakeup_latency_DEPENDENCIES) $(EXTRA_measure_wakeup_latency_DEPENDENCIES) 
 	@rm -f measure_wakeup_latency$(EXEEXT)
 	$(AM_V_CCLD)$(measure_wakeup_latency_LINK) $(measure_wakeup_latency_OBJECTS) $(measure_wakeup_latency_LDADD) $(LIBS)
 
+measure_wakeup_latency_cc$(EXEEXT): $(measure_wakeup_latency_cc_OBJECTS) $(measure_wakeup_latency_cc_DEPENDENCIES) $(EXTRA_measure_wakeup_latency_cc_DEPENDENCIES) 
+	@rm -f measure_wakeup_latency_cc$(EXEEXT)
+	$(AM_V_CXXLD)$(measure_wakeup_latency_cc_LINK) $(measure_wakeup_latency_cc_OBJECTS) $(measure_wakeup_latency_cc_LDADD) $(LIBS)
+
 myth_barrier$(EXEEXT): $(myth_barrier_OBJECTS) $(myth_barrier_DEPENDENCIES) $(EXTRA_myth_barrier_DEPENDENCIES) 
 	@rm -f myth_barrier$(EXEEXT)
 	$(AM_V_CCLD)$(myth_barrier_LINK) $(myth_barrier_OBJECTS) $(myth_barrier_LDADD) $(LIBS)
+
+myth_barrier_cc$(EXEEXT): $(myth_barrier_cc_OBJECTS) $(myth_barrier_cc_DEPENDENCIES) $(EXTRA_myth_barrier_cc_DEPENDENCIES) 
+	@rm -f myth_barrier_cc$(EXEEXT)
+	$(AM_V_CXXLD)$(myth_barrier_cc_LINK) $(myth_barrier_cc_OBJECTS) $(myth_barrier_cc_LDADD) $(LIBS)
 
 myth_cond_broadcast_0$(EXEEXT): $(myth_cond_broadcast_0_OBJECTS) $(myth_cond_broadcast_0_DEPENDENCIES) $(EXTRA_myth_cond_broadcast_0_DEPENDENCIES) 
 	@rm -f myth_cond_broadcast_0$(EXEEXT)
 	$(AM_V_CCLD)$(myth_cond_broadcast_0_LINK) $(myth_cond_broadcast_0_OBJECTS) $(myth_cond_broadcast_0_LDADD) $(LIBS)
 
+myth_cond_broadcast_0_cc$(EXEEXT): $(myth_cond_broadcast_0_cc_OBJECTS) $(myth_cond_broadcast_0_cc_DEPENDENCIES) $(EXTRA_myth_cond_broadcast_0_cc_DEPENDENCIES) 
+	@rm -f myth_cond_broadcast_0_cc$(EXEEXT)
+	$(AM_V_CXXLD)$(myth_cond_broadcast_0_cc_LINK) $(myth_cond_broadcast_0_cc_OBJECTS) $(myth_cond_broadcast_0_cc_LDADD) $(LIBS)
+
 myth_cond_broadcast_1$(EXEEXT): $(myth_cond_broadcast_1_OBJECTS) $(myth_cond_broadcast_1_DEPENDENCIES) $(EXTRA_myth_cond_broadcast_1_DEPENDENCIES) 
 	@rm -f myth_cond_broadcast_1$(EXEEXT)
 	$(AM_V_CCLD)$(myth_cond_broadcast_1_LINK) $(myth_cond_broadcast_1_OBJECTS) $(myth_cond_broadcast_1_LDADD) $(LIBS)
+
+myth_cond_broadcast_1_cc$(EXEEXT): $(myth_cond_broadcast_1_cc_OBJECTS) $(myth_cond_broadcast_1_cc_DEPENDENCIES) $(EXTRA_myth_cond_broadcast_1_cc_DEPENDENCIES) 
+	@rm -f myth_cond_broadcast_1_cc$(EXEEXT)
+	$(AM_V_CXXLD)$(myth_cond_broadcast_1_cc_LINK) $(myth_cond_broadcast_1_cc_OBJECTS) $(myth_cond_broadcast_1_cc_LDADD) $(LIBS)
 
 myth_cond_signal$(EXEEXT): $(myth_cond_signal_OBJECTS) $(myth_cond_signal_DEPENDENCIES) $(EXTRA_myth_cond_signal_DEPENDENCIES) 
 	@rm -f myth_cond_signal$(EXEEXT)
 	$(AM_V_CCLD)$(myth_cond_signal_LINK) $(myth_cond_signal_OBJECTS) $(myth_cond_signal_LDADD) $(LIBS)
 
+myth_cond_signal_cc$(EXEEXT): $(myth_cond_signal_cc_OBJECTS) $(myth_cond_signal_cc_DEPENDENCIES) $(EXTRA_myth_cond_signal_cc_DEPENDENCIES) 
+	@rm -f myth_cond_signal_cc$(EXEEXT)
+	$(AM_V_CXXLD)$(myth_cond_signal_cc_LINK) $(myth_cond_signal_cc_OBJECTS) $(myth_cond_signal_cc_LDADD) $(LIBS)
+
 myth_create_0$(EXEEXT): $(myth_create_0_OBJECTS) $(myth_create_0_DEPENDENCIES) $(EXTRA_myth_create_0_DEPENDENCIES) 
 	@rm -f myth_create_0$(EXEEXT)
 	$(AM_V_CCLD)$(myth_create_0_LINK) $(myth_create_0_OBJECTS) $(myth_create_0_LDADD) $(LIBS)
+
+myth_create_0_cc$(EXEEXT): $(myth_create_0_cc_OBJECTS) $(myth_create_0_cc_DEPENDENCIES) $(EXTRA_myth_create_0_cc_DEPENDENCIES) 
+	@rm -f myth_create_0_cc$(EXEEXT)
+	$(AM_V_CXXLD)$(myth_create_0_cc_LINK) $(myth_create_0_cc_OBJECTS) $(myth_create_0_cc_LDADD) $(LIBS)
 
 myth_create_1$(EXEEXT): $(myth_create_1_OBJECTS) $(myth_create_1_DEPENDENCIES) $(EXTRA_myth_create_1_DEPENDENCIES) 
 	@rm -f myth_create_1$(EXEEXT)
 	$(AM_V_CCLD)$(myth_create_1_LINK) $(myth_create_1_OBJECTS) $(myth_create_1_LDADD) $(LIBS)
 
+myth_create_1_cc$(EXEEXT): $(myth_create_1_cc_OBJECTS) $(myth_create_1_cc_DEPENDENCIES) $(EXTRA_myth_create_1_cc_DEPENDENCIES) 
+	@rm -f myth_create_1_cc$(EXEEXT)
+	$(AM_V_CXXLD)$(myth_create_1_cc_LINK) $(myth_create_1_cc_OBJECTS) $(myth_create_1_cc_LDADD) $(LIBS)
+
 myth_create_2$(EXEEXT): $(myth_create_2_OBJECTS) $(myth_create_2_DEPENDENCIES) $(EXTRA_myth_create_2_DEPENDENCIES) 
 	@rm -f myth_create_2$(EXEEXT)
 	$(AM_V_CCLD)$(myth_create_2_LINK) $(myth_create_2_OBJECTS) $(myth_create_2_LDADD) $(LIBS)
+
+myth_create_2_cc$(EXEEXT): $(myth_create_2_cc_OBJECTS) $(myth_create_2_cc_DEPENDENCIES) $(EXTRA_myth_create_2_cc_DEPENDENCIES) 
+	@rm -f myth_create_2_cc$(EXEEXT)
+	$(AM_V_CXXLD)$(myth_create_2_cc_LINK) $(myth_create_2_cc_OBJECTS) $(myth_create_2_cc_LDADD) $(LIBS)
 
 myth_create_join_many$(EXEEXT): $(myth_create_join_many_OBJECTS) $(myth_create_join_many_DEPENDENCIES) $(EXTRA_myth_create_join_many_DEPENDENCIES) 
 	@rm -f myth_create_join_many$(EXEEXT)
 	$(AM_V_CCLD)$(myth_create_join_many_LINK) $(myth_create_join_many_OBJECTS) $(myth_create_join_many_LDADD) $(LIBS)
 
+myth_create_join_many_cc$(EXEEXT): $(myth_create_join_many_cc_OBJECTS) $(myth_create_join_many_cc_DEPENDENCIES) $(EXTRA_myth_create_join_many_cc_DEPENDENCIES) 
+	@rm -f myth_create_join_many_cc$(EXEEXT)
+	$(AM_V_CXXLD)$(myth_create_join_many_cc_LINK) $(myth_create_join_many_cc_OBJECTS) $(myth_create_join_many_cc_LDADD) $(LIBS)
+
 myth_dag_1d$(EXEEXT): $(myth_dag_1d_OBJECTS) $(myth_dag_1d_DEPENDENCIES) $(EXTRA_myth_dag_1d_DEPENDENCIES) 
 	@rm -f myth_dag_1d$(EXEEXT)
 	$(AM_V_CCLD)$(myth_dag_1d_LINK) $(myth_dag_1d_OBJECTS) $(myth_dag_1d_LDADD) $(LIBS)
+
+myth_dag_1d_cc$(EXEEXT): $(myth_dag_1d_cc_OBJECTS) $(myth_dag_1d_cc_DEPENDENCIES) $(EXTRA_myth_dag_1d_cc_DEPENDENCIES) 
+	@rm -f myth_dag_1d_cc$(EXEEXT)
+	$(AM_V_CXXLD)$(myth_dag_1d_cc_LINK) $(myth_dag_1d_cc_OBJECTS) $(myth_dag_1d_cc_LDADD) $(LIBS)
 
 myth_dag_2d$(EXEEXT): $(myth_dag_2d_OBJECTS) $(myth_dag_2d_DEPENDENCIES) $(EXTRA_myth_dag_2d_DEPENDENCIES) 
 	@rm -f myth_dag_2d$(EXEEXT)
 	$(AM_V_CCLD)$(myth_dag_2d_LINK) $(myth_dag_2d_OBJECTS) $(myth_dag_2d_LDADD) $(LIBS)
 
+myth_dag_2d_cc$(EXEEXT): $(myth_dag_2d_cc_OBJECTS) $(myth_dag_2d_cc_DEPENDENCIES) $(EXTRA_myth_dag_2d_cc_DEPENDENCIES) 
+	@rm -f myth_dag_2d_cc$(EXEEXT)
+	$(AM_V_CXXLD)$(myth_dag_2d_cc_LINK) $(myth_dag_2d_cc_OBJECTS) $(myth_dag_2d_cc_LDADD) $(LIBS)
+
 myth_dag_random$(EXEEXT): $(myth_dag_random_OBJECTS) $(myth_dag_random_DEPENDENCIES) $(EXTRA_myth_dag_random_DEPENDENCIES) 
 	@rm -f myth_dag_random$(EXEEXT)
 	$(AM_V_CCLD)$(myth_dag_random_LINK) $(myth_dag_random_OBJECTS) $(myth_dag_random_LDADD) $(LIBS)
+
+myth_dag_random_cc$(EXEEXT): $(myth_dag_random_cc_OBJECTS) $(myth_dag_random_cc_DEPENDENCIES) $(EXTRA_myth_dag_random_cc_DEPENDENCIES) 
+	@rm -f myth_dag_random_cc$(EXEEXT)
+	$(AM_V_CXXLD)$(myth_dag_random_cc_LINK) $(myth_dag_random_cc_OBJECTS) $(myth_dag_random_cc_LDADD) $(LIBS)
 
 myth_felock$(EXEEXT): $(myth_felock_OBJECTS) $(myth_felock_DEPENDENCIES) $(EXTRA_myth_felock_DEPENDENCIES) 
 	@rm -f myth_felock$(EXEEXT)
 	$(AM_V_CCLD)$(myth_felock_LINK) $(myth_felock_OBJECTS) $(myth_felock_LDADD) $(LIBS)
 
+myth_felock_cc$(EXEEXT): $(myth_felock_cc_OBJECTS) $(myth_felock_cc_DEPENDENCIES) $(EXTRA_myth_felock_cc_DEPENDENCIES) 
+	@rm -f myth_felock_cc$(EXEEXT)
+	$(AM_V_CXXLD)$(myth_felock_cc_LINK) $(myth_felock_cc_OBJECTS) $(myth_felock_cc_LDADD) $(LIBS)
+
 myth_join_counter$(EXEEXT): $(myth_join_counter_OBJECTS) $(myth_join_counter_DEPENDENCIES) $(EXTRA_myth_join_counter_DEPENDENCIES) 
 	@rm -f myth_join_counter$(EXEEXT)
 	$(AM_V_CCLD)$(myth_join_counter_LINK) $(myth_join_counter_OBJECTS) $(myth_join_counter_LDADD) $(LIBS)
+
+myth_join_counter_cc$(EXEEXT): $(myth_join_counter_cc_OBJECTS) $(myth_join_counter_cc_DEPENDENCIES) $(EXTRA_myth_join_counter_cc_DEPENDENCIES) 
+	@rm -f myth_join_counter_cc$(EXEEXT)
+	$(AM_V_CXXLD)$(myth_join_counter_cc_LINK) $(myth_join_counter_cc_OBJECTS) $(myth_join_counter_cc_LDADD) $(LIBS)
 
 myth_lock$(EXEEXT): $(myth_lock_OBJECTS) $(myth_lock_DEPENDENCIES) $(EXTRA_myth_lock_DEPENDENCIES) 
 	@rm -f myth_lock$(EXEEXT)
 	$(AM_V_CCLD)$(myth_lock_LINK) $(myth_lock_OBJECTS) $(myth_lock_LDADD) $(LIBS)
 
+myth_lock_cc$(EXEEXT): $(myth_lock_cc_OBJECTS) $(myth_lock_cc_DEPENDENCIES) $(EXTRA_myth_lock_cc_DEPENDENCIES) 
+	@rm -f myth_lock_cc$(EXEEXT)
+	$(AM_V_CXXLD)$(myth_lock_cc_LINK) $(myth_lock_cc_OBJECTS) $(myth_lock_cc_LDADD) $(LIBS)
+
 myth_mixlock$(EXEEXT): $(myth_mixlock_OBJECTS) $(myth_mixlock_DEPENDENCIES) $(EXTRA_myth_mixlock_DEPENDENCIES) 
 	@rm -f myth_mixlock$(EXEEXT)
 	$(AM_V_CCLD)$(myth_mixlock_LINK) $(myth_mixlock_OBJECTS) $(myth_mixlock_LDADD) $(LIBS)
+
+myth_mixlock_cc$(EXEEXT): $(myth_mixlock_cc_OBJECTS) $(myth_mixlock_cc_DEPENDENCIES) $(EXTRA_myth_mixlock_cc_DEPENDENCIES) 
+	@rm -f myth_mixlock_cc$(EXEEXT)
+	$(AM_V_CXXLD)$(myth_mixlock_cc_LINK) $(myth_mixlock_cc_OBJECTS) $(myth_mixlock_cc_LDADD) $(LIBS)
 
 myth_sleep_queue$(EXEEXT): $(myth_sleep_queue_OBJECTS) $(myth_sleep_queue_DEPENDENCIES) $(EXTRA_myth_sleep_queue_DEPENDENCIES) 
 	@rm -f myth_sleep_queue$(EXEEXT)
 	$(AM_V_CCLD)$(myth_sleep_queue_LINK) $(myth_sleep_queue_OBJECTS) $(myth_sleep_queue_LDADD) $(LIBS)
 
+myth_sleep_queue_cc$(EXEEXT): $(myth_sleep_queue_cc_OBJECTS) $(myth_sleep_queue_cc_DEPENDENCIES) $(EXTRA_myth_sleep_queue_cc_DEPENDENCIES) 
+	@rm -f myth_sleep_queue_cc$(EXEEXT)
+	$(AM_V_CXXLD)$(myth_sleep_queue_cc_LINK) $(myth_sleep_queue_cc_OBJECTS) $(myth_sleep_queue_cc_LDADD) $(LIBS)
+
 myth_trylock$(EXEEXT): $(myth_trylock_OBJECTS) $(myth_trylock_DEPENDENCIES) $(EXTRA_myth_trylock_DEPENDENCIES) 
 	@rm -f myth_trylock$(EXEEXT)
 	$(AM_V_CCLD)$(myth_trylock_LINK) $(myth_trylock_OBJECTS) $(myth_trylock_LDADD) $(LIBS)
+
+myth_trylock_cc$(EXEEXT): $(myth_trylock_cc_OBJECTS) $(myth_trylock_cc_DEPENDENCIES) $(EXTRA_myth_trylock_cc_DEPENDENCIES) 
+	@rm -f myth_trylock_cc$(EXEEXT)
+	$(AM_V_CXXLD)$(myth_trylock_cc_LINK) $(myth_trylock_cc_OBJECTS) $(myth_trylock_cc_LDADD) $(LIBS)
 
 myth_yield_0$(EXEEXT): $(myth_yield_0_OBJECTS) $(myth_yield_0_DEPENDENCIES) $(EXTRA_myth_yield_0_DEPENDENCIES) 
 	@rm -f myth_yield_0$(EXEEXT)
 	$(AM_V_CCLD)$(myth_yield_0_LINK) $(myth_yield_0_OBJECTS) $(myth_yield_0_LDADD) $(LIBS)
 
+myth_yield_0_cc$(EXEEXT): $(myth_yield_0_cc_OBJECTS) $(myth_yield_0_cc_DEPENDENCIES) $(EXTRA_myth_yield_0_cc_DEPENDENCIES) 
+	@rm -f myth_yield_0_cc$(EXEEXT)
+	$(AM_V_CXXLD)$(myth_yield_0_cc_LINK) $(myth_yield_0_cc_OBJECTS) $(myth_yield_0_cc_LDADD) $(LIBS)
+
 myth_yield_1$(EXEEXT): $(myth_yield_1_OBJECTS) $(myth_yield_1_DEPENDENCIES) $(EXTRA_myth_yield_1_DEPENDENCIES) 
 	@rm -f myth_yield_1$(EXEEXT)
 	$(AM_V_CCLD)$(myth_yield_1_LINK) $(myth_yield_1_OBJECTS) $(myth_yield_1_LDADD) $(LIBS)
 
+myth_yield_1_cc$(EXEEXT): $(myth_yield_1_cc_OBJECTS) $(myth_yield_1_cc_DEPENDENCIES) $(EXTRA_myth_yield_1_cc_DEPENDENCIES) 
+	@rm -f myth_yield_1_cc$(EXEEXT)
+	$(AM_V_CXXLD)$(myth_yield_1_cc_LINK) $(myth_yield_1_cc_OBJECTS) $(myth_yield_1_cc_LDADD) $(LIBS)
+
 myth_yield_2$(EXEEXT): $(myth_yield_2_OBJECTS) $(myth_yield_2_DEPENDENCIES) $(EXTRA_myth_yield_2_DEPENDENCIES) 
 	@rm -f myth_yield_2$(EXEEXT)
 	$(AM_V_CCLD)$(myth_yield_2_LINK) $(myth_yield_2_OBJECTS) $(myth_yield_2_LDADD) $(LIBS)
+
+myth_yield_2_cc$(EXEEXT): $(myth_yield_2_cc_OBJECTS) $(myth_yield_2_cc_DEPENDENCIES) $(EXTRA_myth_yield_2_cc_DEPENDENCIES) 
+	@rm -f myth_yield_2_cc$(EXEEXT)
+	$(AM_V_CXXLD)$(myth_yield_2_cc_LINK) $(myth_yield_2_cc_OBJECTS) $(myth_yield_2_cc_LDADD) $(LIBS)
+
+pth_barrier$(EXEEXT): $(pth_barrier_OBJECTS) $(pth_barrier_DEPENDENCIES) $(EXTRA_pth_barrier_DEPENDENCIES) 
+	@rm -f pth_barrier$(EXEEXT)
+	$(AM_V_CCLD)$(pth_barrier_LINK) $(pth_barrier_OBJECTS) $(pth_barrier_LDADD) $(LIBS)
+
+pth_barrier_cc$(EXEEXT): $(pth_barrier_cc_OBJECTS) $(pth_barrier_cc_DEPENDENCIES) $(EXTRA_pth_barrier_cc_DEPENDENCIES) 
+	@rm -f pth_barrier_cc$(EXEEXT)
+	$(AM_V_CXXLD)$(pth_barrier_cc_LINK) $(pth_barrier_cc_OBJECTS) $(pth_barrier_cc_LDADD) $(LIBS)
+
+pth_create_0$(EXEEXT): $(pth_create_0_OBJECTS) $(pth_create_0_DEPENDENCIES) $(EXTRA_pth_create_0_DEPENDENCIES) 
+	@rm -f pth_create_0$(EXEEXT)
+	$(AM_V_CCLD)$(pth_create_0_LINK) $(pth_create_0_OBJECTS) $(pth_create_0_LDADD) $(LIBS)
+
+pth_create_0_cc$(EXEEXT): $(pth_create_0_cc_OBJECTS) $(pth_create_0_cc_DEPENDENCIES) $(EXTRA_pth_create_0_cc_DEPENDENCIES) 
+	@rm -f pth_create_0_cc$(EXEEXT)
+	$(AM_V_CXXLD)$(pth_create_0_cc_LINK) $(pth_create_0_cc_OBJECTS) $(pth_create_0_cc_LDADD) $(LIBS)
+
+pth_create_1$(EXEEXT): $(pth_create_1_OBJECTS) $(pth_create_1_DEPENDENCIES) $(EXTRA_pth_create_1_DEPENDENCIES) 
+	@rm -f pth_create_1$(EXEEXT)
+	$(AM_V_CCLD)$(pth_create_1_LINK) $(pth_create_1_OBJECTS) $(pth_create_1_LDADD) $(LIBS)
+
+pth_create_1_cc$(EXEEXT): $(pth_create_1_cc_OBJECTS) $(pth_create_1_cc_DEPENDENCIES) $(EXTRA_pth_create_1_cc_DEPENDENCIES) 
+	@rm -f pth_create_1_cc$(EXEEXT)
+	$(AM_V_CXXLD)$(pth_create_1_cc_LINK) $(pth_create_1_cc_OBJECTS) $(pth_create_1_cc_LDADD) $(LIBS)
+
+pth_create_2$(EXEEXT): $(pth_create_2_OBJECTS) $(pth_create_2_DEPENDENCIES) $(EXTRA_pth_create_2_DEPENDENCIES) 
+	@rm -f pth_create_2$(EXEEXT)
+	$(AM_V_CCLD)$(pth_create_2_LINK) $(pth_create_2_OBJECTS) $(pth_create_2_LDADD) $(LIBS)
+
+pth_create_2_cc$(EXEEXT): $(pth_create_2_cc_OBJECTS) $(pth_create_2_cc_DEPENDENCIES) $(EXTRA_pth_create_2_cc_DEPENDENCIES) 
+	@rm -f pth_create_2_cc$(EXEEXT)
+	$(AM_V_CXXLD)$(pth_create_2_cc_LINK) $(pth_create_2_cc_OBJECTS) $(pth_create_2_cc_LDADD) $(LIBS)
+
+pth_lock$(EXEEXT): $(pth_lock_OBJECTS) $(pth_lock_DEPENDENCIES) $(EXTRA_pth_lock_DEPENDENCIES) 
+	@rm -f pth_lock$(EXEEXT)
+	$(AM_V_CCLD)$(pth_lock_LINK) $(pth_lock_OBJECTS) $(pth_lock_LDADD) $(LIBS)
+
+pth_lock_cc$(EXEEXT): $(pth_lock_cc_OBJECTS) $(pth_lock_cc_DEPENDENCIES) $(EXTRA_pth_lock_cc_DEPENDENCIES) 
+	@rm -f pth_lock_cc$(EXEEXT)
+	$(AM_V_CXXLD)$(pth_lock_cc_LINK) $(pth_lock_cc_OBJECTS) $(pth_lock_cc_LDADD) $(LIBS)
+
+pth_mixlock$(EXEEXT): $(pth_mixlock_OBJECTS) $(pth_mixlock_DEPENDENCIES) $(EXTRA_pth_mixlock_DEPENDENCIES) 
+	@rm -f pth_mixlock$(EXEEXT)
+	$(AM_V_CCLD)$(pth_mixlock_LINK) $(pth_mixlock_OBJECTS) $(pth_mixlock_LDADD) $(LIBS)
+
+pth_mixlock_cc$(EXEEXT): $(pth_mixlock_cc_OBJECTS) $(pth_mixlock_cc_DEPENDENCIES) $(EXTRA_pth_mixlock_cc_DEPENDENCIES) 
+	@rm -f pth_mixlock_cc$(EXEEXT)
+	$(AM_V_CXXLD)$(pth_mixlock_cc_LINK) $(pth_mixlock_cc_OBJECTS) $(pth_mixlock_cc_LDADD) $(LIBS)
+
+pth_trylock$(EXEEXT): $(pth_trylock_OBJECTS) $(pth_trylock_DEPENDENCIES) $(EXTRA_pth_trylock_DEPENDENCIES) 
+	@rm -f pth_trylock$(EXEEXT)
+	$(AM_V_CCLD)$(pth_trylock_LINK) $(pth_trylock_OBJECTS) $(pth_trylock_LDADD) $(LIBS)
+
+pth_trylock_cc$(EXEEXT): $(pth_trylock_cc_OBJECTS) $(pth_trylock_cc_DEPENDENCIES) $(EXTRA_pth_trylock_cc_DEPENDENCIES) 
+	@rm -f pth_trylock_cc$(EXEEXT)
+	$(AM_V_CXXLD)$(pth_trylock_cc_LINK) $(pth_trylock_cc_OBJECTS) $(pth_trylock_cc_LDADD) $(LIBS)
+
+pth_yield$(EXEEXT): $(pth_yield_OBJECTS) $(pth_yield_DEPENDENCIES) $(EXTRA_pth_yield_DEPENDENCIES) 
+	@rm -f pth_yield$(EXEEXT)
+	$(AM_V_CCLD)$(pth_yield_LINK) $(pth_yield_OBJECTS) $(pth_yield_LDADD) $(LIBS)
+
+pth_yield_cc$(EXEEXT): $(pth_yield_cc_OBJECTS) $(pth_yield_cc_DEPENDENCIES) $(EXTRA_pth_yield_cc_DEPENDENCIES) 
+	@rm -f pth_yield_cc$(EXEEXT)
+	$(AM_V_CXXLD)$(pth_yield_cc_LINK) $(pth_yield_cc_OBJECTS) $(pth_yield_cc_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -895,28 +1579,67 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/measure_create-measure_create.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/measure_create_cc-measure_create_cc.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/measure_latency-measure_latency.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/measure_latency_cc-measure_latency_cc.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/measure_wakeup_latency-measure_wakeup_latency.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/measure_wakeup_latency_cc-measure_wakeup_latency_cc.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/myth_barrier-myth_barrier.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/myth_barrier_cc-myth_barrier_cc.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/myth_cond_broadcast_0-myth_cond_broadcast_0.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/myth_cond_broadcast_0_cc-myth_cond_broadcast_0_cc.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/myth_cond_broadcast_1-myth_cond_broadcast_1.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/myth_cond_broadcast_1_cc-myth_cond_broadcast_1_cc.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/myth_cond_signal-myth_cond_signal.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/myth_cond_signal_cc-myth_cond_signal_cc.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/myth_create_0-myth_create_0.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/myth_create_0_cc-myth_create_0_cc.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/myth_create_1-myth_create_1.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/myth_create_1_cc-myth_create_1_cc.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/myth_create_2-myth_create_2.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/myth_create_2_cc-myth_create_2_cc.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/myth_create_join_many-myth_create_join_many.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/myth_create_join_many_cc-myth_create_join_many_cc.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/myth_dag_1d-myth_dag_1d.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/myth_dag_1d_cc-myth_dag_1d_cc.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/myth_dag_2d-myth_dag_2d.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/myth_dag_2d_cc-myth_dag_2d_cc.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/myth_dag_random-myth_dag_random.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/myth_dag_random_cc-myth_dag_random_cc.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/myth_felock-myth_felock.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/myth_felock_cc-myth_felock_cc.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/myth_join_counter-myth_join_counter.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/myth_join_counter_cc-myth_join_counter_cc.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/myth_lock-myth_lock.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/myth_lock_cc-myth_lock_cc.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/myth_mixlock-myth_mixlock.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/myth_mixlock_cc-myth_mixlock_cc.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/myth_sleep_queue-myth_sleep_queue.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/myth_sleep_queue_cc-myth_sleep_queue_cc.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/myth_trylock-myth_trylock.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/myth_trylock_cc-myth_trylock_cc.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/myth_yield_0-myth_yield_0.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/myth_yield_0_cc-myth_yield_0_cc.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/myth_yield_1-myth_yield_1.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/myth_yield_1_cc-myth_yield_1_cc.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/myth_yield_2-myth_yield_2.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/myth_yield_2_cc-myth_yield_2_cc.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pth_barrier-pth_barrier.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pth_barrier_cc-pth_barrier_cc.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pth_create_0-pth_create_0.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pth_create_0_cc-pth_create_0_cc.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pth_create_1-pth_create_1.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pth_create_1_cc-pth_create_1_cc.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pth_create_2-pth_create_2.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pth_create_2_cc-pth_create_2_cc.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pth_lock-pth_lock.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pth_lock_cc-pth_lock_cc.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pth_mixlock-pth_mixlock.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pth_mixlock_cc-pth_mixlock_cc.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pth_trylock-pth_trylock.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pth_trylock_cc-pth_trylock_cc.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pth_yield-pth_yield.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pth_yield_cc-pth_yield_cc.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
@@ -1261,6 +1984,573 @@ myth_yield_2-myth_yield_2.obj: myth_yield_2.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_yield_2_CFLAGS) $(CFLAGS) -c -o myth_yield_2-myth_yield_2.obj `if test -f 'myth_yield_2.c'; then $(CYGPATH_W) 'myth_yield_2.c'; else $(CYGPATH_W) '$(srcdir)/myth_yield_2.c'; fi`
 
+pth_barrier-pth_barrier.o: pth_barrier.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_barrier_CFLAGS) $(CFLAGS) -MT pth_barrier-pth_barrier.o -MD -MP -MF $(DEPDIR)/pth_barrier-pth_barrier.Tpo -c -o pth_barrier-pth_barrier.o `test -f 'pth_barrier.c' || echo '$(srcdir)/'`pth_barrier.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pth_barrier-pth_barrier.Tpo $(DEPDIR)/pth_barrier-pth_barrier.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='pth_barrier.c' object='pth_barrier-pth_barrier.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_barrier_CFLAGS) $(CFLAGS) -c -o pth_barrier-pth_barrier.o `test -f 'pth_barrier.c' || echo '$(srcdir)/'`pth_barrier.c
+
+pth_barrier-pth_barrier.obj: pth_barrier.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_barrier_CFLAGS) $(CFLAGS) -MT pth_barrier-pth_barrier.obj -MD -MP -MF $(DEPDIR)/pth_barrier-pth_barrier.Tpo -c -o pth_barrier-pth_barrier.obj `if test -f 'pth_barrier.c'; then $(CYGPATH_W) 'pth_barrier.c'; else $(CYGPATH_W) '$(srcdir)/pth_barrier.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pth_barrier-pth_barrier.Tpo $(DEPDIR)/pth_barrier-pth_barrier.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='pth_barrier.c' object='pth_barrier-pth_barrier.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_barrier_CFLAGS) $(CFLAGS) -c -o pth_barrier-pth_barrier.obj `if test -f 'pth_barrier.c'; then $(CYGPATH_W) 'pth_barrier.c'; else $(CYGPATH_W) '$(srcdir)/pth_barrier.c'; fi`
+
+pth_create_0-pth_create_0.o: pth_create_0.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_create_0_CFLAGS) $(CFLAGS) -MT pth_create_0-pth_create_0.o -MD -MP -MF $(DEPDIR)/pth_create_0-pth_create_0.Tpo -c -o pth_create_0-pth_create_0.o `test -f 'pth_create_0.c' || echo '$(srcdir)/'`pth_create_0.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pth_create_0-pth_create_0.Tpo $(DEPDIR)/pth_create_0-pth_create_0.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='pth_create_0.c' object='pth_create_0-pth_create_0.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_create_0_CFLAGS) $(CFLAGS) -c -o pth_create_0-pth_create_0.o `test -f 'pth_create_0.c' || echo '$(srcdir)/'`pth_create_0.c
+
+pth_create_0-pth_create_0.obj: pth_create_0.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_create_0_CFLAGS) $(CFLAGS) -MT pth_create_0-pth_create_0.obj -MD -MP -MF $(DEPDIR)/pth_create_0-pth_create_0.Tpo -c -o pth_create_0-pth_create_0.obj `if test -f 'pth_create_0.c'; then $(CYGPATH_W) 'pth_create_0.c'; else $(CYGPATH_W) '$(srcdir)/pth_create_0.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pth_create_0-pth_create_0.Tpo $(DEPDIR)/pth_create_0-pth_create_0.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='pth_create_0.c' object='pth_create_0-pth_create_0.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_create_0_CFLAGS) $(CFLAGS) -c -o pth_create_0-pth_create_0.obj `if test -f 'pth_create_0.c'; then $(CYGPATH_W) 'pth_create_0.c'; else $(CYGPATH_W) '$(srcdir)/pth_create_0.c'; fi`
+
+pth_create_1-pth_create_1.o: pth_create_1.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_create_1_CFLAGS) $(CFLAGS) -MT pth_create_1-pth_create_1.o -MD -MP -MF $(DEPDIR)/pth_create_1-pth_create_1.Tpo -c -o pth_create_1-pth_create_1.o `test -f 'pth_create_1.c' || echo '$(srcdir)/'`pth_create_1.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pth_create_1-pth_create_1.Tpo $(DEPDIR)/pth_create_1-pth_create_1.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='pth_create_1.c' object='pth_create_1-pth_create_1.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_create_1_CFLAGS) $(CFLAGS) -c -o pth_create_1-pth_create_1.o `test -f 'pth_create_1.c' || echo '$(srcdir)/'`pth_create_1.c
+
+pth_create_1-pth_create_1.obj: pth_create_1.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_create_1_CFLAGS) $(CFLAGS) -MT pth_create_1-pth_create_1.obj -MD -MP -MF $(DEPDIR)/pth_create_1-pth_create_1.Tpo -c -o pth_create_1-pth_create_1.obj `if test -f 'pth_create_1.c'; then $(CYGPATH_W) 'pth_create_1.c'; else $(CYGPATH_W) '$(srcdir)/pth_create_1.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pth_create_1-pth_create_1.Tpo $(DEPDIR)/pth_create_1-pth_create_1.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='pth_create_1.c' object='pth_create_1-pth_create_1.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_create_1_CFLAGS) $(CFLAGS) -c -o pth_create_1-pth_create_1.obj `if test -f 'pth_create_1.c'; then $(CYGPATH_W) 'pth_create_1.c'; else $(CYGPATH_W) '$(srcdir)/pth_create_1.c'; fi`
+
+pth_create_2-pth_create_2.o: pth_create_2.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_create_2_CFLAGS) $(CFLAGS) -MT pth_create_2-pth_create_2.o -MD -MP -MF $(DEPDIR)/pth_create_2-pth_create_2.Tpo -c -o pth_create_2-pth_create_2.o `test -f 'pth_create_2.c' || echo '$(srcdir)/'`pth_create_2.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pth_create_2-pth_create_2.Tpo $(DEPDIR)/pth_create_2-pth_create_2.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='pth_create_2.c' object='pth_create_2-pth_create_2.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_create_2_CFLAGS) $(CFLAGS) -c -o pth_create_2-pth_create_2.o `test -f 'pth_create_2.c' || echo '$(srcdir)/'`pth_create_2.c
+
+pth_create_2-pth_create_2.obj: pth_create_2.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_create_2_CFLAGS) $(CFLAGS) -MT pth_create_2-pth_create_2.obj -MD -MP -MF $(DEPDIR)/pth_create_2-pth_create_2.Tpo -c -o pth_create_2-pth_create_2.obj `if test -f 'pth_create_2.c'; then $(CYGPATH_W) 'pth_create_2.c'; else $(CYGPATH_W) '$(srcdir)/pth_create_2.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pth_create_2-pth_create_2.Tpo $(DEPDIR)/pth_create_2-pth_create_2.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='pth_create_2.c' object='pth_create_2-pth_create_2.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_create_2_CFLAGS) $(CFLAGS) -c -o pth_create_2-pth_create_2.obj `if test -f 'pth_create_2.c'; then $(CYGPATH_W) 'pth_create_2.c'; else $(CYGPATH_W) '$(srcdir)/pth_create_2.c'; fi`
+
+pth_lock-pth_lock.o: pth_lock.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_lock_CFLAGS) $(CFLAGS) -MT pth_lock-pth_lock.o -MD -MP -MF $(DEPDIR)/pth_lock-pth_lock.Tpo -c -o pth_lock-pth_lock.o `test -f 'pth_lock.c' || echo '$(srcdir)/'`pth_lock.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pth_lock-pth_lock.Tpo $(DEPDIR)/pth_lock-pth_lock.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='pth_lock.c' object='pth_lock-pth_lock.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_lock_CFLAGS) $(CFLAGS) -c -o pth_lock-pth_lock.o `test -f 'pth_lock.c' || echo '$(srcdir)/'`pth_lock.c
+
+pth_lock-pth_lock.obj: pth_lock.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_lock_CFLAGS) $(CFLAGS) -MT pth_lock-pth_lock.obj -MD -MP -MF $(DEPDIR)/pth_lock-pth_lock.Tpo -c -o pth_lock-pth_lock.obj `if test -f 'pth_lock.c'; then $(CYGPATH_W) 'pth_lock.c'; else $(CYGPATH_W) '$(srcdir)/pth_lock.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pth_lock-pth_lock.Tpo $(DEPDIR)/pth_lock-pth_lock.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='pth_lock.c' object='pth_lock-pth_lock.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_lock_CFLAGS) $(CFLAGS) -c -o pth_lock-pth_lock.obj `if test -f 'pth_lock.c'; then $(CYGPATH_W) 'pth_lock.c'; else $(CYGPATH_W) '$(srcdir)/pth_lock.c'; fi`
+
+pth_mixlock-pth_mixlock.o: pth_mixlock.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_mixlock_CFLAGS) $(CFLAGS) -MT pth_mixlock-pth_mixlock.o -MD -MP -MF $(DEPDIR)/pth_mixlock-pth_mixlock.Tpo -c -o pth_mixlock-pth_mixlock.o `test -f 'pth_mixlock.c' || echo '$(srcdir)/'`pth_mixlock.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pth_mixlock-pth_mixlock.Tpo $(DEPDIR)/pth_mixlock-pth_mixlock.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='pth_mixlock.c' object='pth_mixlock-pth_mixlock.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_mixlock_CFLAGS) $(CFLAGS) -c -o pth_mixlock-pth_mixlock.o `test -f 'pth_mixlock.c' || echo '$(srcdir)/'`pth_mixlock.c
+
+pth_mixlock-pth_mixlock.obj: pth_mixlock.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_mixlock_CFLAGS) $(CFLAGS) -MT pth_mixlock-pth_mixlock.obj -MD -MP -MF $(DEPDIR)/pth_mixlock-pth_mixlock.Tpo -c -o pth_mixlock-pth_mixlock.obj `if test -f 'pth_mixlock.c'; then $(CYGPATH_W) 'pth_mixlock.c'; else $(CYGPATH_W) '$(srcdir)/pth_mixlock.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pth_mixlock-pth_mixlock.Tpo $(DEPDIR)/pth_mixlock-pth_mixlock.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='pth_mixlock.c' object='pth_mixlock-pth_mixlock.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_mixlock_CFLAGS) $(CFLAGS) -c -o pth_mixlock-pth_mixlock.obj `if test -f 'pth_mixlock.c'; then $(CYGPATH_W) 'pth_mixlock.c'; else $(CYGPATH_W) '$(srcdir)/pth_mixlock.c'; fi`
+
+pth_trylock-pth_trylock.o: pth_trylock.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_trylock_CFLAGS) $(CFLAGS) -MT pth_trylock-pth_trylock.o -MD -MP -MF $(DEPDIR)/pth_trylock-pth_trylock.Tpo -c -o pth_trylock-pth_trylock.o `test -f 'pth_trylock.c' || echo '$(srcdir)/'`pth_trylock.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pth_trylock-pth_trylock.Tpo $(DEPDIR)/pth_trylock-pth_trylock.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='pth_trylock.c' object='pth_trylock-pth_trylock.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_trylock_CFLAGS) $(CFLAGS) -c -o pth_trylock-pth_trylock.o `test -f 'pth_trylock.c' || echo '$(srcdir)/'`pth_trylock.c
+
+pth_trylock-pth_trylock.obj: pth_trylock.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_trylock_CFLAGS) $(CFLAGS) -MT pth_trylock-pth_trylock.obj -MD -MP -MF $(DEPDIR)/pth_trylock-pth_trylock.Tpo -c -o pth_trylock-pth_trylock.obj `if test -f 'pth_trylock.c'; then $(CYGPATH_W) 'pth_trylock.c'; else $(CYGPATH_W) '$(srcdir)/pth_trylock.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pth_trylock-pth_trylock.Tpo $(DEPDIR)/pth_trylock-pth_trylock.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='pth_trylock.c' object='pth_trylock-pth_trylock.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_trylock_CFLAGS) $(CFLAGS) -c -o pth_trylock-pth_trylock.obj `if test -f 'pth_trylock.c'; then $(CYGPATH_W) 'pth_trylock.c'; else $(CYGPATH_W) '$(srcdir)/pth_trylock.c'; fi`
+
+pth_yield-pth_yield.o: pth_yield.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_yield_CFLAGS) $(CFLAGS) -MT pth_yield-pth_yield.o -MD -MP -MF $(DEPDIR)/pth_yield-pth_yield.Tpo -c -o pth_yield-pth_yield.o `test -f 'pth_yield.c' || echo '$(srcdir)/'`pth_yield.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pth_yield-pth_yield.Tpo $(DEPDIR)/pth_yield-pth_yield.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='pth_yield.c' object='pth_yield-pth_yield.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_yield_CFLAGS) $(CFLAGS) -c -o pth_yield-pth_yield.o `test -f 'pth_yield.c' || echo '$(srcdir)/'`pth_yield.c
+
+pth_yield-pth_yield.obj: pth_yield.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_yield_CFLAGS) $(CFLAGS) -MT pth_yield-pth_yield.obj -MD -MP -MF $(DEPDIR)/pth_yield-pth_yield.Tpo -c -o pth_yield-pth_yield.obj `if test -f 'pth_yield.c'; then $(CYGPATH_W) 'pth_yield.c'; else $(CYGPATH_W) '$(srcdir)/pth_yield.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pth_yield-pth_yield.Tpo $(DEPDIR)/pth_yield-pth_yield.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='pth_yield.c' object='pth_yield-pth_yield.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_yield_CFLAGS) $(CFLAGS) -c -o pth_yield-pth_yield.obj `if test -f 'pth_yield.c'; then $(CYGPATH_W) 'pth_yield.c'; else $(CYGPATH_W) '$(srcdir)/pth_yield.c'; fi`
+
+.cc.o:
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXXCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXXCOMPILE) -c -o $@ $<
+
+.cc.obj:
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXXCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ `$(CYGPATH_W) '$<'`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXXCOMPILE) -c -o $@ `$(CYGPATH_W) '$<'`
+
+.cc.lo:
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(LTCXXCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(LTCXXCOMPILE) -c -o $@ $<
+
+measure_create_cc-measure_create_cc.o: measure_create_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(measure_create_cc_CXXFLAGS) $(CXXFLAGS) -MT measure_create_cc-measure_create_cc.o -MD -MP -MF $(DEPDIR)/measure_create_cc-measure_create_cc.Tpo -c -o measure_create_cc-measure_create_cc.o `test -f 'measure_create_cc.cc' || echo '$(srcdir)/'`measure_create_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/measure_create_cc-measure_create_cc.Tpo $(DEPDIR)/measure_create_cc-measure_create_cc.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='measure_create_cc.cc' object='measure_create_cc-measure_create_cc.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(measure_create_cc_CXXFLAGS) $(CXXFLAGS) -c -o measure_create_cc-measure_create_cc.o `test -f 'measure_create_cc.cc' || echo '$(srcdir)/'`measure_create_cc.cc
+
+measure_create_cc-measure_create_cc.obj: measure_create_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(measure_create_cc_CXXFLAGS) $(CXXFLAGS) -MT measure_create_cc-measure_create_cc.obj -MD -MP -MF $(DEPDIR)/measure_create_cc-measure_create_cc.Tpo -c -o measure_create_cc-measure_create_cc.obj `if test -f 'measure_create_cc.cc'; then $(CYGPATH_W) 'measure_create_cc.cc'; else $(CYGPATH_W) '$(srcdir)/measure_create_cc.cc'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/measure_create_cc-measure_create_cc.Tpo $(DEPDIR)/measure_create_cc-measure_create_cc.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='measure_create_cc.cc' object='measure_create_cc-measure_create_cc.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(measure_create_cc_CXXFLAGS) $(CXXFLAGS) -c -o measure_create_cc-measure_create_cc.obj `if test -f 'measure_create_cc.cc'; then $(CYGPATH_W) 'measure_create_cc.cc'; else $(CYGPATH_W) '$(srcdir)/measure_create_cc.cc'; fi`
+
+measure_latency_cc-measure_latency_cc.o: measure_latency_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(measure_latency_cc_CXXFLAGS) $(CXXFLAGS) -MT measure_latency_cc-measure_latency_cc.o -MD -MP -MF $(DEPDIR)/measure_latency_cc-measure_latency_cc.Tpo -c -o measure_latency_cc-measure_latency_cc.o `test -f 'measure_latency_cc.cc' || echo '$(srcdir)/'`measure_latency_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/measure_latency_cc-measure_latency_cc.Tpo $(DEPDIR)/measure_latency_cc-measure_latency_cc.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='measure_latency_cc.cc' object='measure_latency_cc-measure_latency_cc.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(measure_latency_cc_CXXFLAGS) $(CXXFLAGS) -c -o measure_latency_cc-measure_latency_cc.o `test -f 'measure_latency_cc.cc' || echo '$(srcdir)/'`measure_latency_cc.cc
+
+measure_latency_cc-measure_latency_cc.obj: measure_latency_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(measure_latency_cc_CXXFLAGS) $(CXXFLAGS) -MT measure_latency_cc-measure_latency_cc.obj -MD -MP -MF $(DEPDIR)/measure_latency_cc-measure_latency_cc.Tpo -c -o measure_latency_cc-measure_latency_cc.obj `if test -f 'measure_latency_cc.cc'; then $(CYGPATH_W) 'measure_latency_cc.cc'; else $(CYGPATH_W) '$(srcdir)/measure_latency_cc.cc'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/measure_latency_cc-measure_latency_cc.Tpo $(DEPDIR)/measure_latency_cc-measure_latency_cc.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='measure_latency_cc.cc' object='measure_latency_cc-measure_latency_cc.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(measure_latency_cc_CXXFLAGS) $(CXXFLAGS) -c -o measure_latency_cc-measure_latency_cc.obj `if test -f 'measure_latency_cc.cc'; then $(CYGPATH_W) 'measure_latency_cc.cc'; else $(CYGPATH_W) '$(srcdir)/measure_latency_cc.cc'; fi`
+
+measure_wakeup_latency_cc-measure_wakeup_latency_cc.o: measure_wakeup_latency_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(measure_wakeup_latency_cc_CXXFLAGS) $(CXXFLAGS) -MT measure_wakeup_latency_cc-measure_wakeup_latency_cc.o -MD -MP -MF $(DEPDIR)/measure_wakeup_latency_cc-measure_wakeup_latency_cc.Tpo -c -o measure_wakeup_latency_cc-measure_wakeup_latency_cc.o `test -f 'measure_wakeup_latency_cc.cc' || echo '$(srcdir)/'`measure_wakeup_latency_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/measure_wakeup_latency_cc-measure_wakeup_latency_cc.Tpo $(DEPDIR)/measure_wakeup_latency_cc-measure_wakeup_latency_cc.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='measure_wakeup_latency_cc.cc' object='measure_wakeup_latency_cc-measure_wakeup_latency_cc.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(measure_wakeup_latency_cc_CXXFLAGS) $(CXXFLAGS) -c -o measure_wakeup_latency_cc-measure_wakeup_latency_cc.o `test -f 'measure_wakeup_latency_cc.cc' || echo '$(srcdir)/'`measure_wakeup_latency_cc.cc
+
+measure_wakeup_latency_cc-measure_wakeup_latency_cc.obj: measure_wakeup_latency_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(measure_wakeup_latency_cc_CXXFLAGS) $(CXXFLAGS) -MT measure_wakeup_latency_cc-measure_wakeup_latency_cc.obj -MD -MP -MF $(DEPDIR)/measure_wakeup_latency_cc-measure_wakeup_latency_cc.Tpo -c -o measure_wakeup_latency_cc-measure_wakeup_latency_cc.obj `if test -f 'measure_wakeup_latency_cc.cc'; then $(CYGPATH_W) 'measure_wakeup_latency_cc.cc'; else $(CYGPATH_W) '$(srcdir)/measure_wakeup_latency_cc.cc'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/measure_wakeup_latency_cc-measure_wakeup_latency_cc.Tpo $(DEPDIR)/measure_wakeup_latency_cc-measure_wakeup_latency_cc.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='measure_wakeup_latency_cc.cc' object='measure_wakeup_latency_cc-measure_wakeup_latency_cc.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(measure_wakeup_latency_cc_CXXFLAGS) $(CXXFLAGS) -c -o measure_wakeup_latency_cc-measure_wakeup_latency_cc.obj `if test -f 'measure_wakeup_latency_cc.cc'; then $(CYGPATH_W) 'measure_wakeup_latency_cc.cc'; else $(CYGPATH_W) '$(srcdir)/measure_wakeup_latency_cc.cc'; fi`
+
+myth_barrier_cc-myth_barrier_cc.o: myth_barrier_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_barrier_cc_CXXFLAGS) $(CXXFLAGS) -MT myth_barrier_cc-myth_barrier_cc.o -MD -MP -MF $(DEPDIR)/myth_barrier_cc-myth_barrier_cc.Tpo -c -o myth_barrier_cc-myth_barrier_cc.o `test -f 'myth_barrier_cc.cc' || echo '$(srcdir)/'`myth_barrier_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/myth_barrier_cc-myth_barrier_cc.Tpo $(DEPDIR)/myth_barrier_cc-myth_barrier_cc.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='myth_barrier_cc.cc' object='myth_barrier_cc-myth_barrier_cc.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_barrier_cc_CXXFLAGS) $(CXXFLAGS) -c -o myth_barrier_cc-myth_barrier_cc.o `test -f 'myth_barrier_cc.cc' || echo '$(srcdir)/'`myth_barrier_cc.cc
+
+myth_barrier_cc-myth_barrier_cc.obj: myth_barrier_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_barrier_cc_CXXFLAGS) $(CXXFLAGS) -MT myth_barrier_cc-myth_barrier_cc.obj -MD -MP -MF $(DEPDIR)/myth_barrier_cc-myth_barrier_cc.Tpo -c -o myth_barrier_cc-myth_barrier_cc.obj `if test -f 'myth_barrier_cc.cc'; then $(CYGPATH_W) 'myth_barrier_cc.cc'; else $(CYGPATH_W) '$(srcdir)/myth_barrier_cc.cc'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/myth_barrier_cc-myth_barrier_cc.Tpo $(DEPDIR)/myth_barrier_cc-myth_barrier_cc.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='myth_barrier_cc.cc' object='myth_barrier_cc-myth_barrier_cc.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_barrier_cc_CXXFLAGS) $(CXXFLAGS) -c -o myth_barrier_cc-myth_barrier_cc.obj `if test -f 'myth_barrier_cc.cc'; then $(CYGPATH_W) 'myth_barrier_cc.cc'; else $(CYGPATH_W) '$(srcdir)/myth_barrier_cc.cc'; fi`
+
+myth_cond_broadcast_0_cc-myth_cond_broadcast_0_cc.o: myth_cond_broadcast_0_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_cond_broadcast_0_cc_CXXFLAGS) $(CXXFLAGS) -MT myth_cond_broadcast_0_cc-myth_cond_broadcast_0_cc.o -MD -MP -MF $(DEPDIR)/myth_cond_broadcast_0_cc-myth_cond_broadcast_0_cc.Tpo -c -o myth_cond_broadcast_0_cc-myth_cond_broadcast_0_cc.o `test -f 'myth_cond_broadcast_0_cc.cc' || echo '$(srcdir)/'`myth_cond_broadcast_0_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/myth_cond_broadcast_0_cc-myth_cond_broadcast_0_cc.Tpo $(DEPDIR)/myth_cond_broadcast_0_cc-myth_cond_broadcast_0_cc.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='myth_cond_broadcast_0_cc.cc' object='myth_cond_broadcast_0_cc-myth_cond_broadcast_0_cc.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_cond_broadcast_0_cc_CXXFLAGS) $(CXXFLAGS) -c -o myth_cond_broadcast_0_cc-myth_cond_broadcast_0_cc.o `test -f 'myth_cond_broadcast_0_cc.cc' || echo '$(srcdir)/'`myth_cond_broadcast_0_cc.cc
+
+myth_cond_broadcast_0_cc-myth_cond_broadcast_0_cc.obj: myth_cond_broadcast_0_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_cond_broadcast_0_cc_CXXFLAGS) $(CXXFLAGS) -MT myth_cond_broadcast_0_cc-myth_cond_broadcast_0_cc.obj -MD -MP -MF $(DEPDIR)/myth_cond_broadcast_0_cc-myth_cond_broadcast_0_cc.Tpo -c -o myth_cond_broadcast_0_cc-myth_cond_broadcast_0_cc.obj `if test -f 'myth_cond_broadcast_0_cc.cc'; then $(CYGPATH_W) 'myth_cond_broadcast_0_cc.cc'; else $(CYGPATH_W) '$(srcdir)/myth_cond_broadcast_0_cc.cc'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/myth_cond_broadcast_0_cc-myth_cond_broadcast_0_cc.Tpo $(DEPDIR)/myth_cond_broadcast_0_cc-myth_cond_broadcast_0_cc.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='myth_cond_broadcast_0_cc.cc' object='myth_cond_broadcast_0_cc-myth_cond_broadcast_0_cc.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_cond_broadcast_0_cc_CXXFLAGS) $(CXXFLAGS) -c -o myth_cond_broadcast_0_cc-myth_cond_broadcast_0_cc.obj `if test -f 'myth_cond_broadcast_0_cc.cc'; then $(CYGPATH_W) 'myth_cond_broadcast_0_cc.cc'; else $(CYGPATH_W) '$(srcdir)/myth_cond_broadcast_0_cc.cc'; fi`
+
+myth_cond_broadcast_1_cc-myth_cond_broadcast_1_cc.o: myth_cond_broadcast_1_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_cond_broadcast_1_cc_CXXFLAGS) $(CXXFLAGS) -MT myth_cond_broadcast_1_cc-myth_cond_broadcast_1_cc.o -MD -MP -MF $(DEPDIR)/myth_cond_broadcast_1_cc-myth_cond_broadcast_1_cc.Tpo -c -o myth_cond_broadcast_1_cc-myth_cond_broadcast_1_cc.o `test -f 'myth_cond_broadcast_1_cc.cc' || echo '$(srcdir)/'`myth_cond_broadcast_1_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/myth_cond_broadcast_1_cc-myth_cond_broadcast_1_cc.Tpo $(DEPDIR)/myth_cond_broadcast_1_cc-myth_cond_broadcast_1_cc.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='myth_cond_broadcast_1_cc.cc' object='myth_cond_broadcast_1_cc-myth_cond_broadcast_1_cc.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_cond_broadcast_1_cc_CXXFLAGS) $(CXXFLAGS) -c -o myth_cond_broadcast_1_cc-myth_cond_broadcast_1_cc.o `test -f 'myth_cond_broadcast_1_cc.cc' || echo '$(srcdir)/'`myth_cond_broadcast_1_cc.cc
+
+myth_cond_broadcast_1_cc-myth_cond_broadcast_1_cc.obj: myth_cond_broadcast_1_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_cond_broadcast_1_cc_CXXFLAGS) $(CXXFLAGS) -MT myth_cond_broadcast_1_cc-myth_cond_broadcast_1_cc.obj -MD -MP -MF $(DEPDIR)/myth_cond_broadcast_1_cc-myth_cond_broadcast_1_cc.Tpo -c -o myth_cond_broadcast_1_cc-myth_cond_broadcast_1_cc.obj `if test -f 'myth_cond_broadcast_1_cc.cc'; then $(CYGPATH_W) 'myth_cond_broadcast_1_cc.cc'; else $(CYGPATH_W) '$(srcdir)/myth_cond_broadcast_1_cc.cc'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/myth_cond_broadcast_1_cc-myth_cond_broadcast_1_cc.Tpo $(DEPDIR)/myth_cond_broadcast_1_cc-myth_cond_broadcast_1_cc.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='myth_cond_broadcast_1_cc.cc' object='myth_cond_broadcast_1_cc-myth_cond_broadcast_1_cc.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_cond_broadcast_1_cc_CXXFLAGS) $(CXXFLAGS) -c -o myth_cond_broadcast_1_cc-myth_cond_broadcast_1_cc.obj `if test -f 'myth_cond_broadcast_1_cc.cc'; then $(CYGPATH_W) 'myth_cond_broadcast_1_cc.cc'; else $(CYGPATH_W) '$(srcdir)/myth_cond_broadcast_1_cc.cc'; fi`
+
+myth_cond_signal_cc-myth_cond_signal_cc.o: myth_cond_signal_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_cond_signal_cc_CXXFLAGS) $(CXXFLAGS) -MT myth_cond_signal_cc-myth_cond_signal_cc.o -MD -MP -MF $(DEPDIR)/myth_cond_signal_cc-myth_cond_signal_cc.Tpo -c -o myth_cond_signal_cc-myth_cond_signal_cc.o `test -f 'myth_cond_signal_cc.cc' || echo '$(srcdir)/'`myth_cond_signal_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/myth_cond_signal_cc-myth_cond_signal_cc.Tpo $(DEPDIR)/myth_cond_signal_cc-myth_cond_signal_cc.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='myth_cond_signal_cc.cc' object='myth_cond_signal_cc-myth_cond_signal_cc.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_cond_signal_cc_CXXFLAGS) $(CXXFLAGS) -c -o myth_cond_signal_cc-myth_cond_signal_cc.o `test -f 'myth_cond_signal_cc.cc' || echo '$(srcdir)/'`myth_cond_signal_cc.cc
+
+myth_cond_signal_cc-myth_cond_signal_cc.obj: myth_cond_signal_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_cond_signal_cc_CXXFLAGS) $(CXXFLAGS) -MT myth_cond_signal_cc-myth_cond_signal_cc.obj -MD -MP -MF $(DEPDIR)/myth_cond_signal_cc-myth_cond_signal_cc.Tpo -c -o myth_cond_signal_cc-myth_cond_signal_cc.obj `if test -f 'myth_cond_signal_cc.cc'; then $(CYGPATH_W) 'myth_cond_signal_cc.cc'; else $(CYGPATH_W) '$(srcdir)/myth_cond_signal_cc.cc'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/myth_cond_signal_cc-myth_cond_signal_cc.Tpo $(DEPDIR)/myth_cond_signal_cc-myth_cond_signal_cc.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='myth_cond_signal_cc.cc' object='myth_cond_signal_cc-myth_cond_signal_cc.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_cond_signal_cc_CXXFLAGS) $(CXXFLAGS) -c -o myth_cond_signal_cc-myth_cond_signal_cc.obj `if test -f 'myth_cond_signal_cc.cc'; then $(CYGPATH_W) 'myth_cond_signal_cc.cc'; else $(CYGPATH_W) '$(srcdir)/myth_cond_signal_cc.cc'; fi`
+
+myth_create_0_cc-myth_create_0_cc.o: myth_create_0_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_create_0_cc_CXXFLAGS) $(CXXFLAGS) -MT myth_create_0_cc-myth_create_0_cc.o -MD -MP -MF $(DEPDIR)/myth_create_0_cc-myth_create_0_cc.Tpo -c -o myth_create_0_cc-myth_create_0_cc.o `test -f 'myth_create_0_cc.cc' || echo '$(srcdir)/'`myth_create_0_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/myth_create_0_cc-myth_create_0_cc.Tpo $(DEPDIR)/myth_create_0_cc-myth_create_0_cc.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='myth_create_0_cc.cc' object='myth_create_0_cc-myth_create_0_cc.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_create_0_cc_CXXFLAGS) $(CXXFLAGS) -c -o myth_create_0_cc-myth_create_0_cc.o `test -f 'myth_create_0_cc.cc' || echo '$(srcdir)/'`myth_create_0_cc.cc
+
+myth_create_0_cc-myth_create_0_cc.obj: myth_create_0_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_create_0_cc_CXXFLAGS) $(CXXFLAGS) -MT myth_create_0_cc-myth_create_0_cc.obj -MD -MP -MF $(DEPDIR)/myth_create_0_cc-myth_create_0_cc.Tpo -c -o myth_create_0_cc-myth_create_0_cc.obj `if test -f 'myth_create_0_cc.cc'; then $(CYGPATH_W) 'myth_create_0_cc.cc'; else $(CYGPATH_W) '$(srcdir)/myth_create_0_cc.cc'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/myth_create_0_cc-myth_create_0_cc.Tpo $(DEPDIR)/myth_create_0_cc-myth_create_0_cc.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='myth_create_0_cc.cc' object='myth_create_0_cc-myth_create_0_cc.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_create_0_cc_CXXFLAGS) $(CXXFLAGS) -c -o myth_create_0_cc-myth_create_0_cc.obj `if test -f 'myth_create_0_cc.cc'; then $(CYGPATH_W) 'myth_create_0_cc.cc'; else $(CYGPATH_W) '$(srcdir)/myth_create_0_cc.cc'; fi`
+
+myth_create_1_cc-myth_create_1_cc.o: myth_create_1_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_create_1_cc_CXXFLAGS) $(CXXFLAGS) -MT myth_create_1_cc-myth_create_1_cc.o -MD -MP -MF $(DEPDIR)/myth_create_1_cc-myth_create_1_cc.Tpo -c -o myth_create_1_cc-myth_create_1_cc.o `test -f 'myth_create_1_cc.cc' || echo '$(srcdir)/'`myth_create_1_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/myth_create_1_cc-myth_create_1_cc.Tpo $(DEPDIR)/myth_create_1_cc-myth_create_1_cc.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='myth_create_1_cc.cc' object='myth_create_1_cc-myth_create_1_cc.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_create_1_cc_CXXFLAGS) $(CXXFLAGS) -c -o myth_create_1_cc-myth_create_1_cc.o `test -f 'myth_create_1_cc.cc' || echo '$(srcdir)/'`myth_create_1_cc.cc
+
+myth_create_1_cc-myth_create_1_cc.obj: myth_create_1_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_create_1_cc_CXXFLAGS) $(CXXFLAGS) -MT myth_create_1_cc-myth_create_1_cc.obj -MD -MP -MF $(DEPDIR)/myth_create_1_cc-myth_create_1_cc.Tpo -c -o myth_create_1_cc-myth_create_1_cc.obj `if test -f 'myth_create_1_cc.cc'; then $(CYGPATH_W) 'myth_create_1_cc.cc'; else $(CYGPATH_W) '$(srcdir)/myth_create_1_cc.cc'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/myth_create_1_cc-myth_create_1_cc.Tpo $(DEPDIR)/myth_create_1_cc-myth_create_1_cc.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='myth_create_1_cc.cc' object='myth_create_1_cc-myth_create_1_cc.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_create_1_cc_CXXFLAGS) $(CXXFLAGS) -c -o myth_create_1_cc-myth_create_1_cc.obj `if test -f 'myth_create_1_cc.cc'; then $(CYGPATH_W) 'myth_create_1_cc.cc'; else $(CYGPATH_W) '$(srcdir)/myth_create_1_cc.cc'; fi`
+
+myth_create_2_cc-myth_create_2_cc.o: myth_create_2_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_create_2_cc_CXXFLAGS) $(CXXFLAGS) -MT myth_create_2_cc-myth_create_2_cc.o -MD -MP -MF $(DEPDIR)/myth_create_2_cc-myth_create_2_cc.Tpo -c -o myth_create_2_cc-myth_create_2_cc.o `test -f 'myth_create_2_cc.cc' || echo '$(srcdir)/'`myth_create_2_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/myth_create_2_cc-myth_create_2_cc.Tpo $(DEPDIR)/myth_create_2_cc-myth_create_2_cc.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='myth_create_2_cc.cc' object='myth_create_2_cc-myth_create_2_cc.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_create_2_cc_CXXFLAGS) $(CXXFLAGS) -c -o myth_create_2_cc-myth_create_2_cc.o `test -f 'myth_create_2_cc.cc' || echo '$(srcdir)/'`myth_create_2_cc.cc
+
+myth_create_2_cc-myth_create_2_cc.obj: myth_create_2_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_create_2_cc_CXXFLAGS) $(CXXFLAGS) -MT myth_create_2_cc-myth_create_2_cc.obj -MD -MP -MF $(DEPDIR)/myth_create_2_cc-myth_create_2_cc.Tpo -c -o myth_create_2_cc-myth_create_2_cc.obj `if test -f 'myth_create_2_cc.cc'; then $(CYGPATH_W) 'myth_create_2_cc.cc'; else $(CYGPATH_W) '$(srcdir)/myth_create_2_cc.cc'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/myth_create_2_cc-myth_create_2_cc.Tpo $(DEPDIR)/myth_create_2_cc-myth_create_2_cc.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='myth_create_2_cc.cc' object='myth_create_2_cc-myth_create_2_cc.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_create_2_cc_CXXFLAGS) $(CXXFLAGS) -c -o myth_create_2_cc-myth_create_2_cc.obj `if test -f 'myth_create_2_cc.cc'; then $(CYGPATH_W) 'myth_create_2_cc.cc'; else $(CYGPATH_W) '$(srcdir)/myth_create_2_cc.cc'; fi`
+
+myth_create_join_many_cc-myth_create_join_many_cc.o: myth_create_join_many_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_create_join_many_cc_CXXFLAGS) $(CXXFLAGS) -MT myth_create_join_many_cc-myth_create_join_many_cc.o -MD -MP -MF $(DEPDIR)/myth_create_join_many_cc-myth_create_join_many_cc.Tpo -c -o myth_create_join_many_cc-myth_create_join_many_cc.o `test -f 'myth_create_join_many_cc.cc' || echo '$(srcdir)/'`myth_create_join_many_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/myth_create_join_many_cc-myth_create_join_many_cc.Tpo $(DEPDIR)/myth_create_join_many_cc-myth_create_join_many_cc.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='myth_create_join_many_cc.cc' object='myth_create_join_many_cc-myth_create_join_many_cc.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_create_join_many_cc_CXXFLAGS) $(CXXFLAGS) -c -o myth_create_join_many_cc-myth_create_join_many_cc.o `test -f 'myth_create_join_many_cc.cc' || echo '$(srcdir)/'`myth_create_join_many_cc.cc
+
+myth_create_join_many_cc-myth_create_join_many_cc.obj: myth_create_join_many_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_create_join_many_cc_CXXFLAGS) $(CXXFLAGS) -MT myth_create_join_many_cc-myth_create_join_many_cc.obj -MD -MP -MF $(DEPDIR)/myth_create_join_many_cc-myth_create_join_many_cc.Tpo -c -o myth_create_join_many_cc-myth_create_join_many_cc.obj `if test -f 'myth_create_join_many_cc.cc'; then $(CYGPATH_W) 'myth_create_join_many_cc.cc'; else $(CYGPATH_W) '$(srcdir)/myth_create_join_many_cc.cc'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/myth_create_join_many_cc-myth_create_join_many_cc.Tpo $(DEPDIR)/myth_create_join_many_cc-myth_create_join_many_cc.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='myth_create_join_many_cc.cc' object='myth_create_join_many_cc-myth_create_join_many_cc.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_create_join_many_cc_CXXFLAGS) $(CXXFLAGS) -c -o myth_create_join_many_cc-myth_create_join_many_cc.obj `if test -f 'myth_create_join_many_cc.cc'; then $(CYGPATH_W) 'myth_create_join_many_cc.cc'; else $(CYGPATH_W) '$(srcdir)/myth_create_join_many_cc.cc'; fi`
+
+myth_dag_1d_cc-myth_dag_1d_cc.o: myth_dag_1d_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_dag_1d_cc_CXXFLAGS) $(CXXFLAGS) -MT myth_dag_1d_cc-myth_dag_1d_cc.o -MD -MP -MF $(DEPDIR)/myth_dag_1d_cc-myth_dag_1d_cc.Tpo -c -o myth_dag_1d_cc-myth_dag_1d_cc.o `test -f 'myth_dag_1d_cc.cc' || echo '$(srcdir)/'`myth_dag_1d_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/myth_dag_1d_cc-myth_dag_1d_cc.Tpo $(DEPDIR)/myth_dag_1d_cc-myth_dag_1d_cc.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='myth_dag_1d_cc.cc' object='myth_dag_1d_cc-myth_dag_1d_cc.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_dag_1d_cc_CXXFLAGS) $(CXXFLAGS) -c -o myth_dag_1d_cc-myth_dag_1d_cc.o `test -f 'myth_dag_1d_cc.cc' || echo '$(srcdir)/'`myth_dag_1d_cc.cc
+
+myth_dag_1d_cc-myth_dag_1d_cc.obj: myth_dag_1d_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_dag_1d_cc_CXXFLAGS) $(CXXFLAGS) -MT myth_dag_1d_cc-myth_dag_1d_cc.obj -MD -MP -MF $(DEPDIR)/myth_dag_1d_cc-myth_dag_1d_cc.Tpo -c -o myth_dag_1d_cc-myth_dag_1d_cc.obj `if test -f 'myth_dag_1d_cc.cc'; then $(CYGPATH_W) 'myth_dag_1d_cc.cc'; else $(CYGPATH_W) '$(srcdir)/myth_dag_1d_cc.cc'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/myth_dag_1d_cc-myth_dag_1d_cc.Tpo $(DEPDIR)/myth_dag_1d_cc-myth_dag_1d_cc.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='myth_dag_1d_cc.cc' object='myth_dag_1d_cc-myth_dag_1d_cc.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_dag_1d_cc_CXXFLAGS) $(CXXFLAGS) -c -o myth_dag_1d_cc-myth_dag_1d_cc.obj `if test -f 'myth_dag_1d_cc.cc'; then $(CYGPATH_W) 'myth_dag_1d_cc.cc'; else $(CYGPATH_W) '$(srcdir)/myth_dag_1d_cc.cc'; fi`
+
+myth_dag_2d_cc-myth_dag_2d_cc.o: myth_dag_2d_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_dag_2d_cc_CXXFLAGS) $(CXXFLAGS) -MT myth_dag_2d_cc-myth_dag_2d_cc.o -MD -MP -MF $(DEPDIR)/myth_dag_2d_cc-myth_dag_2d_cc.Tpo -c -o myth_dag_2d_cc-myth_dag_2d_cc.o `test -f 'myth_dag_2d_cc.cc' || echo '$(srcdir)/'`myth_dag_2d_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/myth_dag_2d_cc-myth_dag_2d_cc.Tpo $(DEPDIR)/myth_dag_2d_cc-myth_dag_2d_cc.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='myth_dag_2d_cc.cc' object='myth_dag_2d_cc-myth_dag_2d_cc.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_dag_2d_cc_CXXFLAGS) $(CXXFLAGS) -c -o myth_dag_2d_cc-myth_dag_2d_cc.o `test -f 'myth_dag_2d_cc.cc' || echo '$(srcdir)/'`myth_dag_2d_cc.cc
+
+myth_dag_2d_cc-myth_dag_2d_cc.obj: myth_dag_2d_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_dag_2d_cc_CXXFLAGS) $(CXXFLAGS) -MT myth_dag_2d_cc-myth_dag_2d_cc.obj -MD -MP -MF $(DEPDIR)/myth_dag_2d_cc-myth_dag_2d_cc.Tpo -c -o myth_dag_2d_cc-myth_dag_2d_cc.obj `if test -f 'myth_dag_2d_cc.cc'; then $(CYGPATH_W) 'myth_dag_2d_cc.cc'; else $(CYGPATH_W) '$(srcdir)/myth_dag_2d_cc.cc'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/myth_dag_2d_cc-myth_dag_2d_cc.Tpo $(DEPDIR)/myth_dag_2d_cc-myth_dag_2d_cc.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='myth_dag_2d_cc.cc' object='myth_dag_2d_cc-myth_dag_2d_cc.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_dag_2d_cc_CXXFLAGS) $(CXXFLAGS) -c -o myth_dag_2d_cc-myth_dag_2d_cc.obj `if test -f 'myth_dag_2d_cc.cc'; then $(CYGPATH_W) 'myth_dag_2d_cc.cc'; else $(CYGPATH_W) '$(srcdir)/myth_dag_2d_cc.cc'; fi`
+
+myth_dag_random_cc-myth_dag_random_cc.o: myth_dag_random_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_dag_random_cc_CXXFLAGS) $(CXXFLAGS) -MT myth_dag_random_cc-myth_dag_random_cc.o -MD -MP -MF $(DEPDIR)/myth_dag_random_cc-myth_dag_random_cc.Tpo -c -o myth_dag_random_cc-myth_dag_random_cc.o `test -f 'myth_dag_random_cc.cc' || echo '$(srcdir)/'`myth_dag_random_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/myth_dag_random_cc-myth_dag_random_cc.Tpo $(DEPDIR)/myth_dag_random_cc-myth_dag_random_cc.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='myth_dag_random_cc.cc' object='myth_dag_random_cc-myth_dag_random_cc.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_dag_random_cc_CXXFLAGS) $(CXXFLAGS) -c -o myth_dag_random_cc-myth_dag_random_cc.o `test -f 'myth_dag_random_cc.cc' || echo '$(srcdir)/'`myth_dag_random_cc.cc
+
+myth_dag_random_cc-myth_dag_random_cc.obj: myth_dag_random_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_dag_random_cc_CXXFLAGS) $(CXXFLAGS) -MT myth_dag_random_cc-myth_dag_random_cc.obj -MD -MP -MF $(DEPDIR)/myth_dag_random_cc-myth_dag_random_cc.Tpo -c -o myth_dag_random_cc-myth_dag_random_cc.obj `if test -f 'myth_dag_random_cc.cc'; then $(CYGPATH_W) 'myth_dag_random_cc.cc'; else $(CYGPATH_W) '$(srcdir)/myth_dag_random_cc.cc'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/myth_dag_random_cc-myth_dag_random_cc.Tpo $(DEPDIR)/myth_dag_random_cc-myth_dag_random_cc.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='myth_dag_random_cc.cc' object='myth_dag_random_cc-myth_dag_random_cc.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_dag_random_cc_CXXFLAGS) $(CXXFLAGS) -c -o myth_dag_random_cc-myth_dag_random_cc.obj `if test -f 'myth_dag_random_cc.cc'; then $(CYGPATH_W) 'myth_dag_random_cc.cc'; else $(CYGPATH_W) '$(srcdir)/myth_dag_random_cc.cc'; fi`
+
+myth_felock_cc-myth_felock_cc.o: myth_felock_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_felock_cc_CXXFLAGS) $(CXXFLAGS) -MT myth_felock_cc-myth_felock_cc.o -MD -MP -MF $(DEPDIR)/myth_felock_cc-myth_felock_cc.Tpo -c -o myth_felock_cc-myth_felock_cc.o `test -f 'myth_felock_cc.cc' || echo '$(srcdir)/'`myth_felock_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/myth_felock_cc-myth_felock_cc.Tpo $(DEPDIR)/myth_felock_cc-myth_felock_cc.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='myth_felock_cc.cc' object='myth_felock_cc-myth_felock_cc.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_felock_cc_CXXFLAGS) $(CXXFLAGS) -c -o myth_felock_cc-myth_felock_cc.o `test -f 'myth_felock_cc.cc' || echo '$(srcdir)/'`myth_felock_cc.cc
+
+myth_felock_cc-myth_felock_cc.obj: myth_felock_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_felock_cc_CXXFLAGS) $(CXXFLAGS) -MT myth_felock_cc-myth_felock_cc.obj -MD -MP -MF $(DEPDIR)/myth_felock_cc-myth_felock_cc.Tpo -c -o myth_felock_cc-myth_felock_cc.obj `if test -f 'myth_felock_cc.cc'; then $(CYGPATH_W) 'myth_felock_cc.cc'; else $(CYGPATH_W) '$(srcdir)/myth_felock_cc.cc'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/myth_felock_cc-myth_felock_cc.Tpo $(DEPDIR)/myth_felock_cc-myth_felock_cc.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='myth_felock_cc.cc' object='myth_felock_cc-myth_felock_cc.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_felock_cc_CXXFLAGS) $(CXXFLAGS) -c -o myth_felock_cc-myth_felock_cc.obj `if test -f 'myth_felock_cc.cc'; then $(CYGPATH_W) 'myth_felock_cc.cc'; else $(CYGPATH_W) '$(srcdir)/myth_felock_cc.cc'; fi`
+
+myth_join_counter_cc-myth_join_counter_cc.o: myth_join_counter_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_join_counter_cc_CXXFLAGS) $(CXXFLAGS) -MT myth_join_counter_cc-myth_join_counter_cc.o -MD -MP -MF $(DEPDIR)/myth_join_counter_cc-myth_join_counter_cc.Tpo -c -o myth_join_counter_cc-myth_join_counter_cc.o `test -f 'myth_join_counter_cc.cc' || echo '$(srcdir)/'`myth_join_counter_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/myth_join_counter_cc-myth_join_counter_cc.Tpo $(DEPDIR)/myth_join_counter_cc-myth_join_counter_cc.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='myth_join_counter_cc.cc' object='myth_join_counter_cc-myth_join_counter_cc.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_join_counter_cc_CXXFLAGS) $(CXXFLAGS) -c -o myth_join_counter_cc-myth_join_counter_cc.o `test -f 'myth_join_counter_cc.cc' || echo '$(srcdir)/'`myth_join_counter_cc.cc
+
+myth_join_counter_cc-myth_join_counter_cc.obj: myth_join_counter_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_join_counter_cc_CXXFLAGS) $(CXXFLAGS) -MT myth_join_counter_cc-myth_join_counter_cc.obj -MD -MP -MF $(DEPDIR)/myth_join_counter_cc-myth_join_counter_cc.Tpo -c -o myth_join_counter_cc-myth_join_counter_cc.obj `if test -f 'myth_join_counter_cc.cc'; then $(CYGPATH_W) 'myth_join_counter_cc.cc'; else $(CYGPATH_W) '$(srcdir)/myth_join_counter_cc.cc'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/myth_join_counter_cc-myth_join_counter_cc.Tpo $(DEPDIR)/myth_join_counter_cc-myth_join_counter_cc.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='myth_join_counter_cc.cc' object='myth_join_counter_cc-myth_join_counter_cc.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_join_counter_cc_CXXFLAGS) $(CXXFLAGS) -c -o myth_join_counter_cc-myth_join_counter_cc.obj `if test -f 'myth_join_counter_cc.cc'; then $(CYGPATH_W) 'myth_join_counter_cc.cc'; else $(CYGPATH_W) '$(srcdir)/myth_join_counter_cc.cc'; fi`
+
+myth_lock_cc-myth_lock_cc.o: myth_lock_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_lock_cc_CXXFLAGS) $(CXXFLAGS) -MT myth_lock_cc-myth_lock_cc.o -MD -MP -MF $(DEPDIR)/myth_lock_cc-myth_lock_cc.Tpo -c -o myth_lock_cc-myth_lock_cc.o `test -f 'myth_lock_cc.cc' || echo '$(srcdir)/'`myth_lock_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/myth_lock_cc-myth_lock_cc.Tpo $(DEPDIR)/myth_lock_cc-myth_lock_cc.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='myth_lock_cc.cc' object='myth_lock_cc-myth_lock_cc.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_lock_cc_CXXFLAGS) $(CXXFLAGS) -c -o myth_lock_cc-myth_lock_cc.o `test -f 'myth_lock_cc.cc' || echo '$(srcdir)/'`myth_lock_cc.cc
+
+myth_lock_cc-myth_lock_cc.obj: myth_lock_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_lock_cc_CXXFLAGS) $(CXXFLAGS) -MT myth_lock_cc-myth_lock_cc.obj -MD -MP -MF $(DEPDIR)/myth_lock_cc-myth_lock_cc.Tpo -c -o myth_lock_cc-myth_lock_cc.obj `if test -f 'myth_lock_cc.cc'; then $(CYGPATH_W) 'myth_lock_cc.cc'; else $(CYGPATH_W) '$(srcdir)/myth_lock_cc.cc'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/myth_lock_cc-myth_lock_cc.Tpo $(DEPDIR)/myth_lock_cc-myth_lock_cc.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='myth_lock_cc.cc' object='myth_lock_cc-myth_lock_cc.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_lock_cc_CXXFLAGS) $(CXXFLAGS) -c -o myth_lock_cc-myth_lock_cc.obj `if test -f 'myth_lock_cc.cc'; then $(CYGPATH_W) 'myth_lock_cc.cc'; else $(CYGPATH_W) '$(srcdir)/myth_lock_cc.cc'; fi`
+
+myth_mixlock_cc-myth_mixlock_cc.o: myth_mixlock_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_mixlock_cc_CXXFLAGS) $(CXXFLAGS) -MT myth_mixlock_cc-myth_mixlock_cc.o -MD -MP -MF $(DEPDIR)/myth_mixlock_cc-myth_mixlock_cc.Tpo -c -o myth_mixlock_cc-myth_mixlock_cc.o `test -f 'myth_mixlock_cc.cc' || echo '$(srcdir)/'`myth_mixlock_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/myth_mixlock_cc-myth_mixlock_cc.Tpo $(DEPDIR)/myth_mixlock_cc-myth_mixlock_cc.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='myth_mixlock_cc.cc' object='myth_mixlock_cc-myth_mixlock_cc.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_mixlock_cc_CXXFLAGS) $(CXXFLAGS) -c -o myth_mixlock_cc-myth_mixlock_cc.o `test -f 'myth_mixlock_cc.cc' || echo '$(srcdir)/'`myth_mixlock_cc.cc
+
+myth_mixlock_cc-myth_mixlock_cc.obj: myth_mixlock_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_mixlock_cc_CXXFLAGS) $(CXXFLAGS) -MT myth_mixlock_cc-myth_mixlock_cc.obj -MD -MP -MF $(DEPDIR)/myth_mixlock_cc-myth_mixlock_cc.Tpo -c -o myth_mixlock_cc-myth_mixlock_cc.obj `if test -f 'myth_mixlock_cc.cc'; then $(CYGPATH_W) 'myth_mixlock_cc.cc'; else $(CYGPATH_W) '$(srcdir)/myth_mixlock_cc.cc'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/myth_mixlock_cc-myth_mixlock_cc.Tpo $(DEPDIR)/myth_mixlock_cc-myth_mixlock_cc.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='myth_mixlock_cc.cc' object='myth_mixlock_cc-myth_mixlock_cc.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_mixlock_cc_CXXFLAGS) $(CXXFLAGS) -c -o myth_mixlock_cc-myth_mixlock_cc.obj `if test -f 'myth_mixlock_cc.cc'; then $(CYGPATH_W) 'myth_mixlock_cc.cc'; else $(CYGPATH_W) '$(srcdir)/myth_mixlock_cc.cc'; fi`
+
+myth_sleep_queue_cc-myth_sleep_queue_cc.o: myth_sleep_queue_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_sleep_queue_cc_CXXFLAGS) $(CXXFLAGS) -MT myth_sleep_queue_cc-myth_sleep_queue_cc.o -MD -MP -MF $(DEPDIR)/myth_sleep_queue_cc-myth_sleep_queue_cc.Tpo -c -o myth_sleep_queue_cc-myth_sleep_queue_cc.o `test -f 'myth_sleep_queue_cc.cc' || echo '$(srcdir)/'`myth_sleep_queue_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/myth_sleep_queue_cc-myth_sleep_queue_cc.Tpo $(DEPDIR)/myth_sleep_queue_cc-myth_sleep_queue_cc.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='myth_sleep_queue_cc.cc' object='myth_sleep_queue_cc-myth_sleep_queue_cc.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_sleep_queue_cc_CXXFLAGS) $(CXXFLAGS) -c -o myth_sleep_queue_cc-myth_sleep_queue_cc.o `test -f 'myth_sleep_queue_cc.cc' || echo '$(srcdir)/'`myth_sleep_queue_cc.cc
+
+myth_sleep_queue_cc-myth_sleep_queue_cc.obj: myth_sleep_queue_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_sleep_queue_cc_CXXFLAGS) $(CXXFLAGS) -MT myth_sleep_queue_cc-myth_sleep_queue_cc.obj -MD -MP -MF $(DEPDIR)/myth_sleep_queue_cc-myth_sleep_queue_cc.Tpo -c -o myth_sleep_queue_cc-myth_sleep_queue_cc.obj `if test -f 'myth_sleep_queue_cc.cc'; then $(CYGPATH_W) 'myth_sleep_queue_cc.cc'; else $(CYGPATH_W) '$(srcdir)/myth_sleep_queue_cc.cc'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/myth_sleep_queue_cc-myth_sleep_queue_cc.Tpo $(DEPDIR)/myth_sleep_queue_cc-myth_sleep_queue_cc.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='myth_sleep_queue_cc.cc' object='myth_sleep_queue_cc-myth_sleep_queue_cc.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_sleep_queue_cc_CXXFLAGS) $(CXXFLAGS) -c -o myth_sleep_queue_cc-myth_sleep_queue_cc.obj `if test -f 'myth_sleep_queue_cc.cc'; then $(CYGPATH_W) 'myth_sleep_queue_cc.cc'; else $(CYGPATH_W) '$(srcdir)/myth_sleep_queue_cc.cc'; fi`
+
+myth_trylock_cc-myth_trylock_cc.o: myth_trylock_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_trylock_cc_CXXFLAGS) $(CXXFLAGS) -MT myth_trylock_cc-myth_trylock_cc.o -MD -MP -MF $(DEPDIR)/myth_trylock_cc-myth_trylock_cc.Tpo -c -o myth_trylock_cc-myth_trylock_cc.o `test -f 'myth_trylock_cc.cc' || echo '$(srcdir)/'`myth_trylock_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/myth_trylock_cc-myth_trylock_cc.Tpo $(DEPDIR)/myth_trylock_cc-myth_trylock_cc.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='myth_trylock_cc.cc' object='myth_trylock_cc-myth_trylock_cc.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_trylock_cc_CXXFLAGS) $(CXXFLAGS) -c -o myth_trylock_cc-myth_trylock_cc.o `test -f 'myth_trylock_cc.cc' || echo '$(srcdir)/'`myth_trylock_cc.cc
+
+myth_trylock_cc-myth_trylock_cc.obj: myth_trylock_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_trylock_cc_CXXFLAGS) $(CXXFLAGS) -MT myth_trylock_cc-myth_trylock_cc.obj -MD -MP -MF $(DEPDIR)/myth_trylock_cc-myth_trylock_cc.Tpo -c -o myth_trylock_cc-myth_trylock_cc.obj `if test -f 'myth_trylock_cc.cc'; then $(CYGPATH_W) 'myth_trylock_cc.cc'; else $(CYGPATH_W) '$(srcdir)/myth_trylock_cc.cc'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/myth_trylock_cc-myth_trylock_cc.Tpo $(DEPDIR)/myth_trylock_cc-myth_trylock_cc.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='myth_trylock_cc.cc' object='myth_trylock_cc-myth_trylock_cc.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_trylock_cc_CXXFLAGS) $(CXXFLAGS) -c -o myth_trylock_cc-myth_trylock_cc.obj `if test -f 'myth_trylock_cc.cc'; then $(CYGPATH_W) 'myth_trylock_cc.cc'; else $(CYGPATH_W) '$(srcdir)/myth_trylock_cc.cc'; fi`
+
+myth_yield_0_cc-myth_yield_0_cc.o: myth_yield_0_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_yield_0_cc_CXXFLAGS) $(CXXFLAGS) -MT myth_yield_0_cc-myth_yield_0_cc.o -MD -MP -MF $(DEPDIR)/myth_yield_0_cc-myth_yield_0_cc.Tpo -c -o myth_yield_0_cc-myth_yield_0_cc.o `test -f 'myth_yield_0_cc.cc' || echo '$(srcdir)/'`myth_yield_0_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/myth_yield_0_cc-myth_yield_0_cc.Tpo $(DEPDIR)/myth_yield_0_cc-myth_yield_0_cc.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='myth_yield_0_cc.cc' object='myth_yield_0_cc-myth_yield_0_cc.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_yield_0_cc_CXXFLAGS) $(CXXFLAGS) -c -o myth_yield_0_cc-myth_yield_0_cc.o `test -f 'myth_yield_0_cc.cc' || echo '$(srcdir)/'`myth_yield_0_cc.cc
+
+myth_yield_0_cc-myth_yield_0_cc.obj: myth_yield_0_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_yield_0_cc_CXXFLAGS) $(CXXFLAGS) -MT myth_yield_0_cc-myth_yield_0_cc.obj -MD -MP -MF $(DEPDIR)/myth_yield_0_cc-myth_yield_0_cc.Tpo -c -o myth_yield_0_cc-myth_yield_0_cc.obj `if test -f 'myth_yield_0_cc.cc'; then $(CYGPATH_W) 'myth_yield_0_cc.cc'; else $(CYGPATH_W) '$(srcdir)/myth_yield_0_cc.cc'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/myth_yield_0_cc-myth_yield_0_cc.Tpo $(DEPDIR)/myth_yield_0_cc-myth_yield_0_cc.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='myth_yield_0_cc.cc' object='myth_yield_0_cc-myth_yield_0_cc.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_yield_0_cc_CXXFLAGS) $(CXXFLAGS) -c -o myth_yield_0_cc-myth_yield_0_cc.obj `if test -f 'myth_yield_0_cc.cc'; then $(CYGPATH_W) 'myth_yield_0_cc.cc'; else $(CYGPATH_W) '$(srcdir)/myth_yield_0_cc.cc'; fi`
+
+myth_yield_1_cc-myth_yield_1_cc.o: myth_yield_1_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_yield_1_cc_CXXFLAGS) $(CXXFLAGS) -MT myth_yield_1_cc-myth_yield_1_cc.o -MD -MP -MF $(DEPDIR)/myth_yield_1_cc-myth_yield_1_cc.Tpo -c -o myth_yield_1_cc-myth_yield_1_cc.o `test -f 'myth_yield_1_cc.cc' || echo '$(srcdir)/'`myth_yield_1_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/myth_yield_1_cc-myth_yield_1_cc.Tpo $(DEPDIR)/myth_yield_1_cc-myth_yield_1_cc.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='myth_yield_1_cc.cc' object='myth_yield_1_cc-myth_yield_1_cc.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_yield_1_cc_CXXFLAGS) $(CXXFLAGS) -c -o myth_yield_1_cc-myth_yield_1_cc.o `test -f 'myth_yield_1_cc.cc' || echo '$(srcdir)/'`myth_yield_1_cc.cc
+
+myth_yield_1_cc-myth_yield_1_cc.obj: myth_yield_1_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_yield_1_cc_CXXFLAGS) $(CXXFLAGS) -MT myth_yield_1_cc-myth_yield_1_cc.obj -MD -MP -MF $(DEPDIR)/myth_yield_1_cc-myth_yield_1_cc.Tpo -c -o myth_yield_1_cc-myth_yield_1_cc.obj `if test -f 'myth_yield_1_cc.cc'; then $(CYGPATH_W) 'myth_yield_1_cc.cc'; else $(CYGPATH_W) '$(srcdir)/myth_yield_1_cc.cc'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/myth_yield_1_cc-myth_yield_1_cc.Tpo $(DEPDIR)/myth_yield_1_cc-myth_yield_1_cc.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='myth_yield_1_cc.cc' object='myth_yield_1_cc-myth_yield_1_cc.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_yield_1_cc_CXXFLAGS) $(CXXFLAGS) -c -o myth_yield_1_cc-myth_yield_1_cc.obj `if test -f 'myth_yield_1_cc.cc'; then $(CYGPATH_W) 'myth_yield_1_cc.cc'; else $(CYGPATH_W) '$(srcdir)/myth_yield_1_cc.cc'; fi`
+
+myth_yield_2_cc-myth_yield_2_cc.o: myth_yield_2_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_yield_2_cc_CXXFLAGS) $(CXXFLAGS) -MT myth_yield_2_cc-myth_yield_2_cc.o -MD -MP -MF $(DEPDIR)/myth_yield_2_cc-myth_yield_2_cc.Tpo -c -o myth_yield_2_cc-myth_yield_2_cc.o `test -f 'myth_yield_2_cc.cc' || echo '$(srcdir)/'`myth_yield_2_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/myth_yield_2_cc-myth_yield_2_cc.Tpo $(DEPDIR)/myth_yield_2_cc-myth_yield_2_cc.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='myth_yield_2_cc.cc' object='myth_yield_2_cc-myth_yield_2_cc.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_yield_2_cc_CXXFLAGS) $(CXXFLAGS) -c -o myth_yield_2_cc-myth_yield_2_cc.o `test -f 'myth_yield_2_cc.cc' || echo '$(srcdir)/'`myth_yield_2_cc.cc
+
+myth_yield_2_cc-myth_yield_2_cc.obj: myth_yield_2_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_yield_2_cc_CXXFLAGS) $(CXXFLAGS) -MT myth_yield_2_cc-myth_yield_2_cc.obj -MD -MP -MF $(DEPDIR)/myth_yield_2_cc-myth_yield_2_cc.Tpo -c -o myth_yield_2_cc-myth_yield_2_cc.obj `if test -f 'myth_yield_2_cc.cc'; then $(CYGPATH_W) 'myth_yield_2_cc.cc'; else $(CYGPATH_W) '$(srcdir)/myth_yield_2_cc.cc'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/myth_yield_2_cc-myth_yield_2_cc.Tpo $(DEPDIR)/myth_yield_2_cc-myth_yield_2_cc.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='myth_yield_2_cc.cc' object='myth_yield_2_cc-myth_yield_2_cc.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_yield_2_cc_CXXFLAGS) $(CXXFLAGS) -c -o myth_yield_2_cc-myth_yield_2_cc.obj `if test -f 'myth_yield_2_cc.cc'; then $(CYGPATH_W) 'myth_yield_2_cc.cc'; else $(CYGPATH_W) '$(srcdir)/myth_yield_2_cc.cc'; fi`
+
+pth_barrier_cc-pth_barrier_cc.o: pth_barrier_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_barrier_cc_CXXFLAGS) $(CXXFLAGS) -MT pth_barrier_cc-pth_barrier_cc.o -MD -MP -MF $(DEPDIR)/pth_barrier_cc-pth_barrier_cc.Tpo -c -o pth_barrier_cc-pth_barrier_cc.o `test -f 'pth_barrier_cc.cc' || echo '$(srcdir)/'`pth_barrier_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pth_barrier_cc-pth_barrier_cc.Tpo $(DEPDIR)/pth_barrier_cc-pth_barrier_cc.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='pth_barrier_cc.cc' object='pth_barrier_cc-pth_barrier_cc.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_barrier_cc_CXXFLAGS) $(CXXFLAGS) -c -o pth_barrier_cc-pth_barrier_cc.o `test -f 'pth_barrier_cc.cc' || echo '$(srcdir)/'`pth_barrier_cc.cc
+
+pth_barrier_cc-pth_barrier_cc.obj: pth_barrier_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_barrier_cc_CXXFLAGS) $(CXXFLAGS) -MT pth_barrier_cc-pth_barrier_cc.obj -MD -MP -MF $(DEPDIR)/pth_barrier_cc-pth_barrier_cc.Tpo -c -o pth_barrier_cc-pth_barrier_cc.obj `if test -f 'pth_barrier_cc.cc'; then $(CYGPATH_W) 'pth_barrier_cc.cc'; else $(CYGPATH_W) '$(srcdir)/pth_barrier_cc.cc'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pth_barrier_cc-pth_barrier_cc.Tpo $(DEPDIR)/pth_barrier_cc-pth_barrier_cc.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='pth_barrier_cc.cc' object='pth_barrier_cc-pth_barrier_cc.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_barrier_cc_CXXFLAGS) $(CXXFLAGS) -c -o pth_barrier_cc-pth_barrier_cc.obj `if test -f 'pth_barrier_cc.cc'; then $(CYGPATH_W) 'pth_barrier_cc.cc'; else $(CYGPATH_W) '$(srcdir)/pth_barrier_cc.cc'; fi`
+
+pth_create_0_cc-pth_create_0_cc.o: pth_create_0_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_create_0_cc_CXXFLAGS) $(CXXFLAGS) -MT pth_create_0_cc-pth_create_0_cc.o -MD -MP -MF $(DEPDIR)/pth_create_0_cc-pth_create_0_cc.Tpo -c -o pth_create_0_cc-pth_create_0_cc.o `test -f 'pth_create_0_cc.cc' || echo '$(srcdir)/'`pth_create_0_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pth_create_0_cc-pth_create_0_cc.Tpo $(DEPDIR)/pth_create_0_cc-pth_create_0_cc.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='pth_create_0_cc.cc' object='pth_create_0_cc-pth_create_0_cc.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_create_0_cc_CXXFLAGS) $(CXXFLAGS) -c -o pth_create_0_cc-pth_create_0_cc.o `test -f 'pth_create_0_cc.cc' || echo '$(srcdir)/'`pth_create_0_cc.cc
+
+pth_create_0_cc-pth_create_0_cc.obj: pth_create_0_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_create_0_cc_CXXFLAGS) $(CXXFLAGS) -MT pth_create_0_cc-pth_create_0_cc.obj -MD -MP -MF $(DEPDIR)/pth_create_0_cc-pth_create_0_cc.Tpo -c -o pth_create_0_cc-pth_create_0_cc.obj `if test -f 'pth_create_0_cc.cc'; then $(CYGPATH_W) 'pth_create_0_cc.cc'; else $(CYGPATH_W) '$(srcdir)/pth_create_0_cc.cc'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pth_create_0_cc-pth_create_0_cc.Tpo $(DEPDIR)/pth_create_0_cc-pth_create_0_cc.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='pth_create_0_cc.cc' object='pth_create_0_cc-pth_create_0_cc.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_create_0_cc_CXXFLAGS) $(CXXFLAGS) -c -o pth_create_0_cc-pth_create_0_cc.obj `if test -f 'pth_create_0_cc.cc'; then $(CYGPATH_W) 'pth_create_0_cc.cc'; else $(CYGPATH_W) '$(srcdir)/pth_create_0_cc.cc'; fi`
+
+pth_create_1_cc-pth_create_1_cc.o: pth_create_1_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_create_1_cc_CXXFLAGS) $(CXXFLAGS) -MT pth_create_1_cc-pth_create_1_cc.o -MD -MP -MF $(DEPDIR)/pth_create_1_cc-pth_create_1_cc.Tpo -c -o pth_create_1_cc-pth_create_1_cc.o `test -f 'pth_create_1_cc.cc' || echo '$(srcdir)/'`pth_create_1_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pth_create_1_cc-pth_create_1_cc.Tpo $(DEPDIR)/pth_create_1_cc-pth_create_1_cc.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='pth_create_1_cc.cc' object='pth_create_1_cc-pth_create_1_cc.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_create_1_cc_CXXFLAGS) $(CXXFLAGS) -c -o pth_create_1_cc-pth_create_1_cc.o `test -f 'pth_create_1_cc.cc' || echo '$(srcdir)/'`pth_create_1_cc.cc
+
+pth_create_1_cc-pth_create_1_cc.obj: pth_create_1_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_create_1_cc_CXXFLAGS) $(CXXFLAGS) -MT pth_create_1_cc-pth_create_1_cc.obj -MD -MP -MF $(DEPDIR)/pth_create_1_cc-pth_create_1_cc.Tpo -c -o pth_create_1_cc-pth_create_1_cc.obj `if test -f 'pth_create_1_cc.cc'; then $(CYGPATH_W) 'pth_create_1_cc.cc'; else $(CYGPATH_W) '$(srcdir)/pth_create_1_cc.cc'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pth_create_1_cc-pth_create_1_cc.Tpo $(DEPDIR)/pth_create_1_cc-pth_create_1_cc.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='pth_create_1_cc.cc' object='pth_create_1_cc-pth_create_1_cc.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_create_1_cc_CXXFLAGS) $(CXXFLAGS) -c -o pth_create_1_cc-pth_create_1_cc.obj `if test -f 'pth_create_1_cc.cc'; then $(CYGPATH_W) 'pth_create_1_cc.cc'; else $(CYGPATH_W) '$(srcdir)/pth_create_1_cc.cc'; fi`
+
+pth_create_2_cc-pth_create_2_cc.o: pth_create_2_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_create_2_cc_CXXFLAGS) $(CXXFLAGS) -MT pth_create_2_cc-pth_create_2_cc.o -MD -MP -MF $(DEPDIR)/pth_create_2_cc-pth_create_2_cc.Tpo -c -o pth_create_2_cc-pth_create_2_cc.o `test -f 'pth_create_2_cc.cc' || echo '$(srcdir)/'`pth_create_2_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pth_create_2_cc-pth_create_2_cc.Tpo $(DEPDIR)/pth_create_2_cc-pth_create_2_cc.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='pth_create_2_cc.cc' object='pth_create_2_cc-pth_create_2_cc.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_create_2_cc_CXXFLAGS) $(CXXFLAGS) -c -o pth_create_2_cc-pth_create_2_cc.o `test -f 'pth_create_2_cc.cc' || echo '$(srcdir)/'`pth_create_2_cc.cc
+
+pth_create_2_cc-pth_create_2_cc.obj: pth_create_2_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_create_2_cc_CXXFLAGS) $(CXXFLAGS) -MT pth_create_2_cc-pth_create_2_cc.obj -MD -MP -MF $(DEPDIR)/pth_create_2_cc-pth_create_2_cc.Tpo -c -o pth_create_2_cc-pth_create_2_cc.obj `if test -f 'pth_create_2_cc.cc'; then $(CYGPATH_W) 'pth_create_2_cc.cc'; else $(CYGPATH_W) '$(srcdir)/pth_create_2_cc.cc'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pth_create_2_cc-pth_create_2_cc.Tpo $(DEPDIR)/pth_create_2_cc-pth_create_2_cc.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='pth_create_2_cc.cc' object='pth_create_2_cc-pth_create_2_cc.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_create_2_cc_CXXFLAGS) $(CXXFLAGS) -c -o pth_create_2_cc-pth_create_2_cc.obj `if test -f 'pth_create_2_cc.cc'; then $(CYGPATH_W) 'pth_create_2_cc.cc'; else $(CYGPATH_W) '$(srcdir)/pth_create_2_cc.cc'; fi`
+
+pth_lock_cc-pth_lock_cc.o: pth_lock_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_lock_cc_CXXFLAGS) $(CXXFLAGS) -MT pth_lock_cc-pth_lock_cc.o -MD -MP -MF $(DEPDIR)/pth_lock_cc-pth_lock_cc.Tpo -c -o pth_lock_cc-pth_lock_cc.o `test -f 'pth_lock_cc.cc' || echo '$(srcdir)/'`pth_lock_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pth_lock_cc-pth_lock_cc.Tpo $(DEPDIR)/pth_lock_cc-pth_lock_cc.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='pth_lock_cc.cc' object='pth_lock_cc-pth_lock_cc.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_lock_cc_CXXFLAGS) $(CXXFLAGS) -c -o pth_lock_cc-pth_lock_cc.o `test -f 'pth_lock_cc.cc' || echo '$(srcdir)/'`pth_lock_cc.cc
+
+pth_lock_cc-pth_lock_cc.obj: pth_lock_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_lock_cc_CXXFLAGS) $(CXXFLAGS) -MT pth_lock_cc-pth_lock_cc.obj -MD -MP -MF $(DEPDIR)/pth_lock_cc-pth_lock_cc.Tpo -c -o pth_lock_cc-pth_lock_cc.obj `if test -f 'pth_lock_cc.cc'; then $(CYGPATH_W) 'pth_lock_cc.cc'; else $(CYGPATH_W) '$(srcdir)/pth_lock_cc.cc'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pth_lock_cc-pth_lock_cc.Tpo $(DEPDIR)/pth_lock_cc-pth_lock_cc.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='pth_lock_cc.cc' object='pth_lock_cc-pth_lock_cc.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_lock_cc_CXXFLAGS) $(CXXFLAGS) -c -o pth_lock_cc-pth_lock_cc.obj `if test -f 'pth_lock_cc.cc'; then $(CYGPATH_W) 'pth_lock_cc.cc'; else $(CYGPATH_W) '$(srcdir)/pth_lock_cc.cc'; fi`
+
+pth_mixlock_cc-pth_mixlock_cc.o: pth_mixlock_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_mixlock_cc_CXXFLAGS) $(CXXFLAGS) -MT pth_mixlock_cc-pth_mixlock_cc.o -MD -MP -MF $(DEPDIR)/pth_mixlock_cc-pth_mixlock_cc.Tpo -c -o pth_mixlock_cc-pth_mixlock_cc.o `test -f 'pth_mixlock_cc.cc' || echo '$(srcdir)/'`pth_mixlock_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pth_mixlock_cc-pth_mixlock_cc.Tpo $(DEPDIR)/pth_mixlock_cc-pth_mixlock_cc.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='pth_mixlock_cc.cc' object='pth_mixlock_cc-pth_mixlock_cc.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_mixlock_cc_CXXFLAGS) $(CXXFLAGS) -c -o pth_mixlock_cc-pth_mixlock_cc.o `test -f 'pth_mixlock_cc.cc' || echo '$(srcdir)/'`pth_mixlock_cc.cc
+
+pth_mixlock_cc-pth_mixlock_cc.obj: pth_mixlock_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_mixlock_cc_CXXFLAGS) $(CXXFLAGS) -MT pth_mixlock_cc-pth_mixlock_cc.obj -MD -MP -MF $(DEPDIR)/pth_mixlock_cc-pth_mixlock_cc.Tpo -c -o pth_mixlock_cc-pth_mixlock_cc.obj `if test -f 'pth_mixlock_cc.cc'; then $(CYGPATH_W) 'pth_mixlock_cc.cc'; else $(CYGPATH_W) '$(srcdir)/pth_mixlock_cc.cc'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pth_mixlock_cc-pth_mixlock_cc.Tpo $(DEPDIR)/pth_mixlock_cc-pth_mixlock_cc.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='pth_mixlock_cc.cc' object='pth_mixlock_cc-pth_mixlock_cc.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_mixlock_cc_CXXFLAGS) $(CXXFLAGS) -c -o pth_mixlock_cc-pth_mixlock_cc.obj `if test -f 'pth_mixlock_cc.cc'; then $(CYGPATH_W) 'pth_mixlock_cc.cc'; else $(CYGPATH_W) '$(srcdir)/pth_mixlock_cc.cc'; fi`
+
+pth_trylock_cc-pth_trylock_cc.o: pth_trylock_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_trylock_cc_CXXFLAGS) $(CXXFLAGS) -MT pth_trylock_cc-pth_trylock_cc.o -MD -MP -MF $(DEPDIR)/pth_trylock_cc-pth_trylock_cc.Tpo -c -o pth_trylock_cc-pth_trylock_cc.o `test -f 'pth_trylock_cc.cc' || echo '$(srcdir)/'`pth_trylock_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pth_trylock_cc-pth_trylock_cc.Tpo $(DEPDIR)/pth_trylock_cc-pth_trylock_cc.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='pth_trylock_cc.cc' object='pth_trylock_cc-pth_trylock_cc.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_trylock_cc_CXXFLAGS) $(CXXFLAGS) -c -o pth_trylock_cc-pth_trylock_cc.o `test -f 'pth_trylock_cc.cc' || echo '$(srcdir)/'`pth_trylock_cc.cc
+
+pth_trylock_cc-pth_trylock_cc.obj: pth_trylock_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_trylock_cc_CXXFLAGS) $(CXXFLAGS) -MT pth_trylock_cc-pth_trylock_cc.obj -MD -MP -MF $(DEPDIR)/pth_trylock_cc-pth_trylock_cc.Tpo -c -o pth_trylock_cc-pth_trylock_cc.obj `if test -f 'pth_trylock_cc.cc'; then $(CYGPATH_W) 'pth_trylock_cc.cc'; else $(CYGPATH_W) '$(srcdir)/pth_trylock_cc.cc'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pth_trylock_cc-pth_trylock_cc.Tpo $(DEPDIR)/pth_trylock_cc-pth_trylock_cc.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='pth_trylock_cc.cc' object='pth_trylock_cc-pth_trylock_cc.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_trylock_cc_CXXFLAGS) $(CXXFLAGS) -c -o pth_trylock_cc-pth_trylock_cc.obj `if test -f 'pth_trylock_cc.cc'; then $(CYGPATH_W) 'pth_trylock_cc.cc'; else $(CYGPATH_W) '$(srcdir)/pth_trylock_cc.cc'; fi`
+
+pth_yield_cc-pth_yield_cc.o: pth_yield_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_yield_cc_CXXFLAGS) $(CXXFLAGS) -MT pth_yield_cc-pth_yield_cc.o -MD -MP -MF $(DEPDIR)/pth_yield_cc-pth_yield_cc.Tpo -c -o pth_yield_cc-pth_yield_cc.o `test -f 'pth_yield_cc.cc' || echo '$(srcdir)/'`pth_yield_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pth_yield_cc-pth_yield_cc.Tpo $(DEPDIR)/pth_yield_cc-pth_yield_cc.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='pth_yield_cc.cc' object='pth_yield_cc-pth_yield_cc.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_yield_cc_CXXFLAGS) $(CXXFLAGS) -c -o pth_yield_cc-pth_yield_cc.o `test -f 'pth_yield_cc.cc' || echo '$(srcdir)/'`pth_yield_cc.cc
+
+pth_yield_cc-pth_yield_cc.obj: pth_yield_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_yield_cc_CXXFLAGS) $(CXXFLAGS) -MT pth_yield_cc-pth_yield_cc.obj -MD -MP -MF $(DEPDIR)/pth_yield_cc-pth_yield_cc.Tpo -c -o pth_yield_cc-pth_yield_cc.obj `if test -f 'pth_yield_cc.cc'; then $(CYGPATH_W) 'pth_yield_cc.cc'; else $(CYGPATH_W) '$(srcdir)/pth_yield_cc.cc'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pth_yield_cc-pth_yield_cc.Tpo $(DEPDIR)/pth_yield_cc-pth_yield_cc.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='pth_yield_cc.cc' object='pth_yield_cc-pth_yield_cc.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_yield_cc_CXXFLAGS) $(CXXFLAGS) -c -o pth_yield_cc-pth_yield_cc.obj `if test -f 'pth_yield_cc.cc'; then $(CYGPATH_W) 'pth_yield_cc.cc'; else $(CYGPATH_W) '$(srcdir)/pth_yield_cc.cc'; fi`
+
 mostlyclean-libtool:
 	-rm -f *.lo
 
@@ -1600,6 +2890,62 @@ myth_dag_random.log: myth_dag_random$(EXEEXT)
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
 	"$$tst" $(AM_TESTS_FD_REDIRECT)
+pth_create_0.log: pth_create_0$(EXEEXT)
+	@p='pth_create_0$(EXEEXT)'; \
+	b='pth_create_0'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+pth_create_1.log: pth_create_1$(EXEEXT)
+	@p='pth_create_1$(EXEEXT)'; \
+	b='pth_create_1'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+pth_create_2.log: pth_create_2$(EXEEXT)
+	@p='pth_create_2$(EXEEXT)'; \
+	b='pth_create_2'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+pth_yield.log: pth_yield$(EXEEXT)
+	@p='pth_yield$(EXEEXT)'; \
+	b='pth_yield'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+pth_lock.log: pth_lock$(EXEEXT)
+	@p='pth_lock$(EXEEXT)'; \
+	b='pth_lock'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+pth_trylock.log: pth_trylock$(EXEEXT)
+	@p='pth_trylock$(EXEEXT)'; \
+	b='pth_trylock'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+pth_mixlock.log: pth_mixlock$(EXEEXT)
+	@p='pth_mixlock$(EXEEXT)'; \
+	b='pth_mixlock'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+pth_barrier.log: pth_barrier$(EXEEXT)
+	@p='pth_barrier$(EXEEXT)'; \
+	b='pth_barrier'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
 measure_create.log: measure_create$(EXEEXT)
 	@p='measure_create$(EXEEXT)'; \
 	b='measure_create'; \
@@ -1617,6 +2963,223 @@ measure_latency.log: measure_latency$(EXEEXT)
 measure_wakeup_latency.log: measure_wakeup_latency$(EXEEXT)
 	@p='measure_wakeup_latency$(EXEEXT)'; \
 	b='measure_wakeup_latency'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+myth_create_0_cc.log: myth_create_0_cc$(EXEEXT)
+	@p='myth_create_0_cc$(EXEEXT)'; \
+	b='myth_create_0_cc'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+myth_create_1_cc.log: myth_create_1_cc$(EXEEXT)
+	@p='myth_create_1_cc$(EXEEXT)'; \
+	b='myth_create_1_cc'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+myth_create_2_cc.log: myth_create_2_cc$(EXEEXT)
+	@p='myth_create_2_cc$(EXEEXT)'; \
+	b='myth_create_2_cc'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+myth_create_join_many_cc.log: myth_create_join_many_cc$(EXEEXT)
+	@p='myth_create_join_many_cc$(EXEEXT)'; \
+	b='myth_create_join_many_cc'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+myth_yield_0_cc.log: myth_yield_0_cc$(EXEEXT)
+	@p='myth_yield_0_cc$(EXEEXT)'; \
+	b='myth_yield_0_cc'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+myth_yield_1_cc.log: myth_yield_1_cc$(EXEEXT)
+	@p='myth_yield_1_cc$(EXEEXT)'; \
+	b='myth_yield_1_cc'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+myth_yield_2_cc.log: myth_yield_2_cc$(EXEEXT)
+	@p='myth_yield_2_cc$(EXEEXT)'; \
+	b='myth_yield_2_cc'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+myth_sleep_queue_cc.log: myth_sleep_queue_cc$(EXEEXT)
+	@p='myth_sleep_queue_cc$(EXEEXT)'; \
+	b='myth_sleep_queue_cc'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+myth_lock_cc.log: myth_lock_cc$(EXEEXT)
+	@p='myth_lock_cc$(EXEEXT)'; \
+	b='myth_lock_cc'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+myth_trylock_cc.log: myth_trylock_cc$(EXEEXT)
+	@p='myth_trylock_cc$(EXEEXT)'; \
+	b='myth_trylock_cc'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+myth_mixlock_cc.log: myth_mixlock_cc$(EXEEXT)
+	@p='myth_mixlock_cc$(EXEEXT)'; \
+	b='myth_mixlock_cc'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+myth_cond_signal_cc.log: myth_cond_signal_cc$(EXEEXT)
+	@p='myth_cond_signal_cc$(EXEEXT)'; \
+	b='myth_cond_signal_cc'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+myth_cond_broadcast_0_cc.log: myth_cond_broadcast_0_cc$(EXEEXT)
+	@p='myth_cond_broadcast_0_cc$(EXEEXT)'; \
+	b='myth_cond_broadcast_0_cc'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+myth_cond_broadcast_1_cc.log: myth_cond_broadcast_1_cc$(EXEEXT)
+	@p='myth_cond_broadcast_1_cc$(EXEEXT)'; \
+	b='myth_cond_broadcast_1_cc'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+myth_barrier_cc.log: myth_barrier_cc$(EXEEXT)
+	@p='myth_barrier_cc$(EXEEXT)'; \
+	b='myth_barrier_cc'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+myth_join_counter_cc.log: myth_join_counter_cc$(EXEEXT)
+	@p='myth_join_counter_cc$(EXEEXT)'; \
+	b='myth_join_counter_cc'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+myth_felock_cc.log: myth_felock_cc$(EXEEXT)
+	@p='myth_felock_cc$(EXEEXT)'; \
+	b='myth_felock_cc'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+myth_dag_1d_cc.log: myth_dag_1d_cc$(EXEEXT)
+	@p='myth_dag_1d_cc$(EXEEXT)'; \
+	b='myth_dag_1d_cc'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+myth_dag_2d_cc.log: myth_dag_2d_cc$(EXEEXT)
+	@p='myth_dag_2d_cc$(EXEEXT)'; \
+	b='myth_dag_2d_cc'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+myth_dag_random_cc.log: myth_dag_random_cc$(EXEEXT)
+	@p='myth_dag_random_cc$(EXEEXT)'; \
+	b='myth_dag_random_cc'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+pth_create_0_cc.log: pth_create_0_cc$(EXEEXT)
+	@p='pth_create_0_cc$(EXEEXT)'; \
+	b='pth_create_0_cc'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+pth_create_1_cc.log: pth_create_1_cc$(EXEEXT)
+	@p='pth_create_1_cc$(EXEEXT)'; \
+	b='pth_create_1_cc'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+pth_create_2_cc.log: pth_create_2_cc$(EXEEXT)
+	@p='pth_create_2_cc$(EXEEXT)'; \
+	b='pth_create_2_cc'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+pth_yield_cc.log: pth_yield_cc$(EXEEXT)
+	@p='pth_yield_cc$(EXEEXT)'; \
+	b='pth_yield_cc'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+pth_lock_cc.log: pth_lock_cc$(EXEEXT)
+	@p='pth_lock_cc$(EXEEXT)'; \
+	b='pth_lock_cc'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+pth_trylock_cc.log: pth_trylock_cc$(EXEEXT)
+	@p='pth_trylock_cc$(EXEEXT)'; \
+	b='pth_trylock_cc'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+pth_mixlock_cc.log: pth_mixlock_cc$(EXEEXT)
+	@p='pth_mixlock_cc$(EXEEXT)'; \
+	b='pth_mixlock_cc'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+pth_barrier_cc.log: pth_barrier_cc$(EXEEXT)
+	@p='pth_barrier_cc$(EXEEXT)'; \
+	b='pth_barrier_cc'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+measure_create_cc.log: measure_create_cc$(EXEEXT)
+	@p='measure_create_cc$(EXEEXT)'; \
+	b='measure_create_cc'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+measure_latency_cc.log: measure_latency_cc$(EXEEXT)
+	@p='measure_latency_cc$(EXEEXT)'; \
+	b='measure_latency_cc'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+measure_wakeup_latency_cc.log: measure_wakeup_latency_cc$(EXEEXT)
+	@p='measure_wakeup_latency_cc$(EXEEXT)'; \
+	b='measure_wakeup_latency_cc'; \
 	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
