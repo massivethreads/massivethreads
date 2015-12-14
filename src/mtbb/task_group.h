@@ -40,7 +40,7 @@
 #elif TO_MTHREAD
 #include <pthread.h>
 #elif TO_MTHREAD_NATIVE
-#include <myth.h>
+#include <myth/myth.h>
 #elif TO_QTHREAD 
 #include <qthread.h>
 #elif TO_NANOX
