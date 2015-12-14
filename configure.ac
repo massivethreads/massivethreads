@@ -31,6 +31,7 @@ AM_PROG_AR
 # Essential libraries
 AC_CHECK_LIB(dl, dlopen, [], [AC_MSG_ERROR(Test for dlopen failed.)])
 AC_CHECK_LIB(pthread, pthread_create, [], [AC_MSG_ERROR(Test for libpthread failed.)])
+AC_CHECK_LIB(rt, clock_gettime , [], [AC_MSG_ERROR(Test for clock_gettime failed.)])
 
 # Check sizes
 AC_CHECK_SIZEOF([int])

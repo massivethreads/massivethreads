@@ -83,7 +83,7 @@ check_PROGRAMS = \
 #  -I$(abs_top_srcdir)/src
 common_cflags = -I$(abs_top_srcdir)/include
 common_cxxflags = $(common_cflags)
-common_ldadd = $(abs_top_srcdir)/src/libmyth.la 
+common_ldadd = $(abs_top_srcdir)/src/libmyth.la -lrt
 
 myth_create_0_SOURCES = myth_create_0.c
 myth_create_0_CFLAGS = $(common_cflags)
