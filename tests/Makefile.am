@@ -2,7 +2,19 @@
 #if CXX_AVAILABLE
 #SUBDIRS += cxx
 #endif
+
+#
+
 check_PROGRAMS = \
+	myth_malloc \
+	myth_calloc \
+	myth_posix_memalign \
+	myth_aligned_alloc \
+	myth_valloc \
+	myth_memalign \
+	myth_pvalloc \
+	myth_free \
+	myth_realloc \
 	myth_create_0 \
 	myth_create_1 \
 	myth_create_2 \
@@ -84,6 +96,42 @@ check_PROGRAMS = \
 common_cflags = -I$(abs_top_srcdir)/include
 common_cxxflags = $(common_cflags)
 common_ldadd = $(abs_top_srcdir)/src/libmyth.la -lrt
+
+myth_malloc_SOURCES = myth_malloc.c
+myth_malloc_CFLAGS = $(common_cflags)
+myth_malloc_LDADD  = $(common_ldadd)
+
+myth_calloc_SOURCES = myth_calloc.c
+myth_calloc_CFLAGS = $(common_cflags)
+myth_calloc_LDADD  = $(common_ldadd)
+
+myth_posix_memalign_SOURCES = myth_posix_memalign.c
+myth_posix_memalign_CFLAGS = $(common_cflags)
+myth_posix_memalign_LDADD  = $(common_ldadd)
+
+myth_aligned_alloc_SOURCES = myth_aligned_alloc.c
+myth_aligned_alloc_CFLAGS = $(common_cflags)
+myth_aligned_alloc_LDADD  = $(common_ldadd)
+
+myth_valloc_SOURCES = myth_valloc.c
+myth_valloc_CFLAGS = $(common_cflags)
+myth_valloc_LDADD  = $(common_ldadd)
+
+myth_memalign_SOURCES = myth_memalign.c
+myth_memalign_CFLAGS = $(common_cflags)
+myth_memalign_LDADD  = $(common_ldadd)
+
+myth_pvalloc_SOURCES = myth_pvalloc.c
+myth_pvalloc_CFLAGS = $(common_cflags)
+myth_pvalloc_LDADD  = $(common_ldadd)
+
+myth_free_SOURCES = myth_free.c
+myth_free_CFLAGS = $(common_cflags)
+myth_free_LDADD  = $(common_ldadd)
+
+myth_realloc_SOURCES = myth_realloc.c
+myth_realloc_CFLAGS = $(common_cflags)
+myth_realloc_LDADD  = $(common_ldadd)
 
 myth_create_0_SOURCES = myth_create_0.c
 myth_create_0_CFLAGS = $(common_cflags)

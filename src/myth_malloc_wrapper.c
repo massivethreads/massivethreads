@@ -75,8 +75,8 @@ void myth_malloc_wrapper_init(int nthreads)
    chop it into many chunks each chunk_sz bytes,
    and put them into free list fl */
 
-myth_freelist_t make_chunks(size_t chunk_sz,
-			    size_t min_alloc_sz) {
+static myth_freelist_t make_chunks(size_t chunk_sz,
+				   size_t min_alloc_sz) {
 #if FIX_FALSE_SHARING4
   chunk_sz = (chunk_sz + 63) & ~63;
 #endif
@@ -193,7 +193,7 @@ char * volatile g_sys_alloc_region_ptr = g_sys_alloc_region;
 char * g_sys_alloc_region_end = g_sys_alloc_region + SYS_ALLOC_REGION_SIZE;
 
 /* return true if ptr is in the g_sys_alloc_region array. */
-int sys_alloc_region(void * ptr) {
+static int sys_alloc_region(void * ptr) {
   if ((char *)ptr < g_sys_alloc_region) return 0;
   if ((char *)ptr >= g_sys_alloc_region + SYS_ALLOC_REGION_SIZE) return 0;
   return 1;
@@ -204,7 +204,7 @@ int sys_alloc_region(void * ptr) {
    NOTE: you should not use any function that may in turn call any memory
    allocator (malloc etc.). doing so may result in infinite recursions
    (and stack overflow). */
-void * sys_alloc_align(size_t alignment, size_t size) {
+static void * sys_alloc_align(size_t alignment, size_t size) {
   while (1) {
     char * p = g_sys_alloc_region_ptr;
     char * q = p + alignment - 1;
@@ -224,31 +224,7 @@ void * sys_alloc_align(size_t alignment, size_t size) {
 
 #endif
 
-
-
-
-
-void *calloc(size_t nmemb,size_t size)
-{
-#ifdef MYTH_WRAP_MALLOC_RUNTIME
-  /* fall back to the bump allocator before wrapping completed */
-  if (!g_wrap_malloc_completed) {
-    void *ptr = sys_alloc_align(16, nmemb * size);
-    memset(ptr, 0, nmemb * size);
-    return ptr;
-  }
-  /* no wrap. call the real one */
-  if (!g_wrap_malloc) {
-    return real_calloc(nmemb, size);
-  }
-#endif
-  void *ptr;
-  ptr=malloc(nmemb*size);
-  if (!ptr)return NULL;
-  memset(ptr,0,nmemb*size);
-  return ptr;
-}
-void *malloc(size_t size)
+static void * myth_malloc_wrapper_malloc(size_t size)
 {
 #ifdef MYTH_WRAP_MALLOC_RUNTIME
   /* fall back to the bump allocator before wrapping completed */
@@ -319,7 +295,41 @@ void *malloc(size_t size)
   ptr->s.org_ptr=ptr;
   return (void*)(ptr+1);
 }
-int posix_memalign(void **memptr,size_t alignment,size_t size)
+
+static void * myth_malloc_wrapper_calloc(size_t nmemb,size_t size)
+{
+#ifdef MYTH_WRAP_MALLOC_RUNTIME
+  /* fall back to the bump allocator before wrapping completed */
+  if (!g_wrap_malloc_completed) {
+    void *ptr = sys_alloc_align(16, nmemb * size);
+    memset(ptr, 0, nmemb * size);
+    return ptr;
+  }
+  /* no wrap. call the real one */
+  if (!g_wrap_malloc) {
+    return real_calloc(nmemb, size);
+  }
+#endif
+  void *ptr;
+  ptr = myth_malloc_wrapper_malloc(nmemb*size);
+  if (!ptr)return NULL;
+  memset(ptr,0,nmemb*size);
+  return ptr;
+}
+
+/* 
+ TODO: check validity of params
+
+ The address of the allocated memory will be
+ a multiple of alignment, which must be a
+ power of two and a multiple of sizeof(void
+ *).  If size is 0, then the value placed in
+ *memptr is either NULL, or a unique pointer
+ value that can later be successfully passed
+ to free(3).
+ */
+
+static int myth_malloc_wrapper_posix_memalign(void **memptr,size_t alignment,size_t size)
 {
 #ifdef MYTH_WRAP_MALLOC_RUNTIME
   /* fall back to the bump allocator before wrapping completed */
@@ -337,7 +347,7 @@ int posix_memalign(void **memptr,size_t alignment,size_t size)
     return real_posix_memalign(memptr, alignment, size);
   }
 #endif
-  if (size==0){*memptr=NULL;return 0;}
+  if (size == 0) { *memptr = NULL; return 0; }
   malloc_wrapper_header_t ptr;
   if (size<16)size=16;
   if (!real_malloc){
@@ -368,13 +378,35 @@ int posix_memalign(void **memptr,size_t alignment,size_t size)
   return 0;
 }
 
-void *aligned_alloc(size_t alignment, size_t size)
+/* 
+   TODO: check param validity
+
+   The function aligned_alloc() is the same
+   as memalign(), except for the added
+   restriction that size should be a multiple
+   of alignment.
+
+ */
+
+static void * myth_malloc_wrapper_aligned_alloc(size_t alignment, size_t size)
 {
   void *ret = 0;
-  errno=posix_memalign(&ret,alignment,size);
+  errno = myth_malloc_wrapper_posix_memalign(&ret,alignment,size);
   return ret;
 }
-void *valloc(size_t size)
+
+/* 
+  TODO: check param validity
+
+  The obsolete function valloc() allocates
+  size bytes and returns a pointer to the
+  allocated memory.  The memory address will
+  be a multiple of the page size.  It is
+  equivalent to memalign(sysconf(_SC_PAGE-
+  SIZE),size).
+ */
+
+static void * myth_malloc_wrapper_valloc(size_t size)
 {
 #ifdef MYTH_WRAP_MALLOC_RUNTIME
   /* fall back to the bump allocator before wrapping completed */
@@ -387,12 +419,41 @@ void *valloc(size_t size)
     return real_valloc(size);
   }
 #endif
-  void *ret;
-  errno=posix_memalign(&ret,PAGE_SIZE,size);
+  void * ret = 0;
+  errno = myth_malloc_wrapper_posix_memalign(&ret,PAGE_SIZE,size);
   return ret;
 }
 
-void free(void *ptr)
+/* 
+   TODO: check param validity
+
+   The obsolete function memalign() allocates
+   size bytes and returns a pointer to the
+   allocated memory.  The memory address will
+   be a multiple of alignment, which must be
+   a power of two.
+ */
+static void * myth_malloc_wrapper_memalign(size_t alignment, size_t size)
+{
+  void *ret = 0;
+  errno = myth_malloc_wrapper_posix_memalign(&ret,alignment,size);
+  return ret;
+}
+
+/* 
+   TODO: check param validity
+
+   The obsolete function pvalloc() is similar
+   to valloc(), but rounds the size of the
+   allocation up to the next multiple of the
+   system page size.
+ */
+
+static void * myth_malloc_wrapper_pvalloc(size_t size) {
+  return myth_malloc_wrapper_valloc(size);
+}
+
+static void myth_malloc_wrapper_free(void *ptr)
 {
 #ifdef MYTH_WRAP_MALLOC_RUNTIME
   /* before wrapping completed, we simply forget about it.
@@ -442,7 +503,8 @@ void free(void *ptr)
   //fprintf(stderr,"free B,%p,%d\n",rptr->s.org_ptr,(int)idx);
   real_free(rptr->s.org_ptr);
 }
-void *realloc(void *ptr,size_t size)
+
+static void * myth_malloc_wrapper_realloc(void *ptr,size_t size)
 {
 #ifdef MYTH_WRAP_MALLOC_RUNTIME
   /* fall back to the bump allocator before wrapping completed */
@@ -469,13 +531,50 @@ void *realloc(void *ptr,size_t size)
   if (oidx==nidx)return ptr;
   nrsize=MYTH_MALLOC_INDEX_TO_RSIZE(nidx);
   orsize=MYTH_MALLOC_INDEX_TO_RSIZE(*rptr);
-  void *nptr=malloc(size);
+  void *nptr = myth_malloc_wrapper_malloc(size);
   if (!nptr)return NULL;
   size_t btc=(size<orsize)?size:orsize;
   memcpy(nptr,ptr,btc);
-  free(ptr);
+  myth_malloc_wrapper_free(ptr);
   return nptr;
 }
+
+void *malloc(size_t size) {
+  return myth_malloc_wrapper_malloc(size);
+}
+
+void * calloc(size_t nmemb,size_t size) {
+  return  myth_malloc_wrapper_calloc(nmemb, size);
+}
+
+int posix_memalign(void **memptr,size_t alignment,size_t size) {
+  return myth_malloc_wrapper_posix_memalign(memptr, alignment, size);
+}
+
+void * aligned_alloc(size_t alignment, size_t size) {
+  return myth_malloc_wrapper_aligned_alloc(alignment, size);
+}
+
+void * valloc(size_t size) {
+  return myth_malloc_wrapper_valloc(size);
+}
+
+void * memalign(size_t alignment, size_t size) {
+  return myth_malloc_wrapper_memalign(alignment, size);
+}
+
+void *pvalloc(size_t size) {
+  return myth_malloc_wrapper_pvalloc(size);
+}
+
+void free(void *ptr) {
+  myth_malloc_wrapper_free(ptr);
+}
+
+void * realloc(void *ptr,size_t size) {
+  return myth_malloc_wrapper_realloc(ptr, size);
+}
+
 #else
 
 void myth_malloc_wrapper_init(int nthreads)
