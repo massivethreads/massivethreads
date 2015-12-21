@@ -5,7 +5,7 @@
 #include <myth/myth.h>
 
 int main(int argc, char ** argv) {
-  size_t al = (argc > 1 ? atol(argv[1]) : 7);
+  size_t al = (argc > 1 ? atol(argv[1]) : 32);
   size_t sz = (argc > 2 ? atol(argv[2]) : 35);
   size_t n  = (argc > 3 ? atol(argv[3]) : 3);
   size_t i;

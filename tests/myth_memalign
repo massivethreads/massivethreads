@@ -31,13 +31,13 @@ DUALCASE=1; export DUALCASE # for MKS sh
 # if CDPATH is set.
 (unset CDPATH) >/dev/null 2>&1 && unset CDPATH
 
-relink_command="(cd /home/tau/massivethreads/tests; { test -z \"\${LIBRARY_PATH+set}\" || unset LIBRARY_PATH || { LIBRARY_PATH=; export LIBRARY_PATH; }; }; { test -z \"\${COMPILER_PATH+set}\" || unset COMPILER_PATH || { COMPILER_PATH=; export COMPILER_PATH; }; }; { test -z \"\${GCC_EXEC_PREFIX+set}\" || unset GCC_EXEC_PREFIX || { GCC_EXEC_PREFIX=; export GCC_EXEC_PREFIX; }; }; { test -z \"\${LD_RUN_PATH+set}\" || unset LD_RUN_PATH || { LD_RUN_PATH=; export LD_RUN_PATH; }; }; { test -z \"\${LD_LIBRARY_PATH+set}\" || unset LD_LIBRARY_PATH || { LD_LIBRARY_PATH=; export LD_LIBRARY_PATH; }; }; PATH=/home/tau/cfg2/bin:/usr/local/bin:/usr/bin:/bin:/usr/local/games:/usr/games; export PATH; gcc -I/home/tau/massivethreads/include -g -O3 -Wall -ftls-model=initial-exec -o \$progdir/\$file myth_memalign-myth_memalign.o  /home/tau/massivethreads/src/.libs/libmyth.so -lrt -lpthread -ldl -Wl,-rpath -Wl,/home/tau/massivethreads/src/.libs -Wl,-rpath -Wl,/home/tau/local/lib)"
+relink_command="(cd /home/tau/parallel2/sys/src/mth/massivethreads/tests; { test -z \"\${LIBRARY_PATH+set}\" || unset LIBRARY_PATH || { LIBRARY_PATH=; export LIBRARY_PATH; }; }; { test -z \"\${COMPILER_PATH+set}\" || unset COMPILER_PATH || { COMPILER_PATH=; export COMPILER_PATH; }; }; { test -z \"\${GCC_EXEC_PREFIX+set}\" || unset GCC_EXEC_PREFIX || { GCC_EXEC_PREFIX=; export GCC_EXEC_PREFIX; }; }; { test -z \"\${LD_RUN_PATH+set}\" || unset LD_RUN_PATH || { LD_RUN_PATH=; export LD_RUN_PATH; }; }; { test -z \"\${LD_LIBRARY_PATH+set}\" || unset LD_LIBRARY_PATH || { LD_LIBRARY_PATH=; export LD_LIBRARY_PATH; }; }; PATH=/home/tau/parallel2/sys/inst/g/bin:/home/tau/_local/Linux/sbin:/home/tau/_local/Linux/bin:/home/tau/cfg2/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/home/tau/gxp3:/home/tau/L4/bin:/home/tau/ec2/L5/bin/:/home/tau/public_html/lecture/programming_languages/gen/progs/eiffel/compilers/liberty-eiffel/target/bin; export PATH; gcc -I/home/tau/parallel2/sys/src/mth/massivethreads/include -g -O3 -Wall -ftls-model=initial-exec -o \$progdir/\$file myth_memalign-myth_memalign.o  /home/tau/parallel2/sys/src/mth/massivethreads/src/.libs/libmyth.so -lrt -lpthread -ldl -Wl,-rpath -Wl,/home/tau/parallel2/sys/src/mth/massivethreads/src/.libs -Wl,-rpath -Wl,/home/tau/parallel2/sys/inst/g/lib)"
 
 # This environment variable determines our operation mode.
 if test "$libtool_install_magic" = "%%%MAGIC variable%%%"; then
   # install mode needs the following variables:
   generated_by_libtool_version='2.4.2'
-  notinst_deplibs=' /home/tau/massivethreads/src/libmyth.la'
+  notinst_deplibs=' /home/tau/parallel2/sys/src/mth/massivethreads/src/libmyth.la'
 else
   # When we are sourced in execute mode, $file and $ECHO are already set.
   if test "$libtool_execute_magic" != "%%%MAGIC variable%%%"; then
