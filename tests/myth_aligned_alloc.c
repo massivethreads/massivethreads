@@ -4,6 +4,10 @@
 #include <stdlib.h>
 #include <myth/myth.h>
 
+#if ! HAVE_DECL_ALIGNED_ALLOC
+void * aligned_alloc(size_t al, size_t sz);
+#endif
+
 int main(int argc, char ** argv) {
   size_t al = (argc > 1 ? atol(argv[1]) : 32);
   size_t sz = (argc > 2 ? atol(argv[2]) : 35);

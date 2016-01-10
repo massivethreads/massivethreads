@@ -1,4 +1,4 @@
-AC_INIT([massivethreads], [0.50], [massivethreads@eidos.ic.i.u-tokyo.ac.jp], [massivethreads], [http://code.google.com/p/massivethreads/])
+AC_INIT([massivethreads], [0.50], [massivethreads@eidos.ic.i.u-tokyo.ac.jp], [massivethreads], [https://github.com/massivethreads/massivethreads/])
 AM_INIT_AUTOMAKE([foreign -Wall -Werror])
 # required when you build shared libraries, relying on libtool
 AC_CONFIG_MACRO_DIR([m4])
@@ -26,7 +26,7 @@ AC_PROG_CC_C_O
 AM_PROG_CC_C_O
 AM_PROG_AS
 AC_PROG_AWK
-AM_PROG_AR
+#AM_PROG_AR
 
 # Essential libraries
 AC_CHECK_LIB(dl, dlopen, [], [AC_MSG_ERROR(Test for dlopen failed.)])
@@ -39,6 +39,17 @@ AC_CHECK_SIZEOF([void*])
 
 # Check functions
 # AC_CHECK_FUNCS(__builtin_unreachable __builtin_clz)
+
+#
+# check declarations
+#
+
+AC_CHECK_DECL([aligned_alloc])
+if test "x$ac_cv_have_decl_aligned_alloc" = xyes; then
+   AC_DEFINE([HAVE_DECL_ALIGNED_ALLOC], [1], [If set, aligned_alloc is declared]) 
+else
+   AC_DEFINE([HAVE_DECL_ALIGNED_ALLOC], [0], [If set, aligned_alloc is declared]) 
+fi
 
 #
 # --enable-malloc-wrapper
@@ -130,6 +141,23 @@ AC_ARG_ENABLE([bind-workers],
 if test "x$enable_bind_workers" != "xno" ; then
   AC_DEFINE_UNQUOTED([MYTH_BIND_WORKERS],[],[If unset, worker thread binding is disabled]) 
 fi
+
+#
+# for C program tests that follow, we treat warnings as error,
+# as some tests work by checking if the compiler issues a
+# warning
+#
+
+AC_LANG_WERROR
+
+#
+# check if sysv_attribute is available
+#
+
+AC_MSG_CHECKING([sysv_abi attribute])
+AC_COMPILE_IFELSE([AC_LANG_SOURCE([[ static __attribute__((sysv_abi)) int fun() { } ]])], 
+                  [AC_MSG_RESULT([yes]); AC_DEFINE([SYSV_ABI], [1], [if set, sysv_abi attribute is available])],
+		  [AC_MSG_RESULT([no]);  AC_DEFINE([SYSV_ABI], [0], [if set, sysv_abi attribute is available])])
 
 #
 # conditionally build test programs

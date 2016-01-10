@@ -26,7 +26,8 @@ typedef enum {
 } myth_status_t;
 
 /* Thread descriptor */
-typedef struct myth_thread {
+// typedef 
+struct myth_thread {
   struct myth_thread * next;
   // A thread which is waiting for this
   struct myth_thread* join_thread;
@@ -59,12 +60,16 @@ typedef struct myth_thread {
 #endif
   void *custom_data_ptr;
   int custom_data_size;
-} __attribute__((aligned(CACHE_LINE_SIZE))) myth_thread, *myth_thread_t;
+} ;
 
-typedef struct myth_pickle {
+// __attribute__((aligned(CACHE_LINE_SIZE))) myth_thread, *myth_thread_t;
+
+// typedef 
+struct myth_pickle {
   struct myth_thread desc;
   size_t stack_size;
   char *stack;
-} myth_pickle_t;
+} ;
+// myth_pickle_t;
 
 #endif	/* MYTH_THREAD_H_ */

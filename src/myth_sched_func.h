@@ -12,6 +12,7 @@
 //Body of basic functions
 
 #include "myth/myth_config.h"
+#include "myth_thread.h"
 #include "myth_sched.h"
 #include "myth_mem_barrier.h"
 #include "myth_misc.h"
@@ -69,7 +70,7 @@ static inline myth_thread_t get_new_myth_thread_struct_desc(myth_running_env_t e
     size_t th_size;
     size_t alloc_size;
     char *th_ptr;
-    th_size=sizeof(myth_thread);
+    th_size=sizeof(struct myth_thread);
     alloc_size=th_size*STACK_ALLOC_UNIT;
 #ifdef MYTH_ALLOC_PROF
     uint64_t t0,t1,t2,t3;
@@ -344,7 +345,7 @@ static inline void free_myth_thread_struct_stack(myth_running_env_t e,myth_threa
 static inline myth_thread_t get_new_myth_thread_struct_desc_ext(void)
 {
   assert(real_malloc);
-  return real_malloc(sizeof(myth_thread));
+  return real_malloc(sizeof(struct myth_thread));
 }
 
 //Release thread descriptor

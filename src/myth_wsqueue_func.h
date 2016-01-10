@@ -6,7 +6,7 @@
 #define MYTH_WSQUEUE_FUNC_H_
 
 #include "myth/myth_config.h"
-#
+
 #include "myth_internal_lock_func.h"
 #include "myth_desc.h"
 #include "myth_wsqueue.h"
