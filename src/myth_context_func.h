@@ -22,7 +22,7 @@ typedef void (*void_func_t)(void);
 
 #if 1
 
-#if SYSV_ABI
+#if HAVE_ATTR_SYSV_ABI
 #define MYTH_CTX_CALLBACK static __attribute__((used,noinline,sysv_abi))
 #else
 #define MYTH_CTX_CALLBACK static __attribute__((used,noinline))

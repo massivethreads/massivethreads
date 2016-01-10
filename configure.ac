@@ -26,7 +26,16 @@ AC_PROG_CC_C_O
 AM_PROG_CC_C_O
 AM_PROG_AS
 AC_PROG_AWK
-#AM_PROG_AR
+
+# on new systems, this seems required
+# (without it it errs "linking libtool libraries using a 
+# non-POSIX archiver requires 'AM_PROG_AR' in 'configure.ac");
+# on old systems, this results in an error
+# macro `AM_PROG_AR' not found in library
+# error: possibly undefined macro: AM_PROG_AR
+# If this token and others are legitimate, please use m4_pattern_allow.
+# See the Autoconf documentation.
+AM_PROG_AR
 
 # Essential libraries
 AC_CHECK_LIB(dl, dlopen, [], [AC_MSG_ERROR(Test for dlopen failed.)])
@@ -44,12 +53,21 @@ AC_CHECK_SIZEOF([void*])
 # check declarations
 #
 
-AC_CHECK_DECL([aligned_alloc])
-if test "x$ac_cv_have_decl_aligned_alloc" = xyes; then
-   AC_DEFINE([HAVE_DECL_ALIGNED_ALLOC], [1], [If set, aligned_alloc is declared]) 
-else
-   AC_DEFINE([HAVE_DECL_ALIGNED_ALLOC], [0], [If set, aligned_alloc is declared]) 
-fi
+AC_MSG_CHECKING([declaration of aligned_alloc])
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#define _ISOC11_SOURCE 1
+#include <stdlib.h>
+]],
+					     [[ aligned_alloc; ]])], 
+                  [AC_MSG_RESULT([yes]); AC_DEFINE([HAVE_DECL_ALIGNED_ALLOC], [1], [if set, aligned_alloc is declared in stdlib.h])],
+		  [AC_MSG_RESULT([no]);  AC_DEFINE([HAVE_DECL_ALIGNED_ALLOC], [0], [if set, aligned_alloc is declared in stdlib.h])])
+
+
+dnl AC_CHECK_DECL([aligned_alloc])
+dnl if test "x$ac_cv_have_decl_aligned_alloc" = xyes; then
+dnl    AC_DEFINE([HAVE_DECL_ALIGNED_ALLOC], [1], [If set, aligned_alloc is declared]) 
+dnl else
+dnl    AC_DEFINE([HAVE_DECL_ALIGNED_ALLOC], [0], [If set, aligned_alloc is declared]) 
+dnl fi
 
 #
 # --enable-malloc-wrapper
@@ -151,13 +169,13 @@ fi
 AC_LANG_WERROR
 
 #
-# check if sysv_attribute is available
+# check if sysv_abi attribute is available
 #
 
 AC_MSG_CHECKING([sysv_abi attribute])
-AC_COMPILE_IFELSE([AC_LANG_SOURCE([[ static __attribute__((sysv_abi)) int fun() { } ]])], 
-                  [AC_MSG_RESULT([yes]); AC_DEFINE([SYSV_ABI], [1], [if set, sysv_abi attribute is available])],
-		  [AC_MSG_RESULT([no]);  AC_DEFINE([SYSV_ABI], [0], [if set, sysv_abi attribute is available])])
+AC_COMPILE_IFELSE([AC_LANG_SOURCE([[ __attribute__((sysv_abi)) void fun() { } ]])], 
+                  [AC_MSG_RESULT([yes]); AC_DEFINE([HAVE_ATTR_SYSV_ABI], [1], [if set, sysv_abi attribute is available])],
+		  [AC_MSG_RESULT([no]);  AC_DEFINE([HAVE_ATTR_SYSV_ABI], [0], [if set, sysv_abi attribute is available])])
 
 #
 # conditionally build test programs

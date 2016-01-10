@@ -593,7 +593,7 @@ PACKAGE_TARNAME='massivethreads'
 PACKAGE_VERSION='0.50'
 PACKAGE_STRING='massivethreads 0.50'
 PACKAGE_BUGREPORT='massivethreads@eidos.ic.i.u-tokyo.ac.jp'
-PACKAGE_URL='http://code.google.com/p/massivethreads/'
+PACKAGE_URL='https://github.com/massivethreads/massivethreads/'
 
 # Factoring default headers for most tests.
 ac_includes_default="\
@@ -631,6 +631,7 @@ ac_includes_default="\
 # include <unistd.h>
 #endif"
 
+ac_c_werror_flag=
 ac_subst_vars='am__EXEEXT_FALSE
 am__EXEEXT_TRUE
 LTLIBOBJS
@@ -748,7 +749,6 @@ infodir
 docdir
 oldincludedir
 includedir
-runstatedir
 localstatedir
 sharedstatedir
 sysconfdir
@@ -840,7 +840,6 @@ datadir='${datarootdir}'
 sysconfdir='${prefix}/etc'
 sharedstatedir='${prefix}/com'
 localstatedir='${prefix}/var'
-runstatedir='${localstatedir}/run'
 includedir='${prefix}/include'
 oldincludedir='/usr/include'
 docdir='${datarootdir}/doc/${PACKAGE_TARNAME}'
@@ -1093,15 +1092,6 @@ do
   | -silent | --silent | --silen | --sile | --sil)
     silent=yes ;;
 
-  -runstatedir | --runstatedir | --runstatedi | --runstated \
-  | --runstate | --runstat | --runsta | --runst | --runs \
-  | --run | --ru | --r)
-    ac_prev=runstatedir ;;
-  -runstatedir=* | --runstatedir=* | --runstatedi=* | --runstated=* \
-  | --runstate=* | --runstat=* | --runsta=* | --runst=* | --runs=* \
-  | --run=* | --ru=* | --r=*)
-    runstatedir=$ac_optarg ;;
-
   -sbindir | --sbindir | --sbindi | --sbind | --sbin | --sbi | --sb)
     ac_prev=sbindir ;;
   -sbindir=* | --sbindir=* | --sbindi=* | --sbind=* | --sbin=* \
@@ -1239,7 +1229,7 @@ fi
 for ac_var in	exec_prefix prefix bindir sbindir libexecdir datarootdir \
 		datadir sysconfdir sharedstatedir localstatedir includedir \
 		oldincludedir docdir infodir htmldir dvidir pdfdir psdir \
-		libdir localedir mandir runstatedir
+		libdir localedir mandir
 do
   eval ac_val=\$$ac_var
   # Remove trailing slashes.
@@ -1392,7 +1382,6 @@ Fine tuning of the installation directories:
   --sysconfdir=DIR        read-only single-machine data [PREFIX/etc]
   --sharedstatedir=DIR    modifiable architecture-independent data [PREFIX/com]
   --localstatedir=DIR     modifiable single-machine data [PREFIX/var]
-  --runstatedir=DIR       modifiable per-process data [LOCALSTATEDIR/run]
   --libdir=DIR            object code libraries [EPREFIX/lib]
   --includedir=DIR        C header files [PREFIX/include]
   --oldincludedir=DIR     C header files for non-gcc [/usr/include]
@@ -1508,7 +1497,7 @@ Use these variables to override the choices made by `configure' or to help
 it to find libraries and programs with nonstandard names/locations.
 
 Report bugs to <massivethreads@eidos.ic.i.u-tokyo.ac.jp>.
-massivethreads home page: <http://code.google.com/p/massivethreads/>.
+massivethreads home page: <https://github.com/massivethreads/massivethreads/>.
 _ACEOF
 ac_status=$?
 fi
@@ -2592,7 +2581,7 @@ ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $
 ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
-am__api_version='1.15'
+am__api_version='1.14'
 
 ac_aux_dir=
 for ac_dir in "$srcdir" "$srcdir/.." "$srcdir/../.."; do
@@ -2793,8 +2782,8 @@ test "$program_suffix" != NONE &&
 ac_script='s/[\\$]/&&/g;s/;s,x,x,$//'
 program_transform_name=`$as_echo "$program_transform_name" | sed "$ac_script"`
 
-# Expand $ac_aux_dir to an absolute path.
-am_aux_dir=`cd "$ac_aux_dir" && pwd`
+# expand $ac_aux_dir to an absolute path
+am_aux_dir=`cd $ac_aux_dir && pwd`
 
 if test x"${MISSING+set}" != xset; then
   case $am_aux_dir in
@@ -2813,7 +2802,7 @@ else
 $as_echo "$as_me: WARNING: 'missing' script is too old or missing" >&2;}
 fi
 
-if test x"${install_sh+set}" != xset; then
+if test x"${install_sh}" != xset; then
   case $am_aux_dir in
   *\ * | *\	*)
     install_sh="\${SHELL} '$am_aux_dir/install-sh'" ;;
@@ -3141,8 +3130,8 @@ MAKEINFO=${MAKEINFO-"${am_missing_run}makeinfo"}
 # <http://lists.gnu.org/archive/html/automake/2012-07/msg00014.html>
 mkdir_p='$(MKDIR_P)'
 
-# We need awk for the "check" target (and possibly the TAP driver).  The
-# system "awk" is bad on some platforms.
+# We need awk for the "check" target.  The system "awk" is bad on
+# some platforms.
 # Always define AMTAR for backward compatibility.  Yes, it's still used
 # in the wild :-(  We should find a proper way to deprecate it ...
 AMTAR='$${TAR-tar}'
@@ -3199,7 +3188,6 @@ END
     as_fn_error $? "Your 'rm' program is bad, sorry." "$LINENO" 5
   fi
 fi
-
 # required when you build shared libraries, relying on libtool
 
 # avoid executing autotools on the user side
@@ -4570,6 +4558,15 @@ fi
 done
 
 
+# on new systems, this seems required
+# (without it it errs "linking libtool libraries using a
+# non-POSIX archiver requires 'AM_PROG_AR' in 'configure.ac");
+# on old systems, this results in an error
+# macro `AM_PROG_AR' not found in library
+# error: possibly undefined macro: AM_PROG_AR
+# If this token and others are legitimate, please use m4_pattern_allow.
+# See the Autoconf documentation.
+
 if test -n "$ac_tool_prefix"; then
   for ac_prog in ar lib "link -lib"
   do
@@ -5354,6 +5351,40 @@ _ACEOF
 # AC_CHECK_FUNCS(__builtin_unreachable __builtin_clz)
 
 #
+# check declarations
+#
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking declaration of aligned_alloc" >&5
+$as_echo_n "checking declaration of aligned_alloc... " >&6; }
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+#define _ISOC11_SOURCE 1
+#include <stdlib.h>
+
+int
+main ()
+{
+ aligned_alloc;
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_compile "$LINENO"; then :
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+$as_echo "yes" >&6; };
+$as_echo "#define HAVE_DECL_ALIGNED_ALLOC 1" >>confdefs.h
+
+else
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; };
+$as_echo "#define HAVE_DECL_ALIGNED_ALLOC 0" >>confdefs.h
+
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+
+
+
+#
 # --enable-malloc-wrapper
 #   flag controlling the behavior of malloc
 #
@@ -5463,6 +5494,38 @@ cat >>confdefs.h <<_ACEOF
 _ACEOF
 
 fi
+
+#
+# for C program tests that follow, we treat warnings as error,
+# as some tests work by checking if the compiler issues a
+# warning
+#
+
+
+ac_c_werror_flag=yes
+
+#
+# check if sysv_abi attribute is available
+#
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking sysv_abi attribute" >&5
+$as_echo_n "checking sysv_abi attribute... " >&6; }
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+ __attribute__((sysv_abi)) void fun() { }
+_ACEOF
+if ac_fn_c_try_compile "$LINENO"; then :
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+$as_echo "yes" >&6; };
+$as_echo "#define HAVE_ATTR_SYSV_ABI 1" >>confdefs.h
+
+else
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; };
+$as_echo "#define HAVE_ATTR_SYSV_ABI 0" >>confdefs.h
+
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
 
 #
 # conditionally build test programs
@@ -16942,7 +17005,7 @@ Configuration commands:
 $config_commands
 
 Report bugs to <massivethreads@eidos.ic.i.u-tokyo.ac.jp>.
-massivethreads home page: <http://code.google.com/p/massivethreads/>."
+massivethreads home page: <https://github.com/massivethreads/massivethreads/>."
 
 _ACEOF
 cat >>$CONFIG_STATUS <<_ACEOF || ac_write_fail=1
