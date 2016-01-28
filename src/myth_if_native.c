@@ -15,25 +15,30 @@
 #include "myth_sched_func.h"
 #include "myth_tls_func.h"
 
-void myth_init(void)
-{
-  myth_init_body(0,0);
+int myth_init(void) {
+  return myth_init_body(0,0);
 }
 
-void myth_init_withparam(int worker_num,size_t def_stack_size)
-{
+#if 1
+int myth_init_ex(int worker_num,size_t def_stack_size) {
+  return myth_init_body(worker_num,def_stack_size);
+}
+#else
+void myth_init_withparam(int worker_num,size_t def_stack_size) {
   myth_init_body(worker_num,def_stack_size);
 }
+#endif
 
-void myth_fini(void)
-{
+void myth_fini(void) {
   myth_fini_body();
 }
 
+#if 0
 int myth_init_ex(int worker_num,size_t def_stack_size)
 {
   return myth_init_ex_body(worker_num,def_stack_size);
 }
+#endif
 
 void myth_fini_ex(void)
 {

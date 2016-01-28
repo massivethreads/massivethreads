@@ -19,7 +19,7 @@
 
 //Initialize specifying the number of worker threads
 //If specified less than 1, MYTH_WORKER_NUM or the number of CPU cores used instead.
-int myth_init_ex_body(int worker_num, size_t def_stack_size) {
+int myth_init_body_really(int worker_num, size_t def_stack_size) {
   intptr_t nthreads;
   myth_init_process_affinity_info();
   //Load original functions
@@ -67,7 +67,7 @@ int g_myth_initialized=0;
 cpu_set_t g_proc_cpuset;
 
 //Initialize
-void myth_init_body(int worker_num,size_t def_stack_size) {
+int myth_init_body(int worker_num,size_t def_stack_size) {
   if (g_myth_initialized){
     myth_fini_body();
   }
@@ -75,15 +75,17 @@ void myth_init_body(int worker_num,size_t def_stack_size) {
   sched_getaffinity(getpid(), sizeof(cpu_set_t), &g_proc_cpuset);
   assert(g_myth_initialized==0);
   g_myth_initialized=1;
-  myth_init_ex_body(worker_num,def_stack_size);
+  int nthreads = myth_init_body_really(worker_num,def_stack_size);
+  assert(nthreads == g_worker_thread_num);
   //Create worker threads
   intptr_t i;
-  for (i=1;i<g_worker_thread_num;i++){
+  for (i = 1; i < nthreads; i++){
     real_pthread_create(&g_envs[i].worker,NULL,myth_worker_thread_fn,(void*)i);
   }
   g_envs[0].worker=real_pthread_self();
   //Initialize each worker threads
   myth_worker_thread_fn((void*)(intptr_t)0);
+  return nthreads;
 }
 
 void myth_emit_log(FILE *fp_prof_out) {

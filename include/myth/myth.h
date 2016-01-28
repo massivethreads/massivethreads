@@ -25,10 +25,15 @@ extern "C" {
     absolutely sure that an initilization has
     taken place before a certain point.
 
+    Returns:
+
+    The number of workers MassiveThreads that ends
+    up launching.
+
     See Also: 
     <myth_init_ex>
   */
-  void myth_init(void);
+  int myth_init(void);
 
   /*
     Function: myth_init_ex
@@ -75,7 +80,7 @@ extern "C" {
 
     Returns:
 
-    The number of workers MassiveThreads ends
+    The number of workers MassiveThreads that ends
     up launching.
 
     See Also: 
