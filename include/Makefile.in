@@ -89,7 +89,7 @@ am__aclocal_m4_deps = $(top_srcdir)/m4/libtool.m4 \
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 mkinstalldirs = $(install_sh) -d
-CONFIG_HEADER = $(top_builddir)/include/myth/config.h
+CONFIG_HEADER = $(top_builddir)/src/config.h
 CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 AM_V_P = $(am__v_P_@AM_V@)
@@ -287,8 +287,9 @@ top_srcdir = @top_srcdir@
 
 # required when you use libtool (for building shared libs)
 ACLOCAL_AMFLAGS = -I m4
+
+#	myth/config.h
 nobase_include_HEADERS = \
-	myth/config.h \
 	myth/myth.h \
 	myth/myth_config.h \
 	myth/myth_internal_lock.h \

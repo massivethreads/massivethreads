@@ -3,6 +3,8 @@
  */
 #include <dlfcn.h>
 #include <stdlib.h>
+#include "config.h"
+
 #include "myth/myth_config.h"
 
 #include "myth_sched.h"

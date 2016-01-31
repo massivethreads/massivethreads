@@ -221,6 +221,6 @@ AC_CONFIG_FILES([
 	tests/cxx/mtbb/lambda/bin/Makefile
 	tests/cxx/mtbb/lambda/profiler/Makefile
 ])
-# AC_CONFIG_HEADERS([src/config.h])
-AC_CONFIG_HEADERS([include/myth/config.h])
+AC_CONFIG_HEADERS([src/config.h])
+# AC_CONFIG_HEADERS([include/myth/config.h])
 AC_OUTPUT

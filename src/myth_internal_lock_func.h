@@ -6,8 +6,8 @@
 #define MYTH_INTERNAL_LOCK_FUNC_H_
 
 #include "myth/myth_config.h"
+#include "myth/myth_internal_lock.h"
 
-#include "myth_internal_lock.h"
 #include "myth_mem_barrier.h"
 #include "myth_original_lib.h"
 

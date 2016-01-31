@@ -9,8 +9,9 @@
 #include <stddef.h>
 #include <sys/mman.h>
 
+#include "myth/myth_internal_lock.h"
+
 #include "myth_context.h"
-#include "myth_internal_lock.h"
 #include "myth_thread.h"
 
 #include "myth_wsqueue.h"

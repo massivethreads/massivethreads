@@ -1,8 +1,9 @@
 # required when you use libtool (for building shared libs)
 ACLOCAL_AMFLAGS = -I m4
 
+#	myth/config.h
+
 nobase_include_HEADERS = \
-	myth/config.h \
 	myth/myth.h \
 	myth/myth_config.h \
 	myth/myth_internal_lock.h \

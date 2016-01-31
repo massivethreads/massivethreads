@@ -6,8 +6,9 @@
  */
 
 #include "myth/myth.h"
+#include "myth/myth_internal_lock.h"
+
 #include "myth_tls_func.h"
-#include "myth_internal_lock.h"
 
 //Global variable declarations
 

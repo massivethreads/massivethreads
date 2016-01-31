@@ -13,6 +13,9 @@
 #include <unistd.h>
 #include <time.h>
 #include <sys/mman.h>
+
+#include "config.h"
+
 #include "myth/myth_config.h"
 #include "myth_original_lib.h"
 
