@@ -9,9 +9,9 @@
 #include <stdlib.h>
 
 #include "myth/myth.h"
+//#include "myth/myth_internal_lock.h"
 
 #include "myth_context.h"
-#include "myth_internal_lock.h"
 
 /* Thread status constants */
 typedef enum {

@@ -8,7 +8,7 @@
 #include <sys/socket.h>
 #include <stdint.h>
 
-#include "myth_internal_lock.h"
+#include "myth/myth_internal_lock.h"
 
 typedef enum myth_io_type {
   MYTH_IO_CONNECT,

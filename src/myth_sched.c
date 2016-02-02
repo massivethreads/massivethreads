@@ -3,6 +3,9 @@
  */
 
 #include <signal.h>
+
+#include "config.h"
+
 #include "myth/myth.h"
 
 #include "myth_wsqueue.h"

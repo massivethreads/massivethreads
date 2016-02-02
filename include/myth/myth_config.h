@@ -1,7 +1,7 @@
 #ifndef MYTH_CONFIG_H_
 #define MYTH_CONFIG_H_
 
-#include "myth/config.h"
+//#include "myth/config.h"
 
 //Enable debug
 //#define MYTH_DEBUG

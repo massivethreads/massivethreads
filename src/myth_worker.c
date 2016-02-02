@@ -1,6 +1,9 @@
 /* 
  * myth_worker.c
  */
+
+#include "config.h"
+
 #include "myth_worker.h"
 #include "myth_worker_proto.h"
 #include "myth_worker_func.h"
