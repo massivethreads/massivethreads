@@ -1,4 +1,4 @@
-AC_INIT([massivethreads], [0.50], [massivethreads@eidos.ic.i.u-tokyo.ac.jp], [massivethreads], [https://github.com/massivethreads/massivethreads/])
+AC_INIT([massivethreads], [0.97], [massivethreads@eidos.ic.i.u-tokyo.ac.jp], [massivethreads], [https://github.com/massivethreads/massivethreads/])
 AM_INIT_AUTOMAKE([foreign -Wall -Werror])
 # required when you build shared libraries, relying on libtool
 AC_CONFIG_MACRO_DIR([m4])
