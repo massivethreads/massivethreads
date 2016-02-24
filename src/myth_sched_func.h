@@ -385,7 +385,7 @@ MYTH_CTX_CALLBACK void myth_create_1(void *arg1,void *arg2,void *arg3)
 #endif
   env->this_thread=new_thread;
 #ifdef MYTH_CREATE_PROF
-  uint64_t t1=myth_get_rdtsc();
+  t1=myth_get_rdtsc();
   env->prof_data.create_cycles+=t1-env->prof_data.create_cycles_tmp;
   env->prof_data.create_cnt++;
 #endif
