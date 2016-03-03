@@ -93,11 +93,25 @@ cilk int f(int x) {
     dr_return_from_create_task(__t__);				\
   } while (0)
 
+#define spawn_with_prof_(spawn_stmt, file, line) do {                   \
+    dr_dag_node * __t__ = dr_enter_create_cilk_proc_task_(file, line);  \
+    (void)__cilk_begin__;                                               \
+    spawn_stmt;                                                         \
+    dr_return_from_create_task_(__t__, file, line);                     \
+  } while (0)
+
 #define sync_with_prof do {				       \
     dr_dag_node * __t__ = dr_enter_wait_tasks();	       \
     (void)__cilk_begin__;				       \
     cilk_sync;						       \
     dr_return_from_wait_tasks(__t__);			       \
+  } while(0)
+
+#define sync_with_prof_(file, line) do {                       \
+    dr_dag_node * __t__ = dr_enter_wait_tasks_(file, line);    \
+    (void)__cilk_begin__;				       \
+    cilk_sync;						       \
+    dr_return_from_wait_tasks_(__t__, file, line);             \
   } while(0)
 
 
@@ -108,9 +122,11 @@ cilk int f(int x) {
 #define cilk_return_t(type_of_x, x)        cilk_return_with_prof_t(type_of_x, x)
 #define cilk_void_return      cilk_void_return_with_prof
 #define spawn_(spawn_stmt)    spawn_with_prof(spawn_stmt)
+#define spawn__(spawn_stmt, file, line)    spawn_with_prof_(spawn_stmt, file, line)
 #define cilk_sync_            sync_with_prof
 #define _Cilk_sync_           sync_with_prof
 #define sync_                 sync_with_prof
+#define sync__(file, line)    sync_with_prof_(file, line)
 
 #define dr_get_max_workers()     __cilkrts_get_nworkers()
 #define dr_get_worker()          __cilkrts_get_worker_number()
@@ -121,9 +137,11 @@ cilk int f(int x) {
 #define cilk_return(x)        cilk_return_no_prof(x)
 #define cilk_return_t(type_of_x, x)   cilk_return_no_prof(x)
 #define cilk_void_return      cilk_void_return_no_prof
-#define spawn_(spawn_stmt)    spawn_no_prof(spawn_stmt)
+#define spawn_(spawn_stmt)              spawn_no_prof(spawn_stmt)
+#define spawn__(spawn_stmt, file, line) spawn_no_prof(spawn_stmt)
 #define cilk_sync_            sync_no_prof
 #define _Cilk_sync_           sync_no_prof
 #define sync_                 sync_no_prof
+#define sync__(file, line)    sync_no_prof
 
 #endif

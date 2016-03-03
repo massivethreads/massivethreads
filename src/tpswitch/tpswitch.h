@@ -68,6 +68,8 @@
 #define mk_task_group 
 #define create_task0(statement)			\
   pragma_omp_task(, statement)
+#define create_task0_(statement, file, line)    \
+  pragma_omp_task_(, statement, file, line)
 #define create_task1(s0,statement)		\
   pragma_omp_task(shared(s0), statement)
 #define create_task2(s0,s1,statement)		\
@@ -85,6 +87,7 @@
 #define create_taskc_and_wait(C)		\
   do { create_taskc(C); wait_tasks; } while(0)
 #define wait_tasks pragma_omp_taskwait
+#define wait_tasks_(file, line) pragma_omp_taskwait_(file, line)
 
 #define cilk_begin				\
   int __cilk_begin__ = 0
@@ -114,6 +117,8 @@
 #define mk_task_group mtbb::task_group __tg__
 #define create_task0(statement)			\
   __tg__.run_([=] { statement; }, __FILE__, __LINE__)
+#define create_task0_(statement, file, line)    \
+  __tg__.run_([=] { statement; }, file, line)
 #define create_task1(s0,statement)		\
   __tg__.run_([=,&s0] { statement; }, __FILE__, __LINE__)
 #define create_task2(s0,s1,statement)		\
@@ -139,6 +144,7 @@
   do { call_taskc(callable); wait_tasks; } while(0)
 #endif
 #define wait_tasks __tg__.wait_(__FILE__, __LINE__)
+#define wait_tasks_(file, line) __tg__.wait_(file, line)
 
 #define cilk_begin				\
   int __cilk_begin__ = 0
@@ -169,10 +175,11 @@
 
 #include <tpswitch/serial_dr.h>
 
-#define create_task0(statement)       create_task(statement)
-#define create_task1(s0,statement)    create_task(statement)
-#define create_task2(s0,s1,statement) create_task(statement)
-#define create_taskA(statement)       create_task(statement)
+#define create_task0(statement)              create_task(statement)
+#define create_task0_(statement, file, line) create_task_(statement, file, line)
+#define create_task1(s0,statement)           create_task(statement)
+#define create_task2(s0,s1,statement)        create_task(statement)
+#define create_taskA(statement)              create_task(statement)
 #define call_task(statement)          do { statement; } while(0)
 #define call_taskc(callable)          callable()
 
@@ -220,11 +227,13 @@
 //#define mk_task_group int __mk_task_group__ __attribute__((unused)) = 0
 #define mk_task_group 
 #define create_task0(spawn_stmt)       spawn_(spawn_stmt)
+#define create_task0_(spawn_stmt, file, line)       spawn__(spawn_stmt, file, line)
 #define create_task1(s0,spawn_stmt)    spawn_(spawn_stmt)
 #define create_task2(s0,s1,spawn_stmt) spawn_(spawn_stmt)
 #define create_taskA(spawn_stmt)       spawn_(spawn_stmt)
 #if TO_CILK
 #define create_taskc(callable)            spawn_(spawn callable())
+#define create_taskc_(callable)            spawn_(spawn callable())
 #else
 #define create_taskc(callable)            spawn_(_Cilk_spawn callable())
 #endif
@@ -236,6 +245,7 @@
 #define call_taskc(callable)              create_taskc_and_wait(callable)   
 
 #define wait_tasks sync_
+#define wait_tasks_(file, line) sync__(file, line)
 
 
 #else
@@ -259,3 +269,126 @@ do { if (X) { create_taskc(E); } else { call_taskc(E); } } while(0)
 do { if (X) { create_task_and_wait(E); } else { call_task(E); } } while(0)
 #define create_taskc_and_wait_if(X,E) \
 do { if (X) { create_taskc_and_wait(E); } else { call_taskc(E); } } while(0)
+
+
+
+
+/*
+   tpswitch parallel for (pfor)
+   -->
+   omp parallel for (OpenMP)
+   cilk_for (Cilk Plus)
+   mtbb::parallel_for (TBB-like)
+
+   tpswitch::parallel_for(T, var, FIRST, LAST, STEP, S)
+
+   pragma omp parallel for
+   for (var = FIRST; var < LAST; i += INC) S
+
+   cilk_for (var = FIRST; var < LAST; i += INC) S
+
+   mtbb::parallel_for(FIRST, LAST, STEP, [&] (int VAR) { S })
+
+ */
+
+#if TO_SERIAL
+
+//#define pfor_original(T, x, first, last, step, S) do { for (T x = first; x < last; x += step) S ; } while(0)
+#define pfor_original(T, x, first, last, step, grainsize, S) do { for (T x = first; x < last; x += step) S ; } while(0)
+
+#elif TO_OMP
+
+//#define pfor_original(T, x, first, last, step, S) do { pragma_omp(parallel for) for (T x = first; x < last; x += step) S } while(0)
+#define pfor_original(T, x, first, last, step, grainsize, S) do { pragma_omp(parallel for) for (T x = first; x < last; x += step) S } while(0)
+
+#elif TO_CILKPLUS
+
+//#define pfor_original(T, x, first, last, step, S) do { cilk_for(T x = first; x < last; x += step) S } while(0)
+#define pfor_original(T, x, first, last, step, grainsize, S) do { cilk_for(T x = first; x < last; x += step) S } while(0)
+
+#elif TO_TBB || TO_MTHREAD || TO_MTHREAD_NATIVE || TO_QTHREAD || TO_NANOX
+
+#include <mtbb/parallel_for.h>
+//#define pfor_original(T, x, first, last, step, S) mtbb::parallel_for(first, last, step, [=] (T x) { S } )
+#define pfor_original(T, x, first, last, step, grainsize, S) mtbb::parallel_for(first, last, step, grainsize, [=] (T begin, T end) { S } )
+
+#else
+
+#error "please define TO_SERIAL, TO_OMP, TO_TBB, TO_MTHREAD, TO_MTHREAD_NATIVE, TO_QTHREAD, TO_NANOX, or TO_CILKPLUS"
+
+#endif
+
+
+template<typename T>
+static void
+pfor_bisection_aux(T first, T a, T b, T step, T grainsize, void (*f) (T begin, T end), const char * file, int line) {
+  if (b - a <= grainsize) {
+    f(first + a * step, first + b * step);
+  } else {
+    mk_task_group;
+    const int c = a + (b - a) / 2;
+    create_task0_(spawn pfor_bisection_aux(first, a, c, step, grainsize, f), file, line);
+    call_task(spawn pfor_bisection_aux(first, c, b, step, grainsize, f));
+    wait_tasks_(file, line);
+  }
+}
+
+#define pfor_bisection(T, x, first, last, step, grainsize, S)           \
+  pfor_bisection_aux<T>(first, 0, (last - first + step - 1) / step, step, grainsize, [=] (T begin, T end) { S }, __FILE__, __LINE__)
+
+template<typename T>
+static void
+pfor_allatonce_aux(T first, T a, T b, T step, T grainsize, void (*f) (T begin, T end), const char * file, int line) {
+    mk_task_group;
+    T _first = first;
+    T _last = last;
+    T last = first;
+    while (first < _last) {
+      last += step * grainsize;
+      if (last > _last) last = _last;
+      create_task0(spawn f(first, last));
+      //create_taskc( f );
+      first = last;   
+    }       
+    wait_tasks;
+}
+
+#define pfor_allatonce(T, x, first, last, step, grainsize, S)           \
+  pfor_allatonce_aux<T>(first, 0, (last - first + step - 1) / step, step, grainsize, [=] (T begin, T end) { S }, __FILE__, __LINE__)
+
+#define pfor_allatonce_2(T, x, first, last, step, grainsize, S)         \
+  do {                                                                  \
+    mk_task_group;                                                      \
+    T _first = first;                                                   \
+    T _last = last;                                                     \
+    T last = first;                                                     \
+    while (first < _last) {                                             \
+      last += step * grainsize;                                         \
+      if (last > _last) last = _last;                                   \
+      create_task0(spawn S);                                            \
+      first = last;                                                     \
+    }                                                                   \
+    wait_tasks;                                                         \
+  } while (0)
+
+//      create_taskc( [=] () {S} );             \
+//      create_task0( spawn [=] () { S } (); );
+
+
+#if PFOR_TO_ORIGINAL
+
+#define pfor(T, x, first, last, step, grainsize, S) pfor_original(T, x, first, last, step, grainsize, S)
+
+#elif PFOR_TO_BISECTION
+
+#define pfor(T, x, first, last, step, grainsize, S) pfor_bisection(T, x, first, last, step, grainsize, S)
+
+#elif PFOR_TO_ALLATONCE
+
+#define pfor(T, x, first, last, step, grainsize, S) pfor_allatonce(T, x, first, last, step, grainsize, S)
+
+#else
+
+#define pfor(T, x, first, last, step, grainsize, S) pfor_bisection(T, x, first, last, step, grainsize, S)
+
+#endif

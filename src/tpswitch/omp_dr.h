@@ -69,6 +69,17 @@
     dr_return_from_create_task(__t__);			   \
   } while (0)
 
+#define pragma_omp_task_with_prof_(options, statement, file, line) do { \
+    dr_dag_node * __c__ = 0;                                            \
+    dr_dag_node * __t__ = dr_enter_create_task_(&__c__, file, line);    \
+    pragma_omp(task options) do {                                       \
+      dr_start_task_(__c__, file, line);                                \
+      statement;                                                        \
+      dr_end_task_(file, line);                                         \
+    } while(0);                                                         \
+    dr_return_from_create_task_(__t__, file, line);                     \
+  } while (0)
+
 #define pragma_omp_taskc_with_prof(options, callable) \
   pragma_omp_task_with_prof(options, callable())
 
@@ -78,13 +89,22 @@
     dr_return_from_wait_tasks(__t__);			       \
   } while(0)
 
+#define pragma_omp_taskwait_with_prof_(file, line) do {                \
+    dr_dag_node * __t__ = dr_enter_wait_tasks_(file, line);	       \
+    pragma_omp(taskwait);                                              \
+    dr_return_from_wait_tasks_(__t__, file, line);                     \
+  } while(0)
+
 #if DAG_RECORDER>=2
 
 #define pragma_omp_task(options, statement)	\
   pragma_omp_task_with_prof(options, statement)
+#define pragma_omp_task_(options, statement, file, line)	\
+  pragma_omp_task_with_prof_(options, statement, file, line)
 #define pragma_omp_taskc(options, callable)	\
   pragma_omp_taskc_with_prof(options, callable)
 #define pragma_omp_taskwait pragma_omp_taskwait_with_prof
+#define pragma_omp_taskwait_(file, line) pragma_omp_taskwait_with_prof_(file, line)
 
 #define dr_get_max_workers() (omp_in_parallel() ? omp_get_num_threads() : omp_get_max_threads())
 #define dr_get_worker()      omp_get_thread_num()
@@ -127,9 +147,12 @@
 
 #define pragma_omp_task(options, statement)	\
   pragma_omp_task_no_prof(options, statement)
+#define pragma_omp_task_(options, statement, file, line)	\
+  pragma_omp_task_no_prof(options, statement)
 #define pragma_omp_taskc(options, callable)	\
   pragma_omp_taskc_no_prof(options, callable)
 #define pragma_omp_taskwait pragma_omp_taskwait_no_prof
+#define pragma_omp_taskwait_(file, line) pragma_omp_taskwait_no_prof
 
 #define pragma_omp_parallel_single(clause, S) \
   do {					     \
