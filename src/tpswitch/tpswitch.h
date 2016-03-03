@@ -310,7 +310,7 @@ do { if (X) { create_taskc_and_wait(E); } else { call_taskc(E); } } while(0)
 
 #include <mtbb/parallel_for.h>
 //#define pfor_original(T, x, first, last, step, S) mtbb::parallel_for(first, last, step, [=] (T x) { S } )
-#define pfor_original(T, x, first, last, step, grainsize, S) mtbb::parallel_for(first, last, step, grainsize, [=] (T begin, T end) { S } )
+#define pfor_original(T, x, first, last, step, grainsize, S) mtbb::parallel_for(first, last, step, grainsize, [=] (T first, T last) { S } )
 
 #else
 
@@ -321,7 +321,7 @@ do { if (X) { create_taskc_and_wait(E); } else { call_taskc(E); } } while(0)
 
 template<typename T>
 static void
-pfor_bisection_aux(T first, T a, T b, T step, T grainsize, void (*f) (T begin, T end), const char * file, int line) {
+pfor_bisection_aux(T first, T a, T b, T step, T grainsize, std::function<void (T, T)> f, const char * file, int line) {
   if (b - a <= grainsize) {
     f(first + a * step, first + b * step);
   } else {
@@ -334,11 +334,12 @@ pfor_bisection_aux(T first, T a, T b, T step, T grainsize, void (*f) (T begin, T
 }
 
 #define pfor_bisection(T, x, first, last, step, grainsize, S)           \
-  pfor_bisection_aux<T>(first, 0, (last - first + step - 1) / step, step, grainsize, [=] (T begin, T end) { S }, __FILE__, __LINE__)
+  pfor_bisection_aux<T>(first, 0, (last - first + step - 1) / step, step, grainsize, [=] (T first, T last) { S }, __FILE__, __LINE__)
+
 
 template<typename T>
 static void
-pfor_allatonce_aux(T first, T a, T b, T step, T grainsize, void (*f) (T begin, T end), const char * file, int line) {
+pfor_allatonce_aux(T first, T a, T b, T step, T grainsize, std::function<void (T, T)> f, const char * file, int line) {
     mk_task_group;
     T _first = first;
     T _last = last;
@@ -346,15 +347,15 @@ pfor_allatonce_aux(T first, T a, T b, T step, T grainsize, void (*f) (T begin, T
     while (first < _last) {
       last += step * grainsize;
       if (last > _last) last = _last;
-      create_task0(spawn f(first, last));
+      create_task0_(spawn f(first, last), file, line);
       //create_taskc( f );
-      first = last;   
+      first = last;
     }       
     wait_tasks;
 }
 
 #define pfor_allatonce(T, x, first, last, step, grainsize, S)           \
-  pfor_allatonce_aux<T>(first, 0, (last - first + step - 1) / step, step, grainsize, [=] (T begin, T end) { S }, __FILE__, __LINE__)
+  pfor_allatonce_aux<T>(first, 0, (last - first + step - 1) / step, step, grainsize, [=] (T first, T last) { S }, __FILE__, __LINE__)
 
 #define pfor_allatonce_2(T, x, first, last, step, grainsize, S)         \
   do {                                                                  \

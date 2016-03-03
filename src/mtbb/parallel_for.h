@@ -92,12 +92,11 @@ namespace mtbb {
       Index a;
       Index b;
       Index step;
-      Index grainsize;
       const Func & f;
     parallel_for_aux_callable(Index first_, Index a_, Index b_, Index step_, Index grainsize_, const Func & f_) :
-      first(first_), a(a_), b(b_), step(step_), grainsize(grainsize_), f(f_) {}
+      first(first_), a(a_), b(b_), step(step_), f(f_) {}
       void operator() () {
-	parallel_for_aux(first, a, b, step, grainsize, f);
+	parallel_for_aux(first, a, b, step, f);
       }
     };
   
@@ -111,20 +110,63 @@ namespace mtbb {
 
   template<typename Index, typename Func>
     Func parallel_for_aux(Index first, 
-			  Index a, Index b, Index step, Index grainsize,
+			  Index a, Index b, Index step,
 			  const Func& f) {
-    if (b - a <= grainsize) {
-      if (grainsize == 1)
-        f(first + a * step);
-      else
-        f(first + a * step, first + b * step);
+    if (b - a == 1) {
+      f(first + a * step);
     } else {
       mtbb::task_group tg;
       const Index c = a + (b - a) / 2;
-      //tg.run(parallel_for_aux_callable<Index,Func>(first, a, c, step, grainsize, f));
-      tg.run_(parallel_for_aux_callable<Index,Func>(first, a, c, step, grainsize, f), __FILE__, __LINE__);
-      parallel_for_aux(first, c, b, step, grainsize, f);
+      //tg.run(parallel_for_aux_callable<Index,Func>(first, a, c, step, f));
+      tg.run_(parallel_for_aux_callable<Index,Func>(first, a, c, step, f), __FILE__, __LINE__);
+      parallel_for_aux(first, c, b, step, f);
       //tg.wait();
+      tg.wait_(__FILE__, __LINE__);
+    }
+    return f;
+  }
+  
+  template<typename Index, typename Func>
+    Func parallel_for(Index first, Index last, Index step,
+		      const Func& f) {
+    return parallel_for_aux(first, 0, (last - first + step - 1) / step, step, f);
+  }
+  
+  template<typename Index, typename Func>
+    Func parallel_for(Index first, Index last, 
+		      const Func& f) {
+    return parallel_for_aux(first, 0, (last - first), 1, f);
+  }
+
+
+  /* parallel for with grainsize */
+  
+  template<typename Index, typename Func>
+    struct parallel_for_aux_callable_2 {
+      Index first;
+      Index a;
+      Index b;
+      Index step;
+      Index grainsize;
+      const Func & f;
+    parallel_for_aux_callable_2(Index first_, Index a_, Index b_, Index step_, Index grainsize_, const Func & f_) :
+      first(first_), a(a_), b(b_), step(step_), grainsize(grainsize_), f(f_) {}
+      void operator() () {
+	parallel_for_aux_2(first, a, b, step, grainsize, f);
+      }
+    };
+  
+  template<typename Index, typename Func>
+    Func parallel_for_aux_2(Index first, 
+			  Index a, Index b, Index step, Index grainsize,
+			  const Func& f) {
+    if (b - a <= grainsize) {
+      f(first + a * step, first + b * step);
+    } else {
+      mtbb::task_group tg;
+      const Index c = a + (b - a) / 2;
+      tg.run_(parallel_for_aux_callable_2<Index,Func>(first, a, c, step, grainsize, f), __FILE__, __LINE__);
+      parallel_for_aux_2(first, c, b, step, grainsize, f);
       tg.wait_(__FILE__, __LINE__);
     }
     return f;
@@ -133,21 +175,9 @@ namespace mtbb {
   template<typename Index, typename Func>
     Func parallel_for(Index first, Index last, Index step, Index grainsize,
 		      const Func& f) {
-    return parallel_for_aux(first, 0, 1 + (last - first - 1) / step, step, grainsize, f);
+    return parallel_for_aux_2(first, 0, (last - first + step - 1) / step, step, grainsize, f);
   }
   
-  template<typename Index, typename Func>
-    Func parallel_for(Index first, Index last, Index step,
-		      const Func& f) {
-    //return parallel_for_aux(first, 0, (last - first) / step, step, 1, f);
-    return parallel_for_aux(first, 0, (last - first + step - 1) / step, step, 1, f);
-  }
-  
-  template<typename Index, typename Func>
-    Func parallel_for(Index first, Index last, 
-		      const Func& f) {
-    return parallel_for_aux(first, 0, (last - first), 1, 1, f);
-  }
  } /* namespace mtbb */
 
 
