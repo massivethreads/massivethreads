@@ -142,6 +142,11 @@ namespace mtbb {
   /* parallel for with grainsize */
   
   template<typename Index, typename Func>
+    Func parallel_for_aux_2(Index first, 
+                            Index a, Index b, Index step, Index grainsize,
+                            const Func& f);
+
+  template<typename Index, typename Func>
     struct parallel_for_aux_callable_2 {
       Index first;
       Index a;
