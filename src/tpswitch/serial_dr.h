@@ -60,7 +60,7 @@
   __mk_task_group_n_children__ = 0;			\
 } while(0)
 
-#define wait_tasks_with_prof_ do {                                \
+#define wait_tasks_with_prof_(file,line) do {			  \
     if (__mk_task_group_n_children__ == 0) dr_begin_section();    \
     dr_return_from_wait_tasks_(dr_enter_wait_tasks_(file, line), file, line); \
     __mk_task_group_n_children__ = 0;                             \
