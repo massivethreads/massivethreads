@@ -400,9 +400,6 @@ pfor_allatonce_aux(T first, T a, T b, T step, T grainsize, std::function<void (T
     wait_tasks;                                                         \
   } while (0)
 
-//      create_taskc( [=] () {S} );             \
-//      create_task0( spawn [=] () { S } (); );
-
 
 #if PFOR_TO_ORIGINAL
 
