@@ -317,7 +317,10 @@ int main() {
    
  */
 
+#if PFOR_TO_ORIGINAL || PFOR_TO_BISECTION || PFOR_TO_ALLATONCE || PFOR_TO_ALLATONCE_2
+
 #if defined(__cplusplus)
+
 #include <functional>
 
 #if TO_SERIAL
@@ -433,3 +436,4 @@ pfor_allatonce_aux(T first, T a, T b, T step, T grainsize, std::function<void (T
 
 #endif
 
+#endif
