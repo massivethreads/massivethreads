@@ -77,7 +77,8 @@ namespace mtbb {
     } else {
       task_group tg;
       Range left(range);
-      const Range right(left, tbb::split());
+      //const Range right(left, tbb::split());
+      const Range right(left);
       //tg.run(parallel_for_callable<Range,Body>(left, body));
       tg.run_(parallel_for_callable<Range,Body>(left, body), __FILE__, __LINE__);
       mtbb::parallel_for(right, body);
