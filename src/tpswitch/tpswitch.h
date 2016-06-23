@@ -450,16 +450,16 @@ static void pfor_allatonce_aux(T first, T a, T b, T step, T grainsize, std::func
 
 #define pfor_allatonce_2(T, first, last, step, grainsize, S)            \
   do {                                                                  \
+    T eval_first = (first);                                             \
+    T eval_last  = (last);                                              \
     mk_task_group;                                                      \
-    T _first = first;                                                   \
-    T _last = last;                                                     \
-    T last = first;                                                     \
-    while (last < _last) {                                              \
-      last += step * grainsize;                                         \
-      if (last > _last) last = _last;                                   \
-      T FIRST_ = first, LAST_ = last;                                   \
+    T FIRST_ = eval_first;                                              \
+    T LAST_ = eval_first;                                               \
+    while (LAST_ < eval_last) {                                         \
+      LAST_ += (step) * (grainsize);                           \
+      if (LAST_ > eval_last) LAST_ = eval_last;                         \
       create_task0(spawn S);                                            \
-      first = last;                                                     \
+      FIRST_ = LAST_;                                                   \
     }                                                                   \
     wait_tasks;                                                         \
   } while (0)
