@@ -36,9 +36,9 @@ namespace mtbb {
   template<typename Range, typename Value, 
     typename Func, typename Reduction>
     Value parallel_reduce(const Range& range, 
-			  const Value& identity,
-			  const Func& func, 
-			  const Reduction& reduction);
+                          const Value& identity,
+                          const Func& func, 
+                          const Reduction& reduction);
 
   template<typename Range, typename Value, 
     typename Func, typename Reduction>
@@ -49,21 +49,21 @@ namespace mtbb {
       const Func& func;
       const Reduction& reduction;
     parallel_reduce_functional_callable(Value& result_,
-					const Range& range_, const Value& identity_,
-					const Func& func_, const Reduction& reduction_) :
+                                        const Range& range_, const Value& identity_,
+                                        const Func& func_, const Reduction& reduction_) :
       result(result_), range(range_), identity(identity_),
-	func(func_), reduction(reduction_) {}
+        func(func_), reduction(reduction_) {}
       void operator() () {
-	result = parallel_reduce(range, identity, func, reduction);
+        result = mtbb::parallel_reduce(range, identity, func, reduction);
       }
     };
   
   template<typename Range, typename Value, 
     typename Func, typename Reduction>
     Value parallel_reduce(const Range& range, 
-			  const Value& identity,
-			  const Func& func, 
-			  const Reduction& reduction) {
+                          const Value& identity,
+                          const Func& func, 
+                          const Reduction& reduction) {
     if (range.empty()) {
       return identity;
     } else if (!range.is_divisible()) {
@@ -73,8 +73,8 @@ namespace mtbb {
       Range left(range);
       const Range right(left, tbb::split());
       Value left_result;
-      tg.run(parallel_reduce_functional_callable<Range,Value,Func,Reduction>(left_result, left, identity, func, reduction));
-      const Value right_result = parallel_reduce(right, identity, func, reduction);
+      tg.run(mtbb::parallel_reduce_functional_callable<Range,Value,Func,Reduction>(left_result, left, identity, func, reduction));
+      const Value right_result = mtbb::parallel_reduce(right, identity, func, reduction);
       tg.wait();
       return reduction(left_result, right_result);
     }
@@ -89,10 +89,10 @@ namespace mtbb {
       const Range& range;
       Body& body;
     parallel_reduce_imperative_callable(const Range& range_, 
-					Body& body_) :
+                                        Body& body_) :
       range(range_), body(body_) {}
       void operator() () {
-	parallel_reduce<Range,Body>(range, body);
+        mtbb::parallel_reduce<Range,Body>(range, body);
       }
     };
   
@@ -107,8 +107,8 @@ namespace mtbb {
       Range left(range);
       const Range right(left, tbb::split());
       Body right_body(body, tbb::split());
-      tg.run(parallel_reduce_imperative_callable<Range,Body>(left, body));
-      parallel_reduce<Range,Body>(right, right_body);
+      tg.run(mtbb::parallel_reduce_imperative_callable<Range,Body>(left, body));
+      mtbb::parallel_reduce<Range,Body>(right, right_body);
       tg.wait();
       body.join(right_body);
     }

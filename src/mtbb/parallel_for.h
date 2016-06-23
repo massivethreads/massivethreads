@@ -90,7 +90,7 @@ namespace mtbb {
     }
   }
 
-#elif
+#else
   /* in order to remove dependence on tbb when compiling (by removing tbb::split()),
    range is divided directly here without using its split construction */
 
