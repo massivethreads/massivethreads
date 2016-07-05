@@ -705,7 +705,7 @@ static void pfor_allatonce_aux(T first, T a, T b, T step, T grainsize, std::func
     template<typename IntTy, typename StepIntTy, typename LeafFuncTy> static void PFOR_BACKWARD_IMPL(IntTy first, IntTy last, StepIntTy step, IntTy grainsize, LeafFuncTy leaffunc, const char * file, int line) {
       IntTy newfirst = 0;
       IntTy newlast  = first - last + 1;
-      IntTy newStep  = -step;
+      IntTy newstep  = -step;
       auto PFOR_BACKWARD_FUNC = [first, leaffunc] (IntTy _first, IntTy _last) -> void { 
         leaffunc(first - _first, first - _last + 1);
       };
