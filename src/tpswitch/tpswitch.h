@@ -709,7 +709,7 @@ static void pfor_allatonce_aux(T first, T a, T b, T step, T grainsize, std::func
       auto PFOR_BACKWARD_FUNC = [first, leaffunc] (IntTy _first, IntTy _last) -> void { 
         leaffunc(first - _first, first - _last + 1);
       };
-      PFOR_IMPL(newfirst, newlast, step, grainsize, PFOR_BACKWARD_FUNC, file, line);
+      PFOR_IMPL(newfirst, newlast, newstep, grainsize, PFOR_BACKWARD_FUNC, file, line);
     }
     #define pfor_backward(FIRST, ...) PFOR_BACKWARD_IMPL <std::decay<decltype(FIRST)>::type>(FIRST, __VA_ARGS__, __FILE__, __LINE__)
     #define pfor_backward_c(INTTYPE, FIRST, LAST, STEP, GRAINSIZE, FIRST_VAR, LAST_VAR, ...) PFOR_BACKWARD_IMPL <INTTYPE>(FIRST, LAST, STEP, GRAINSIZE, [=](INTTYPE FIRST_VAR, INTTYPE LAST_VAR) {__VA_ARGS__}, __FILE__, __LINE__)
