@@ -224,7 +224,7 @@ static inline void myth_wait_for_write(int fd,myth_running_env_t env,myth_io_op_
 
 extern myth_running_env_t g_envs;
 extern int g_sched_prof;
-extern int g_worker_thread_num;
+extern int g_attr.n_workers;
 
 static inline void myth_io_register_fd(int fd) {
   //register a file descriptor to the epoll instance in a worker thread
@@ -249,7 +249,7 @@ static inline void myth_io_register_fd(int fd) {
   //The worker thread is chosen randomly
   {
     int worker_id;
-    worker_id=myth_random(0,g_worker_thread_num);
+    worker_id=myth_random(0, g_attr.n_workers);
     w_env=&g_envs[worker_id];
   }
 #else

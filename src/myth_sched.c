@@ -16,10 +16,8 @@
 
 //Global variable declarations
 //Global thread index
-int g_thread_index=0;
-myth_running_env_t g_envs=NULL;
-//The number of worker threads
-int g_worker_thread_num=0;
+int g_thread_index = 0;
+myth_running_env_t g_envs = NULL;
 //A barrier for worker thread to synchronize
 pthread_barrier_t g_worker_barrier;
 
@@ -29,8 +27,6 @@ int g_sched_prof=0;
 int g_log_worker_stat=0;
 
 #define PAGE_ALIGN(n) ((((n)+(PAGE_SIZE)-1)/(PAGE_SIZE))*PAGE_SIZE)
-
-size_t g_default_stack_size=PAGE_ALIGN(MYTH_DEF_STACK_SIZE);
 
 #ifdef TLS_BY_PTHREAD
 //TLS by pthread
@@ -55,7 +51,7 @@ void myth_alrm_sighandler(int signum, siginfo_t *sinfo, void* ctx) {
   int i;
   if (env->rank==0){
     //broadcast signal
-    for (i=0;i<g_worker_thread_num;i++){
+    for (i=0;i<g_attr.n_workers;i++){
       if (i!=env->rank){
 	real_pthread_kill(g_envs[i].worker,SIGVTALRM);
       }

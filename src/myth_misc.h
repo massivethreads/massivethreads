@@ -13,11 +13,13 @@
 #include <unistd.h>
 #include <time.h>
 #include <sys/mman.h>
+#include <sched.h>
 
 #include "config.h"
 
 #include "myth/myth_config.h"
-#include "myth_original_lib.h"
+//#include "myth_original_lib.h"
+#include "myth_real_fun.h"
 
 //Variable attribute which may be unused to supress warnings
 #define MAY_BE_UNUSED __attribute__((unused))
@@ -71,7 +73,7 @@ static inline uint64_t myth_get_rdtsc()
 #endif
 }
 
-void myth_init_process_affinity_info(void);
+void myth_init_read_available_cpu_list(void);
 int myth_get_cpu_num(void);
 cpu_set_t myth_get_worker_cpuset(int rank);
 
@@ -96,6 +98,7 @@ static inline int myth_random(int min,int max)
 //Reference to the next entry is stored at the head of the entry,
 //so entries must be larger than pointer size
 
+#if 0
 //Freelist type definition: an alias of void**
 typedef void** myth_freelist_t;
 //Initialize
@@ -119,6 +122,40 @@ typedef void** myth_freelist_t;
     }						\
     else{ret=NULL;}				\
   }
+
+#else
+
+typedef struct myth_freelist_cell {
+  struct myth_freelist_cell * next;
+} myth_freelist_cell_t;
+  
+typedef struct {
+  myth_freelist_cell_t * head;
+} myth_freelist_t;
+
+static inline void myth_freelist_init(myth_freelist_t * fl) {
+  fl->head = 0;
+}
+
+static inline void myth_freelist_push(myth_freelist_t * fl, void * h_) {
+  myth_freelist_cell_t * h = h_;
+  h->next = fl->head;
+  fl->head = h;
+}
+
+static inline void * myth_freelist_pop(myth_freelist_t * fl) {
+  myth_freelist_cell_t * h = fl->head;
+  if (h) {
+    fl->head = h->next;
+    return (void *)h;
+  } else {
+    return 0;
+  }
+}
+
+#endif
+
+
 
 #ifdef MYTH_FLMALLOC_PROF
 extern __thread uint64_t g_myth_flmalloc_cycles,g_myth_flmalloc_cnt;
@@ -155,7 +192,7 @@ extern myth_freelist_t **g_myth_freelist;
 static inline void myth_flmalloc_init(int nthreads)
 {
 #ifndef MYTH_FLMALLOC_TLS
-  assert(real_malloc);
+  //assert(real_malloc);
   g_myth_freelist=real_malloc(sizeof(myth_freelist_t*)*nthreads);
 #endif
 }
@@ -175,7 +212,7 @@ static inline void myth_flmalloc_init_worker(int rank)
   g_myth_freelist[rank]=real_malloc(sizeof(myth_freelist_t)*FREE_LIST_NUM);
   //Initialize
   for (i=0;i<FREE_LIST_NUM;i++){
-    myth_freelist_init(g_myth_freelist[rank][i]);
+    myth_freelist_init(&g_myth_freelist[rank][i]);
   }
 #endif
 }
@@ -209,101 +246,93 @@ static inline void myth_flmalloc_fini_worker(int rank)
 
 extern __thread int g_worker_rank;
 
-static inline void *myth_mmap(void *addr,size_t length,int prot,int flags,int fd,off_t offset);
+static inline void * myth_mmap(void *addr, size_t length, int prot,
+			       int flags, int fd, off_t offset);
 
-#if 0
-#define myth_flmalloc(a,b) myth_flmalloc_(a,b,__FILE__,__LINE__)
-static inline void *myth_flmalloc_(int rank,size_t size,char *f,int l)
-#else
-  static inline void *myth_flmalloc(int rank,size_t size)
-#endif
-{
+static inline void * myth_flmalloc(int rank, size_t size) {
   //Freelist-based Internal allocator
-  size_t realsize;
-  int idx;
-  void **ptr;
+  
 #ifdef MYTH_FLMALLOC_PROF
-  uint64_t t0,t1;
-  t0=myth_get_rdtsc();
+  uint64_t t0 = myth_get_rdtsc();
 #endif
-  if (size<8)size=8;
-  idx=MYTH_MALLOC_SIZE_TO_INDEX(size);
+  if (size < 8) size = 8;
+  int idx = MYTH_MALLOC_SIZE_TO_INDEX(size);
 #ifdef MYTH_FLMALLOC_TLS
-  myth_freelist_pop(g_myth_freelist[idx],ptr);
+  void * ptr = myth_freelist_pop(&g_myth_freelist[idx]);
 #else
-  myth_freelist_pop(g_myth_freelist[rank][idx],ptr);
+  void * ptr = myth_freelist_pop(&g_myth_freelist[rank][idx]);
 #endif
   if (!ptr){
     //Freelist is empty, allocate
-    realsize=MYTH_MALLOC_INDEX_TO_RSIZE(idx);
-    if (realsize<PAGE_SIZE){
+    size_t realsize = MYTH_MALLOC_INDEX_TO_RSIZE(idx);
+    if (realsize < PAGE_SIZE) {
 #if 1
-      assert(PAGE_SIZE%realsize==0);
-      char *p,*p2;
-      ptr=(void**)myth_mmap(NULL,PAGE_SIZE,PROT_READ|PROT_WRITE,MAP_PRIVATE|MAP_ANONYMOUS,-1,0);
-      p=(char*)ptr;
-      p2=p+PAGE_SIZE;p+=realsize;
-      while (p<p2){
+      assert(PAGE_SIZE % realsize == 0);
+      ptr = myth_mmap(NULL, PAGE_SIZE, PROT_READ|PROT_WRITE,
+		      MAP_PRIVATE|MAP_ANONYMOUS, -1, 0);
+      char * p = ptr;
+      char * p2 = p + PAGE_SIZE;
+      p += realsize;
+      while (p < p2){
 #ifdef MYTH_FLMALLOC_TLS
-	myth_freelist_push(g_myth_freelist[idx],(void**)p);
+	myth_freelist_push(&g_myth_freelist[idx], p);
 #else
-	myth_freelist_push(g_myth_freelist[rank][idx],(void**)p);
+	myth_freelist_push(&g_myth_freelist[rank][idx], p);
 #endif
-	p+=realsize;
+	p += realsize;
       }
 #else
-      ptr=(void**)malloc(realsize);
+      ptr = malloc(realsize);
       if (!ptr){
 	perror("malloc");
 	assert(0);
       }
 #endif
-    }
-    else{
+    } else {
       //Just allocate by mmap and return
-      assert(realsize%4096==0);
-      ptr=myth_mmap(NULL,realsize,PROT_READ|PROT_WRITE,MAP_PRIVATE|MAP_ANONYMOUS,-1,0);
+      assert(realsize % 4096 == 0);
+      ptr = myth_mmap(NULL,realsize,PROT_READ|PROT_WRITE,MAP_PRIVATE|MAP_ANONYMOUS,-1,0);
     }
     //ptr=real_malloc(realsize);//fprintf(stderr,"M %lu %s:%d\n",(unsigned long)realsize,f,l);
     myth_assert(ptr);
   }
-  else{
-  }
 #ifdef MYTH_FLMALLOC_PROF
-  t1=myth_get_rdtsc();
-  g_myth_flmalloc_cycles+=t1-t0;g_myth_flmalloc_cnt++;
+  uint64_t t1 = myth_get_rdtsc();
+  g_myth_flmalloc_cycles += t1 - t0;
+  g_myth_flmalloc_cnt++;
 #endif
   return ptr;
 }
-static inline void myth_flfree(int rank,size_t size,void *ptr)
+
+static inline void myth_flfree(int rank, size_t size, void *ptr)
 {
   //Put into the freelist
   int idx;
 #ifdef MYTH_FLMALLOC_PROF
-  uint64_t t0,t1;
-  t0=myth_get_rdtsc();
+  uint64_t t0 = myth_get_rdtsc();
 #endif
-  if (size<8)size=8;
-  idx=MYTH_MALLOC_SIZE_TO_INDEX(size);
+  if (size < 8) size = 8;
+  idx = MYTH_MALLOC_SIZE_TO_INDEX(size);
 #ifdef MYTH_FLMALLOC_TLS
-  myth_freelist_push(g_myth_freelist[idx],ptr)
+  myth_freelist_push(&g_myth_freelist[idx], ptr);
 #else
-    myth_freelist_push(g_myth_freelist[rank][idx],ptr)
+  myth_freelist_push(& g_myth_freelist[rank][idx], ptr);
 #endif
 #ifdef MYTH_FLMALLOC_PROF
-    t1=myth_get_rdtsc();
-  g_myth_flfree_cycles+=t1-t0;g_myth_flfree_cnt++;
+  uint64_t t1=myth_get_rdtsc();
+  g_myth_flfree_cycles += t1 - t0;
+  g_myth_flfree_cnt++;
 #endif
 }
-static inline void *myth_flrealloc(int rank,size_t oldsize,void *ptr,size_t size)
-{
+
+static inline void *myth_flrealloc(int rank,size_t oldsize,void *ptr,size_t size) {
   void *ret;
   size_t cp_size;
-  ret=myth_flmalloc(rank,size);
+  ret = myth_flmalloc(rank, size);
   myth_assert(ret);
-  cp_size=(size<oldsize)?size:oldsize;
-  memcpy(ret,ptr,cp_size);
-  myth_flfree(rank,oldsize,ptr);
+  cp_size = (size < oldsize) ? size : oldsize;
+  memcpy(ret, ptr, cp_size);
+  myth_flfree(rank, oldsize, ptr);
   return ret;
 }
 #else
@@ -358,11 +387,11 @@ static inline void myth_flfree(int rank,size_t size,void *ptr)
 #endif
 
 //malloc with error checking
-static inline void *myth_malloc(size_t size)
+static inline void * myth_malloc(size_t size)
 {
   void *ptr;
   if (!real_malloc)return NULL;
-  ptr=real_malloc(size);
+  ptr = real_malloc(size);
   myth_assert(ptr);
   return ptr;
 }

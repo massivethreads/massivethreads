@@ -12,6 +12,7 @@
 extern "C" {
 #endif
 
+
   /*
     Function: myth_init
 
@@ -34,6 +35,74 @@ extern "C" {
     <myth_init_ex>
   */
   int myth_init(void);
+
+  /* 
+     Type: myth_attr_t
+
+     This is given to myth_init
+
+     Fields:
+     size_t default_stack_size - default stack size in bytes 
+     (default: specified with ./configure --with-default-stack-size=S, or 128K)
+     int n_workers : number of workers
+     int bind_workers : 1 to bind workers to cores
+  */
+  typedef struct {
+    size_t default_stack_size;
+    int n_workers;
+    int bind_workers;
+  } myth_attr_t;
+
+  /* 
+     Function: myth_get_attr_default
+     
+     Fill fields (default_stack_size, n_workers, and bind_workers)
+     of attr structure with the default values.  After this function
+     returns, you may modify fields you want to customize and then
+     call myth_set_attr to globally affect your customization.
+     myth_get_attr_default and myth_set_attr together give you a convenient
+     means to customize parameters of MassiveThreads.
+     
+     This function must be called before MassiveThreads is initialized
+     (which automatically happens when you call any MassiveThreads
+     function other than myth_get_attr_default or myth_set_attr).
+
+     Parameters:
+  
+     attr - a pointer to myth_attr_t structure to be filled with
+     default values for all the defined attributes.
+
+     Returns:
+
+     1 if succeeded and 0 otherwise (currently it always returns 1)
+  
+  */
+
+  int myth_get_attr_default(myth_attr_t * attr);
+
+  /* 
+     Function: myth_set_attr
+
+     Set the attributes affecting the behavior of MassiveThreads,
+     with values supplied by attr.
+
+     This takes effect when you initialize MassiveThreads next time,
+     by calling any MassiveThreads function other than myth_get_attr_default
+     or myth_set_attr.  
+     
+     Parameters:
+  
+     attr - a pointer to myth_attr_t structure supplying values
+     of all the attributes
+     default values for all the defined attributes.
+
+     Returns:
+
+     1 if succeeded and 0 otherwise (currently it always returns 1)
+  
+ */
+  
+  int myth_set_attr(const myth_attr_t * attr);
 
   /*
     Function: myth_init_ex
@@ -86,7 +155,8 @@ extern "C" {
     See Also: 
     <myth_init>, <myth_create>, <myth_create_ex>
   */
-  int myth_init_ex(int worker_num, size_t def_stack_size);
+  //int myth_init_ex(int worker_num, size_t def_stack_size);
+  int myth_init_ex(myth_attr_t * attr);
 
   //void myth_init_withparam(int worker_num,size_t def_stack_size);
 
@@ -98,21 +168,6 @@ extern "C" {
     See Also: <myth_init>, <myth_init_ex>
   */
   void myth_fini(void);
-
-  /*
-    Function: myth_fini_ex
-
-    Finalize MassiveThreads.
-
-    See Also: <myth_init>, <myth_init_ex>
-  */
-  void myth_fini_ex(void);
-
-  void myth_exit_workers_ex(void);
-  void myth_ext_exit_workers_ex(void);
-  void myth_worker_start_ex(int rank);
-  void myth_startpoint_init_ex(int rank);
-  void myth_startpoint_exit_ex(int rank);
 
   /* 
      Type: myth_thread_attr_t
@@ -128,9 +183,9 @@ extern "C" {
 
   typedef struct myth_thread_attr { 
     size_t stack_size;
-    int switch_immediately;
     size_t custom_data_size;
     void *custom_data;
+    int child_first;
   } myth_thread_attr_t;
   
   /* Type: myth_func_t 
@@ -174,7 +229,7 @@ extern "C" {
     See Also:
     <myth_create_ex>, <myth_join>
   */
-  myth_thread_t myth_create(myth_func_t func,void *arg);
+  myth_thread_t myth_create(myth_func_t func, void *arg);
 
   /*
     Function: myth_create_ex
@@ -843,7 +898,6 @@ extern "C" {
 
   /* felock */
 
-#if 1
   int myth_felock_init(myth_felock_t * fe, const myth_felockattr_t * attr);
   int myth_felock_destroy(myth_felock_t * fe);
   int myth_felock_lock(myth_felock_t * fe);
@@ -851,17 +905,6 @@ extern "C" {
   int myth_felock_wait_and_lock(myth_felock_t * fe, int status_to_wait);
   int myth_felock_mark_and_signal(myth_felock_t * fe,int status_to_signal);
   int myth_felock_status(myth_felock_t * fe);
-
-#else
-  int myth_felock_init(myth_felock_t * felock, const myth_felockattr_t * attr);
-  int myth_felock_destroy(myth_felock_t * felock);
-  int myth_felock_lock(myth_felock_t * felock);
-  int myth_felock_wait_lock(myth_felock_t * felock, int val);
-  int myth_felock_unlock(myth_felock_t * felock);
-  int myth_felock_status(myth_felock_t * felock);
-  int myth_felock_set_unlock(myth_felock_t * felock, int val);
-#endif
-
 
   /*
     Function: myth_set_def_stack_size

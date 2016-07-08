@@ -14,14 +14,14 @@ myth_freelist_t **g_myth_freelist;
 
 //uint64_t g_mmap_total=0,g_mmap_count=0;
 
-__thread unsigned int g_myth_random_temp=0;
+__thread unsigned int g_myth_random_temp = 0;
 
-__thread uint64_t g_myth_flmalloc_cycles=0,g_myth_flmalloc_cnt=0;
-__thread uint64_t g_myth_flfree_cycles=0,g_myth_flfree_cnt=0;
+__thread uint64_t g_myth_flmalloc_cycles = 0, g_myth_flmalloc_cnt = 0;
+__thread uint64_t g_myth_flfree_cycles = 0, g_myth_flfree_cnt = 0;
 
 static int myth_cpu_list[CPU_SETSIZE];
 static cpu_set_t worker_cpusets[CPU_SETSIZE];
-static int available_cores=-1;
+static int available_cores = -1;
 
 /* 
    When environment variable MYTH_CPU_LIST is set,
@@ -192,23 +192,22 @@ static int myth_parse_cpu_list(const char * var, int * a, int n) {
 }
 
 
-void myth_init_process_affinity_info(void)
-{
+void myth_init_read_available_cpu_list(void) {
   int n = myth_parse_cpu_list("MYTH_CPU_LIST", myth_cpu_list, CPU_SETSIZE);
   if (n == -1) {
     fprintf(stderr, "MYTH_CPU_LIST ignored\n");
   }
   cpu_set_t cset;
-  sched_getaffinity(getpid(),sizeof(cpu_set_t),&cset);
+  sched_getaffinity(getpid(), sizeof(cpu_set_t), &cset);
   int i;
-  for (i=0;i<CPU_SETSIZE;i++){
+  for (i = 0; i < CPU_SETSIZE; i++){
     CPU_ZERO(&worker_cpusets[i]);
   }
-  available_cores=0;
+  available_cores = 0;
   int sz = (n ? n : CPU_SETSIZE);
-  for (i=0;i<sz;i++){
-    if (CPU_ISSET((n>0)?myth_cpu_list[i]:i,&cset)){
-      CPU_SET((n>0)?myth_cpu_list[i]:i,&worker_cpusets[available_cores]);
+  for (i = 0; i < sz; i++){
+    if (CPU_ISSET((n > 0 ? myth_cpu_list[i] : i), &cset)) {
+      CPU_SET((n > 0 ? myth_cpu_list[i] : i), &worker_cpusets[available_cores]);
       available_cores++;
     }
   }
@@ -232,15 +231,13 @@ void myth_init_process_affinity_info(void)
 }
 
 //Return the number of CPU cores
-int myth_get_cpu_num(void)
-{
+int myth_get_cpu_num(void) {
   assert(available_cores>0);
   return available_cores;
 }
 
 //Return cpu_set
-cpu_set_t myth_get_worker_cpuset(int rank)
-{
+cpu_set_t myth_get_worker_cpuset(int rank) {
   assert(available_cores>0);
-  return worker_cpusets[rank%available_cores];
+  return worker_cpusets[rank % available_cores];
 }
