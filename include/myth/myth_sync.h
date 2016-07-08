@@ -1,6 +1,7 @@
 #ifndef MYTH_SYNC_H_
 #define MYTH_SYNC_H_
 
+#include <stddef.h>
 #include <stdint.h>
 
 #include "myth/myth_config.h"

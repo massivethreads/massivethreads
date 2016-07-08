@@ -84,7 +84,6 @@ extern myth_steal_func_t g_myth_steal_func;
 extern int g_thread_index;
 extern myth_running_env_t g_envs;
 //Number of worker threads
-extern int g_worker_thread_num;
 //Barrier for worker threads
 extern pthread_barrier_t g_worker_barrier;
 

@@ -6,7 +6,7 @@
 #define _MYTH_ECO_H_
 
 #include "myth_desc.h"
-#include "myth_original_lib.h"
+//#include "myth_original_lib.h"
 #include "myth_worker.h"
 #include <linux/futex.h>
 #include <limits.h>

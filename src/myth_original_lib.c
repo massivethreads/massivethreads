@@ -5,7 +5,7 @@
 #include <dlfcn.h>
 #include "myth/myth_config.h"
 #include "myth_misc.h"
-#include "myth_original_lib.h"
+//#include "myth_original_lib.h"
 
 #define LOAD_FN(fn) {real_##fn=dlsym(RTLD_NEXT,#fn);assert(real_##fn);}
 #define LOAD_PTHREAD_FN(fn) {real_pthread_##fn=dlsym(RTLD_NEXT,"pthread_"#fn);assert(real_pthread_##fn);}

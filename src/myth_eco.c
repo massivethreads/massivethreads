@@ -2,7 +2,7 @@
  * myth_eco.c
  */
 #include "myth_eco.h"
-#include "myth_original_lib.h"
+//#include "myth_original_lib.h"
 #include <linux/futex.h>
 #include <limits.h>
 #include <semaphore.h>
@@ -49,7 +49,7 @@ static void myth_eco_sched_loop(myth_running_env_t env) {
 	while(1) {
 	  int temp = 0;
 	  int j;
-	  for(j = 1; j < g_worker_thread_num; j++) {
+	  for(j = 1; j < g_attr.n_workers; j++) {
 	    if(g_envs[j].c != EXITED) {
 	      temp = 1;
 	    }
@@ -81,7 +81,7 @@ static void myth_eco_sched_loop(myth_running_env_t env) {
 	while(1) {
 	  int temp = 0;
 	  int j;
-	  for(j = 1; j < g_worker_thread_num; j++) {
+	  for(j = 1; j < g_attr.n_workers; j++) {
 	    if(g_envs[j].c != EXITED) {
 	      temp = 1;
 	    }
@@ -193,7 +193,7 @@ myth_thread_t myth_eco_all_task_check(myth_running_env_t env)
   uint64_t t0,t1;
   t0=myth_get_rdtsc();
 #endif
-  while(i < g_worker_thread_num){
+  while(i < g_attr.n_workers){
     if(g_envs[i].c == RUNNING) {
       busy_env = &g_envs[i];
       next_run = myth_queue_take(&busy_env->runnable_q);
@@ -301,7 +301,7 @@ int myth_wakeup_one(void) {
 
 void myth_wakeup_all(void) {
   int i;
-  for(i = 0; i < g_worker_thread_num;) {
+  for(i = 0; i < g_attr.n_workers;) {
     /* int s;   if((s = myth_wakeup_one()) != -1) {
       i++;
       }*/
@@ -316,7 +316,7 @@ void myth_wakeup_all(void) {
 void myth_wakeup_all_force(void)
 {
 	int i;
-	for(i = 0; i < g_worker_thread_num; i++) {
+	for(i = 0; i < g_attr.n_workers; i++) {
 		int *my_sem=&g_envs[i].my_sem;
 		*my_sem = 0;
 		g_envs[i].isSleepy = 0;
@@ -327,31 +327,31 @@ void myth_wakeup_all_force(void)
 void myth_eco_init(void) {
   int i;
   char *env;
-  env=getenv("MYTH_ECO_MODE");
+  env = getenv("MYTH_ECO_MODE");
   if (env){
-	  g_eco_mode_enabled=atoi(env);
+    g_eco_mode_enabled=atoi(env);
   }
   sleeper = 0;
   queue_lock = myth_malloc(sizeof(pthread_mutex_t));
-  //  thread_sem = myth_malloc(sizeof(int) * g_worker_thread_num);
+  //  thread_sem = myth_malloc(sizeof(int) * g_attr.n_workers);
   g_sleep_queue = NULL;// = myth_malloc(sizeof(struct sleep_queue));
-  for(i = 0; i < g_worker_thread_num; i++) {
+  for(i = 0; i < g_attr.n_workers; i++) {
     g_envs[i].my_sem = 0;
 #ifdef MYTH_ECO_TEIAN_STEAL
     g_envs[i].knowledge = 0;
 #endif
   }
-  (*real_pthread_mutex_init)(queue_lock,NULL);
-  //  MAX_TRY = g_worker_thread_num * 5;
+  real_pthread_mutex_init(queue_lock, NULL);
+  //  MAX_TRY = g_attr.n_workers * 5;
   //  g_sleep_queue->next = NULL;
   //  g_sleep_queue->tail = g_sleep_queue;
   //  g_sleep_queue->head_sem = NULL;
-  //  g_sleep_queue->head_rank = g_worker_thread_num+1;
+  //  g_sleep_queue->head_rank = g_attr.n_workers+1;
 #ifdef MYTH_ECO_TEIAN_STEAL
   task_num = 0;
   g_envs[0].c = RUNNING;
-  for(i = 1; i < g_worker_thread_num; i++) g_envs[i].c = STEALING;
-  for(i = 0; i < g_worker_thread_num; i++) g_envs[i].finish_ready=0;
+  for(i = 1; i < g_attr.n_workers; i++) g_envs[i].c = STEALING;
+  for(i = 0; i < g_attr.n_workers; i++) g_envs[i].finish_ready=0;
 #endif
 }
 void myth_eco_des(void) {

@@ -137,7 +137,9 @@ void myth_malloc_wrapper_init_worker(int rank)
     }
   }
 #else
-  for (i=0;i<FREE_LIST_NUM;i++){myth_freelist_init(g_myth_malloc_wrapper_fl[rank][i]);}
+  for (i = 0; i < FREE_LIST_NUM; i++){
+    myth_freelist_init(g_myth_malloc_wrapper_fl[rank][i]);
+  }
 #endif
   __sync_fetch_and_add(&g_alloc_hook_ok,1);
 
@@ -254,7 +256,7 @@ static void * myth_malloc_wrapper_malloc(size_t size)
     else return NULL;
     assert(real_malloc);
   }
-  if ((!g_worker_thread_num) || (g_alloc_hook_ok!=g_worker_thread_num) || (size>MYTH_MALLOC_FLSIZE_MAX)){
+  if ((!g_attr.n_workers) || (g_alloc_hook_ok!=g_attr.n_workers) || (size>MYTH_MALLOC_FLSIZE_MAX)){
     ptr=real_malloc(size+sizeof(malloc_wrapper_header));
     if (!ptr){
       fprintf(stderr,"size=%llu\n",(unsigned long long)size);
@@ -495,7 +497,7 @@ static void myth_malloc_wrapper_free(void *ptr)
     real_free(rptr->s.org_ptr);
     return;
   }
-  if (g_worker_thread_num && (g_alloc_hook_ok==g_worker_thread_num)){
+  if (g_attr.n_workers && (g_alloc_hook_ok==g_attr.n_workers)){
     myth_running_env_t env;
     env=myth_get_current_env();
     int rank=env->rank;

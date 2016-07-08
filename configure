@@ -749,6 +749,7 @@ infodir
 docdir
 oldincludedir
 includedir
+runstatedir
 localstatedir
 sharedstatedir
 sysconfdir
@@ -840,6 +841,7 @@ datadir='${datarootdir}'
 sysconfdir='${prefix}/etc'
 sharedstatedir='${prefix}/com'
 localstatedir='${prefix}/var'
+runstatedir='${localstatedir}/run'
 includedir='${prefix}/include'
 oldincludedir='/usr/include'
 docdir='${datarootdir}/doc/${PACKAGE_TARNAME}'
@@ -1092,6 +1094,15 @@ do
   | -silent | --silent | --silen | --sile | --sil)
     silent=yes ;;
 
+  -runstatedir | --runstatedir | --runstatedi | --runstated \
+  | --runstate | --runstat | --runsta | --runst | --runs \
+  | --run | --ru | --r)
+    ac_prev=runstatedir ;;
+  -runstatedir=* | --runstatedir=* | --runstatedi=* | --runstated=* \
+  | --runstate=* | --runstat=* | --runsta=* | --runst=* | --runs=* \
+  | --run=* | --ru=* | --r=*)
+    runstatedir=$ac_optarg ;;
+
   -sbindir | --sbindir | --sbindi | --sbind | --sbin | --sbi | --sb)
     ac_prev=sbindir ;;
   -sbindir=* | --sbindir=* | --sbindi=* | --sbind=* | --sbin=* \
@@ -1229,7 +1240,7 @@ fi
 for ac_var in	exec_prefix prefix bindir sbindir libexecdir datarootdir \
 		datadir sysconfdir sharedstatedir localstatedir includedir \
 		oldincludedir docdir infodir htmldir dvidir pdfdir psdir \
-		libdir localedir mandir
+		libdir localedir mandir runstatedir
 do
   eval ac_val=\$$ac_var
   # Remove trailing slashes.
@@ -1382,6 +1393,7 @@ Fine tuning of the installation directories:
   --sysconfdir=DIR        read-only single-machine data [PREFIX/etc]
   --sharedstatedir=DIR    modifiable architecture-independent data [PREFIX/com]
   --localstatedir=DIR     modifiable single-machine data [PREFIX/var]
+  --runstatedir=DIR       modifiable per-process data [LOCALSTATEDIR/run]
   --libdir=DIR            object code libraries [EPREFIX/lib]
   --includedir=DIR        C header files [PREFIX/include]
   --oldincludedir=DIR     C header files for non-gcc [/usr/include]
@@ -1435,7 +1447,7 @@ Optional Features:
                           enables it, but you can still disable it at runtime
                           by setting environment variable
                           MYTH_DONT_WRAP_MALLOC=1. Default is "yes". If you
-                          experience a segfault for programs which don't
+                          experience a segfault for programs which dont
                           without MassiveThreads, it may be a MassiveThreads
                           bug around malloc wapper; chances are that
                           MYTH_DONT_WRAP_MALLOC=0 at runtime or
@@ -2581,7 +2593,7 @@ ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $
 ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
-am__api_version='1.14'
+am__api_version='1.15'
 
 ac_aux_dir=
 for ac_dir in "$srcdir" "$srcdir/.." "$srcdir/../.."; do
@@ -2782,8 +2794,8 @@ test "$program_suffix" != NONE &&
 ac_script='s/[\\$]/&&/g;s/;s,x,x,$//'
 program_transform_name=`$as_echo "$program_transform_name" | sed "$ac_script"`
 
-# expand $ac_aux_dir to an absolute path
-am_aux_dir=`cd $ac_aux_dir && pwd`
+# Expand $ac_aux_dir to an absolute path.
+am_aux_dir=`cd "$ac_aux_dir" && pwd`
 
 if test x"${MISSING+set}" != xset; then
   case $am_aux_dir in
@@ -2802,7 +2814,7 @@ else
 $as_echo "$as_me: WARNING: 'missing' script is too old or missing" >&2;}
 fi
 
-if test x"${install_sh}" != xset; then
+if test x"${install_sh+set}" != xset; then
   case $am_aux_dir in
   *\ * | *\	*)
     install_sh="\${SHELL} '$am_aux_dir/install-sh'" ;;
@@ -3130,8 +3142,8 @@ MAKEINFO=${MAKEINFO-"${am_missing_run}makeinfo"}
 # <http://lists.gnu.org/archive/html/automake/2012-07/msg00014.html>
 mkdir_p='$(MKDIR_P)'
 
-# We need awk for the "check" target.  The system "awk" is bad on
-# some platforms.
+# We need awk for the "check" target (and possibly the TAP driver).  The
+# system "awk" is bad on some platforms.
 # Always define AMTAR for backward compatibility.  Yes, it's still used
 # in the wild :-(  We should find a proper way to deprecate it ...
 AMTAR='$${TAR-tar}'
@@ -3188,6 +3200,7 @@ END
     as_fn_error $? "Your 'rm' program is bad, sorry." "$LINENO" 5
   fi
 fi
+
 # required when you build shared libraries, relying on libtool
 
 # avoid executing autotools on the user side
@@ -4255,20 +4268,22 @@ fi
 
 
 # use -O3 optimization instead of -O2
-if test "x$ac_test_CFLAGS" = "xset"; then
-  CFLAGS=$ac_save_CFLAGS
-elif test "x$ac_cv_prog_cc_g" = "xyes"; then
-  if test "x$GCC" = "xyes"; then
-    CFLAGS="-g -O3 -Wall -ftls-model=initial-exec"
-  else
-    CFLAGS="-g"
-  fi
-else
-  if test "x$GCC" = "xyes"; then
-    CFLAGS="-O3 -Wall -ftls-model=initial-exec"
-  else
-    CFLAGS=
-  fi
+if false ; then
+    if test "x$ac_test_CFLAGS" = "xset"; then
+	CFLAGS=$ac_save_CFLAGS
+    elif test "x$ac_cv_prog_cc_g" = "xyes"; then
+	if test "x$GCC" = "xyes"; then
+	    CFLAGS="-g -O3 -Wall -ftls-model=initial-exec"
+	else
+	    CFLAGS="-g"
+	fi
+    else
+	if test "x$GCC" = "xyes"; then
+	    CFLAGS="-O3 -Wall -ftls-model=initial-exec"
+	else
+	    CFLAGS=
+	fi
+    fi
 fi
 if test "x$CC" != xcc; then
   { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $CC and cc understand -c and -o together" >&5
@@ -5389,25 +5404,26 @@ rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
 #   flag controlling the behavior of malloc
 #
 
-# Check whether --enable-malloc-wrapper was given.
+if false ; then
+
+   # Check whether --enable-malloc-wrapper was given.
 if test "${enable_malloc_wrapper+set}" = set; then :
-  enableval=$enable_malloc_wrapper;
-else
-  enable_malloc_wrapper="yes"
+  enableval=$enable_malloc_wrapper; enable_malloc_wrapper="yes"
 fi
 
 
-if test "x$enable_malloc_wrapper" != "xno" ; then
+   if test "x$enable_malloc_wrapper" != "xno" ; then
 
 cat >>confdefs.h <<_ACEOF
-#define MYTH_WRAP_MALLOC /**/
+#define MYTH_WRAP_MALLOC 1
 _ACEOF
 
 
 cat >>confdefs.h <<_ACEOF
-#define MYTH_WRAP_MALLOC_RUNTIME /**/
+#define MYTH_WRAP_MALLOC_RUNTIME 1
 _ACEOF
 
+   fi
 fi
 
 #
@@ -5464,12 +5480,12 @@ fi
 if test "x$enable_eco_mode" != "xno" ; then
 
 cat >>confdefs.h <<_ACEOF
-#define MYTH_ECO_MODE /**/
+#define MYTH_ECO_MODE 1
 _ACEOF
 
 
 cat >>confdefs.h <<_ACEOF
-#define MYTH_ECO_TEIAN_STEAL /**/
+#define MYTH_ECO_TEIAN_STEAL 1
 _ACEOF
 
 fi
@@ -5490,7 +5506,7 @@ fi
 if test "x$enable_bind_workers" != "xno" ; then
 
 cat >>confdefs.h <<_ACEOF
-#define MYTH_BIND_WORKERS /**/
+#define MYTH_BIND_WORKERS 1
 _ACEOF
 
 fi

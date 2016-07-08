@@ -95,7 +95,7 @@ check_PROGRAMS = \
 #  -I$(abs_top_srcdir)/src
 common_cflags = -I$(abs_top_srcdir)/include
 common_cxxflags = $(common_cflags)
-common_ldadd = $(abs_top_srcdir)/src/libmyth.la -lrt
+common_ldadd = $(abs_top_srcdir)/src/libmyth-vanilla.la -lrt
 
 myth_malloc_SOURCES = myth_malloc.c
 myth_malloc_CFLAGS = $(common_cflags)

@@ -24,9 +24,9 @@ static inline void myth_tls_init(int nworkers) {
   (void)nworkers;
   assert(real_malloc);
   myth_internal_lock_init(&g_myth_tls_lock);
-  g_myth_tls_list=NULL;
-  g_myth_tls_list_size=0;
-  memset(g_myth_tls_key_status,0,sizeof(int)*MYTH_TLS_KEY_SIZE);
+  g_myth_tls_list = NULL;
+  g_myth_tls_list_size = 0;
+  memset(g_myth_tls_key_status, 0, sizeof(int) * MYTH_TLS_KEY_SIZE);
 }
 
 static inline void myth_tls_fini(void)

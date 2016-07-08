@@ -76,7 +76,7 @@ static inline void myth_log_flush_body(void);
 static inline void myth_log_fini(void) {
   myth_log_flush_body();
   int i;
-  for (i=0;i<g_worker_thread_num;i++){
+  for (i=0;i<g_attr.n_workers;i++){
     myth_internal_lock_destroy(&g_envs[i].log_lock);
   }
 }
@@ -153,7 +153,7 @@ int myth_log_entry_compare(const void *pa,const void *pb);
 
 static inline void myth_log_reset_body(void) {
   int i,j;
-  for (i=0;i<g_worker_thread_num;i++){
+  for (i=0;i<g_attr.n_workers;i++){
     myth_running_env_t e=&g_envs[i];
     myth_internal_lock_lock(&e->log_lock);
     qsort(e->log_data,e->log_count,sizeof(myth_log_entry),myth_log_entry_compare);
@@ -175,13 +175,13 @@ static inline void myth_log_flush_body(void) {
   //merge all the logs
   int i;
   int total_log_entry_count=0;
-  for (i=0;i<g_worker_thread_num;i++){
+  for (i=0;i<g_attr.n_workers;i++){
     myth_internal_lock_lock(&g_envs[i].log_lock);
     total_log_entry_count+=g_envs[i].log_count;
   }
   myth_log_entry_t all_logs=real_malloc(sizeof(myth_log_entry)*total_log_entry_count);
   int pos=0;
-  for (i=0;i<g_worker_thread_num;i++){
+  for (i=0;i<g_attr.n_workers;i++){
     memcpy(&all_logs[pos],g_envs[i].log_data,sizeof(myth_log_entry)*g_envs[i].log_count);
     pos+=g_envs[i].log_count;
     myth_internal_lock_unlock(&g_envs[i].log_lock);
@@ -257,11 +257,11 @@ static inline void myth_log_flush_body(void) {
   fprintf(g_log_fp,"Category[ index=182 name=Thread_Idle topo=State color=(0,0,255,127,true) width=1 ]\n");
 #endif
   tx_logs=malloc(sizeof(myth_textlog_entry)*textlog_size);
-  idle_sum=malloc(sizeof(uint64_t)*g_worker_thread_num);
-  user_sum=malloc(sizeof(uint64_t)*g_worker_thread_num);
-  ws_count=malloc(sizeof(uint64_t)*g_worker_thread_num);
+  idle_sum=malloc(sizeof(uint64_t)*g_attr.n_workers);
+  user_sum=malloc(sizeof(uint64_t)*g_attr.n_workers);
+  ws_count=malloc(sizeof(uint64_t)*g_attr.n_workers);
   //Merge all the logs and sort by time
-  for (i=0;i<g_worker_thread_num;i++){
+  for (i=0;i<g_attr.n_workers;i++){
     int log_num;
     myth_log_entry_t e;
     idle_sum[i]=0;user_sum[i]=0;ws_count[i]=0;
@@ -337,7 +337,7 @@ static inline void myth_log_flush_body(void) {
   fclose(g_log_fp);
 #endif
   idle_sum_all=user_sum_all=ws_count_all=0;
-  for (i=0;i<g_worker_thread_num;i++){
+  for (i=0;i<g_attr.n_workers;i++){
 #ifdef MYTH_LOG_EMIT_STAT_WORKER
     FILE *fp_stat_out;
     fp_stat_out=stdout;
@@ -348,15 +348,15 @@ static inline void myth_log_flush_body(void) {
 #ifdef MYTH_LOG_EMIT_STAT_ALL
   FILE *fp_stat_out;
   fp_stat_out=stdout;
-  fprintf(fp_stat_out,"Total work-stealing count : %llu ( %lf per core)\n",(unsigned long long)ws_count_all,(double)ws_count_all/(double)g_worker_thread_num);
-  fprintf(fp_stat_out,"Total user time : %llu ( %lf per core)\n",(unsigned long long)user_sum_all,(double)user_sum_all/(double)g_worker_thread_num);
-  fprintf(fp_stat_out,"Total idle time : %llu ( %lf per core)\n",(unsigned long long)idle_sum_all,(double)idle_sum_all/(double)g_worker_thread_num);
+  fprintf(fp_stat_out,"Total work-stealing count : %llu ( %lf per core)\n",(unsigned long long)ws_count_all,(double)ws_count_all/(double)g_attr.n_workers);
+  fprintf(fp_stat_out,"Total user time : %llu ( %lf per core)\n",(unsigned long long)user_sum_all,(double)user_sum_all/(double)g_attr.n_workers);
+  fprintf(fp_stat_out,"Total idle time : %llu ( %lf per core)\n",(unsigned long long)idle_sum_all,(double)idle_sum_all/(double)g_attr.n_workers);
 #endif
   free(idle_sum);
   free(user_sum);
   free(ws_count);
   /*
-    for (i=0;i<g_worker_thread_num;i++){
+    for (i=0;i<g_attr.n_workers;i++){
     myth_flfree(g_envs[i].rank,sizeof(myth_log_entry)*g_envs[i].log_buf_size,g_envs[i].log_data);
     }*/
 #endif

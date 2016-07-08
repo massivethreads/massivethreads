@@ -7,20 +7,22 @@ AM_MAINTAINER_MODE([disable])
 
 AC_PROG_CC
 # use -O3 optimization instead of -O2
-if test "x$ac_test_CFLAGS" = "xset"; then
-  CFLAGS=$ac_save_CFLAGS
-elif test "x$ac_cv_prog_cc_g" = "xyes"; then
-  if test "x$GCC" = "xyes"; then
-    CFLAGS="-g -O3 -Wall -ftls-model=initial-exec"
-  else
-    CFLAGS="-g"
-  fi
-else
-  if test "x$GCC" = "xyes"; then
-    CFLAGS="-O3 -Wall -ftls-model=initial-exec"
-  else
-    CFLAGS=
-  fi
+if false ; then
+    if test "x$ac_test_CFLAGS" = "xset"; then
+	CFLAGS=$ac_save_CFLAGS
+    elif test "x$ac_cv_prog_cc_g" = "xyes"; then
+	if test "x$GCC" = "xyes"; then
+	    CFLAGS="-g -O3 -Wall -ftls-model=initial-exec"
+	else
+	    CFLAGS="-g"
+	fi
+    else
+	if test "x$GCC" = "xyes"; then
+	    CFLAGS="-O3 -Wall -ftls-model=initial-exec"
+	else
+	    CFLAGS=
+	fi
+    fi
 fi
 AC_PROG_CC_C_O
 AM_PROG_CC_C_O
@@ -74,23 +76,26 @@ dnl fi
 #   flag controlling the behavior of malloc
 #
 
-AC_ARG_ENABLE([malloc-wrapper],
-              [AS_HELP_STRING([--enable-malloc-wrapper=yes|no],
-	                      [Enable or disable malloc wrapper. "no" completely 
-			      disables it when compiling MassiveThreads. "yes" 
-			      enables it, but you can still disable it at runtime 
-			      by setting environment variable MYTH_DONT_WRAP_MALLOC=1.  
-			      Default is "yes".  If you experience a segfault for 
-			      programs which don't without MassiveThreads, it may be a 
-			      MassiveThreads bug around malloc wapper; chances are
-			      that MYTH_DONT_WRAP_MALLOC=0 at runtime or --disable-malloc 
-			      will avoid it at the cost of resorting to less scalable 
-			      malloc implementation.])],
-			     ,[enable_malloc_wrapper="yes"])
+if false ; then
 
-if test "x$enable_malloc_wrapper" != "xno" ; then
-  AC_DEFINE_UNQUOTED([MYTH_WRAP_MALLOC],[],[If unset, we never wrap malloc])
-  AC_DEFINE_UNQUOTED([MYTH_WRAP_MALLOC_RUNTIME],[],[If set, you can choose wrap malloc or not at runtime. default is to wrap.  set environment variable MYTH_DONT_WRAP_MALLOC=1 not to wrap it])
+   AC_ARG_ENABLE([malloc-wrapper],
+		 [AS_HELP_STRING([--enable-malloc-wrapper=yes|no],
+		   	         [Enable or disable malloc wrapper. "no" completely 
+				  disables it when compiling MassiveThreads. "yes" 
+				  enables it, but you can still disable it at runtime 
+				  by setting environment variable MYTH_DONT_WRAP_MALLOC=1.  
+				  Default is "yes".  If you experience a segfault for 
+				  programs which dont without MassiveThreads, it may be a 
+				  MassiveThreads bug around malloc wapper; chances are
+				  that MYTH_DONT_WRAP_MALLOC=0 at runtime or --disable-malloc 
+				  will avoid it at the cost of resorting to less scalable 
+				  malloc implementation.])],
+		 [enable_malloc_wrapper="yes"])
+
+   if test "x$enable_malloc_wrapper" != "xno" ; then
+       AC_DEFINE_UNQUOTED([MYTH_WRAP_MALLOC],[1],[If unset, we never wrap malloc])
+       AC_DEFINE_UNQUOTED([MYTH_WRAP_MALLOC_RUNTIME],[1],[If set, you can choose wrap malloc or not at runtime. default is to wrap.  set environment variable MYTH_DONT_WRAP_MALLOC=1 not to wrap it])
+   fi
 fi
 
 #
@@ -138,8 +143,8 @@ AC_ARG_ENABLE([eco-mode],
 			     [enable_eco_mode="yes"])
 
 if test "x$enable_eco_mode" != "xno" ; then
-  AC_DEFINE_UNQUOTED([MYTH_ECO_MODE],[],[If unset, eco-mode is disabled])
-  AC_DEFINE_UNQUOTED([MYTH_ECO_TEIAN_STEAL],[],[If unset, eco-mode is disabled])
+  AC_DEFINE_UNQUOTED([MYTH_ECO_MODE],[1],[If unset, eco-mode is disabled])
+  AC_DEFINE_UNQUOTED([MYTH_ECO_TEIAN_STEAL],[1],[If unset, eco-mode is disabled])
 fi
 
 #
@@ -157,7 +162,7 @@ AC_ARG_ENABLE([bind-workers],
 			     [enable_bind_workers="yes"])
 
 if test "x$enable_bind_workers" != "xno" ; then
-  AC_DEFINE_UNQUOTED([MYTH_BIND_WORKERS],[],[If unset, worker thread binding is disabled]) 
+  AC_DEFINE_UNQUOTED([MYTH_BIND_WORKERS],[1],[If unset, worker thread binding is disabled]) 
 fi
 
 #
