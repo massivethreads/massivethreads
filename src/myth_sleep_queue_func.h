@@ -15,19 +15,20 @@
 #if !MYTH_SLEEP_QUEUE_LOCK
 /* stuff needed for non-blocking version */
 
-static inline myth_sleep_queue_item_t load_(volatile myth_sleep_queue_item_t * p) {
+static inline myth_sleep_queue_item_t
+load_(volatile myth_sleep_queue_item_t * p) {
   myth_sleep_queue_item_t q = *p;
   return q;
 }
 
-static inline void store_(volatile myth_sleep_queue_item_t * p, 
-			  myth_sleep_queue_item_t t) {
+static inline void
+store_(volatile myth_sleep_queue_item_t * p, myth_sleep_queue_item_t t) {
   *p = t;
 }
 
-static inline int cas_(volatile myth_sleep_queue_item_t * p, 
-		       myth_sleep_queue_item_t old, 
-		       myth_sleep_queue_item_t val) {
+static inline int
+cas_(volatile myth_sleep_queue_item_t * p, 
+     myth_sleep_queue_item_t old, myth_sleep_queue_item_t val) {
   return __sync_bool_compare_and_swap(p, old, val);
 } 
 

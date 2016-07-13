@@ -8,8 +8,9 @@ nobase_include_HEADERS = \
 	myth/myth_config.h \
 	myth/myth_internal_lock.h \
 	myth/myth_sleep_queue.h \
-	myth/myth_sync.h \
 	myth.h
+
+#	myth/myth_sync.h
 
 ## the last file, myth.h, is installed only to 
 ## signal an error to the user who install 

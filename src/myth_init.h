@@ -25,21 +25,14 @@ enum {
 extern myth_attr_t g_attr;
 extern volatile int g_myth_init_state;
 
+/* defined in myth_init_func.h */
+static inline int myth_ensure_init_ex(myth_attr_t * attr);
+static inline int myth_ensure_init(void);
+
+/* defined in myth_init.c */
 int myth_get_attr_default(myth_attr_t * attr);
 int myth_set_attr(const myth_attr_t * attr);
 int myth_init_ex_body(const myth_attr_t * attr);
 int myth_fini_body(void);
-
-static inline int myth_ensure_init_ex(myth_attr_t * attr) {
-  if (g_myth_init_state == myth_init_state_initialized) {
-    return 1;
-  } else {
-    return myth_init_ex_body(attr);
-  }
-}
-
-static inline int myth_ensure_init(void) {
-  return myth_ensure_init_ex(0);
-}
 
 #endif

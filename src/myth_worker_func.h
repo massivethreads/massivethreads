@@ -8,20 +8,22 @@
 #include <signal.h>
 #include <sys/time.h>
 
-#include "myth_worker.h"
-//#include "myth_malloc_wrapper.h"
-
-#include "myth_sched.h"
-#include "myth_sched_proto.h"
-#include "myth_sched_func.h"
-
-//#include "myth_log_proto.h"
-#include "myth_log_func.h"
-
 #include "myth_init.h"
-#include "myth_io.h"
+#include "myth_worker.h"
 
+#include "myth_context.h"
+#include "myth_misc.h"
+#include "myth_wsqueue.h"
+#include "myth_sched.h"
+#include "myth_io.h"
+#include "myth_log.h"
+
+#include "myth_context_func.h"
+#include "myth_misc_func.h"
+#include "myth_wsqueue_func.h"
+#include "myth_sched_func.h"
 #include "myth_io_func.h"
+#include "myth_log_func.h"
 
 #ifdef MYTH_ECO_MODE
 #include "myth_eco.h"

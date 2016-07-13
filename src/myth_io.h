@@ -7,6 +7,7 @@
 
 #include <sys/socket.h>
 #include <stdint.h>
+#include <stdarg.h>
 
 #include "myth/myth_internal_lock.h"
 
@@ -27,20 +28,20 @@ typedef struct myth_fd_map_entry {
   struct myth_io_struct_perfd **data;
   int *key;
   myth_internal_lock_t lock;
-}myth_fd_map_entry,*myth_fd_map_entry_t;
+} myth_fd_map_entry,*myth_fd_map_entry_t;
 
 typedef struct myth_fd_map {
   myth_internal_lock_t lock;
   myth_fd_map_entry *entry;
   //int size;
-}myth_fd_map,*myth_fd_map_t;
+} myth_fd_map,*myth_fd_map_t;
 
 typedef struct myth_io_fd_list {//File descriptor list
   myth_internal_lock_t lock;
   int size;
   int bufsize;
   struct myth_io_struct_perfd **data;
-}myth_io_fd_list,*myth_io_fd_list_t;
+} myth_io_fd_list, *myth_io_fd_list_t;
 
 //I/O operation descriptor containing type and arguments
 typedef struct myth_io_op {
@@ -52,24 +53,24 @@ typedef struct myth_io_op {
       int fd;
       struct sockaddr *addr;
       socklen_t *len;
-    }a;//accept
+    } a;//accept
     struct{
       int fd;
       //__SOCKADDR_ARG addr;
       //socklen_t *addr_len;
-    }c;
+    } c;
     struct{
       int fd;
       __const void *buf;
       size_t n;
       int flags;
-    }s;//send
+    } s;//send
     struct{
       int fd;
       void *buf;
       size_t n;
       int flags;
-    }r;//recv
+    } r;//recv
     struct{
       int fd;
       __const void *buf;
@@ -77,7 +78,7 @@ typedef struct myth_io_op {
       int flags;
       const struct sockaddr *addr;
       socklen_t addr_len;
-    }st;//sendto
+    } st;//sendto
     struct{
       int fd;
       void *buf;
@@ -85,18 +86,18 @@ typedef struct myth_io_op {
       int flags;
       struct sockaddr *addr;
       socklen_t *addr_len;
-    }rf;//recvfrom
+    } rf;//recvfrom
     struct{
       int nfds;
       fd_set *readfds;
       fd_set *writefds;
       fd_set *exceptfds;
       struct timeval *timeout;
-    }sl;//select
-  }u;
+    } sl;//select
+  } u;
   int ret;
   int errcode;
-}myth_io_op,*myth_io_op_t;
+} myth_io_op, *myth_io_op_t;
 
 //Pending I/O operation list
 typedef struct myth_io_wait_list {
@@ -104,7 +105,7 @@ typedef struct myth_io_wait_list {
   myth_io_op_t *io_ops;
   int size;//the size of io_ops
   int count;//valid elements
-}myth_io_wait_list,*myth_io_wait_list_t;
+} myth_io_wait_list, *myth_io_wait_list_t;
 
 //Per-worker-thread structure
 typedef struct myth_io_struct_perenv {
@@ -123,7 +124,9 @@ typedef struct myth_io_struct_perenv {
   uint8_t exit_flag;
   pthread_mutex_t mtx;
 #endif
-}myth_io_struct_perenv,*myth_io_struct_perenv_t;
+} myth_io_struct_perenv, *myth_io_struct_perenv_t;
+
+typedef struct myth_running_env * myth_running_env_t;
 
 //Fd-specific data structure
 typedef struct myth_io_struct_perfd {
@@ -133,10 +136,41 @@ typedef struct myth_io_struct_perfd {
   myth_io_wait_list *rd_reserve_list_ptr;
   myth_io_wait_list *wr_reserve_list_ptr;
   int tmp_for_poll;
-  struct myth_running_env *env;
+  myth_running_env_t env;
   int closed;
-}myth_io_struct_perfd,*myth_io_struct_perfd_t;
+} myth_io_struct_perfd, *myth_io_struct_perfd_t;
 
 extern myth_fd_map_t g_fd_map;
+
+
+
+
+static void myth_io_init(void);
+static void myth_io_fini(void);
+static void myth_io_worker_init(myth_running_env_t env,
+				myth_io_struct_perenv_t io);
+static void myth_io_worker_fini(myth_running_env_t env,
+				myth_io_struct_perenv_t io);
+
+static inline void myth_wait_for_read(int fd, myth_running_env_t env,
+				      myth_io_op_t op);
+static inline void myth_wait_for_write(int fd, myth_running_env_t env,
+				       myth_io_op_t op);
+
+static inline int myth_socket_body (int domain, int type, int protocol);
+static inline int myth_connect_body (int fd, const struct sockaddr* addr,
+				     socklen_t len);
+static inline int myth_accept_body (int fd, struct sockaddr *addr,
+		   socklen_t * addr_len);
+static inline int myth_bind_body(int fd, const struct sockaddr* addr, socklen_t len);
+static inline int myth_listen_body (int fd, int n);
+static inline ssize_t myth_send_body (int fd, const void *buf, size_t n, int flags);
+static inline ssize_t myth_recv_body (int fd, void *buf, size_t n, int flags);
+static inline int myth_close_body (int fd);
+static inline int myth_fcntl_body (int fd, int cmd,va_list vl);
+static inline myth_thread_t myth_io_polling(struct myth_running_env *env);
+static inline int myth_io_execute(myth_io_op_t op);
+
+
 
 #endif /* MYTH_IO_H_ */

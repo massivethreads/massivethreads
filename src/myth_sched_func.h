@@ -17,23 +17,21 @@
 #include "myth_sched.h"
 #include "myth_mem_barrier.h"
 #include "myth_misc.h"
-//#include "myth_original_lib.h"
-
-#include "myth_wsqueue.h"
-#include "myth_wsqueue_func.h"
-
-#include "myth_worker.h"
-#include "myth_worker_func.h"
-
 #include "myth_log.h"
-#include "myth_log_func.h"
-
+#include "myth_wsqueue.h"
+#include "myth_tls.h"
+#include "myth_worker.h"
 #include "myth_io.h"
-#include "myth_io_proto.h"
-
 #ifdef MYTH_ECO_MODE
 #include "myth_eco.h"
 #endif
+
+#include "myth_wsqueue_func.h"
+#include "myth_tls_func.h"
+#include "myth_worker_func.h"
+#include "myth_log_func.h"
+
+
 
 #ifndef PAGE_ALIGN
 #define PAGE_ALIGN(n) ((((n)+(PAGE_SIZE)-1)/(PAGE_SIZE))*PAGE_SIZE)
@@ -334,11 +332,13 @@ static inline void free_myth_thread_struct_desc_ext(myth_thread_t th) {
   real_free(th);
 }
 
+#if 0
 static inline myth_thread_t myth_self_body(void) {
-  myth_ensure_init();
+  myth_ensure_init();		/* TODO: hoist this outside */
   myth_running_env_t env = myth_get_current_env();
   return env->this_thread;
 }
+#endif
 
 MYTH_CTX_CALLBACK void myth_create_1(void *arg1,void *arg2,void *arg3) {
   MAY_BE_UNUSED uint64_t t0,t1;
@@ -406,6 +406,7 @@ static inline int myth_create_ex_body(myth_thread_t * id,
   // Allocate new thread descriptor
   myth_thread_t new_thread = get_new_myth_thread_struct_desc(env);
   new_thread->next = 0;
+  myth_tls_tree_init(new_thread->tls);
 
 #ifdef MYTH_SPLIT_STACK_DESC /* default */
   // allocate stack and get pointer
@@ -976,8 +977,9 @@ MYTH_CTX_CALLBACK void myth_entry_point_2(void *arg1,void *arg2,void *arg3)
 #endif
 }
 
-static inline void myth_entry_point_cleanup(myth_thread_t this_thread)
-{
+static inline void myth_entry_point_cleanup(myth_thread_t this_thread) {
+  myth_tls_tree_fini(this_thread->tls, g_myth_tls_key_allocator);
+  
 #ifdef MYTH_NO_JOIN
 #ifndef MYTH_NO_QUEUEOP
   next = myth_queue_pop(&env->runnable_q);
@@ -987,24 +989,25 @@ static inline void myth_entry_point_cleanup(myth_thread_t this_thread)
 #endif
   myth_running_env_t env;
   myth_thread_t this_thread_v;
+#ifdef MYTH_EP_PROF_DETAIL
   MAY_BE_UNUSED uint64_t t0,t1;
   t0 = 0; t1 = 0;
+#endif
 #ifdef MYTH_ENTRY_POINT_DEBUG
   myth_dprintf("Finished thread %p\n",this_thread);
 #endif
 #ifdef MYTH_ENTRY_POINT_PROF
-  uint64_t t2;
-  t2=myth_get_rdtsc();
+  uint64_t t2 = myth_get_rdtsc();
 #endif
 #ifdef MYTH_EP_PROF_DETAIL
-  t0=myth_get_rdtsc();
+  t0 = myth_get_rdtsc();
 #endif
   //Get worker thread descriptor
   env = this_thread->env;
-  myth_assert(this_thread->env==env);
-  myth_assert(this_thread==env->this_thread);
+  myth_assert(this_thread->env == env);
+  myth_assert(this_thread == env->this_thread);
 #ifdef MYTH_ENTRY_POINT_PROF
-  env->prof_data.ep_cycles_tmp=t2;
+  env->prof_data.ep_cycles_tmp = t2;
 #endif
   this_thread_v = this_thread;
   myth_internal_lock_lock(&this_thread->lock);
@@ -1012,28 +1015,30 @@ static inline void myth_entry_point_cleanup(myth_thread_t this_thread)
   //Execute a thread waiting for current thread
   if (wait_thread){
     //sanity check
-    myth_assert(wait_thread->status==MYTH_STATUS_BLOCKED);
-    wait_thread->env=env;
-    wait_thread->status=MYTH_STATUS_READY;
+    myth_assert(wait_thread->status == MYTH_STATUS_BLOCKED);
+    wait_thread->env = env;
+    wait_thread->status = MYTH_STATUS_READY;
 #ifdef MYTH_ENTRY_POINT_DEBUG
     myth_dprintf("Join process completed %p\n",this_thread);
 #endif
 #ifdef SWITCH_AFTER_EXIT
 #ifdef MYTH_EP_PROF_DETAIL
     t1 = myth_get_rdtsc();
-    env->prof_data.ep_join += t1-t0;
+    env->prof_data.ep_join += t1 - t0;
     env->prof_data.ep_d_tmp = myth_get_rdtsc();
 #endif
     //Execute
-    myth_set_context_withcall(&wait_thread->context,myth_entry_point_1,(void*)env,this_thread,wait_thread);
+    myth_set_context_withcall(&wait_thread->context,
+			      myth_entry_point_1,
+			      (void*)env, this_thread, wait_thread);
 #else
     //Push to the runqueue
-    myth_queue_push(&env->runnable_q,wait_thread);
+    myth_queue_push(&env->runnable_q, wait_thread);
 #endif
   }
 #ifdef MYTH_EP_PROF_DETAIL
   t1 = myth_get_rdtsc();
-  env->prof_data.ep_join += t1-t0;
+  env->prof_data.ep_join += t1 - t0;
   t0 = myth_get_rdtsc();
 #endif
   myth_thread_t next;
@@ -1052,20 +1057,20 @@ static inline void myth_entry_point_cleanup(myth_thread_t this_thread)
     env->prof_data.ep_d_tmp=myth_get_rdtsc();
 #endif
     //Switch to the next thread
-    myth_set_context_withcall(&next->context,myth_entry_point_1,(void*)env,this_thread,next);
-  }
-  else{
+    myth_set_context_withcall(&next->context, myth_entry_point_1,
+			      (void*)env, this_thread, next);
+  } else {
 #ifdef MYTH_EP_PROF_DETAIL
-    env->prof_data.ep_d_tmp=myth_get_rdtsc();
+    env->prof_data.ep_d_tmp = myth_get_rdtsc();
 #endif
     //Switch to the scheduler
-    myth_set_context_withcall(&env->sched.context,myth_entry_point_2,(void*)env,this_thread,NULL);
+    myth_set_context_withcall(&env->sched.context, myth_entry_point_2,
+			      (void*)env, this_thread, NULL);
   }
-  if (next){
-    myth_entry_point_1((void*)env,this_thread,next);
-  }
-  else{
-    myth_entry_point_2((void*)env,this_thread,NULL);
+  if (next) {
+    myth_entry_point_1((void*)env, this_thread, next);
+  } else {
+    myth_entry_point_2((void*)env, this_thread, NULL);
   }
 }
 
@@ -1111,11 +1116,11 @@ static inline int myth_is_canceled(myth_thread_t th)
 
 static inline void myth_testcancel_body(void)
 {
-  myth_thread_t th=myth_self_body();
-  int c=myth_is_canceled(th);
-  if (c){
+  myth_thread_t th = myth_self_body();
+  int c = myth_is_canceled(th);
+  if (c) {
     //set return value as cancelled
-    th->result=MYTH_CANCELED;
+    th->result = MYTH_CANCELED;
     //exit
     myth_entry_point_cleanup(th);
   }

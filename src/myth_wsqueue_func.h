@@ -6,11 +6,10 @@
 #define MYTH_WSQUEUE_FUNC_H_
 
 #include "myth/myth_config.h"
+#include "myth_wsqueue.h"
 
 #include "myth_internal_lock_func.h"
-#include "myth_desc.h"
-#include "myth_wsqueue.h"
-#include "myth_wsqueue_proto.h"
+#include "myth_desc_func.h"
 
 #if 0
 //Initialize thread-local data
@@ -26,8 +25,8 @@ static inline void myth_queue_fini_thread_data(myth_queue_data_t th){
 static inline void myth_queue_enter_operation(myth_thread_queue_t q)
 {
 #ifdef USE_SIGNAL_CS
-  assert(q->op_flag==0);
-  q->op_flag=1;
+  assert(q->op_flag == 0);
+  q->op_flag = 1;
   myth_wsqueue_wbarrier();
 #else
   (void)q;
@@ -42,9 +41,9 @@ static inline void myth_queue_enter_operation(myth_thread_queue_t q)
 static inline void myth_queue_exit_operation(myth_thread_queue_t q)
 {
 #ifdef USE_SIGNAL_CS
-  assert(q->op_flag==1);
+  assert(q->op_flag == 1);
   myth_wsqueue_wbarrier();
-  q->op_flag=0;
+  q->op_flag = 0;
 #else
   (void)q;
 #endif
@@ -57,9 +56,9 @@ static inline void myth_queue_exit_operation(myth_thread_queue_t q)
 
 static inline int myth_queue_is_operating(myth_thread_queue_t q)
 {
-  int ret=0;
+  int ret = 0;
 #ifdef USE_SIGNAL_CS
-  ret=ret && q->op_flag;
+  ret = ret && q->op_flag;
 #else
   (void)q;
 #endif
@@ -72,7 +71,7 @@ static inline void myth_queue_init(myth_thread_queue_t q){
   myth_internal_lock_init(&q->m_lock);
 #endif
 #ifdef USE_SIGNAL_CS
-  q->op_flag=0;
+  q->op_flag = 0;
 #endif
 #ifdef USE_THREAD_CS
   pthread_mutexattr_t attr;
@@ -81,11 +80,11 @@ static inline void myth_queue_init(myth_thread_queue_t q){
   real_pthread_mutex_init(&q->mtx,&attr);
   pthread_mutexattr_destroy(&attr);
 #endif
-  q->size=INITIAL_QUEUE_SIZE;
-  q->ptr=myth_malloc(sizeof(myth_thread_t)*q->size);
+  q->size = INITIAL_QUEUE_SIZE;
+  q->ptr = myth_malloc(sizeof(myth_thread_t)*q->size);
   memset(q->ptr,0,sizeof(myth_thread_t)*q->size);
-  q->base=q->size/2;
-  q->top=q->base;
+  q->base = q->size/2;
+  q->top = q->base;
   memset(&q->wc,0,sizeof(myth_wscache));
 }
 
@@ -105,9 +104,9 @@ static inline void myth_queue_clear(myth_thread_queue_t q)
   myth_internal_lock_lock(&q->m_lock);
 #endif
   myth_wsqueue_lock_lock(&q->lock);
-  myth_assert(q->top==q->base);
-  q->base=q->size/2;
-  q->top=q->base;
+  myth_assert(q->top == q->base);
+  q->base = q->size/2;
+  q->top = q->base;
   myth_wsqueue_lock_unlock(&q->lock);
 #if defined USE_LOCK || defined USE_LOCK_CLEAR
   myth_internal_lock_unlock(&q->m_lock);
@@ -333,7 +332,7 @@ static inline int myth_queue_trypass(myth_thread_queue_t q,myth_thread_t th)
 #endif
   int ret=1;
   if (!myth_wsqueue_lock_trylock(&q->lock))return 0;
-  if (q->base==0){
+  if (q->base == 0){
     ret=0;
   }
   else{
@@ -355,7 +354,7 @@ static inline void myth_queue_pass(myth_thread_queue_t q,myth_thread_t th)
   int ret;
   do{
     ret=myth_queue_trypass(q,th);
-  }while(ret==0);
+  }while(ret == 0);
 }
 
 
@@ -367,8 +366,8 @@ static inline void myth_queue_put(myth_thread_queue_t q,myth_thread_t th)
   myth_internal_lock_lock(&q->m_lock);
 #endif
   myth_wsqueue_lock_lock(&q->lock);
-  if (q->base==0){
-    if (q->top==q->size){
+  if (q->base == 0){
+    if (q->top == q->size){
       myth_assert(0);
       fprintf(stderr,"Fatal error:Runqueue overflow\n");
       abort();
@@ -391,11 +390,11 @@ static inline void myth_queue_put(myth_thread_queue_t q,myth_thread_t th)
       q->top+=offset;q->base+=offset;
     }
   }
-  int b=q->base;
-  if (b==0){myth_unreachable();}
+  int b = q->base;
+  if (b == 0){ myth_unreachable(); }
   b--;
-  q->ptr[b]=th;
-  q->base=b;
+  q->ptr[b] = th;
+  q->base = b;
   myth_wsqueue_lock_unlock(&q->lock);
 #if defined USE_LOCK || defined USE_LOCK_PUSH
   myth_internal_lock_unlock(&q->m_lock);

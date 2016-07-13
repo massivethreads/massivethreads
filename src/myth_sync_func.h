@@ -5,7 +5,7 @@
 #ifndef MYTH_SYNC_FUNC_H_
 #define MYTH_SYNC_FUNC_H_
 
-#include "myth/myth_sync.h"
+#include "myth/myth.h"
 #include "myth_sleep_queue_func.h"
 #include "myth_internal_lock_func.h"
 

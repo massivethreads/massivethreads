@@ -5,7 +5,6 @@
 #include "config.h"
 
 #include "myth_worker.h"
-#include "myth_worker_proto.h"
 #include "myth_worker_func.h"
 
 myth_thread_t myth_default_steal_func(int rank);

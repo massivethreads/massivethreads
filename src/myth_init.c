@@ -6,15 +6,18 @@
 
 #include "myth/myth.h"
 
+#include "myth_misc.h"
+#include "myth_log.h"
 #include "myth_worker.h"
-#include "myth_worker_proto.h"
-//#include "myth_malloc_wrapper.h"
-
+#include "myth_tls.h"
 #include "myth_io.h"
-#include "myth_io_proto.h"
-#include "myth_io_func.h"
-#include "myth_tls_func.h"
 #include "myth_eco.h"
+
+#include "myth_misc_func.h"
+#include "myth_log_func.h"
+#include "myth_worker_func.h"
+#include "myth_tls_func.h"
+#include "myth_io_func.h"
 
 myth_attr_t g_attr;
 

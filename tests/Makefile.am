@@ -35,6 +35,9 @@ check_PROGRAMS = \
 	myth_dag_1d \
 	myth_dag_2d \
 	myth_dag_random \
+	myth_key_create \
+	myth_key_getspecific \
+	myth_key_destructor \
 	pth_create_0 \
 	pth_create_1 \
 	pth_create_2 \
@@ -66,6 +69,9 @@ check_PROGRAMS = \
 	myth_dag_1d_cc \
 	myth_dag_2d_cc \
 	myth_dag_random_cc \
+	myth_key_create_cc \
+	myth_key_getspecific_cc \
+	myth_key_destructor_cc \
 	pth_create_0_cc \
 	pth_create_1_cc \
 	pth_create_2_cc \
@@ -95,7 +101,7 @@ check_PROGRAMS = \
 #  -I$(abs_top_srcdir)/src
 common_cflags = -I$(abs_top_srcdir)/include
 common_cxxflags = $(common_cflags)
-common_ldadd = $(abs_top_srcdir)/src/libmyth-vanilla.la -lrt
+common_ldadd = $(abs_top_srcdir)/src/libmyth.la -lrt
 
 myth_malloc_SOURCES = myth_malloc.c
 myth_malloc_CFLAGS = $(common_cflags)
@@ -212,6 +218,18 @@ myth_dag_2d_LDADD  = $(common_ldadd)
 myth_dag_random_SOURCES = myth_dag_random.c
 myth_dag_random_CFLAGS = $(common_cflags)
 myth_dag_random_LDADD  = $(common_ldadd)
+
+myth_key_create_SOURCES = myth_key_create.c
+myth_key_create_CFLAGS = $(common_cflags)
+myth_key_create_LDADD  = $(common_ldadd)
+
+myth_key_getspecific_SOURCES = myth_key_getspecific.c
+myth_key_getspecific_CFLAGS = $(common_cflags)
+myth_key_getspecific_LDADD  = $(common_ldadd)
+
+myth_key_destructor_SOURCES = myth_key_destructor.c
+myth_key_destructor_CFLAGS = $(common_cflags)
+myth_key_destructor_LDADD  = $(common_ldadd)
 
 pth_create_0_SOURCES = pth_create_0.c
 pth_create_0_CFLAGS = $(common_cflags)
@@ -351,6 +369,18 @@ myth_dag_2d_cc_LDADD  = $(common_ldadd)
 myth_dag_random_cc_SOURCES = myth_dag_random_cc.cc
 myth_dag_random_cc_CXXFLAGS = $(common_cxxflags)
 myth_dag_random_cc_LDADD  = $(common_ldadd)
+
+myth_key_create_cc_SOURCES = myth_key_create_cc.cc
+myth_key_create_cc_CXXFLAGS = $(common_cxxflags)
+myth_key_create_cc_LDADD  = $(common_ldadd)
+
+myth_key_getspecific_cc_SOURCES = myth_key_getspecific_cc.cc
+myth_key_getspecific_cc_CXXFLAGS = $(common_cxxflags)
+myth_key_getspecific_cc_LDADD  = $(common_ldadd)
+
+myth_key_destructor_cc_SOURCES = myth_key_destructor_cc.cc
+myth_key_destructor_cc_CXXFLAGS = $(common_cxxflags)
+myth_key_destructor_cc_LDADD  = $(common_ldadd)
 
 pth_create_0_cc_SOURCES = pth_create_0_cc.cc
 pth_create_0_cc_CXXFLAGS = $(common_cxxflags)

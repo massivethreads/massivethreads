@@ -52,7 +52,7 @@
    */
 #undef LT_OBJDIR
 
-/* If unset, worker thread binding is disabled */
+/* whether worker thread binding is enabled */
 #undef MYTH_BIND_WORKERS
 
 /* Default stack size */

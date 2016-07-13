@@ -107,22 +107,25 @@ check_PROGRAMS = myth_malloc$(EXEEXT) myth_calloc$(EXEEXT) \
 	myth_cond_broadcast_1$(EXEEXT) myth_barrier$(EXEEXT) \
 	myth_join_counter$(EXEEXT) myth_felock$(EXEEXT) \
 	myth_dag_1d$(EXEEXT) myth_dag_2d$(EXEEXT) \
-	myth_dag_random$(EXEEXT) pth_create_0$(EXEEXT) \
-	pth_create_1$(EXEEXT) pth_create_2$(EXEEXT) pth_yield$(EXEEXT) \
-	pth_lock$(EXEEXT) pth_trylock$(EXEEXT) pth_mixlock$(EXEEXT) \
-	pth_barrier$(EXEEXT) measure_create$(EXEEXT) \
-	measure_latency$(EXEEXT) measure_wakeup_latency$(EXEEXT) \
-	myth_create_0_cc$(EXEEXT) myth_create_1_cc$(EXEEXT) \
-	myth_create_2_cc$(EXEEXT) myth_create_join_many_cc$(EXEEXT) \
-	myth_yield_0_cc$(EXEEXT) myth_yield_1_cc$(EXEEXT) \
-	myth_yield_2_cc$(EXEEXT) myth_sleep_queue_cc$(EXEEXT) \
-	myth_lock_cc$(EXEEXT) myth_trylock_cc$(EXEEXT) \
-	myth_mixlock_cc$(EXEEXT) myth_cond_signal_cc$(EXEEXT) \
-	myth_cond_broadcast_0_cc$(EXEEXT) \
+	myth_dag_random$(EXEEXT) myth_key_create$(EXEEXT) \
+	myth_key_getspecific$(EXEEXT) myth_key_destructor$(EXEEXT) \
+	pth_create_0$(EXEEXT) pth_create_1$(EXEEXT) \
+	pth_create_2$(EXEEXT) pth_yield$(EXEEXT) pth_lock$(EXEEXT) \
+	pth_trylock$(EXEEXT) pth_mixlock$(EXEEXT) pth_barrier$(EXEEXT) \
+	measure_create$(EXEEXT) measure_latency$(EXEEXT) \
+	measure_wakeup_latency$(EXEEXT) myth_create_0_cc$(EXEEXT) \
+	myth_create_1_cc$(EXEEXT) myth_create_2_cc$(EXEEXT) \
+	myth_create_join_many_cc$(EXEEXT) myth_yield_0_cc$(EXEEXT) \
+	myth_yield_1_cc$(EXEEXT) myth_yield_2_cc$(EXEEXT) \
+	myth_sleep_queue_cc$(EXEEXT) myth_lock_cc$(EXEEXT) \
+	myth_trylock_cc$(EXEEXT) myth_mixlock_cc$(EXEEXT) \
+	myth_cond_signal_cc$(EXEEXT) myth_cond_broadcast_0_cc$(EXEEXT) \
 	myth_cond_broadcast_1_cc$(EXEEXT) myth_barrier_cc$(EXEEXT) \
 	myth_join_counter_cc$(EXEEXT) myth_felock_cc$(EXEEXT) \
 	myth_dag_1d_cc$(EXEEXT) myth_dag_2d_cc$(EXEEXT) \
-	myth_dag_random_cc$(EXEEXT) pth_create_0_cc$(EXEEXT) \
+	myth_dag_random_cc$(EXEEXT) myth_key_create_cc$(EXEEXT) \
+	myth_key_getspecific_cc$(EXEEXT) \
+	myth_key_destructor_cc$(EXEEXT) pth_create_0_cc$(EXEEXT) \
 	pth_create_1_cc$(EXEEXT) pth_create_2_cc$(EXEEXT) \
 	pth_yield_cc$(EXEEXT) pth_lock_cc$(EXEEXT) \
 	pth_trylock_cc$(EXEEXT) pth_mixlock_cc$(EXEEXT) \
@@ -143,7 +146,7 @@ CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 am_measure_create_OBJECTS = measure_create-measure_create.$(OBJEXT)
 measure_create_OBJECTS = $(am_measure_create_OBJECTS)
-am__DEPENDENCIES_1 = $(abs_top_srcdir)/src/libmyth-vanilla.la
+am__DEPENDENCIES_1 = $(abs_top_srcdir)/src/libmyth.la
 measure_create_DEPENDENCIES = $(am__DEPENDENCIES_1)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
@@ -407,6 +410,55 @@ myth_join_counter_cc_DEPENDENCIES = $(am__DEPENDENCIES_1)
 myth_join_counter_cc_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CXXLD) \
 	$(myth_join_counter_cc_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) \
+	$(LDFLAGS) -o $@
+am_myth_key_create_OBJECTS =  \
+	myth_key_create-myth_key_create.$(OBJEXT)
+myth_key_create_OBJECTS = $(am_myth_key_create_OBJECTS)
+myth_key_create_DEPENDENCIES = $(am__DEPENDENCIES_1)
+myth_key_create_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
+	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
+	$(myth_key_create_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) \
+	-o $@
+am_myth_key_create_cc_OBJECTS =  \
+	myth_key_create_cc-myth_key_create_cc.$(OBJEXT)
+myth_key_create_cc_OBJECTS = $(am_myth_key_create_cc_OBJECTS)
+myth_key_create_cc_DEPENDENCIES = $(am__DEPENDENCIES_1)
+myth_key_create_cc_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX \
+	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CXXLD) \
+	$(myth_key_create_cc_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) \
+	$(LDFLAGS) -o $@
+am_myth_key_destructor_OBJECTS =  \
+	myth_key_destructor-myth_key_destructor.$(OBJEXT)
+myth_key_destructor_OBJECTS = $(am_myth_key_destructor_OBJECTS)
+myth_key_destructor_DEPENDENCIES = $(am__DEPENDENCIES_1)
+myth_key_destructor_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
+	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
+	$(myth_key_destructor_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
+	$(LDFLAGS) -o $@
+am_myth_key_destructor_cc_OBJECTS =  \
+	myth_key_destructor_cc-myth_key_destructor_cc.$(OBJEXT)
+myth_key_destructor_cc_OBJECTS = $(am_myth_key_destructor_cc_OBJECTS)
+myth_key_destructor_cc_DEPENDENCIES = $(am__DEPENDENCIES_1)
+myth_key_destructor_cc_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX \
+	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CXXLD) \
+	$(myth_key_destructor_cc_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) \
+	$(LDFLAGS) -o $@
+am_myth_key_getspecific_OBJECTS =  \
+	myth_key_getspecific-myth_key_getspecific.$(OBJEXT)
+myth_key_getspecific_OBJECTS = $(am_myth_key_getspecific_OBJECTS)
+myth_key_getspecific_DEPENDENCIES = $(am__DEPENDENCIES_1)
+myth_key_getspecific_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
+	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
+	$(myth_key_getspecific_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
+	$(LDFLAGS) -o $@
+am_myth_key_getspecific_cc_OBJECTS =  \
+	myth_key_getspecific_cc-myth_key_getspecific_cc.$(OBJEXT)
+myth_key_getspecific_cc_OBJECTS =  \
+	$(am_myth_key_getspecific_cc_OBJECTS)
+myth_key_getspecific_cc_DEPENDENCIES = $(am__DEPENDENCIES_1)
+myth_key_getspecific_cc_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX \
+	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CXXLD) \
+	$(myth_key_getspecific_cc_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
 am_myth_lock_OBJECTS = myth_lock-myth_lock.$(OBJEXT)
 myth_lock_OBJECTS = $(am_myth_lock_OBJECTS)
@@ -722,24 +774,29 @@ SOURCES = $(measure_create_SOURCES) $(measure_create_cc_SOURCES) \
 	$(myth_dag_random_cc_SOURCES) $(myth_felock_SOURCES) \
 	$(myth_felock_cc_SOURCES) $(myth_free_SOURCES) \
 	$(myth_join_counter_SOURCES) $(myth_join_counter_cc_SOURCES) \
-	$(myth_lock_SOURCES) $(myth_lock_cc_SOURCES) \
-	$(myth_malloc_SOURCES) $(myth_memalign_SOURCES) \
-	$(myth_mixlock_SOURCES) $(myth_mixlock_cc_SOURCES) \
-	$(myth_posix_memalign_SOURCES) $(myth_pvalloc_SOURCES) \
-	$(myth_realloc_SOURCES) $(myth_sleep_queue_SOURCES) \
-	$(myth_sleep_queue_cc_SOURCES) $(myth_trylock_SOURCES) \
-	$(myth_trylock_cc_SOURCES) $(myth_valloc_SOURCES) \
-	$(myth_yield_0_SOURCES) $(myth_yield_0_cc_SOURCES) \
-	$(myth_yield_1_SOURCES) $(myth_yield_1_cc_SOURCES) \
-	$(myth_yield_2_SOURCES) $(myth_yield_2_cc_SOURCES) \
-	$(pth_barrier_SOURCES) $(pth_barrier_cc_SOURCES) \
-	$(pth_create_0_SOURCES) $(pth_create_0_cc_SOURCES) \
-	$(pth_create_1_SOURCES) $(pth_create_1_cc_SOURCES) \
-	$(pth_create_2_SOURCES) $(pth_create_2_cc_SOURCES) \
-	$(pth_lock_SOURCES) $(pth_lock_cc_SOURCES) \
-	$(pth_mixlock_SOURCES) $(pth_mixlock_cc_SOURCES) \
-	$(pth_trylock_SOURCES) $(pth_trylock_cc_SOURCES) \
-	$(pth_yield_SOURCES) $(pth_yield_cc_SOURCES)
+	$(myth_key_create_SOURCES) $(myth_key_create_cc_SOURCES) \
+	$(myth_key_destructor_SOURCES) \
+	$(myth_key_destructor_cc_SOURCES) \
+	$(myth_key_getspecific_SOURCES) \
+	$(myth_key_getspecific_cc_SOURCES) $(myth_lock_SOURCES) \
+	$(myth_lock_cc_SOURCES) $(myth_malloc_SOURCES) \
+	$(myth_memalign_SOURCES) $(myth_mixlock_SOURCES) \
+	$(myth_mixlock_cc_SOURCES) $(myth_posix_memalign_SOURCES) \
+	$(myth_pvalloc_SOURCES) $(myth_realloc_SOURCES) \
+	$(myth_sleep_queue_SOURCES) $(myth_sleep_queue_cc_SOURCES) \
+	$(myth_trylock_SOURCES) $(myth_trylock_cc_SOURCES) \
+	$(myth_valloc_SOURCES) $(myth_yield_0_SOURCES) \
+	$(myth_yield_0_cc_SOURCES) $(myth_yield_1_SOURCES) \
+	$(myth_yield_1_cc_SOURCES) $(myth_yield_2_SOURCES) \
+	$(myth_yield_2_cc_SOURCES) $(pth_barrier_SOURCES) \
+	$(pth_barrier_cc_SOURCES) $(pth_create_0_SOURCES) \
+	$(pth_create_0_cc_SOURCES) $(pth_create_1_SOURCES) \
+	$(pth_create_1_cc_SOURCES) $(pth_create_2_SOURCES) \
+	$(pth_create_2_cc_SOURCES) $(pth_lock_SOURCES) \
+	$(pth_lock_cc_SOURCES) $(pth_mixlock_SOURCES) \
+	$(pth_mixlock_cc_SOURCES) $(pth_trylock_SOURCES) \
+	$(pth_trylock_cc_SOURCES) $(pth_yield_SOURCES) \
+	$(pth_yield_cc_SOURCES)
 DIST_SOURCES = $(measure_create_SOURCES) $(measure_create_cc_SOURCES) \
 	$(measure_latency_SOURCES) $(measure_latency_cc_SOURCES) \
 	$(measure_wakeup_latency_SOURCES) \
@@ -761,24 +818,29 @@ DIST_SOURCES = $(measure_create_SOURCES) $(measure_create_cc_SOURCES) \
 	$(myth_dag_random_cc_SOURCES) $(myth_felock_SOURCES) \
 	$(myth_felock_cc_SOURCES) $(myth_free_SOURCES) \
 	$(myth_join_counter_SOURCES) $(myth_join_counter_cc_SOURCES) \
-	$(myth_lock_SOURCES) $(myth_lock_cc_SOURCES) \
-	$(myth_malloc_SOURCES) $(myth_memalign_SOURCES) \
-	$(myth_mixlock_SOURCES) $(myth_mixlock_cc_SOURCES) \
-	$(myth_posix_memalign_SOURCES) $(myth_pvalloc_SOURCES) \
-	$(myth_realloc_SOURCES) $(myth_sleep_queue_SOURCES) \
-	$(myth_sleep_queue_cc_SOURCES) $(myth_trylock_SOURCES) \
-	$(myth_trylock_cc_SOURCES) $(myth_valloc_SOURCES) \
-	$(myth_yield_0_SOURCES) $(myth_yield_0_cc_SOURCES) \
-	$(myth_yield_1_SOURCES) $(myth_yield_1_cc_SOURCES) \
-	$(myth_yield_2_SOURCES) $(myth_yield_2_cc_SOURCES) \
-	$(pth_barrier_SOURCES) $(pth_barrier_cc_SOURCES) \
-	$(pth_create_0_SOURCES) $(pth_create_0_cc_SOURCES) \
-	$(pth_create_1_SOURCES) $(pth_create_1_cc_SOURCES) \
-	$(pth_create_2_SOURCES) $(pth_create_2_cc_SOURCES) \
-	$(pth_lock_SOURCES) $(pth_lock_cc_SOURCES) \
-	$(pth_mixlock_SOURCES) $(pth_mixlock_cc_SOURCES) \
-	$(pth_trylock_SOURCES) $(pth_trylock_cc_SOURCES) \
-	$(pth_yield_SOURCES) $(pth_yield_cc_SOURCES)
+	$(myth_key_create_SOURCES) $(myth_key_create_cc_SOURCES) \
+	$(myth_key_destructor_SOURCES) \
+	$(myth_key_destructor_cc_SOURCES) \
+	$(myth_key_getspecific_SOURCES) \
+	$(myth_key_getspecific_cc_SOURCES) $(myth_lock_SOURCES) \
+	$(myth_lock_cc_SOURCES) $(myth_malloc_SOURCES) \
+	$(myth_memalign_SOURCES) $(myth_mixlock_SOURCES) \
+	$(myth_mixlock_cc_SOURCES) $(myth_posix_memalign_SOURCES) \
+	$(myth_pvalloc_SOURCES) $(myth_realloc_SOURCES) \
+	$(myth_sleep_queue_SOURCES) $(myth_sleep_queue_cc_SOURCES) \
+	$(myth_trylock_SOURCES) $(myth_trylock_cc_SOURCES) \
+	$(myth_valloc_SOURCES) $(myth_yield_0_SOURCES) \
+	$(myth_yield_0_cc_SOURCES) $(myth_yield_1_SOURCES) \
+	$(myth_yield_1_cc_SOURCES) $(myth_yield_2_SOURCES) \
+	$(myth_yield_2_cc_SOURCES) $(pth_barrier_SOURCES) \
+	$(pth_barrier_cc_SOURCES) $(pth_create_0_SOURCES) \
+	$(pth_create_0_cc_SOURCES) $(pth_create_1_SOURCES) \
+	$(pth_create_1_cc_SOURCES) $(pth_create_2_SOURCES) \
+	$(pth_create_2_cc_SOURCES) $(pth_lock_SOURCES) \
+	$(pth_lock_cc_SOURCES) $(pth_mixlock_SOURCES) \
+	$(pth_mixlock_cc_SOURCES) $(pth_trylock_SOURCES) \
+	$(pth_trylock_cc_SOURCES) $(pth_yield_SOURCES) \
+	$(pth_yield_cc_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -1152,7 +1214,7 @@ top_srcdir = @top_srcdir@
 #  -I$(abs_top_srcdir)/src
 common_cflags = -I$(abs_top_srcdir)/include
 common_cxxflags = $(common_cflags)
-common_ldadd = $(abs_top_srcdir)/src/libmyth-vanilla.la -lrt
+common_ldadd = $(abs_top_srcdir)/src/libmyth.la -lrt
 myth_malloc_SOURCES = myth_malloc.c
 myth_malloc_CFLAGS = $(common_cflags)
 myth_malloc_LDADD = $(common_ldadd)
@@ -1240,6 +1302,15 @@ myth_dag_2d_LDADD = $(common_ldadd)
 myth_dag_random_SOURCES = myth_dag_random.c
 myth_dag_random_CFLAGS = $(common_cflags)
 myth_dag_random_LDADD = $(common_ldadd)
+myth_key_create_SOURCES = myth_key_create.c
+myth_key_create_CFLAGS = $(common_cflags)
+myth_key_create_LDADD = $(common_ldadd)
+myth_key_getspecific_SOURCES = myth_key_getspecific.c
+myth_key_getspecific_CFLAGS = $(common_cflags)
+myth_key_getspecific_LDADD = $(common_ldadd)
+myth_key_destructor_SOURCES = myth_key_destructor.c
+myth_key_destructor_CFLAGS = $(common_cflags)
+myth_key_destructor_LDADD = $(common_ldadd)
 pth_create_0_SOURCES = pth_create_0.c
 pth_create_0_CFLAGS = $(common_cflags)
 pth_create_0_LDADD = $(common_ldadd)
@@ -1349,6 +1420,15 @@ myth_dag_2d_cc_LDADD = $(common_ldadd)
 myth_dag_random_cc_SOURCES = myth_dag_random_cc.cc
 myth_dag_random_cc_CXXFLAGS = $(common_cxxflags)
 myth_dag_random_cc_LDADD = $(common_ldadd)
+myth_key_create_cc_SOURCES = myth_key_create_cc.cc
+myth_key_create_cc_CXXFLAGS = $(common_cxxflags)
+myth_key_create_cc_LDADD = $(common_ldadd)
+myth_key_getspecific_cc_SOURCES = myth_key_getspecific_cc.cc
+myth_key_getspecific_cc_CXXFLAGS = $(common_cxxflags)
+myth_key_getspecific_cc_LDADD = $(common_ldadd)
+myth_key_destructor_cc_SOURCES = myth_key_destructor_cc.cc
+myth_key_destructor_cc_CXXFLAGS = $(common_cxxflags)
+myth_key_destructor_cc_LDADD = $(common_ldadd)
 pth_create_0_cc_SOURCES = pth_create_0_cc.cc
 pth_create_0_cc_CXXFLAGS = $(common_cxxflags)
 pth_create_0_cc_LDADD = $(common_ldadd)
@@ -1582,6 +1662,30 @@ myth_join_counter_cc$(EXEEXT): $(myth_join_counter_cc_OBJECTS) $(myth_join_count
 	@rm -f myth_join_counter_cc$(EXEEXT)
 	$(AM_V_CXXLD)$(myth_join_counter_cc_LINK) $(myth_join_counter_cc_OBJECTS) $(myth_join_counter_cc_LDADD) $(LIBS)
 
+myth_key_create$(EXEEXT): $(myth_key_create_OBJECTS) $(myth_key_create_DEPENDENCIES) $(EXTRA_myth_key_create_DEPENDENCIES) 
+	@rm -f myth_key_create$(EXEEXT)
+	$(AM_V_CCLD)$(myth_key_create_LINK) $(myth_key_create_OBJECTS) $(myth_key_create_LDADD) $(LIBS)
+
+myth_key_create_cc$(EXEEXT): $(myth_key_create_cc_OBJECTS) $(myth_key_create_cc_DEPENDENCIES) $(EXTRA_myth_key_create_cc_DEPENDENCIES) 
+	@rm -f myth_key_create_cc$(EXEEXT)
+	$(AM_V_CXXLD)$(myth_key_create_cc_LINK) $(myth_key_create_cc_OBJECTS) $(myth_key_create_cc_LDADD) $(LIBS)
+
+myth_key_destructor$(EXEEXT): $(myth_key_destructor_OBJECTS) $(myth_key_destructor_DEPENDENCIES) $(EXTRA_myth_key_destructor_DEPENDENCIES) 
+	@rm -f myth_key_destructor$(EXEEXT)
+	$(AM_V_CCLD)$(myth_key_destructor_LINK) $(myth_key_destructor_OBJECTS) $(myth_key_destructor_LDADD) $(LIBS)
+
+myth_key_destructor_cc$(EXEEXT): $(myth_key_destructor_cc_OBJECTS) $(myth_key_destructor_cc_DEPENDENCIES) $(EXTRA_myth_key_destructor_cc_DEPENDENCIES) 
+	@rm -f myth_key_destructor_cc$(EXEEXT)
+	$(AM_V_CXXLD)$(myth_key_destructor_cc_LINK) $(myth_key_destructor_cc_OBJECTS) $(myth_key_destructor_cc_LDADD) $(LIBS)
+
+myth_key_getspecific$(EXEEXT): $(myth_key_getspecific_OBJECTS) $(myth_key_getspecific_DEPENDENCIES) $(EXTRA_myth_key_getspecific_DEPENDENCIES) 
+	@rm -f myth_key_getspecific$(EXEEXT)
+	$(AM_V_CCLD)$(myth_key_getspecific_LINK) $(myth_key_getspecific_OBJECTS) $(myth_key_getspecific_LDADD) $(LIBS)
+
+myth_key_getspecific_cc$(EXEEXT): $(myth_key_getspecific_cc_OBJECTS) $(myth_key_getspecific_cc_DEPENDENCIES) $(EXTRA_myth_key_getspecific_cc_DEPENDENCIES) 
+	@rm -f myth_key_getspecific_cc$(EXEEXT)
+	$(AM_V_CXXLD)$(myth_key_getspecific_cc_LINK) $(myth_key_getspecific_cc_OBJECTS) $(myth_key_getspecific_cc_LDADD) $(LIBS)
+
 myth_lock$(EXEEXT): $(myth_lock_OBJECTS) $(myth_lock_DEPENDENCIES) $(EXTRA_myth_lock_DEPENDENCIES) 
 	@rm -f myth_lock$(EXEEXT)
 	$(AM_V_CCLD)$(myth_lock_LINK) $(myth_lock_OBJECTS) $(myth_lock_LDADD) $(LIBS)
@@ -1767,6 +1871,12 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/myth_free-myth_free.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/myth_join_counter-myth_join_counter.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/myth_join_counter_cc-myth_join_counter_cc.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/myth_key_create-myth_key_create.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/myth_key_create_cc-myth_key_create_cc.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/myth_key_destructor-myth_key_destructor.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/myth_key_destructor_cc-myth_key_destructor_cc.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/myth_key_getspecific-myth_key_getspecific.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/myth_key_getspecific_cc-myth_key_getspecific_cc.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/myth_lock-myth_lock.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/myth_lock_cc-myth_lock_cc.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/myth_malloc-myth_malloc.Po@am__quote@
@@ -2090,6 +2200,48 @@ myth_join_counter-myth_join_counter.obj: myth_join_counter.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='myth_join_counter.c' object='myth_join_counter-myth_join_counter.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_join_counter_CFLAGS) $(CFLAGS) -c -o myth_join_counter-myth_join_counter.obj `if test -f 'myth_join_counter.c'; then $(CYGPATH_W) 'myth_join_counter.c'; else $(CYGPATH_W) '$(srcdir)/myth_join_counter.c'; fi`
+
+myth_key_create-myth_key_create.o: myth_key_create.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_key_create_CFLAGS) $(CFLAGS) -MT myth_key_create-myth_key_create.o -MD -MP -MF $(DEPDIR)/myth_key_create-myth_key_create.Tpo -c -o myth_key_create-myth_key_create.o `test -f 'myth_key_create.c' || echo '$(srcdir)/'`myth_key_create.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/myth_key_create-myth_key_create.Tpo $(DEPDIR)/myth_key_create-myth_key_create.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='myth_key_create.c' object='myth_key_create-myth_key_create.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_key_create_CFLAGS) $(CFLAGS) -c -o myth_key_create-myth_key_create.o `test -f 'myth_key_create.c' || echo '$(srcdir)/'`myth_key_create.c
+
+myth_key_create-myth_key_create.obj: myth_key_create.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_key_create_CFLAGS) $(CFLAGS) -MT myth_key_create-myth_key_create.obj -MD -MP -MF $(DEPDIR)/myth_key_create-myth_key_create.Tpo -c -o myth_key_create-myth_key_create.obj `if test -f 'myth_key_create.c'; then $(CYGPATH_W) 'myth_key_create.c'; else $(CYGPATH_W) '$(srcdir)/myth_key_create.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/myth_key_create-myth_key_create.Tpo $(DEPDIR)/myth_key_create-myth_key_create.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='myth_key_create.c' object='myth_key_create-myth_key_create.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_key_create_CFLAGS) $(CFLAGS) -c -o myth_key_create-myth_key_create.obj `if test -f 'myth_key_create.c'; then $(CYGPATH_W) 'myth_key_create.c'; else $(CYGPATH_W) '$(srcdir)/myth_key_create.c'; fi`
+
+myth_key_destructor-myth_key_destructor.o: myth_key_destructor.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_key_destructor_CFLAGS) $(CFLAGS) -MT myth_key_destructor-myth_key_destructor.o -MD -MP -MF $(DEPDIR)/myth_key_destructor-myth_key_destructor.Tpo -c -o myth_key_destructor-myth_key_destructor.o `test -f 'myth_key_destructor.c' || echo '$(srcdir)/'`myth_key_destructor.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/myth_key_destructor-myth_key_destructor.Tpo $(DEPDIR)/myth_key_destructor-myth_key_destructor.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='myth_key_destructor.c' object='myth_key_destructor-myth_key_destructor.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_key_destructor_CFLAGS) $(CFLAGS) -c -o myth_key_destructor-myth_key_destructor.o `test -f 'myth_key_destructor.c' || echo '$(srcdir)/'`myth_key_destructor.c
+
+myth_key_destructor-myth_key_destructor.obj: myth_key_destructor.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_key_destructor_CFLAGS) $(CFLAGS) -MT myth_key_destructor-myth_key_destructor.obj -MD -MP -MF $(DEPDIR)/myth_key_destructor-myth_key_destructor.Tpo -c -o myth_key_destructor-myth_key_destructor.obj `if test -f 'myth_key_destructor.c'; then $(CYGPATH_W) 'myth_key_destructor.c'; else $(CYGPATH_W) '$(srcdir)/myth_key_destructor.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/myth_key_destructor-myth_key_destructor.Tpo $(DEPDIR)/myth_key_destructor-myth_key_destructor.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='myth_key_destructor.c' object='myth_key_destructor-myth_key_destructor.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_key_destructor_CFLAGS) $(CFLAGS) -c -o myth_key_destructor-myth_key_destructor.obj `if test -f 'myth_key_destructor.c'; then $(CYGPATH_W) 'myth_key_destructor.c'; else $(CYGPATH_W) '$(srcdir)/myth_key_destructor.c'; fi`
+
+myth_key_getspecific-myth_key_getspecific.o: myth_key_getspecific.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_key_getspecific_CFLAGS) $(CFLAGS) -MT myth_key_getspecific-myth_key_getspecific.o -MD -MP -MF $(DEPDIR)/myth_key_getspecific-myth_key_getspecific.Tpo -c -o myth_key_getspecific-myth_key_getspecific.o `test -f 'myth_key_getspecific.c' || echo '$(srcdir)/'`myth_key_getspecific.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/myth_key_getspecific-myth_key_getspecific.Tpo $(DEPDIR)/myth_key_getspecific-myth_key_getspecific.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='myth_key_getspecific.c' object='myth_key_getspecific-myth_key_getspecific.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_key_getspecific_CFLAGS) $(CFLAGS) -c -o myth_key_getspecific-myth_key_getspecific.o `test -f 'myth_key_getspecific.c' || echo '$(srcdir)/'`myth_key_getspecific.c
+
+myth_key_getspecific-myth_key_getspecific.obj: myth_key_getspecific.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_key_getspecific_CFLAGS) $(CFLAGS) -MT myth_key_getspecific-myth_key_getspecific.obj -MD -MP -MF $(DEPDIR)/myth_key_getspecific-myth_key_getspecific.Tpo -c -o myth_key_getspecific-myth_key_getspecific.obj `if test -f 'myth_key_getspecific.c'; then $(CYGPATH_W) 'myth_key_getspecific.c'; else $(CYGPATH_W) '$(srcdir)/myth_key_getspecific.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/myth_key_getspecific-myth_key_getspecific.Tpo $(DEPDIR)/myth_key_getspecific-myth_key_getspecific.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='myth_key_getspecific.c' object='myth_key_getspecific-myth_key_getspecific.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_key_getspecific_CFLAGS) $(CFLAGS) -c -o myth_key_getspecific-myth_key_getspecific.obj `if test -f 'myth_key_getspecific.c'; then $(CYGPATH_W) 'myth_key_getspecific.c'; else $(CYGPATH_W) '$(srcdir)/myth_key_getspecific.c'; fi`
 
 myth_lock-myth_lock.o: myth_lock.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_lock_CFLAGS) $(CFLAGS) -MT myth_lock-myth_lock.o -MD -MP -MF $(DEPDIR)/myth_lock-myth_lock.Tpo -c -o myth_lock-myth_lock.o `test -f 'myth_lock.c' || echo '$(srcdir)/'`myth_lock.c
@@ -2629,6 +2781,48 @@ myth_join_counter_cc-myth_join_counter_cc.obj: myth_join_counter_cc.cc
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='myth_join_counter_cc.cc' object='myth_join_counter_cc-myth_join_counter_cc.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_join_counter_cc_CXXFLAGS) $(CXXFLAGS) -c -o myth_join_counter_cc-myth_join_counter_cc.obj `if test -f 'myth_join_counter_cc.cc'; then $(CYGPATH_W) 'myth_join_counter_cc.cc'; else $(CYGPATH_W) '$(srcdir)/myth_join_counter_cc.cc'; fi`
+
+myth_key_create_cc-myth_key_create_cc.o: myth_key_create_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_key_create_cc_CXXFLAGS) $(CXXFLAGS) -MT myth_key_create_cc-myth_key_create_cc.o -MD -MP -MF $(DEPDIR)/myth_key_create_cc-myth_key_create_cc.Tpo -c -o myth_key_create_cc-myth_key_create_cc.o `test -f 'myth_key_create_cc.cc' || echo '$(srcdir)/'`myth_key_create_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/myth_key_create_cc-myth_key_create_cc.Tpo $(DEPDIR)/myth_key_create_cc-myth_key_create_cc.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='myth_key_create_cc.cc' object='myth_key_create_cc-myth_key_create_cc.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_key_create_cc_CXXFLAGS) $(CXXFLAGS) -c -o myth_key_create_cc-myth_key_create_cc.o `test -f 'myth_key_create_cc.cc' || echo '$(srcdir)/'`myth_key_create_cc.cc
+
+myth_key_create_cc-myth_key_create_cc.obj: myth_key_create_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_key_create_cc_CXXFLAGS) $(CXXFLAGS) -MT myth_key_create_cc-myth_key_create_cc.obj -MD -MP -MF $(DEPDIR)/myth_key_create_cc-myth_key_create_cc.Tpo -c -o myth_key_create_cc-myth_key_create_cc.obj `if test -f 'myth_key_create_cc.cc'; then $(CYGPATH_W) 'myth_key_create_cc.cc'; else $(CYGPATH_W) '$(srcdir)/myth_key_create_cc.cc'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/myth_key_create_cc-myth_key_create_cc.Tpo $(DEPDIR)/myth_key_create_cc-myth_key_create_cc.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='myth_key_create_cc.cc' object='myth_key_create_cc-myth_key_create_cc.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_key_create_cc_CXXFLAGS) $(CXXFLAGS) -c -o myth_key_create_cc-myth_key_create_cc.obj `if test -f 'myth_key_create_cc.cc'; then $(CYGPATH_W) 'myth_key_create_cc.cc'; else $(CYGPATH_W) '$(srcdir)/myth_key_create_cc.cc'; fi`
+
+myth_key_destructor_cc-myth_key_destructor_cc.o: myth_key_destructor_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_key_destructor_cc_CXXFLAGS) $(CXXFLAGS) -MT myth_key_destructor_cc-myth_key_destructor_cc.o -MD -MP -MF $(DEPDIR)/myth_key_destructor_cc-myth_key_destructor_cc.Tpo -c -o myth_key_destructor_cc-myth_key_destructor_cc.o `test -f 'myth_key_destructor_cc.cc' || echo '$(srcdir)/'`myth_key_destructor_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/myth_key_destructor_cc-myth_key_destructor_cc.Tpo $(DEPDIR)/myth_key_destructor_cc-myth_key_destructor_cc.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='myth_key_destructor_cc.cc' object='myth_key_destructor_cc-myth_key_destructor_cc.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_key_destructor_cc_CXXFLAGS) $(CXXFLAGS) -c -o myth_key_destructor_cc-myth_key_destructor_cc.o `test -f 'myth_key_destructor_cc.cc' || echo '$(srcdir)/'`myth_key_destructor_cc.cc
+
+myth_key_destructor_cc-myth_key_destructor_cc.obj: myth_key_destructor_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_key_destructor_cc_CXXFLAGS) $(CXXFLAGS) -MT myth_key_destructor_cc-myth_key_destructor_cc.obj -MD -MP -MF $(DEPDIR)/myth_key_destructor_cc-myth_key_destructor_cc.Tpo -c -o myth_key_destructor_cc-myth_key_destructor_cc.obj `if test -f 'myth_key_destructor_cc.cc'; then $(CYGPATH_W) 'myth_key_destructor_cc.cc'; else $(CYGPATH_W) '$(srcdir)/myth_key_destructor_cc.cc'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/myth_key_destructor_cc-myth_key_destructor_cc.Tpo $(DEPDIR)/myth_key_destructor_cc-myth_key_destructor_cc.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='myth_key_destructor_cc.cc' object='myth_key_destructor_cc-myth_key_destructor_cc.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_key_destructor_cc_CXXFLAGS) $(CXXFLAGS) -c -o myth_key_destructor_cc-myth_key_destructor_cc.obj `if test -f 'myth_key_destructor_cc.cc'; then $(CYGPATH_W) 'myth_key_destructor_cc.cc'; else $(CYGPATH_W) '$(srcdir)/myth_key_destructor_cc.cc'; fi`
+
+myth_key_getspecific_cc-myth_key_getspecific_cc.o: myth_key_getspecific_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_key_getspecific_cc_CXXFLAGS) $(CXXFLAGS) -MT myth_key_getspecific_cc-myth_key_getspecific_cc.o -MD -MP -MF $(DEPDIR)/myth_key_getspecific_cc-myth_key_getspecific_cc.Tpo -c -o myth_key_getspecific_cc-myth_key_getspecific_cc.o `test -f 'myth_key_getspecific_cc.cc' || echo '$(srcdir)/'`myth_key_getspecific_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/myth_key_getspecific_cc-myth_key_getspecific_cc.Tpo $(DEPDIR)/myth_key_getspecific_cc-myth_key_getspecific_cc.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='myth_key_getspecific_cc.cc' object='myth_key_getspecific_cc-myth_key_getspecific_cc.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_key_getspecific_cc_CXXFLAGS) $(CXXFLAGS) -c -o myth_key_getspecific_cc-myth_key_getspecific_cc.o `test -f 'myth_key_getspecific_cc.cc' || echo '$(srcdir)/'`myth_key_getspecific_cc.cc
+
+myth_key_getspecific_cc-myth_key_getspecific_cc.obj: myth_key_getspecific_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_key_getspecific_cc_CXXFLAGS) $(CXXFLAGS) -MT myth_key_getspecific_cc-myth_key_getspecific_cc.obj -MD -MP -MF $(DEPDIR)/myth_key_getspecific_cc-myth_key_getspecific_cc.Tpo -c -o myth_key_getspecific_cc-myth_key_getspecific_cc.obj `if test -f 'myth_key_getspecific_cc.cc'; then $(CYGPATH_W) 'myth_key_getspecific_cc.cc'; else $(CYGPATH_W) '$(srcdir)/myth_key_getspecific_cc.cc'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/myth_key_getspecific_cc-myth_key_getspecific_cc.Tpo $(DEPDIR)/myth_key_getspecific_cc-myth_key_getspecific_cc.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='myth_key_getspecific_cc.cc' object='myth_key_getspecific_cc-myth_key_getspecific_cc.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_key_getspecific_cc_CXXFLAGS) $(CXXFLAGS) -c -o myth_key_getspecific_cc-myth_key_getspecific_cc.obj `if test -f 'myth_key_getspecific_cc.cc'; then $(CYGPATH_W) 'myth_key_getspecific_cc.cc'; else $(CYGPATH_W) '$(srcdir)/myth_key_getspecific_cc.cc'; fi`
 
 myth_lock_cc-myth_lock_cc.o: myth_lock_cc.cc
 @am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_lock_cc_CXXFLAGS) $(CXXFLAGS) -MT myth_lock_cc-myth_lock_cc.o -MD -MP -MF $(DEPDIR)/myth_lock_cc-myth_lock_cc.Tpo -c -o myth_lock_cc-myth_lock_cc.o `test -f 'myth_lock_cc.cc' || echo '$(srcdir)/'`myth_lock_cc.cc
@@ -3242,6 +3436,27 @@ myth_dag_random.log: myth_dag_random$(EXEEXT)
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
 	"$$tst" $(AM_TESTS_FD_REDIRECT)
+myth_key_create.log: myth_key_create$(EXEEXT)
+	@p='myth_key_create$(EXEEXT)'; \
+	b='myth_key_create'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+myth_key_getspecific.log: myth_key_getspecific$(EXEEXT)
+	@p='myth_key_getspecific$(EXEEXT)'; \
+	b='myth_key_getspecific'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+myth_key_destructor.log: myth_key_destructor$(EXEEXT)
+	@p='myth_key_destructor$(EXEEXT)'; \
+	b='myth_key_destructor'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
 pth_create_0.log: pth_create_0$(EXEEXT)
 	@p='pth_create_0$(EXEEXT)'; \
 	b='pth_create_0'; \
@@ -3455,6 +3670,27 @@ myth_dag_2d_cc.log: myth_dag_2d_cc$(EXEEXT)
 myth_dag_random_cc.log: myth_dag_random_cc$(EXEEXT)
 	@p='myth_dag_random_cc$(EXEEXT)'; \
 	b='myth_dag_random_cc'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+myth_key_create_cc.log: myth_key_create_cc$(EXEEXT)
+	@p='myth_key_create_cc$(EXEEXT)'; \
+	b='myth_key_create_cc'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+myth_key_getspecific_cc.log: myth_key_getspecific_cc$(EXEEXT)
+	@p='myth_key_getspecific_cc$(EXEEXT)'; \
+	b='myth_key_getspecific_cc'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+myth_key_destructor_cc.log: myth_key_destructor_cc$(EXEEXT)
+	@p='myth_key_destructor_cc$(EXEEXT)'; \
+	b='myth_key_destructor_cc'; \
 	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \

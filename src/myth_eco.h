@@ -5,12 +5,12 @@
 #ifndef _MYTH_ECO_H_
 #define _MYTH_ECO_H_
 
-#include "myth_desc.h"
-//#include "myth_original_lib.h"
-#include "myth_worker.h"
 #include <linux/futex.h>
 #include <limits.h>
 #include <semaphore.h>
+
+#include "myth_worker.h"
+#include "myth_desc_func.h"
 
 typedef struct sleep_queue {
   struct sleep_queue *next;
@@ -24,7 +24,7 @@ extern sleep_queue_t g_sleep_queue;
 extern pthread_mutex_t *queue_lock;
 extern int sleeper;
 extern int task_num;
-extern myth_running_env *g_envs;
+extern struct myth_running_env *g_envs;
 extern int g_eco_mode_enabled;
 
 #ifdef MYTH_ECO_MODE

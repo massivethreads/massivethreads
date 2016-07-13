@@ -162,7 +162,9 @@ AC_ARG_ENABLE([bind-workers],
 			     [enable_bind_workers="yes"])
 
 if test "x$enable_bind_workers" != "xno" ; then
-  AC_DEFINE_UNQUOTED([MYTH_BIND_WORKERS],[1],[If unset, worker thread binding is disabled]) 
+    AC_DEFINE_UNQUOTED([MYTH_BIND_WORKERS],[1],[whether worker thread binding is enabled])
+else
+    AC_DEFINE_UNQUOTED([MYTH_BIND_WORKERS],[0],[whether worker thread binding is enabled])
 fi
 
 #

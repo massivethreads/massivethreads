@@ -9,9 +9,8 @@
 #include <stdlib.h>
 
 #include "myth/myth.h"
-//#include "myth/myth_internal_lock.h"
-
 #include "myth_context.h"
+#include "myth_tls.h"
 
 /* Thread status constants */
 typedef enum {
@@ -60,6 +59,8 @@ struct myth_thread {
 #endif
   void *custom_data_ptr;
   int custom_data_size;
+
+  myth_tls_tree_t tls[1];
 } ;
 
 // __attribute__((aligned(CACHE_LINE_SIZE))) myth_thread, *myth_thread_t;

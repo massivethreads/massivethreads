@@ -306,7 +306,6 @@ nobase_include_HEADERS = \
 	myth/myth_config.h \
 	myth/myth_internal_lock.h \
 	myth/myth_sleep_queue.h \
-	myth/myth_sync.h \
 	myth.h
 
 all: all-am
@@ -575,6 +574,8 @@ uninstall-am: uninstall-nobase_includeHEADERS
 
 .PRECIOUS: Makefile
 
+
+#	myth/myth_sync.h
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

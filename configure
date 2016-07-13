@@ -5509,6 +5509,12 @@ cat >>confdefs.h <<_ACEOF
 #define MYTH_BIND_WORKERS 1
 _ACEOF
 
+else
+
+cat >>confdefs.h <<_ACEOF
+#define MYTH_BIND_WORKERS 0
+_ACEOF
+
 fi
 
 #

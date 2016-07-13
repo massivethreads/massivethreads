@@ -58,4 +58,46 @@ typedef struct myth_context {
 #endif
 } myth_context, *myth_context_t;
 
+
+
+//Attributes of functions called after context switch
+#if defined MYTH_CONTEXT_ARCH_i386
+#define MYTH_CTX_CALLBACK static __attribute__((used,noinline,regparm(0)))
+#define USE_AVOID_OPTIMIZE
+
+#elif defined MYTH_CONTEXT_ARCH_amd64
+
+#if 1
+
+#if HAVE_ATTR_SYSV_ABI
+#define MYTH_CTX_CALLBACK static __attribute__((used,noinline,sysv_abi))
+#else
+#define MYTH_CTX_CALLBACK static __attribute__((used,noinline))
+#endif
+
+#else  /* 1 */
+#if defined __ICC
+//Intel Compiler does not recognize sysv_abi
+#define MYTH_CTX_CALLBACK static __attribute__((used,noinline))
+#else  /* __ICC */
+#define MYTH_CTX_CALLBACK static __attribute__((used,noinline,sysv_abi))
+#endif	/* __ICC */
+#endif	/* 1 */
+
+#define USE_AVOID_OPTIMIZE
+//#define MYTH_CTX_CALLBACK static __attribute((used,noinline))
+
+#elif defined MYTH_CONTEXT_ARCH_sparc
+#include <string.h>
+//#include <ucontext.h>
+#define MYTH_CTX_CALLBACK static __attribute__((used,noinline))
+
+#elif defined MYTH_CONTEXT_ARCH_UNIVERSAL
+#include <string.h>
+//#include <ucontext.h>
+#define MYTH_CTX_CALLBACK static __attribute__((used,noinline))
+
+#endif	/* MYTH_CONTEXT_ARCH_xxxx */
+
+
 #endif	/* MYTH_CONTEXT_H_ */

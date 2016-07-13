@@ -18,7 +18,6 @@ typedef enum {
   MYTH_LOG_SWITCH,//context switch
 }myth_log_type_t;
 
-//ログをとるための構造体
 typedef struct myth_log_entry {
   uint64_t tsc;			//Time stamp counter from rdtsc
   myth_log_type_t type;
@@ -37,5 +36,9 @@ typedef struct myth_log_entry {
 }myth_log_entry,*myth_log_entry_t;
 
 extern uint64_t g_tsc_base;
+
+
+
+
 
 #endif /* MYTH_LOG_H_ */

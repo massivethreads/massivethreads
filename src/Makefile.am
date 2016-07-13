@@ -12,8 +12,8 @@ COMMON_SRCS = \
 	myth_init.c \
 	myth_misc.c \
 	myth_tls.c \
-	myth_context.S \
-	myth_context_gvar.c \
+	myth_context.c \
+	myth_context_switch.S \
 	myth_eco.c \
 	myth_real_fun.c 
 
