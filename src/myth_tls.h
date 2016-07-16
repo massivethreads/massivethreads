@@ -105,10 +105,11 @@ typedef struct {
   myth_tls_tree_node_t * root;
 } myth_tls_tree_t;
 
+static inline myth_thread_t myth_self_body(void);
 static inline void myth_tls_tree_init(myth_tls_tree_t * t);
 static inline void myth_tls_tree_fini(myth_tls_tree_t * t,
 				      myth_tls_key_allocator_t * ka);
 
-extern myth_tls_key_allocator_t g_myth_tls_key_allocator[1];
+  extern myth_tls_key_allocator_t g_myth_tls_key_allocator[1];
 
 #endif /* MYTH_TLS_H_ */

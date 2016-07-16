@@ -65,6 +65,7 @@ int myth_get_attr_default(myth_attr_t * attr) {
     a.bind_workers = bw;
   }
   *attr = a;
+  return 0;
 }
 
 int myth_set_attr(const myth_attr_t * attr) {

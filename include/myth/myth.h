@@ -559,6 +559,15 @@ extern "C" {
   int myth_get_num_workers(void);
 
   /*
+    Function: myth_get_stack_size
+
+    Returns:
+    The size (in bytes) of the stack size of the current thread
+
+  */
+  size_t myth_get_stack_size(void);
+
+  /*
     Function: myth_self
 
     Returns:
@@ -569,11 +578,7 @@ extern "C" {
   */
   myth_thread_t myth_self(void);
 
-#if 1
   typedef int myth_key_t;
-#else
-  typedef unsigned int myth_key_t;
-#endif
 
   /*
     Function: myth_key_create

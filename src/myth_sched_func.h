@@ -135,6 +135,7 @@ static inline myth_thread_t get_new_myth_thread_struct_desc(myth_running_env_t e
     for (i=0; i<STACK_ALLOC_UNIT; i++){
       ret = (myth_thread_t)(th_ptr+st_size);
       ret->stack = (th_ptr + st_size - sizeof(void*));
+      ret->stack_size = st_size;
       myth_internal_lock_init(&ret->lock);
       if (i < STACK_ALLOC_UNIT - 1){
 	ret = myth_freelist_push(&env->freelist_ds);
@@ -332,14 +333,6 @@ static inline void free_myth_thread_struct_desc_ext(myth_thread_t th) {
   real_free(th);
 }
 
-#if 0
-static inline myth_thread_t myth_self_body(void) {
-  myth_ensure_init();		/* TODO: hoist this outside */
-  myth_running_env_t env = myth_get_current_env();
-  return env->this_thread;
-}
-#endif
-
 MYTH_CTX_CALLBACK void myth_create_1(void *arg1,void *arg2,void *arg3) {
   MAY_BE_UNUSED uint64_t t0,t1;
   myth_running_env_t env = arg1;
@@ -412,6 +405,7 @@ static inline int myth_create_ex_body(myth_thread_t * id,
   // allocate stack and get pointer
   void * stk = get_new_myth_thread_struct_stack(env, stack_size);
   new_thread->stack = stk;
+  new_thread->stack_size = stack_size;
 #else
   void * stk = new_thread->stack;
 #endif /* MYTH_SPLIT_STACK_DESC */

@@ -136,9 +136,9 @@ libmyth_la_LIBADD =
 am__objects_1 = libmyth_la-myth_log.lo libmyth_la-myth_sched.lo \
 	libmyth_la-myth_worker.lo libmyth_la-myth_sync.lo \
 	libmyth_la-myth_init.lo libmyth_la-myth_misc.lo \
-	libmyth_la-myth_tls.lo libmyth_la-myth_context.lo \
-	libmyth_la-myth_context_switch.lo libmyth_la-myth_eco.lo \
-	libmyth_la-myth_real_fun.lo
+	libmyth_la-myth_tls.lo libmyth_la-myth_thread.lo \
+	libmyth_la-myth_context.lo libmyth_la-myth_context_switch.lo \
+	libmyth_la-myth_eco.lo libmyth_la-myth_real_fun.lo
 am_libmyth_la_OBJECTS = $(am__objects_1) libmyth_la-myth_if_native.lo
 libmyth_la_OBJECTS = $(am_libmyth_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
@@ -405,6 +405,7 @@ COMMON_SRCS = \
 	myth_init.c \
 	myth_misc.c \
 	myth_tls.c \
+	myth_thread.c \
 	myth_context.c \
 	myth_context_switch.S \
 	myth_eco.c \
@@ -550,6 +551,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmyth_la-myth_real_fun.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmyth_la-myth_sched.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmyth_la-myth_sync.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmyth_la-myth_thread.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmyth_la-myth_tls.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libmyth_la-myth_worker.Plo@am__quote@
 
@@ -650,6 +652,13 @@ libmyth_la-myth_tls.lo: myth_tls.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='myth_tls.c' object='libmyth_la-myth_tls.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmyth_la_CFLAGS) $(CFLAGS) -c -o libmyth_la-myth_tls.lo `test -f 'myth_tls.c' || echo '$(srcdir)/'`myth_tls.c
+
+libmyth_la-myth_thread.lo: myth_thread.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmyth_la_CFLAGS) $(CFLAGS) -MT libmyth_la-myth_thread.lo -MD -MP -MF $(DEPDIR)/libmyth_la-myth_thread.Tpo -c -o libmyth_la-myth_thread.lo `test -f 'myth_thread.c' || echo '$(srcdir)/'`myth_thread.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libmyth_la-myth_thread.Tpo $(DEPDIR)/libmyth_la-myth_thread.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='myth_thread.c' object='libmyth_la-myth_thread.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmyth_la_CFLAGS) $(CFLAGS) -c -o libmyth_la-myth_thread.lo `test -f 'myth_thread.c' || echo '$(srcdir)/'`myth_thread.c
 
 libmyth_la-myth_context.lo: myth_context.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libmyth_la_CFLAGS) $(CFLAGS) -MT libmyth_la-myth_context.lo -MD -MP -MF $(DEPDIR)/libmyth_la-myth_context.Tpo -c -o libmyth_la-myth_context.lo `test -f 'myth_context.c' || echo '$(srcdir)/'`myth_context.c

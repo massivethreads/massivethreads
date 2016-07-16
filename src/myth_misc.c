@@ -232,12 +232,18 @@ void myth_init_read_available_cpu_list(void) {
 
 //Return the number of CPU cores
 int myth_get_cpu_num(void) {
-  assert(available_cores>0);
+  if (available_cores <= 0) {
+    myth_init_read_available_cpu_list();
+    assert(available_cores > 0);
+  }
   return available_cores;
 }
 
 //Return cpu_set
 cpu_set_t myth_get_worker_cpuset(int rank) {
-  assert(available_cores>0);
+  if (available_cores <= 0) {
+    myth_init_read_available_cpu_list();
+    assert(available_cores > 0);
+  }
   return worker_cpusets[rank % available_cores];
 }

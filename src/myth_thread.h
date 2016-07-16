@@ -37,6 +37,7 @@ struct myth_thread {
   myth_context context;
   // Pointer to stack
   void *stack;
+  size_t stack_size;
   // Pointer to worker thread
   struct myth_running_env* env;
   // Lock
