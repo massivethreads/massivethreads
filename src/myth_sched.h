@@ -6,8 +6,10 @@
 #define _MYTH_SCHED_H_
 #include <stdint.h>
 
+#include "myth/myth.h"
+#include "myth_config.h"
+
 #include "myth_context.h"
-//#include "myth_worker.h"
 
 typedef struct myth_running_env * myth_running_env_t;
 
@@ -20,6 +22,7 @@ typedef struct myth_sched {
 //External Global variables
 extern int g_log_worker_stat;
 extern int g_sched_prof;
+
 
 //Cancel constants, set as the same as those of pthreads
 #define MYTH_CANCEL_DEFERRED PTHREAD_CANCEL_DEFERRED
@@ -35,10 +38,12 @@ static inline myth_running_env_t myth_get_current_env(void);
 static inline void init_myth_thread_struct(myth_running_env_t env,myth_thread_t th);
 static inline myth_running_env_t myth_env_get_first_busy(myth_running_env_t e);
 MYTH_CTX_CALLBACK void myth_create_1(void *arg1,void *arg2,void *arg3);
-static inline myth_thread_t myth_create_body(myth_func_t func, void *arg, size_t stack_size);
-MYTH_CTX_CALLBACK void myth_yield_1(void *arg1,void *arg2,void *arg3);
-static inline void myth_yield_body(int force_worksteal);
-static inline void myth_yield2_body(void);
+static inline int myth_create_ex_body(myth_thread_t * id,
+				      myth_thread_attr_t * attr,
+				      myth_func_t func, void *arg);
+MYTH_CTX_CALLBACK void myth_yield_ex_1(void * arg1, void * arg2, void * arg3);
+static inline int myth_yield_ex_body(int yield_opt);
+static inline int myth_yield_body(void);
 static inline void myth_join_1(myth_running_env_t e,myth_thread_t th,void **result);
 MYTH_CTX_CALLBACK void myth_join_2(void *arg1,void *arg2,void *arg3);
 MYTH_CTX_CALLBACK void myth_join_3(void *arg1,void *arg2,void *arg3);

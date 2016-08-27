@@ -10,12 +10,14 @@
 
 #include "myth/myth.h"
 
+#include "myth_config.h"
+#include "myth_misc.h"
 #include "myth_sched.h"
 #include "myth_io.h"
-#include "myth_log.h"
+//#include "myth_log.h"
 #include "myth_wsqueue.h"
 
-#if defined(MYTH_ECO_MODE) && defined (MYTH_ECO_TEIAN_STEAL)
+#if MYTH_ECO_MODE && MYTH_ECO_TEIAN_STEAL
 //#include "myth_eco.h"
 typedef enum {
   RUNNING = 31,
@@ -29,43 +31,43 @@ typedef enum {
 
 //Profiling data
 typedef struct myth_prof_data {
-#ifdef MYTH_CREATE_PROF
+#if MYTH_CREATE_PROF
   uint64_t create_cnt,create_cycles;
   uint64_t create_cycles_tmp;
 #endif
-#ifdef MYTH_CREATE_PROF_DETAIL
+#if MYTH_CREATE_PROF_DETAIL
   uint64_t create_d_cnt,create_d_tmp;
   uint64_t create_alloc,create_switch,create_push;
 #endif
-#ifdef MYTH_ENTRY_POINT_PROF
+#if MYTH_ENTRY_POINT_PROF
   uint64_t ep_cnt;
   uint64_t ep_cyclesA,ep_cyclesB;
   uint64_t ep_cycles_tmp;
 #endif
-#ifdef MYTH_EP_PROF_DETAIL
+#if MYTH_EP_PROF_DETAIL
   uint64_t ep_d_cnt,ep_d_tmp;
   uint64_t ep_join,ep_switch,ep_pop;
 #endif
-#ifdef MYTH_JOIN_PROF
+#if MYTH_JOIN_PROF
   uint64_t join_cnt,join_cycles;
 #endif
-#ifdef MYTH_JOIN_PROF_DETAIL
+#if MYTH_JOIN_PROF_DETAIL
   uint64_t join_d_cnt;
   uint64_t join_join,join_release;
 #endif
-#ifdef MYTH_WS_PROF_DETAIL
+#if MYTH_WS_PROF_DETAIL
   uint64_t ws_hit_cnt;
   uint64_t ws_hit_cycles;
   uint64_t ws_miss_cnt;
   uint64_t ws_miss_cycles;
   uint64_t *ws_attempt_count;
 #endif
-#ifdef MYTH_SWITCH_PROF
+#if MYTH_SWITCH_PROF
   uint64_t sw_cnt;
   uint64_t sw_cycles;
   uint64_t sw_tmp;
 #endif
-#ifdef MYTH_ALLOC_PROF
+#if MYTH_ALLOC_PROF
   uint64_t alloc_cnt;
   uint64_t malloc_cnt;
   uint64_t malloc_cycles;
@@ -79,7 +81,7 @@ typedef struct myth_prof_data {
   uint64_t smalloc_cycles;
   uint64_t saddlist_cycles;
 #endif
-#ifdef MYTH_IO_PROF_DETAIL
+#if MYTH_IO_PROF_DETAIL
   uint64_t io_succ_send_cnt,io_succ_recv_cnt;
   uint64_t io_succ_send_cycles,io_succ_recv_cycles;
   uint64_t io_block_send_cnt,io_block_recv_cnt;
@@ -101,7 +103,7 @@ typedef struct myth_prof_data {
 typedef struct myth_running_env {
   //The following entries are only accessed from the owner
   struct myth_thread *this_thread;//Currently executing thread
-#ifdef MYTH_SPLIT_STACK_DESC
+#if MYTH_SPLIT_STACK_DESC
   myth_freelist_t freelist_desc;//Freelist of thread descriptor
   myth_freelist_t freelist_stack;//Freelist of stack
 #else
@@ -109,7 +111,7 @@ typedef struct myth_running_env {
 #endif
   int log_buf_size;
   int log_count;
-  myth_internal_lock_t log_lock;
+  myth_spinlock_t log_lock;
   struct myth_log_entry *log_data;
   struct myth_prof_data prof_data;
   pid_t tid;//an ID of the worker thread
@@ -121,20 +123,20 @@ typedef struct myth_running_env {
   //Appropriate synchronization is required
   myth_thread_queue runnable_q;//Runqueue
   //Reference to Global free list
-#ifdef MYTH_SPLIT_STACK_DESC
+#if MYTH_SPLIT_STACK_DESC
   myth_freelist_t *freelist_desc_g;//Freelist of thread descriptor
   myth_freelist_t *freelist_stack_g;//Freelist of stack
 #endif
   struct myth_io_struct_perenv io_struct;//I/O-related data structure. See myth_io_struct.h
-#ifdef MYTH_ECO_MODE
+#if MYTH_ECO_MODE
   int my_sem;
   int isSleepy;
   int ws_target;
 #endif
-#ifdef MYTH_ECO_TEST
+#if MYTH_ECO_TEST
   int thief_count;
 #endif
-#if defined(MYTH_ECO_TEIAN_STEAL)
+#if MYTH_ECO_TEIAN_STEAL
   worker_cond_t c;
   int finish_ready;
   int knowledge;
@@ -157,6 +159,20 @@ extern myth_running_env_t g_envs;
 //Barrier for worker threads
 extern pthread_barrier_t g_worker_barrier;
 
+
+#if WENV_IMPL == WENV_IMPL_PTHREAD
+//TLS by pthread
+extern pthread_key_t g_env_key;
+#elif WENV_IMPL == WENV_IMPL_ELF
+//TLS by GCC extension
+extern __thread int g_worker_rank;
+#elif WENV_IMPL == WENV_IMPL_NONE
+//Simple global variable. Works only on single worker thread
+#else
+#error "invalid WENV_IMPL"
+#endif
+
+
 static void myth_sched_loop(void);
 
 static inline void myth_env_init(void);
@@ -170,5 +186,6 @@ static inline void myth_startpoint_init_ex_body(int rank);
 static inline void myth_startpoint_exit_ex_body(int rank);
 static void *myth_worker_thread_fn(void *args);
 
+static inline int myth_get_num_workers_body(void);
 
 #endif /* MYTH_WORKER_H_ */

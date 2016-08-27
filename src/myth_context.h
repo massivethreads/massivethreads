@@ -3,71 +3,69 @@
  *  data structure related to context and
  *  must be included by the user
  */
+#pragma once
 #ifndef MYTH_CONTEXT_H_
 #define MYTH_CONTEXT_H_
 
 #include <stdint.h>
-#include "myth/myth_config.h"
+#include "myth_config.h"
 
-#if defined MYTH_ARCH_i386 && !defined MYTH_FORCE_UCONTEXT
-#define MYTH_CONTEXT_ARCH_i386
+/* define MYTH_CONTEXT */
 
-#elif defined MYTH_ARCH_amd64 && !defined MYTH_FORCE_UCONTEXT
-#define MYTH_CONTEXT_ARCH_amd64
-
-#elif defined MYTH_ARCH_sparc && !defined MYTH_FORCE_UCONTEXT
-#define MYTH_CONTEXT_ARCH_sparc
-  #ifdef MYTH_ARCH_sparc_v9
-  #define FRAMESIZE 176   /* Keep consistent with myth_context.S */
-  #define STACKBIAS 2047  /* Do not change this */
-  #define SAVE_FP   128
-  #define SAVE_I7   136
-  #else
-  #define FRAMESIZE 92
-  #define SAVE_FP   68
-  #define SAVE_I7   72
-  #endif
-
-#elif defined MYTH_ARCH_UNIVERSAL || defined MYTH_FORCE_UCONTEXT
+#if MYTH_FORCE_UCONTEXT || MYTH_ARCH == MYTH_ARCH_UNIVERSAL
+#define MYTH_CONTEXT MYTH_CONTEXT_UCONTEXT
 #include <ucontext.h>
 
-#define MYTH_CONTEXT_ARCH_UNIVERSAL
-#undef MYTH_INLINE_CONTEXT
-#define MYTH_CONTEXT_ARCH_UNIVERSAL
+#elif MYTH_ARCH == MYTH_ARCH_i386
+#define MYTH_CONTEXT MYTH_CONTEXT_i386
+
+#elif MYTH_ARCH == MYTH_ARCH_amd64
+#define MYTH_CONTEXT MYTH_CONTEXT_amd64
+
+#elif MYTH_ARCH == MYTH_ARCH_amd64_knc
+#define MYTH_CONTEXT MYTH_CONTEXT_amd64_knc
+
+#elif MYTH_ARCH == MYTH_ARCH_sparc_v9
+#define MYTH_CONTEXT MYTH_CONTEXT_sparc_v9
+#define FRAMESIZE 176   /* Keep consistent with myth_context.S */
+#define STACKBIAS 2047  /* Do not change this */
+#define SAVE_FP   128
+#define SAVE_I7   136
+
+#elif MYTH_ARCH == MYTH_ARCH_sparc_v8
+#define MYTH_CONTEXT MYTH_CONTEXT_sparc_v8
+#define FRAMESIZE 92
+#define SAVE_FP   68
+#define SAVE_I7   72
 
 #else
-#error "Specify architecture"
+#error "invalid MYTH_ARCH"
 #endif
 
 /* Execution context */
 typedef struct myth_context {
-#if defined MYTH_CONTEXT_ARCH_i386
+#if MYTH_CONTEXT == MYTH_CONTEXT_i386
   uint32_t esp;
-#elif defined MYTH_CONTEXT_ARCH_amd64
+#elif MYTH_CONTEXT == MYTH_CONTEXT_amd64 || MYTH_CONTEXT == MYTH_CONTEXT_amd64_knc
   uint64_t rsp;
-#elif defined MYTH_CONTEXT_ARCH_sparc
-#ifdef MYTH_ARCH_sparc_v9
+#elif MYTH_CONTEXT == MYTH_CONTEXT_sparc_v9
   uint64_t sp;
-#else
+#elif MYTH_CONTEXT == MYTH_CONTEXT_sparc_v8
   uint32_t sp;
-#endif
-#elif defined MYTH_CONTEXT_ARCH_UNIVERSAL
+#elif MYTH_CONTEXT == MYTH_CONTEXT_UCONTEXT
   ucontext_t uc;
 #else
-#error "Architecture not defined"
+#error "MYTH_CONTEXT not defined"
 #endif
 } myth_context, *myth_context_t;
 
 
-
 //Attributes of functions called after context switch
-#if defined MYTH_CONTEXT_ARCH_i386
+#if MYTH_CONTEXT == MYTH_CONTEXT_i386
 #define MYTH_CTX_CALLBACK static __attribute__((used,noinline,regparm(0)))
-#define USE_AVOID_OPTIMIZE
+#define USE_AVOID_OPTIMIZE 1
 
-#elif defined MYTH_CONTEXT_ARCH_amd64
-
-#if 1
+#elif MYTH_CONTEXT == MYTH_CONTEXT_amd64 || MYTH_CONTEXT == MYTH_CONTEXT_amd64_knc
 
 #if HAVE_ATTR_SYSV_ABI
 #define MYTH_CTX_CALLBACK static __attribute__((used,noinline,sysv_abi))
@@ -75,29 +73,20 @@ typedef struct myth_context {
 #define MYTH_CTX_CALLBACK static __attribute__((used,noinline))
 #endif
 
-#else  /* 1 */
-#if defined __ICC
-//Intel Compiler does not recognize sysv_abi
-#define MYTH_CTX_CALLBACK static __attribute__((used,noinline))
-#else  /* __ICC */
-#define MYTH_CTX_CALLBACK static __attribute__((used,noinline,sysv_abi))
-#endif	/* __ICC */
-#endif	/* 1 */
+#define USE_AVOID_OPTIMIZE 1
 
-#define USE_AVOID_OPTIMIZE
-//#define MYTH_CTX_CALLBACK static __attribute((used,noinline))
-
-#elif defined MYTH_CONTEXT_ARCH_sparc
+#elif MYTH_CONTEXT == MYTH_CONTEXT_sparc_v9 || MYTH_CONTEXT == MYTH_CONTEXT_sparc_v8
 #include <string.h>
-//#include <ucontext.h>
+
 #define MYTH_CTX_CALLBACK static __attribute__((used,noinline))
 
-#elif defined MYTH_CONTEXT_ARCH_UNIVERSAL
+#elif MYTH_CONTEXT == MYTH_CONTEXT_UCONTEXT
 #include <string.h>
-//#include <ucontext.h>
 #define MYTH_CTX_CALLBACK static __attribute__((used,noinline))
 
-#endif	/* MYTH_CONTEXT_ARCH_xxxx */
+#else 
+#error "define MYTH_CONTEXT"
+#endif	/* MYTH_CONTEXT == */
 
 
 #endif	/* MYTH_CONTEXT_H_ */

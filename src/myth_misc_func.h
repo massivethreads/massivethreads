@@ -15,9 +15,7 @@
 #include <sys/mman.h>
 #include <sched.h>
 
-#include "config.h"
-
-#include "myth/myth_config.h"
+#include "myth_config.h"
 #include "myth_misc.h"
 #include "myth_real_fun.h"
 
@@ -25,15 +23,15 @@
 //Access to time stamp counter
 //lfence inserted to serialize instructions
 static inline uint64_t myth_get_rdtsc() {
-#if defined MYTH_ARCH_i386 || defined MYTH_ARCH_amd64
+#if MYTH_ARCH == MYTH_ARCH_i386 || MYTH_ARCH == MYTH_ARCH_amd64 || MYTH_ARCH == MYTH_ARCH_amd64_knc
   uint32_t hi,lo;
-#if defined MYTH_ARCH_amd64_mic
-  asm volatile("rdtsc" : "=a"(lo),"=d"(hi));
+#if MYTH_ARCH == MYTH_ARCH_amd64_knc
 #else
-  asm volatile("lfence\nrdtsc" : "=a"(lo),"=d"(hi));
+  asm volatile("lfence");
 #endif
+  asm volatile("rdtsc" : "=a"(lo),"=d"(hi));
   return ((uint64_t)hi)<<32 | lo;
-#elif defined MYTH_ARCH_sparc
+#elif MYTH_ARCH == MYTH_ARCH_sparc_v9 || MYTH_ARCH == MYTH_ARCH_sparc_v8
   uint64_t tick;
   asm volatile("rd %%tick, %0" : "=r" (tick));
   return tick;
@@ -78,7 +76,7 @@ static inline void * myth_freelist_pop(myth_freelist_t * fl) {
   }
 }
 
-#ifdef MYTH_FLMALLOC_PROF
+#if MYTH_FLMALLOC_PROF
 extern __thread uint64_t g_myth_flmalloc_cycles,g_myth_flmalloc_cnt;
 extern __thread uint64_t g_myth_flfree_cycles,g_myth_flfree_cnt;
 #endif
@@ -102,29 +100,29 @@ extern __thread uint64_t g_myth_flfree_cycles,g_myth_flfree_cnt;
 
 #define MYTH_MALLOC_FLSIZE_MAX (MYTH_MALLOC_INDEX_TO_RSIZE(FREE_LIST_NUM-1)-1)
 
-#ifdef USE_MYTH_FLMALLOC
+#if USE_MYTH_FLMALLOC
 
-#ifdef MYTH_FLMALLOC_TLS
+#if MYTH_FLMALLOC_TLS
 extern __thread myth_freelist_t *g_myth_freelist;
 #else
 extern myth_freelist_t **g_myth_freelist;
 #endif
 
 static inline void myth_flmalloc_init(int nthreads) {
-#ifndef MYTH_FLMALLOC_TLS
+#if !MYTH_FLMALLOC_TLS
   //assert(real_malloc);
-  g_myth_freelist=real_malloc(sizeof(myth_freelist_t*)*nthreads);
+  g_myth_freelist = real_malloc(sizeof(myth_freelist_t*)*nthreads);
 #endif
 }
 
 static inline void myth_flmalloc_init_worker(int rank) {
   int i;
   //Allocate freelists
-#ifdef MYTH_FLMALLOC_TLS
+#if MYTH_FLMALLOC_TLS
   g_myth_freelist=real_malloc(sizeof(myth_freelist_t)*FREE_LIST_NUM);
   //Initialize
   for (i=0;i<FREE_LIST_NUM;i++){
-    myth_freelist_init(g_myth_freelist[i]);
+    myth_freelist_init(&g_myth_freelist[i]);
   }
 #else
   assert(real_malloc);
@@ -138,7 +136,7 @@ static inline void myth_flmalloc_init_worker(int rank) {
 
 extern uint64_t g_mmap_total,g_mmap_count;
 static inline void myth_flmalloc_fini() {
-#ifndef MYTH_FLMALLOC_TLS
+#if !MYTH_FLMALLOC_TLS
   real_free(g_myth_freelist);
 #endif
 }
@@ -150,12 +148,12 @@ static inline void myth_flmalloc_fini_worker(int rank) {
 
     }*/
   //Release the array
-#ifndef MYTH_FLMALLOC_TLS
-  real_free(g_myth_freelist[rank]);
-#else
+#if MYTH_FLMALLOC_TLS
   real_free(g_myth_freelist);
+#else
+  real_free(g_myth_freelist[rank]);
 #endif
-#ifdef MYTH_FLMALLOC_PROF
+#if MYTH_FLMALLOC_PROF
   fprintf(stderr,"%lu mallocs : %lf cycles/malloc\n",(unsigned long)g_myth_flmalloc_cnt,g_myth_flmalloc_cycles/(double)g_myth_flmalloc_cnt);
   fprintf(stderr,"%lu frees : %lf cycles/free\n",(unsigned long)g_myth_flfree_cnt,g_myth_flfree_cycles/(double)g_myth_flfree_cnt);
 #endif
@@ -169,12 +167,12 @@ static inline void * myth_mmap(void *addr, size_t length, int prot,
 static inline void * myth_flmalloc(int rank, size_t size) {
   //Freelist-based Internal allocator
   
-#ifdef MYTH_FLMALLOC_PROF
+#if MYTH_FLMALLOC_PROF
   uint64_t t0 = myth_get_rdtsc();
 #endif
   if (size < 8) size = 8;
   int idx = MYTH_MALLOC_SIZE_TO_INDEX(size);
-#ifdef MYTH_FLMALLOC_TLS
+#if MYTH_FLMALLOC_TLS
   void * ptr = myth_freelist_pop(&g_myth_freelist[idx]);
 #else
   void * ptr = myth_freelist_pop(&g_myth_freelist[rank][idx]);
@@ -191,7 +189,7 @@ static inline void * myth_flmalloc(int rank, size_t size) {
       char * p2 = p + PAGE_SIZE;
       p += realsize;
       while (p < p2){
-#ifdef MYTH_FLMALLOC_TLS
+#if MYTH_FLMALLOC_TLS
 	myth_freelist_push(&g_myth_freelist[idx], p);
 #else
 	myth_freelist_push(&g_myth_freelist[rank][idx], p);
@@ -213,7 +211,7 @@ static inline void * myth_flmalloc(int rank, size_t size) {
     //ptr=real_malloc(realsize);//fprintf(stderr,"M %lu %s:%d\n",(unsigned long)realsize,f,l);
     myth_assert(ptr);
   }
-#ifdef MYTH_FLMALLOC_PROF
+#if MYTH_FLMALLOC_PROF
   uint64_t t1 = myth_get_rdtsc();
   g_myth_flmalloc_cycles += t1 - t0;
   g_myth_flmalloc_cnt++;
@@ -224,17 +222,17 @@ static inline void * myth_flmalloc(int rank, size_t size) {
 static inline void myth_flfree(int rank, size_t size, void *ptr) {
   //Put into the freelist
   int idx;
-#ifdef MYTH_FLMALLOC_PROF
+#if MYTH_FLMALLOC_PROF
   uint64_t t0 = myth_get_rdtsc();
 #endif
   if (size < 8) size = 8;
   idx = MYTH_MALLOC_SIZE_TO_INDEX(size);
-#ifdef MYTH_FLMALLOC_TLS
+#if MYTH_FLMALLOC_TLS
   myth_freelist_push(&g_myth_freelist[idx], ptr);
 #else
   myth_freelist_push(& g_myth_freelist[rank][idx], ptr);
 #endif
-#ifdef MYTH_FLMALLOC_PROF
+#if MYTH_FLMALLOC_PROF
   uint64_t t1=myth_get_rdtsc();
   g_myth_flfree_cycles += t1 - t0;
   g_myth_flfree_cnt++;
@@ -262,7 +260,7 @@ static inline void myth_flmalloc_fini(void) {
 }
 
 static inline void myth_flmalloc_fini_worker(int rank) {
-#ifdef MYTH_FLMALLOC_PROF
+#if MYTH_FLMALLOC_PROF
   fprintf(stderr,"%lu mallocs : %lf cycles/malloc\n",(unsigned long)g_myth_flmalloc_cnt,g_myth_flmalloc_cycles/(double)g_myth_flmalloc_cnt);
   fprintf(stderr,"%lu frees : %lf cycles/free\n",(unsigned long)g_myth_flfree_cnt,g_myth_flfree_cycles/(double)g_myth_flfree_cnt);
 #endif
@@ -271,24 +269,24 @@ static inline void *myth_malloc(size_t size);
 static inline void myth_free(void *ptr,size_t size);
 static inline void* myth_flmalloc(int rank,size_t s) {
   void *ret;
-#ifdef MYTH_FLMALLOC_PROF
+#if MYTH_FLMALLOC_PROF
   uint64_t t0,t1;
   t0=myth_get_rdtsc();
 #endif
   ret=myth_malloc(s);
-#ifdef MYTH_FLMALLOC_PROF
+#if MYTH_FLMALLOC_PROF
   t1=myth_get_rdtsc();
   g_myth_flmalloc_cycles+=t1-t0;g_myth_flmalloc_cnt++;
 #endif
   return ret;
 }
 static inline void myth_flfree(int rank,size_t size,void *ptr) {
-#ifdef MYTH_FLMALLOC_PROF
+#if MYTH_FLMALLOC_PROF
   uint64_t t0,t1;
   t0=myth_get_rdtsc();
 #endif
   myth_free(ptr,size);
-#ifdef MYTH_FLMALLOC_PROF
+#if MYTH_FLMALLOC_PROF
   t1=myth_get_rdtsc();
   g_myth_flfree_cycles+=t1-t0;g_myth_flfree_cnt++;
 #endif
@@ -299,7 +297,9 @@ static inline void myth_flfree(int rank,size_t size,void *ptr) {
 //malloc with error checking
 static inline void * myth_malloc(size_t size) {
   void *ptr;
+#if 0
   if (!real_malloc) return NULL;
+#endif
   ptr = real_malloc(size);
   myth_assert(ptr);
   return ptr;

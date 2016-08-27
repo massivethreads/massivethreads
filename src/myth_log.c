@@ -1,7 +1,8 @@
 /* 
  * myth_log.c
  */
-#include "myth_log.h"
+#include "myth_config.h"
+#include "myth_log_func.h"
 
 /*
   int myth_textlog_entry_compare(const void *pa,const void *pb)

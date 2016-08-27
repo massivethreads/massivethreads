@@ -9,11 +9,11 @@
 
 #include "myth/myth.h"
 
-#if 1
-
+#include "myth_config.h"
 #include "myth_init.h"
 #include "myth_misc.h"
 #include "myth_worker.h"
+#include "myth_thread.h"
 #include "myth_tls.h"
 
 #include "myth_init_func.h"
@@ -119,6 +119,7 @@ myth_tls_tree_destroy_rec(myth_tls_tree_node_t * n,
       c_base += stride;
     }
   }
+  return 0;
 }
 
 static inline int
@@ -155,7 +156,8 @@ static inline void * myth_tls_tree_get(myth_tls_tree_t * t, int idx) {
   return n->entries[idx & (myth_tls_tree_node_n_entries_in_leaf - 1)].value;
 }
 
-static inline int myth_tls_tree_set(myth_tls_tree_t * t, int idx, void * v) {
+static inline int myth_tls_tree_set(myth_tls_tree_t * t, int idx,
+				    const void * v) {
   if (idx < 0 || idx >= myth_tls_n_keys) {
     return EINVAL;
   }
@@ -186,7 +188,8 @@ static inline int myth_tls_tree_set(myth_tls_tree_t * t, int idx, void * v) {
     n = c;
   }
   assert(n->type == myth_tls_tree_node_type_leaf);
-  n->entries[idx & (myth_tls_tree_node_n_entries_in_leaf - 1)].value = v;
+  /* a cast to discard const qualifier  */
+  n->entries[idx & (myth_tls_tree_node_n_entries_in_leaf - 1)].value = (void *)v;
   return 0;
 }
 
@@ -201,10 +204,12 @@ static inline void myth_tls_key_allocator_init(myth_tls_key_allocator_t * s) {
 }
 
 static inline void myth_tls_key_allocator_fini(myth_tls_key_allocator_t * s) {
+  (void)s;
 }
 
 myth_tls_key_allocator_t g_myth_tls_key_allocator[1];
-static inline void myth_tls_init(int nworkers) {
+static inline void myth_tls_init(int n_workers) {
+  (void)n_workers;
   myth_tls_key_allocator_init(g_myth_tls_key_allocator);
 }
 
@@ -257,10 +262,11 @@ myth_tls_key_allocator_dealloc(myth_tls_key_allocator_t * s, int key) {
 }
 
 static inline int myth_key_create_body(myth_key_t * key,
-				       void (*destructor)(void *)) {
-  myth_ensure_init();
+				       myth_tls_destructor_fun_t destructor) {
+  int _ = myth_ensure_init();
   myth_key_t k = myth_tls_key_allocator_alloc(g_myth_tls_key_allocator,
 					      destructor);
+  (void)_;
   if (k == -1) {
     return EINVAL;
   } else {
@@ -270,9 +276,10 @@ static inline int myth_key_create_body(myth_key_t * key,
 }
 
 static inline int myth_key_delete_body(myth_key_t key) {
-  myth_ensure_init();
+  int _ = myth_ensure_init();
   myth_tls_destructor_fun_t f
     = myth_tls_key_allocator_dealloc(g_myth_tls_key_allocator, key);
+  (void)_;
   if (f == (myth_tls_destructor_fun_t)-1) {
     return EINVAL;
   } else {
@@ -281,150 +288,24 @@ static inline int myth_key_delete_body(myth_key_t key) {
 }
 
 static inline myth_thread_t myth_self_body(void) {
-  myth_ensure_init();		/* TODO: hoist this outside */
+  int _ = myth_ensure_init();	/* TODO: hoist this outside */
   myth_running_env_t env = myth_get_current_env();
+  (void)_;
   return env->this_thread;
 }
 
-static inline void *myth_getspecific_body(myth_key_t key) {
-  myth_thread_t th = myth_self_body();
-  return myth_tls_tree_get(th->tls, key);
+static inline int myth_equal_body(myth_thread_t t1, myth_thread_t t2) {
+  return t1 == t2;
 }
 
-static inline int myth_setspecific_body(myth_key_t key, void * val) {
+static inline int myth_setspecific_body(myth_key_t key, const void * val) {
   myth_thread_t th = myth_self_body();
   return myth_tls_tree_set(th->tls, key, val);
 }
 
-
-#else
-
-typedef struct myth_tls_entry {
-  myth_thread_t th;
-  myth_key_t key;
-  void *value;
-} myth_tls_entry, *myth_tls_entry_t;
-
-extern myth_internal_lock_t g_myth_tls_lock;
-extern myth_tls_entry *g_myth_tls_list;
-extern int g_myth_tls_list_size;
-extern int g_myth_tls_key_status[MYTH_TLS_KEY_SIZE];
-
-static inline void myth_tls_init(int nworkers) {
-  (void)nworkers;
-  assert(real_malloc);
-  myth_internal_lock_init(&g_myth_tls_lock);
-  g_myth_tls_list = NULL;
-  g_myth_tls_list_size = 0;
-  memset(g_myth_tls_key_status, 0, sizeof(int) * MYTH_TLS_KEY_SIZE);
+static inline void * myth_getspecific_body(myth_key_t key) {
+  myth_thread_t th = myth_self_body();
+  return myth_tls_tree_get(th->tls, key);
 }
-
-static inline void myth_tls_fini(void)
-{
-  myth_internal_lock_destroy(&g_myth_tls_lock);
-  if (g_myth_tls_list)real_free(g_myth_tls_list);
-  g_myth_tls_list=NULL;
-  g_myth_tls_list_size=0;
-}
-
-static inline int myth_key_create_body(myth_key_t *__key,void (*__destr_function) (void *))
-{
-  int i;
-  int ret=0;
-  myth_internal_lock_lock(&g_myth_tls_lock);
-  if (__destr_function){ret=EAGAIN;}
-  else{
-    for (i=0;i<MYTH_TLS_KEY_SIZE;i++){
-      if (g_myth_tls_key_status[i]==0)break;
-    }
-    if (i==MYTH_TLS_KEY_SIZE){
-      ret=EAGAIN;
-    }
-    else{
-      g_myth_tls_key_status[i]=1;
-      *__key=i;
-    }
-  }
-  myth_internal_lock_unlock(&g_myth_tls_lock);
-  return ret;
-}
-
-static inline int myth_key_delete_body(myth_key_t __key)
-{
-  int ret=0;
-  myth_internal_lock_lock(&g_myth_tls_lock);
-  int i;
-  if (g_myth_tls_list){
-    for (i=0;i<g_myth_tls_list_size;i++){
-      if (g_myth_tls_list[i].key==__key){
-	memmove(&g_myth_tls_list[i],&g_myth_tls_list[i+1],sizeof(myth_tls_entry)*(g_myth_tls_list_size-i-1));
-	g_myth_tls_list_size--;
-      }
-    }
-    g_myth_tls_list=real_realloc(g_myth_tls_list,sizeof(myth_tls_entry)*g_myth_tls_list_size);
-  }
-  if (g_myth_tls_key_status[__key]==0){ret=EINVAL;}
-  else{
-    g_myth_tls_key_status[__key]=0;
-  }
-  myth_internal_lock_unlock(&g_myth_tls_lock);
-  return ret;
-}
-
-static inline void *myth_getspecific_body(myth_key_t __key)
-{
-  void *ret=NULL;
-  myth_internal_lock_lock(&g_myth_tls_lock);
-  if (g_myth_tls_key_status[__key]!=0){
-    int i;
-    if (g_myth_tls_list){
-      for (i=0;i<g_myth_tls_list_size;i++){
-	if (g_myth_tls_list[i].key==__key && g_myth_tls_list[i].th==myth_self_body()){
-	  ret=g_myth_tls_list[i].value;
-	  break;
-	}
-      }
-    }
-  }
-  myth_internal_lock_unlock(&g_myth_tls_lock);
-  return ret;
-}
-
-static inline int myth_setspecific_body(myth_key_t __key,void *__pointer)
-{
-  int ret=0;
-  myth_internal_lock_lock(&g_myth_tls_lock);
-  if (g_myth_tls_key_status[__key]==0){ret=EINVAL;}
-  else{
-    int i;
-    if (g_myth_tls_list){
-      for (i=0;i<g_myth_tls_list_size;i++){
-	if (g_myth_tls_list[i].key==__key && g_myth_tls_list[i].th==myth_self_body()){
-	  g_myth_tls_list[i].value=__pointer;
-	  break;
-	}
-      }
-      if (i==g_myth_tls_list_size){
-	g_myth_tls_list_size++;
-	g_myth_tls_list=real_realloc(g_myth_tls_list,sizeof(myth_tls_entry)*g_myth_tls_list_size);
-	g_myth_tls_list[i].key=__key;
-	g_myth_tls_list[i].th=myth_self_body();
-	g_myth_tls_list[i].value=__pointer;
-      }
-    }
-    else{
-      g_myth_tls_list_size = 1;
-      g_myth_tls_list=real_malloc(sizeof(myth_tls_entry));
-      g_myth_tls_list[0].key=__key;
-      g_myth_tls_list[0].th=myth_self_body();
-      g_myth_tls_list[0].value=__pointer;
-    }
-  }
-  myth_internal_lock_unlock(&g_myth_tls_lock);
-  return ret;
-}
-
-
-#endif	/* 1 */
 
 #endif /* MYTH_TLS_FUNC_H_ */

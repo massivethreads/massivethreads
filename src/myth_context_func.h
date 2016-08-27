@@ -9,7 +9,13 @@
 #include <stdlib.h>
 #include <stdint.h>
 
+#include "myth_config.h"
 #include "myth_context.h"
+
+#include "myth_desc_func.h"
+
+//#include "myth_log.h"
+//#include "myth_log_func.h"
 
 typedef void (*void_func_t)(void);
 
@@ -20,7 +26,7 @@ static inline void myth_make_context_voidcall(myth_context_t ctx, void_func_t fu
 					      void *stack, size_t stacksize);
 
 
-#if defined MYTH_COLLECT_LOG && defined MYTH_COLLECT_CONTEXT_SWITCH
+#if MYTH_COLLECT_LOG && MYTH_COLLECT_CONTEXT_SWITCH
 //static inline void myth_log_add_context_switch(struct myth_running_env *env,struct myth_thread *th);
 #define  myth_context_switch_hook(ctx) \
 { \
@@ -32,26 +38,30 @@ static inline void myth_make_context_voidcall(myth_context_t ctx, void_func_t fu
 #define myth_context_switch_hook(ctx)
 #endif
 
-#if defined MYTH_CONTEXT_ARCH_i386 || defined MYTH_CONTEXT_ARCH_amd64 || \
-    defined MYTH_CONTEXT_ARCH_sparc
+#if MYTH_CONTEXT == MYTH_CONTEXT_i386 \
+  || MYTH_CONTEXT == MYTH_CONTEXT_amd64 \
+  || MYTH_CONTEXT == MYTH_CONTEXT_amd64_knc \
+  || MYTH_CONTEXT == MYTH_CONTEXT_sparc_v9 \
+  || MYTH_CONTEXT == MYTH_CONTEXT_sparc_v8
+
 void myth_swap_context_s(myth_context_t switch_from, myth_context_t switch_to);
-void myth_swap_context_withcall_s(myth_context_t switch_from, myth_context_t switch_to,
-  void(*func)(void*,void*,void*), void *arg1, void *arg2, void *arg3);
+void myth_swap_context_withcall_s(myth_context_t switch_from,
+				  myth_context_t switch_to,
+				  void(*func)(void*,void*,void*),
+				  void *arg1, void *arg2, void *arg3);
 void myth_set_context_s(myth_context_t ctx);
 void myth_set_context_withcall_s(myth_context_t switch_to, 
-  void(*func)(void*,void*,void*), void *arg1, void *arg2, void *arg3);
-#elif defined MYTH_CONTEXT_ARCH_UNIVERSAL
+				 void(*func)(void*,void*,void*),
+				 void *arg1, void *arg2, void *arg3);
 
-#ifdef MYTH_ARCH_sparc
-#ifdef MYTH_ARCH_sparc_v9
-#define PRESERVE_TLSREG(ctx) asm volatile("stx %%g7,[%0]" \
-	:: "r"(&ctx->uc.uc_mcontext.mc_gregs[MC_G7]) : "memory")
+#elif MYTH_CONTEXT == MYTH_CONTEXT_UCONTEXT
+
+#if MYTH_ARCH == MYTH_ARCH_sparc_v9
+#define PRESERVE_TLSREG(ctx) asm volatile("stx %%g7,[%0]" :: "r"(&ctx->uc.uc_mcontext.mc_gregs[MC_G7]) : "memory")
+#elif MYTH_ARCH == MYTH_ARCH_sparc_v8
+#define PRESERVE_TLSREG(ctx) asm volatile("st %%g7,[%0]" :: "r"(&ctx->uc.uc_mcontext.gregs[REG_G7]) : "memory")
 #else
-#define PRESERVE_TLSREG(ctx) asm volatile("st %%g7,[%0]" \
-	:: "r"(&ctx->uc.uc_mcontext.gregs[REG_G7]) : "memory")
-#endif
-#else /* MYTH_ARCH_sparc */
-#define PRESERVE_TLSREG(ctx) //do nothing
+#define PRESERVE_TLSREG(ctx) do { } while(0)
 #endif 
 
 typedef struct myth_ctx_withcall_param {
@@ -142,9 +152,14 @@ static void voidcall_context_ep(int pfn0, int pfn1) {
   }
   (*fn)();
 }
-#endif /* MYTH_CONTEXT_ARCH_UNIVERSAL */
 
-#if defined MYTH_INLINE_CONTEXT
+#else
+
+#error "invalid MYTH_CONTEXT"
+
+#endif /* MYTH_CONTEXT */
+
+#if MYTH_INLINE_CONTEXT
 #define myth_set_context(ctx) \
   {myth_context_switch_hook(ctx); myth_set_context_i(ctx);}
 #define myth_swap_context(from,to) \
@@ -169,7 +184,7 @@ static inline void myth_make_context_voidcall(myth_context_t ctx,
 					      void_func_t func, 
 					      void *stack, 
 					      size_t stacksize) {
-#if defined MYTH_CONTEXT_ARCH_i386
+#if MYTH_CONTEXT == MYTH_CONTEXT_i386
   (void)stacksize;
   //Get stack tail
   uint32_t stack_tail = (uint32_t) stack;
@@ -182,7 +197,7 @@ static inline void myth_make_context_voidcall(myth_context_t ctx,
   ctx->esp = stack_tail;
   //Set retuen address
   *dest_addr = (uint32_t) func;
-#elif defined MYTH_CONTEXT_ARCH_amd64
+#elif MYTH_CONTEXT == MYTH_CONTEXT_amd64 || MYTH_CONTEXT == MYTH_CONTEXT_amd64_knc
   (void)stacksize;
   //Get stack tail
   uint64_t stack_tail = (uint64_t) stack;
@@ -195,9 +210,7 @@ static inline void myth_make_context_voidcall(myth_context_t ctx,
   ctx->rsp = stack_tail;
   //Set retuen address
   *dest_addr = (uint64_t) func;
-#elif defined MYTH_CONTEXT_ARCH_sparc 
-  (void)stacksize;
-#ifdef MYTH_ARCH_sparc_v9
+#elif MYTH_CONTEXT == MYTH_CONTEXT_sparc_v9
   uint64_t stack_tail = (uint64_t) stack;
   stack_tail -= 8;
   uint64_t *dest_addr, *fp;
@@ -207,7 +220,7 @@ static inline void myth_make_context_voidcall(myth_context_t ctx,
   *fp = (uint64_t) (stack_tail - FRAMESIZE - STACKBIAS);
   dest_addr = (uint64_t *) (ctx->sp + STACKBIAS + SAVE_I7);
   *dest_addr = (uint64_t) func - 8;
-#else
+#elif MYTH_CONTEXT == MYTH_CONTEXT_sparc_v8
   uint32_t stack_tail = (uint32_t) stack;
   stack_tail -= 4;
   uint32_t *dest_addr, *fp;
@@ -219,8 +232,7 @@ static inline void myth_make_context_voidcall(myth_context_t ctx,
   *fp = (uint32_t) (stack_tail - FRAMESIZE);
   dest_addr = (uint32_t *) (ctx->sp + SAVE_I7); /* %i7 */
   *dest_addr = (uint32_t) func - 8;
-#endif
-#elif defined MYTH_CONTEXT_ARCH_UNIVERSAL
+#elif MYTH_CONTEXT == MYTH_CONTEXT_UCONTEXT
   uintptr_t stack_start = ((uintptr_t) stack) - (stacksize - sizeof(void*));
   getcontext(&ctx->uc);
   ctx->uc.uc_stack.ss_sp = (void*) stack_start;
@@ -232,12 +244,15 @@ static inline void myth_make_context_voidcall(myth_context_t ctx,
   memset(fn_ints, 0, sizeof(fn_ints));
   memcpy(fn_ints, &func, sizeof(void*));
   makecontext(&ctx->uc, (void(*)())voidcall_context_ep, 2, fn_ints[0], fn_ints[1]);
+#else
+
+#error "invalid MYTH_CONTEXT"
 #endif
 }
 
 static inline void myth_make_context_empty(myth_context_t ctx, void *stack,
 					   size_t stacksize) {
-#if defined MYTH_CONTEXT_ARCH_i386
+#if MYTH_CONTEXT == MYTH_CONTEXT_i386
   (void)stacksize;
   //Get stack tail
   uint32_t stack_tail = (uint32_t) stack;
@@ -245,7 +260,7 @@ static inline void myth_make_context_empty(myth_context_t ctx, void *stack,
   stack_tail &= 0xFFFFFFF0;
   //Set stack pointer
   ctx->esp = stack_tail;
-#elif defined MYTH_CONTEXT_ARCH_amd64
+#elif MYTH_CONTEXT == MYTH_CONTEXT_amd64 || MYTH_CONTEXT == MYTH_CONTEXT_amd64_knc
   (void)stacksize;
   //Get stack tail
   uint64_t stack_tail = (uint64_t) stack;
@@ -253,32 +268,32 @@ static inline void myth_make_context_empty(myth_context_t ctx, void *stack,
   stack_tail &= 0xFFFFFFFFFFFFFFF0;
   //Set stack pointer
   ctx->rsp = stack_tail;
-#elif defined MYTH_CONTEXT_ARCH_sparc
+#elif MYTH_CONTEXT == MYTH_CONTEXT_sparc_v9
   (void)stacksize;
-#ifdef MYTH_ARCH_sparc_v9
   uint64_t stack_tail = (uint64_t) stack;
   uint64_t *fp;
   stack_tail &= 0xFFFFFFFFFFFFFFF0;
   ctx->sp = stack_tail - FRAMESIZE * 2 - STACKBIAS;
   fp = (uint64_t *) (ctx->sp + STACKBIAS + SAVE_FP);
   *fp = (uint64_t) (stack_tail - FRAMESIZE - STACKBIAS);
-#else
+#elif MYTH_CONTEXT == MYTH_CONTEXT_sparc_v8
   uint32_t stack_tail = (uint32_t) stack;
   uint32_t *fp;
   stack_tail &= 0xFFFFFFF0;
   ctx->sp = stack_tail - FRAMESIZE * 2;
   fp = (uint32_t *) (stack_tail - FRAMESIZE * 2 + SAVE_FP); /* %fp */
   *fp = (uint32_t) (stack_tail - FRAMESIZE);
-#endif
-#elif defined MYTH_CONTEXT_ARCH_UNIVERSAL
+#elif MYTH_CONTEXT == MYTH_CONTEXT_UCONTEXT
   myth_make_context_voidcall(ctx, empty_context_ep, stack, stacksize);
+#else
+#error "invalid MYTH_CONTEXT"
 #endif
 }
 
-#if defined MYTH_CONTEXT_ARCH_i386
+#if MYTH_CONTEXT == MYTH_CONTEXT_i386
 
 //Suffix for PLT
-#ifdef PIC
+#if PIC
 #define FUNC_SUFFIX "@PLT"
 #define GOTPCREL_SUFFIX "@GOTPCREL"
 #else
@@ -286,7 +301,7 @@ static inline void myth_make_context_empty(myth_context_t ctx, void *stack,
 #define GOTPCREL_SUFFIX ""
 #endif
 
-#ifdef MYTH_INLINE_PUSH_CALLEE_SAVED
+#if MYTH_INLINE_PUSH_CALLEE_SAVED
 #define PUSH_CALLEE_SAVED() \
 	"push %%ebp\n" \
 	"push %%ebx\n" \
@@ -310,12 +325,12 @@ static inline void myth_make_context_empty(myth_context_t ctx, void *stack,
 	asm volatile("":::"%eax","%ecx","%edx","%esi","%edi","memory");
 #endif
 
-#ifdef USE_JUMP_INSN_A
+#if USE_JUMP_INSN_A
 #define MY_RET_A "pop %%eax\njmp *%%eax\n"
 #else
 #define MY_RET_A "ret\n"
 #endif
-#ifdef USE_JUMP_INSN_B
+#if USE_JUMP_INSN_B
 #define MY_RET_B "pop %%eax\njmp *%%eax\n"
 #else
 #define MY_RET_B "ret\n"
@@ -370,10 +385,10 @@ static inline void myth_make_context_empty(myth_context_t ctx, void *stack,
 	myth_unreachable();\
 	}
 
-#elif defined(MYTH_CONTEXT_ARCH_amd64)
+#elif MYTH_CONTEXT == MYTH_CONTEXT_amd64 || MYTH_CONTEXT == MYTH_CONTEXT_amd64_knc
 
 //Suffix for PLT
-#ifdef PIC
+#if PIC
 #define FUNC_SUFFIX "@PLT"
 #define GOTPCREL_SUFFIX "@GOTPCREL"
 #else
@@ -381,7 +396,7 @@ static inline void myth_make_context_empty(myth_context_t ctx, void *stack,
 #define GOTPCREL_SUFFIX ""
 #endif
 
-#ifdef PIC
+#if PIC
 #define PUSH_LABEL_USING_A(label) \
 	"leaq "label"(%%rip),%%rax\n"\
 	"push %%rax\n"
@@ -395,7 +410,7 @@ static inline void myth_make_context_empty(myth_context_t ctx, void *stack,
 #define PUSH_LABEL_USING_BP(label) PUSH_LABEL(label)
 #endif
 
-#ifdef MYTH_SAVE_FPCSR
+#if MYTH_SAVE_FPCSR
 #define PUSH_FPCSR() \
 	"sub $16,%%rsp\n"\
 	"stmxcsr 8(%%rsp)\n"\
@@ -409,7 +424,7 @@ static inline void myth_make_context_empty(myth_context_t ctx, void *stack,
 #define POP_FPCSR()
 #endif
 
-#if defined MYTH_INLINE_PUSH_CALLEE_SAVED
+#if MYTH_INLINE_PUSH_CALLEE_SAVED
 
 #define PUSH_CALLEE_SAVED() \
 	"sub $128,%%rsp\n"\
@@ -475,12 +490,12 @@ static inline void myth_make_context_empty(myth_context_t ctx, void *stack,
 
 #endif
 
-#ifdef USE_JUMP_INSN_A
+#if USE_JUMP_INSN_A
 #define MY_RET_A "pop %%rax\njmp *%%rax\n"
 #else
 #define MY_RET_A "ret\n"
 #endif
-#ifdef USE_JUMP_INSN_B
+#if USE_JUMP_INSN_B
 #define MY_RET_B "pop %%rax\njmp *%%rax\n"
 #else
 #define MY_RET_B "ret\n"
@@ -541,12 +556,16 @@ static inline void myth_make_context_empty(myth_context_t ctx, void *stack,
 	myth_unreachable();\
 	}
 
-#elif defined MYTH_CONTEXT_ARCH_sparc
+#elif MYTH_CONTEXT == MYTH_CONTEXT_sparc_v9
 
-#elif defined MYTH_CONTEXT_ARCH_UNIVERSAL
+#elif MYTH_CONTEXT == MYTH_CONTEXT_sparc_v8
+
+#elif MYTH_CONTEXT == MYTH_CONTEXT_UCONTEXT
 
 #else /* UNSUPPORTED ARCH */
+
 #error "This architecture is not supported"
+
 #endif
 
 #endif /* MYTH_CONTEXT_FUNC_H_ */

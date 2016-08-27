@@ -126,6 +126,48 @@ AC_ARG_WITH([sched-stack-size],
 AC_DEFINE_UNQUOTED([MYTH_SCHED_STACK_SIZE],[$sched_stack_size],[Scheduler stack size])
 
 #
+# set user threads' default guard size
+#
+
+AC_ARG_WITH([default-guard-size],
+            [AS_HELP_STRING([--with-default-guard-size=S],
+                            [Set default guard size of threads to S bytes.
+                             Default: 4096.  You can change it at runtime
+			     by setting MYTH_DEF_GUARDSIZE.])],
+            [default_guard_size="$withval"],
+            [default_guard_size=4096])
+
+AC_DEFINE_UNQUOTED([MYTH_DEF_GUARD_SIZE],[$default_guard_size],[Default guard size])
+
+#
+# bind workers or not
+#
+
+AC_ARG_WITH([bind-workers],
+            [AS_HELP_STRING([--with-bind-workers=0/1],
+                            [Set default value for bind-workers.
+                             Default: 1.  You can change it at runtime
+			     by setting MYTH_BIND_WORKERS.])],
+            [default_bind_workers="$withval"],
+            [default_bind_workers=1])
+
+AC_DEFINE_UNQUOTED([MYTH_BIND_WORKERS],[$default_bind_workers],[Default bind workers])
+
+#
+# child first or not
+#
+
+AC_ARG_WITH([child-first],
+            [AS_HELP_STRING([--with-child-first=0/1],
+                            [Set default value for child-first.
+                             Default: 1.  You can change it at runtime
+			     by setting MYTH_CHILD_FIRST.])],
+            [default_child_first="$withval"],
+            [default_child_first=1])
+
+AC_DEFINE_UNQUOTED([MYTH_CHILD_FIRST],[$default_child_first],[Default child first])
+
+#
 # --enable-eco-mode
 #   flag controlling the behavior of eco-mode scheduler
 #
@@ -145,26 +187,6 @@ AC_ARG_ENABLE([eco-mode],
 if test "x$enable_eco_mode" != "xno" ; then
   AC_DEFINE_UNQUOTED([MYTH_ECO_MODE],[1],[If unset, eco-mode is disabled])
   AC_DEFINE_UNQUOTED([MYTH_ECO_TEIAN_STEAL],[1],[If unset, eco-mode is disabled])
-fi
-
-#
-# --enable-bind-workers
-#   flag controlling the binding of worker thread 
-#
-
-AC_ARG_ENABLE([bind-workers],
-              [AS_HELP_STRING([--enable-bind-workers=yes|no],
-	                      [Change the default behavior of worker thread binding. 
-			      "yes" enables it and each worker thread is bound to each CPU core. 
-			      This setting can be overridden by setting environmental variable
-			      MYTH_BIND_WORKERS=[1|0]])],
-			      ,
-			     [enable_bind_workers="yes"])
-
-if test "x$enable_bind_workers" != "xno" ; then
-    AC_DEFINE_UNQUOTED([MYTH_BIND_WORKERS],[1],[whether worker thread binding is enabled])
-else
-    AC_DEFINE_UNQUOTED([MYTH_BIND_WORKERS],[0],[whether worker thread binding is enabled])
 fi
 
 #

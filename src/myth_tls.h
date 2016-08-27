@@ -5,6 +5,9 @@
 #ifndef MYTH_TLS_H_
 #define MYTH_TLS_H_
 
+#include "myth/myth.h"
+#include "myth_config.h"
+
 /* nuts and bolts for thread specific key
    (1) data structure to maintain unused keys and to allocate a free key
        (myth_tls_key_allocator)
@@ -109,7 +112,8 @@ static inline myth_thread_t myth_self_body(void);
 static inline void myth_tls_tree_init(myth_tls_tree_t * t);
 static inline void myth_tls_tree_fini(myth_tls_tree_t * t,
 				      myth_tls_key_allocator_t * ka);
+static inline void myth_tls_init(int nworkers);
 
-  extern myth_tls_key_allocator_t g_myth_tls_key_allocator[1];
+extern myth_tls_key_allocator_t g_myth_tls_key_allocator[1];
 
 #endif /* MYTH_TLS_H_ */

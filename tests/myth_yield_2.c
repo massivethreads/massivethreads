@@ -17,7 +17,7 @@ void * f(void * arg_) {
   if (b - a == 1) {
     int i;
     for (i = 0; i < 10; i++) {
-      myth_yield(1);
+      myth_yield_ex(myth_yield_option_steal_first);
     }
     arg->r = a;
   } else {

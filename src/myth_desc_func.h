@@ -9,13 +9,10 @@
 #include <stddef.h>
 #include <sys/mman.h>
 
-#include "myth/myth_internal_lock.h"
-
-#include "myth_context.h"
-#include "myth_thread.h"
-
-#include "myth_wsqueue.h"
+#include "myth/myth.h"
+#include "myth_config.h"
 #include "myth_worker.h"
+#include "myth_thread.h"
 
 static inline myth_thread_t myth_context_to_thread(myth_running_env_t env,myth_context_t ctx)
 {

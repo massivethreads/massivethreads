@@ -9,6 +9,8 @@
 #include <stdlib.h>
 
 #include "myth/myth.h"
+
+#include "myth_config.h"
 #include "myth_context.h"
 #include "myth_tls.h"
 
@@ -41,25 +43,24 @@ struct myth_thread {
   // Pointer to worker thread
   struct myth_running_env* env;
   // Lock
-  myth_internal_lock_t lock;
-#if 0
-  // Data for runqueue (not used)
-  myth_queue_data queue_data;
-#endif
+  myth_spinlock_t lock;
   // Status
   volatile myth_status_t status;
   uint8_t detached;
   uint8_t cancelled;
   uint8_t cancel_enabled;
-#if defined MYTH_ENABLE_THREAD_ANNOTATION && defined MYTH_COLLECT_LOG
+#if MYTH_ENABLE_THREAD_ANNOTATION && MYTH_COLLECT_LOG
   char annotation_str[MYTH_THREAD_ANNOTATION_MAXLEN];
   int recycle_count;
 #endif
-#ifdef MYTH_DESC_REUSE_CHECK
-  myth_internal_lock_t sanity_check;
+#if MYTH_DESC_REUSE_CHECK
+  myth_spinlock_t sanity_check;
 #endif
+  /* TODO: get rid of them */
   void *custom_data_ptr;
   int custom_data_size;
+
+  myth_thread_attr_t attr;
 
   myth_tls_tree_t tls[1];
 } ;

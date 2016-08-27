@@ -1,10 +1,12 @@
 /* 
  * myth_misc.c
  */
-#include "myth_misc.h"
 #include <ctype.h>
 
-#ifdef MYTH_FLMALLOC_TLS
+#include "myth_misc.h"
+#include "myth_misc_func.h"
+
+#if MYTH_FLMALLOC_TLS
 __thread myth_freelist_t *g_myth_freelist;
 #else
 myth_freelist_t **g_myth_freelist;

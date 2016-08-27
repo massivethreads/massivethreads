@@ -2,6 +2,7 @@
  * myth_worker.c
  */
 
+#include "myth_config.h"
 #include "config.h"
 
 #include "myth_worker.h"
@@ -24,7 +25,7 @@ myth_thread_t myth_default_steal_func(int rank)
 {
   myth_running_env_t env,busy_env;
   myth_thread_t next_run=NULL;
-#ifdef MYTH_WS_PROF_DETAIL
+#if MYTH_WS_PROF_DETAIL
   uint64_t t0,t1;
   t0=myth_get_rdtsc();
 #endif
@@ -34,7 +35,7 @@ myth_thread_t myth_default_steal_func(int rank)
   if (busy_env){
     //int ws_victim;
 #if 0
-#ifdef MYTH_SCHED_LOOP_DEBUG
+#if MYTH_SCHED_LOOP_DEBUG
     myth_dprintf("env %p is trying to steal thread from %p...\n",env,busy_env);
 #endif
 #endif
@@ -42,14 +43,14 @@ myth_thread_t myth_default_steal_func(int rank)
     //Try to steal thread
     next_run=myth_queue_take(&busy_env->runnable_q);
     if (next_run){
-#ifdef MYTH_SCHED_LOOP_DEBUG
+#if MYTH_SCHED_LOOP_DEBUG
       myth_dprintf("env %p is stealing thread %p from %p...\n",env,steal_th,busy_env);
 #endif
       myth_assert(next_run->status==MYTH_STATUS_READY);
       //Change worker thread descriptor
     }
   }
-#ifdef MYTH_WS_PROF_DETAIL
+#if MYTH_WS_PROF_DETAIL
   t1=myth_get_rdtsc();
   if (g_sched_prof){
     env->prof_data.ws_attempt_count[busy_env->rank]++;

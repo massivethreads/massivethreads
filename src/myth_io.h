@@ -9,7 +9,9 @@
 #include <stdint.h>
 #include <stdarg.h>
 
-#include "myth/myth_internal_lock.h"
+#include "myth/myth.h"
+#include "myth_config.h"
+#include "myth_spinlock_func.h"
 
 typedef enum myth_io_type {
   MYTH_IO_CONNECT,
@@ -27,17 +29,17 @@ typedef struct myth_fd_map_entry {
   //void **data;
   struct myth_io_struct_perfd **data;
   int *key;
-  myth_internal_lock_t lock;
+  myth_spinlock_t lock;
 } myth_fd_map_entry,*myth_fd_map_entry_t;
 
 typedef struct myth_fd_map {
-  myth_internal_lock_t lock;
+  myth_spinlock_t lock;
   myth_fd_map_entry *entry;
   //int size;
 } myth_fd_map,*myth_fd_map_t;
 
 typedef struct myth_io_fd_list {//File descriptor list
-  myth_internal_lock_t lock;
+  myth_spinlock_t lock;
   int size;
   int bufsize;
   struct myth_io_struct_perfd **data;
@@ -101,7 +103,7 @@ typedef struct myth_io_op {
 
 //Pending I/O operation list
 typedef struct myth_io_wait_list {
-  myth_internal_lock_t lock;
+  myth_spinlock_t lock;
   myth_io_op_t *io_ops;
   int size;//the size of io_ops
   int count;//valid elements
@@ -119,7 +121,7 @@ typedef struct myth_io_struct_perenv {
   //myth_io_fd_list notify_list;
   volatile int8_t cs_flag;
   int sig_count;
-#ifdef MYTH_USE_IO_THREAD
+#if MYTH_USE_IO_THREAD
   pthread_t thread;
   uint8_t exit_flag;
   pthread_mutex_t mtx;
@@ -143,7 +145,7 @@ typedef struct myth_io_struct_perfd {
 extern myth_fd_map_t g_fd_map;
 
 
-
+#if MYTH_WRAP_SOCKIO
 
 static void myth_io_init(void);
 static void myth_io_fini(void);
@@ -171,6 +173,6 @@ static inline int myth_fcntl_body (int fd, int cmd,va_list vl);
 static inline myth_thread_t myth_io_polling(struct myth_running_env *env);
 static inline int myth_io_execute(myth_io_op_t op);
 
-
+#endif	/* MYTH_WRAP_SOCKIO */
 
 #endif /* MYTH_IO_H_ */

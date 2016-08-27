@@ -25,7 +25,7 @@ void * f(void * x) {
       v = (void *)jrand48(rg);
       vals[i] = v;
       myth_setspecific(keys[i], v);
-      myth_yield(1);
+      myth_yield_ex(myth_yield_option_steal_first);
     }
   }
   return 0;

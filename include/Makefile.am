@@ -4,10 +4,9 @@ ACLOCAL_AMFLAGS = -I m4
 #	myth/config.h
 
 nobase_include_HEADERS = \
-	myth/myth.h \
-	myth/myth_config.h \
-	myth/myth_internal_lock.h \
+	myth/myth_spinlock.h \
 	myth/myth_sleep_queue.h \
+	myth/myth.h \
 	myth.h
 
 #	myth/myth_sync.h

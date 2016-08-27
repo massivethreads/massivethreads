@@ -9,8 +9,12 @@
 #include <limits.h>
 #include <semaphore.h>
 
+#include "myth_config.h"
 #include "myth_worker.h"
-#include "myth_desc_func.h"
+
+/* TODO: probably merge them into one  */
+#define MYTH_ECO_DEBUG 0
+#define MYTH_ECO_MODE_DEBUG 0
 
 typedef struct sleep_queue {
   struct sleep_queue *next;
@@ -27,13 +31,13 @@ extern int task_num;
 extern struct myth_running_env *g_envs;
 extern int g_eco_mode_enabled;
 
-#ifdef MYTH_ECO_MODE
+#if MYTH_ECO_MODE
 static void myth_eco_sched_loop(myth_running_env_t env);
 #endif
 myth_thread_t myth_eco_steal(int rank);
 myth_thread_t myth_eco_all_task_check(myth_running_env_t env);
 
-void myth_sleep(void);
+void myth_sleep_1(void);
 void myth_sleep_2(int num);
 void myth_go_asleep(void);
 int myth_wakeup_one(void);

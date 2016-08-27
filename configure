@@ -778,8 +778,10 @@ enable_dependency_tracking
 enable_malloc_wrapper
 with_default_stack_size
 with_sched_stack_size
+with_default_guard_size
+with_bind_workers
+with_child_first
 enable_eco_mode
-enable_bind_workers
 enable_shared
 enable_static
 with_pic
@@ -1462,12 +1464,6 @@ Optional Features:
                           Default is "yes". When eco-mode scheduler is
                           enabled, thread creation overhead might be slightly
                           increased, whichever it is activated or not
-  --enable-bind-workers=yes|no
-                          Change the default behavior of worker thread
-                          binding. "yes" enables it and each worker thread is
-                          bound to each CPU core. This setting can be
-                          overridden by setting environmental variable
-                          MYTH_BIND_WORKERS=[1|0]
   --enable-shared[=PKGS]  build shared libraries [default=yes]
   --enable-static[=PKGS]  build static libraries [default=yes]
   --enable-fast-install[=PKGS]
@@ -1484,6 +1480,16 @@ Optional Packages:
   --with-sched-stack-size=S
                           Set default stack size of the scheduler thread to S
                           bytes. Default: 1048576.
+  --with-default-guard-size=S
+                          Set default guard size of threads to S bytes.
+                          Default: 4096. You can change it at runtime by
+                          setting MYTH_DEF_GUARDSIZE.
+  --with-bind-workers=0/1 Set default value for bind-workers. Default: 1. You
+                          can change it at runtime by setting
+                          MYTH_BIND_WORKERS.
+  --with-child-first=0/1  Set default value for child-first. Default: 1. You
+                          can change it at runtime by setting
+                          MYTH_CHILD_FIRST.
   --with-pic[=PKGS]       try to use only PIC/non-PIC objects [default=use
                           both]
   --with-gnu-ld           assume the C compiler uses GNU ld [default=no]
@@ -5465,6 +5471,63 @@ _ACEOF
 
 
 #
+# set user threads' default guard size
+#
+
+
+# Check whether --with-default-guard-size was given.
+if test "${with_default_guard_size+set}" = set; then :
+  withval=$with_default_guard_size; default_guard_size="$withval"
+else
+  default_guard_size=4096
+fi
+
+
+
+cat >>confdefs.h <<_ACEOF
+#define MYTH_DEF_GUARD_SIZE $default_guard_size
+_ACEOF
+
+
+#
+# bind workers or not
+#
+
+
+# Check whether --with-bind-workers was given.
+if test "${with_bind_workers+set}" = set; then :
+  withval=$with_bind_workers; default_bind_workers="$withval"
+else
+  default_bind_workers=1
+fi
+
+
+
+cat >>confdefs.h <<_ACEOF
+#define MYTH_BIND_WORKERS $default_bind_workers
+_ACEOF
+
+
+#
+# child first or not
+#
+
+
+# Check whether --with-child-first was given.
+if test "${with_child_first+set}" = set; then :
+  withval=$with_child_first; default_child_first="$withval"
+else
+  default_child_first=1
+fi
+
+
+
+cat >>confdefs.h <<_ACEOF
+#define MYTH_CHILD_FIRST $default_child_first
+_ACEOF
+
+
+#
 # --enable-eco-mode
 #   flag controlling the behavior of eco-mode scheduler
 #
@@ -5486,33 +5549,6 @@ _ACEOF
 
 cat >>confdefs.h <<_ACEOF
 #define MYTH_ECO_TEIAN_STEAL 1
-_ACEOF
-
-fi
-
-#
-# --enable-bind-workers
-#   flag controlling the binding of worker thread
-#
-
-# Check whether --enable-bind-workers was given.
-if test "${enable_bind_workers+set}" = set; then :
-  enableval=$enable_bind_workers;
-else
-  enable_bind_workers="yes"
-fi
-
-
-if test "x$enable_bind_workers" != "xno" ; then
-
-cat >>confdefs.h <<_ACEOF
-#define MYTH_BIND_WORKERS 1
-_ACEOF
-
-else
-
-cat >>confdefs.h <<_ACEOF
-#define MYTH_BIND_WORKERS 0
 _ACEOF
 
 fi

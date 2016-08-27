@@ -5,7 +5,7 @@
 #ifndef MYTH_IO_FUNC_H_
 #define MYTH_IO_FUNC_H_
 
-#ifdef MYTH_WRAP_SOCKIO
+#if MYTH_WRAP_SOCKIO
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -23,17 +23,17 @@
 #include <pthread.h>
 #include <sched.h>
 
-#include "myth_wsqueue.h"
+#include "myth_config.h"
+
 #include "myth_worker.h"
 #include "myth_io.h"
-#include "myth_sched_proto.h"
-#include "myth_wsqueue_proto.h"
+#include "myth_init.h"
 
-#include "myth_io_proto.h"
-
-// #include "myth_io_struct.h"
-
-#include "myth_sched_func.h"
+#include "myth_misc_func.h"
+#include "myth_context_func.h"
+#include "myth_spinlock_func.h"
+#include "myth_wsqueue_func.h"
+#include "myth_worker_func.h"
 
 /* used to be in myth_io_proto.h */
 
@@ -52,10 +52,10 @@ static inline myth_fd_map_t myth_fd_map_init() {
     ret->entry[i].key=myth_malloc(sizeof(int));
     ret->entry[i].size=0;
     ret->entry[i].bufsize=1;
-    myth_internal_lock_init(&ret->entry[i].lock);
+    myth_spin_init_body(&ret->entry[i].lock);
   }
   //ret->size=0;
-  myth_internal_lock_init(&ret->lock);
+  myth_spin_init_body(&ret->lock);
   return ret;
 }
 
@@ -64,14 +64,14 @@ static inline void myth_fd_map_set(myth_running_env_t env,myth_fd_map_t fm,int f
   myth_assert(data);
   int i;
   myth_fd_map_entry_t fe;
-  myth_internal_lock_lock(&fm->lock);
+  myth_spin_lock_body(&fm->lock);
   fe=&fm->entry[MYTH_FD_MAP_KEY(fd)];
-  myth_internal_lock_lock(&fe->lock);
+  myth_spin_lock_body(&fe->lock);
   for (i=0;i<fe->size;i++){
     if (fe->key[i]==fd){
       fe->data[i]=data;
-      myth_internal_lock_unlock(&fe->lock);
-      myth_internal_lock_unlock(&fm->lock);
+      myth_spin_unlock_body(&fe->lock);
+      myth_spin_unlock_body(&fm->lock);
       return;
     }
   }
@@ -85,17 +85,17 @@ static inline void myth_fd_map_set(myth_running_env_t env,myth_fd_map_t fm,int f
   }
   fe->key[fe->size-1]=fd;
   fe->data[fe->size-1]=data;
-  myth_internal_lock_unlock(&fe->lock);
+  myth_spin_unlock_body(&fe->lock);
   //fm->size++;
-  myth_internal_lock_unlock(&fm->lock);
+  myth_spin_unlock_body(&fm->lock);
 }
 
 static inline void myth_fd_map_delete(myth_fd_map_t fm,int fd) {
   int i,j;
   myth_fd_map_entry_t fe;
-  myth_internal_lock_lock(&fm->lock);
+  myth_spin_lock_body(&fm->lock);
   fe=&fm->entry[MYTH_FD_MAP_KEY(fd)];
-  myth_internal_lock_lock(&fe->lock);
+  myth_spin_lock_body(&fe->lock);
   for (i=0;i<fe->size;i++){
     if (fe->key[i]==fd){
       for (j=i+1;j<fe->size;j++){
@@ -103,9 +103,9 @@ static inline void myth_fd_map_delete(myth_fd_map_t fm,int fd) {
 	fe->data[j-1]=fe->data[j];
       }
       fe->size--;
-      myth_internal_lock_unlock(&fe->lock);
+      myth_spin_unlock_body(&fe->lock);
       //fm->size--;
-      myth_internal_lock_unlock(&fm->lock);
+      myth_spin_unlock_body(&fm->lock);
       return;
     }
   }
@@ -116,58 +116,58 @@ static inline void myth_fd_map_delete(myth_fd_map_t fm,int fd) {
 static inline myth_io_struct_perfd_t myth_fd_map_lookup(myth_fd_map_t fm,int fd) {//Lookup blocked list from fd, return NULL if lookup fails
   int i;
   myth_fd_map_entry_t fe;
-  myth_internal_lock_lock(&fm->lock);
+  myth_spin_lock_body(&fm->lock);
   fe=&fm->entry[MYTH_FD_MAP_KEY(fd)];
-  myth_internal_lock_lock(&fe->lock);
+  myth_spin_lock_body(&fe->lock);
   for (i=0;i<fe->size;i++){
     if (fe->key[i]==fd){
       assert(fe->data[i]);
       myth_io_struct_perfd_t ret=fe->data[i];
-      myth_internal_lock_unlock(&fe->lock);
-      myth_internal_lock_unlock(&fm->lock);
+      myth_spin_unlock_body(&fe->lock);
+      myth_spin_unlock_body(&fm->lock);
       return ret;
     }
   }
-  myth_internal_lock_unlock(&fe->lock);
-  myth_internal_lock_unlock(&fm->lock);
+  myth_spin_unlock_body(&fe->lock);
+  myth_spin_unlock_body(&fm->lock);
   return NULL;
 }
 
 static inline myth_io_struct_perfd_t myth_fd_map_trylookup(myth_fd_map_t fm,int fd) {//Lookup blocked list from fd, return NULL if lookup fails
   int i;
   myth_fd_map_entry_t fe;
-  if (!myth_internal_lock_trylock(&fm->lock))return NULL;
+  if (!myth_spin_trylock_body(&fm->lock))return NULL;
   fe=&fm->entry[MYTH_FD_MAP_KEY(fd)];
-  if (!myth_internal_lock_trylock(&fe->lock)){
-    myth_internal_lock_unlock(&fm->lock);
+  if (!myth_spin_trylock_body(&fe->lock)){
+    myth_spin_unlock_body(&fm->lock);
     return NULL;
   }
   for (i=0;i<fe->size;i++){
     if (fe->key[i]==fd){
       assert(fe->data[i]);
       myth_io_struct_perfd_t ret=fe->data[i];
-      myth_internal_lock_unlock(&fe->lock);
-      myth_internal_lock_unlock(&fm->lock);
+      myth_spin_unlock_body(&fe->lock);
+      myth_spin_unlock_body(&fm->lock);
       return ret;
     }
   }
-  myth_internal_lock_unlock(&fe->lock);
-  myth_internal_lock_unlock(&fm->lock);
+  myth_spin_unlock_body(&fe->lock);
+  myth_spin_unlock_body(&fm->lock);
   return NULL;
 }
 
 static inline void myth_fd_map_clear(myth_fd_map_t fm) {//Remove all elements from fd_map
   int i;
-  myth_internal_lock_lock(&fm->lock);
+  myth_spin_lock_body(&fm->lock);
   for (i=0;i<MYTH_FD_MAP_SIZE;i++){
     myth_fd_map_entry_t fe;
     fe=&fm->entry[i];
-    myth_internal_lock_lock(&fe->lock);
+    myth_spin_lock_body(&fe->lock);
     fe->size=0;
-    myth_internal_lock_unlock(&fe->lock);
+    myth_spin_unlock_body(&fe->lock);
   }
   //fm->size=0;
-  myth_internal_lock_unlock(&fm->lock);
+  myth_spin_unlock_body(&fm->lock);
 }
 
 static inline void myth_fd_map_destroy(myth_fd_map_t fm) {
@@ -175,17 +175,17 @@ static inline void myth_fd_map_destroy(myth_fd_map_t fm) {
   for (i=0;i<MYTH_FD_MAP_SIZE;i++){
     myth_fd_map_entry_t fe;
     fe=&fm->entry[i];
-    myth_internal_lock_destroy(&fe->lock);
+    myth_spin_destroy(&fe->lock);
     myth_free(fe->data,0);
     myth_free(fe->key,0);
   }
-  myth_internal_lock_destroy(&fm->lock);
+  myth_spin_destroy(&fm->lock);
   myth_free(fm->entry,0);
   myth_free(fm,0);
 }
 
 static inline void myth_io_wait_list_init(myth_io_wait_list_t wl) {
-  myth_internal_lock_init(&wl->lock);
+  myth_spin_init_body(&wl->lock);
   wl->count=0;
   wl->size=1;
   assert(real_malloc);
@@ -193,12 +193,12 @@ static inline void myth_io_wait_list_init(myth_io_wait_list_t wl) {
 }
 
 static inline void myth_io_wait_list_destroy(myth_io_wait_list_t wl) {
-  myth_internal_lock_destroy(&wl->lock);
+  myth_spin_destroy(&wl->lock);
   real_free(wl->io_ops);
 }
 
 static inline void myth_io_cs_enter(myth_running_env_t e) {
-#ifdef MYTH_USE_IO_THREAD
+#if MYTH_USE_IO_THREAD
   int ret;
   ret=real_pthread_mutex_lock(&e->io_struct.mtx);
   if (ret!=0){
@@ -207,8 +207,10 @@ static inline void myth_io_cs_enter(myth_running_env_t e) {
     perror(NULL);
     assert(0);
   }
+#else
+  (void)e;
 #endif
-#ifdef MYTH_USE_SIGHANDLER
+#if MYTH_USE_SIGHANDLER
   assert(e->io_struct.cs_flag==0);
   e->io_struct.cs_flag=1;
   myth_wbarrier();
@@ -216,50 +218,57 @@ static inline void myth_io_cs_enter(myth_running_env_t e) {
 }
 
 static inline void myth_io_cs_exit(myth_running_env_t e) {
-#ifdef MYTH_USE_SIGHANDLER
+#if MYTH_USE_SIGHANDLER
   assert(e->io_struct.cs_flag==1);
   myth_wbarrier();
   e->io_struct.cs_flag=0;
+#else
+  (void)e;
 #endif
-#ifdef MYTH_USE_IO_THREAD
+#if MYTH_USE_IO_THREAD
   real_pthread_mutex_unlock(&e->io_struct.mtx);
 #endif
 }
 
 static inline int myth_io_is_in_cs(myth_running_env_t e) {
   int ret=0;
-#ifdef MYTH_USE_SIGHANDLER
+#if MYTH_USE_SIGHANDLER
   ret=ret || e->io_struct.cs_flag;
+#else
+  (void)e;
 #endif
-#ifdef MYTH_USE_IO_THREAD
+#if MYTH_USE_IO_THREAD
 #endif
   return ret;
 }
 
-static inline void myth_io_wait_list_push(myth_running_env_t e,myth_io_wait_list_t wl,myth_io_op_t op) {
-  myth_internal_lock_lock(&wl->lock);
+static inline void myth_io_wait_list_push(myth_running_env_t e,
+					  myth_io_wait_list_t wl, myth_io_op_t op) {
+  (void)e;
+  myth_spin_lock_body(&wl->lock);
   if (wl->count==wl->size){
     wl->size*=2;
     wl->io_ops=real_realloc(wl->io_ops,sizeof(myth_io_op_t)*wl->size);
   }
   wl->io_ops[wl->count]=op;
   wl->count++;
-  myth_internal_lock_unlock(&wl->lock);
+  myth_spin_unlock_body(&wl->lock);
 }
 
-static inline myth_io_op_t myth_io_wait_list_pop(myth_running_env_t e,myth_io_wait_list_t wl) {
+static inline myth_io_op_t myth_io_wait_list_pop(myth_running_env_t e, myth_io_wait_list_t wl) {
   myth_io_op_t ret;
-#ifdef QUICK_CHECK_IO_WAIT_LIST
+  (void)e;
+#if QUICK_CHECK_IO_WAIT_LIST
   if (!wl->count) return NULL;
 #endif
-  myth_internal_lock_lock(&wl->lock);
+  myth_spin_lock_body(&wl->lock);
   if (wl->count){
     ret=wl->io_ops[wl->count-1];
     //if (ret)printf("popped:%p->%p\n",wl,ret);
     wl->count--;
   }
   else ret=NULL;
-  myth_internal_lock_unlock(&wl->lock);
+  myth_spin_unlock_body(&wl->lock);
   //if (ret)printf("unlocked:%p<-%p\n",wl,ret);
   return ret;
 }
@@ -268,44 +277,44 @@ static inline void myth_io_fd_list_init(myth_running_env_t env,myth_io_fd_list_t
   cl->data=myth_flmalloc(env->rank,sizeof(myth_io_struct_perfd_t));
   cl->size=0;
   cl->bufsize=1;
-  myth_internal_lock_init(&cl->lock);
+  myth_spin_init_body(&cl->lock);
 }
 
 static inline void myth_io_fd_list_push(myth_running_env_t env,myth_io_fd_list_t cl,myth_io_struct_perfd_t fd_data) {
-  myth_internal_lock_lock(&cl->lock);
+  myth_spin_lock_body(&cl->lock);
   cl->size++;
   if (cl->bufsize<cl->size){
     cl->data=myth_flrealloc(env->rank,cl->bufsize*sizeof(myth_io_struct_perfd_t),cl->data,sizeof(myth_io_struct_perfd_t)*cl->size);
     cl->bufsize=cl->size;
   }
   cl->data[cl->size-1]=fd_data;
-  myth_internal_lock_unlock(&cl->lock);
+  myth_spin_unlock_body(&cl->lock);
 }
 
 static inline myth_io_struct_perfd_t myth_io_fd_list_pop(myth_io_fd_list_t cl) {
   myth_io_struct_perfd_t ret;
-#ifdef QUICK_CHECK_IO_FD_LIST
+#if QUICK_CHECK_IO_FD_LIST
   if (cl->size<=0) return NULL;
 #endif
-  myth_internal_lock_lock(&cl->lock);
+  myth_spin_lock_body(&cl->lock);
   if (cl->size>0){
     ret=cl->data[cl->size-1];
     cl->size--;
   }
   else ret=NULL;
-  myth_internal_lock_unlock(&cl->lock);
+  myth_spin_unlock_body(&cl->lock);
   return ret;
 }
 
 static inline myth_io_struct_perfd_t myth_io_fd_list_trypop(myth_io_fd_list_t cl) {
   myth_io_struct_perfd_t ret;
-  if (myth_internal_lock_trylock(&cl->lock)==0)return NULL;
+  if (myth_spin_trylock_body(&cl->lock)==0)return NULL;
   if (cl->size>0){
     ret=cl->data[cl->size-1];
     cl->size--;
   }
   else ret=NULL;
-  myth_internal_lock_unlock(&cl->lock);
+  myth_spin_unlock_body(&cl->lock);
   return ret;
 }
 
@@ -313,7 +322,7 @@ static inline void myth_io_fd_list_destroy(myth_running_env_t env,myth_io_fd_lis
   myth_flfree(env->rank,cl->bufsize,cl->data);
   cl->size=0;
   cl->bufsize=0;
-  myth_internal_lock_destroy(&cl->lock);
+  myth_spin_destroy(&cl->lock);
 }
 
 /* end of myth_io_proto.h */
@@ -331,11 +340,11 @@ static inline void myth_io_init(void) {
   g_fd_map=myth_fd_map_init();
 }
 
-#ifdef MYTH_USE_SIGIO
+#if MYTH_USE_SIGIO
 static void myth_io_sighandler(int signum,siginfo_t *sinfo,void* ctx);
 #endif
 
-#ifdef MYTH_USE_IO_THREAD
+#if MYTH_USE_IO_THREAD
 static inline myth_thread_t myth_io_polling_thread(struct myth_running_env *env);
 static void *myth_io_thread_func(void* args) {
   myth_running_env_t env;
@@ -363,14 +372,14 @@ static void myth_io_worker_init(myth_running_env_t env,myth_io_struct_perenv_t i
   io->fd_count=0;
   io->cs_flag=0;
   io->sig_count=0;
-#ifdef MYTH_USE_SIGIO
+#if MYTH_USE_SIGIO
   struct sigaction newact;
   memset(&newact,0,sizeof(newact));
   newact.sa_sigaction=myth_io_sighandler;
   newact.sa_flags=SA_SIGINFO;
   sigaction(MYTH_IO_SIGNAL_NO,&newact,NULL);
 #endif
-#ifdef MYTH_USE_IO_THREAD
+#if MYTH_USE_IO_THREAD
   pthread_mutexattr_t attr;
   pthread_mutexattr_init(&attr);
   pthread_mutexattr_settype(&attr,PTHREAD_MUTEX_ERRORCHECK);
@@ -385,7 +394,7 @@ static void myth_io_worker_init(myth_running_env_t env,myth_io_struct_perenv_t i
 }
 
 static void myth_io_worker_fini(myth_running_env_t env,myth_io_struct_perenv_t io) {
-#ifdef MYTH_USE_IO_THREAD
+#if MYTH_USE_IO_THREAD
   io->exit_flag=1;
   real_pthread_join(io->thread,NULL);
 #endif
@@ -423,7 +432,7 @@ static inline void myth_wait_for_read(int fd,myth_running_env_t env,myth_io_op_t
   fd_data=myth_fd_map_lookup(fd_map,fd);
   if (!fd_data){
     while (1){
-      myth_yield_body(0);
+      myth_yield_body();
       if (myth_io_execute(op))break;
     }
     return;
@@ -477,7 +486,7 @@ static inline void myth_wait_for_write(int fd,myth_running_env_t env,myth_io_op_
   fd_data=myth_fd_map_lookup(fd_map,fd);
   if (!fd_data){
     while (1){
-      myth_yield_body(0);
+      myth_yield_body();
       if (myth_io_execute(op))break;
     }
     return;
@@ -507,7 +516,6 @@ static inline void myth_wait_for_write(int fd,myth_running_env_t env,myth_io_op_
 
 extern myth_running_env_t g_envs;
 extern int g_sched_prof;
-extern int g_attr.n_workers;
 
 static inline void myth_io_register_fd(int fd) {
   //register a file descriptor to the epoll instance in a worker thread
@@ -525,10 +533,10 @@ static inline void myth_io_register_fd(int fd) {
   myth_fd_map_set(env,env->io_struct.fd_map,fd,fd_data);
   ee.events=MYTH_IO_EPOLL_FLAG;
   ee.data.ptr=fd_data;
-#ifdef MYTH_ONE_IO_WORKER
+#if MYTH_ONE_IO_WORKER
   //Register all the file descriptors to worker thread #0
   w_env=&g_envs[0];
-#elif defined MYTH_RANDOM_IO_WORKER
+#elif MYTH_RANDOM_IO_WORKER
   //The worker thread is chosen randomly
   {
     int worker_id;
@@ -549,7 +557,7 @@ static inline void myth_io_register_fd(int fd) {
   long fl;
   int ret;
   fl=real_fcntl(fd,F_GETFL);assert(fl!=-1);
-#ifdef MYTH_USE_SIGIO
+#if MYTH_USE_SIGIO
   //Set to send signals
   ret=real_fcntl(fd,F_SETSIG,MYTH_IO_SIGNAL_NO);assert(ret!=-1);
 #if 0
@@ -675,8 +683,8 @@ static inline int myth_select_body(int nfds, fd_set *readfds, fd_set *writefds,
   while (1){
     tv_immediate.tv_sec=0;tv_immediate.tv_usec=0;
     ret=real_select(nfds,readfds,writefds,exceptfds,&tv_immediate);
-#ifdef SELECT_ALWAYS_RETURN_IMMEDIATELY
-    if (ret!=0)myth_yield_body(0);
+#if SELECT_ALWAYS_RETURN_IMMEDIATELY
+    if (ret!=0)myth_yield_body();
     break;
 #endif
     if (ret!=0)break;
@@ -687,7 +695,7 @@ static inline int myth_select_body(int nfds, fd_set *readfds, fd_set *writefds,
       t_current=tv.tv_sec*1000*1000+tv.tv_usec;
       if (t_goal<=t_current)break;
     }
-    myth_yield_body(0);
+    myth_yield_body();
   }
   if (timeout){
     //rewrite timeval
@@ -707,14 +715,14 @@ static inline ssize_t myth_sendto_body(int sockfd, const void *buf,
   ssize_t ret;
   t0=0;t1=0;t2=0;t3=0;
   myth_running_env_t env;
-#ifdef MYTH_IO_PROF_DETAIL
+#if MYTH_IO_PROF_DETAIL
   t0=myth_get_rdtsc();
 #endif
   env=myth_get_current_env();
   myth_io_cs_enter(env);
   //Perform non-blocking send
   ret=real_sendto(sockfd,buf,len,flags,dest_addr,addrlen);
-#ifdef MYTH_IO_PROF_DETAIL
+#if MYTH_IO_PROF_DETAIL
   t1=myth_get_rdtsc();
 #endif
   if (ret==-1){
@@ -725,7 +733,7 @@ static inline ssize_t myth_sendto_body(int sockfd, const void *buf,
       return -1;
     }
     //Wait for I/O ready
-#ifdef MYTH_IO_PROF_DETAIL
+#if MYTH_IO_PROF_DETAIL
     t2=myth_get_rdtsc();
 #endif
     op.type=MYTH_IO_SENDTO;
@@ -735,7 +743,7 @@ static inline ssize_t myth_sendto_body(int sockfd, const void *buf,
     op.u.st.flags=flags;
     op.u.st.addr=dest_addr;
     op.u.st.addr_len=addrlen;
-#ifdef MYTH_IO_PROF_DETAIL
+#if MYTH_IO_PROF_DETAIL
     t3=myth_get_rdtsc();
     env->prof_data.io_block_send_cycles+=t1-t0;
     env->prof_data.io_block_send_cnt++;
@@ -746,7 +754,7 @@ static inline ssize_t myth_sendto_body(int sockfd, const void *buf,
   }
   else{
     myth_io_cs_exit(env);
-#ifdef MYTH_IO_PROF_DETAIL
+#if MYTH_IO_PROF_DETAIL
     env->prof_data.io_succ_send_cycles+=t1-t0;
     env->prof_data.io_succ_send_cnt++;
 #endif
@@ -762,7 +770,7 @@ static inline ssize_t myth_recvfrom_body(int sockfd, void *buf, size_t len,
   MAY_BE_UNUSED uint64_t t0,t1,t2,t3;
   ssize_t ret;
   t0=0;t1=0;t2=0;t3=0;
-#ifdef MYTH_IO_PROF_DETAIL
+#if MYTH_IO_PROF_DETAIL
   t0=myth_get_rdtsc();
 #endif
   myth_running_env_t env;
@@ -770,7 +778,7 @@ static inline ssize_t myth_recvfrom_body(int sockfd, void *buf, size_t len,
   myth_io_cs_enter(env);
   //Perform non-blocking recv
   ret=real_recvfrom(sockfd,buf,len,flags,src_addr,addrlen);
-#ifdef MYTH_IO_PROF_DETAIL
+#if MYTH_IO_PROF_DETAIL
   t1=myth_get_rdtsc();
 #endif
   if (ret==-1){
@@ -780,7 +788,7 @@ static inline ssize_t myth_recvfrom_body(int sockfd, void *buf, size_t len,
       myth_io_cs_exit(env);
       return -1;
     }
-#ifdef MYTH_IO_PROF_DETAIL
+#if MYTH_IO_PROF_DETAIL
     t2=myth_get_rdtsc();
 #endif
     //Wait for I/O ready
@@ -791,7 +799,7 @@ static inline ssize_t myth_recvfrom_body(int sockfd, void *buf, size_t len,
     op.u.rf.flags=flags;
     op.u.rf.addr=src_addr;
     op.u.rf.addr_len=addrlen;
-#ifdef MYTH_IO_PROF_DETAIL
+#if MYTH_IO_PROF_DETAIL
     t3=myth_get_rdtsc();
     env->prof_data.io_block_recv_cycles+=t1-t0;
     env->prof_data.io_block_recv_cnt++;
@@ -802,7 +810,7 @@ static inline ssize_t myth_recvfrom_body(int sockfd, void *buf, size_t len,
   }
   else{
     myth_io_cs_exit(env);
-#ifdef MYTH_IO_PROF_DETAIL
+#if MYTH_IO_PROF_DETAIL
     env->prof_data.io_succ_recv_cycles+=t1-t0;
     env->prof_data.io_succ_recv_cnt++;
 #endif
@@ -816,14 +824,14 @@ static inline ssize_t myth_send_body (int fd, const void *buf, size_t n, int fla
   ssize_t ret;
   t0=0;t1=0;t2=0;t3=0;
   myth_running_env_t env;
-#ifdef MYTH_IO_PROF_DETAIL
+#if MYTH_IO_PROF_DETAIL
   t0=myth_get_rdtsc();
 #endif
   env=myth_get_current_env();
   myth_io_cs_enter(env);
   //Perform non-blocking send
   ret=real_send(fd,buf,n,flags);
-#ifdef MYTH_IO_PROF_DETAIL
+#if MYTH_IO_PROF_DETAIL
   t1=myth_get_rdtsc();
 #endif
   if (ret==-1){
@@ -834,7 +842,7 @@ static inline ssize_t myth_send_body (int fd, const void *buf, size_t n, int fla
       return -1;
     }
     //Wait for I/O ready
-#ifdef MYTH_IO_PROF_DETAIL
+#if MYTH_IO_PROF_DETAIL
     t2=myth_get_rdtsc();
 #endif
     op.type=MYTH_IO_SEND;
@@ -842,7 +850,7 @@ static inline ssize_t myth_send_body (int fd, const void *buf, size_t n, int fla
     op.u.s.buf=buf;
     op.u.s.n=n;
     op.u.s.flags=flags;
-#ifdef MYTH_IO_PROF_DETAIL
+#if MYTH_IO_PROF_DETAIL
     t3=myth_get_rdtsc();
     env->prof_data.io_block_send_cycles+=t1-t0;
     env->prof_data.io_block_send_cnt++;
@@ -854,7 +862,7 @@ static inline ssize_t myth_send_body (int fd, const void *buf, size_t n, int fla
   }
   else{
     myth_io_cs_exit(env);
-#ifdef MYTH_IO_PROF_DETAIL
+#if MYTH_IO_PROF_DETAIL
     env->prof_data.io_succ_send_cycles+=t1-t0;
     env->prof_data.io_succ_send_cnt++;
 #endif
@@ -867,7 +875,7 @@ static inline ssize_t myth_recv_body (int fd, void *buf, size_t n, int flags) {
   MAY_BE_UNUSED uint64_t t0,t1,t2,t3;
   ssize_t ret;
   t0=0;t1=0;t2=0;t3=0;
-#ifdef MYTH_IO_PROF_DETAIL
+#if MYTH_IO_PROF_DETAIL
   t0=myth_get_rdtsc();
 #endif
   myth_running_env_t env;
@@ -875,7 +883,7 @@ static inline ssize_t myth_recv_body (int fd, void *buf, size_t n, int flags) {
   myth_io_cs_enter(env);
   //Perform non-blocking recv
   ret=real_recv(fd,buf,n,flags);
-#ifdef MYTH_IO_PROF_DETAIL
+#if MYTH_IO_PROF_DETAIL
   t1=myth_get_rdtsc();
 #endif
   if (ret==-1){
@@ -885,7 +893,7 @@ static inline ssize_t myth_recv_body (int fd, void *buf, size_t n, int flags) {
       myth_io_cs_exit(env);
       return -1;
     }
-#ifdef MYTH_IO_PROF_DETAIL
+#if MYTH_IO_PROF_DETAIL
     t2=myth_get_rdtsc();
 #endif
     //Wait for I/O ready
@@ -894,7 +902,7 @@ static inline ssize_t myth_recv_body (int fd, void *buf, size_t n, int flags) {
     op.u.r.buf=buf;
     op.u.r.n=n;
     op.u.r.flags=flags;
-#ifdef MYTH_IO_PROF_DETAIL
+#if MYTH_IO_PROF_DETAIL
     t3=myth_get_rdtsc();
     env->prof_data.io_block_recv_cycles+=t1-t0;
     env->prof_data.io_block_recv_cnt++;
@@ -905,7 +913,7 @@ static inline ssize_t myth_recv_body (int fd, void *buf, size_t n, int flags) {
   }
   else{
     myth_io_cs_exit(env);
-#ifdef MYTH_IO_PROF_DETAIL
+#if MYTH_IO_PROF_DETAIL
     env->prof_data.io_succ_recv_cycles+=t1-t0;
     env->prof_data.io_succ_recv_cnt++;
 #endif
@@ -1011,12 +1019,12 @@ static inline int myth_io_execute(myth_io_op_t op) {
     break;
   }
   case MYTH_IO_SEND:
-#ifdef MYTH_IO_PROF_DETAIL
+#if MYTH_IO_PROF_DETAIL
     t0=myth_get_rdtsc();
 #endif
     ret=real_send(op->u.s.fd,op->u.s.buf,op->u.s.n,op->u.s.flags);
     //assert(myth_fd_map_lookup(op->th->env->io_struct.fd_map,op->u.s.fd));
-#ifdef MYTH_IO_PROF_DETAIL
+#if MYTH_IO_PROF_DETAIL
     t1=myth_get_rdtsc();
     env=myth_get_current_env();
     if (ret==-1 && (errno==EAGAIN || errno==EWOULDBLOCK)){
@@ -1030,12 +1038,12 @@ static inline int myth_io_execute(myth_io_op_t op) {
 #endif
     break;
   case MYTH_IO_RECV:
-#ifdef MYTH_IO_PROF_DETAIL
+#if MYTH_IO_PROF_DETAIL
     t0=myth_get_rdtsc();
 #endif
     ret=real_recv(op->u.r.fd,op->u.r.buf,op->u.r.n,op->u.r.flags);
     //assert(myth_fd_map_lookup(op->th->env->io_struct.fd_map,op->u.r.fd));
-#ifdef MYTH_IO_PROF_DETAIL
+#if MYTH_IO_PROF_DETAIL
     t1=myth_get_rdtsc();
     env=myth_get_current_env();
     if (ret==-1 && (errno==EAGAIN || errno==EWOULDBLOCK)){
@@ -1112,10 +1120,10 @@ static inline myth_thread_t myth_io_polling(struct myth_running_env *env) {
   t0=0;t1=0;t2=0;t3=0;
   hit=0;
   myth_io_cs_enter(env);
-#ifdef MYTH_IO_PROF_DETAIL
+#if MYTH_IO_PROF_DETAIL
   t0=myth_get_rdtsc();
 #endif
-#ifdef MYTH_ONE_IO_WORKER
+#if MYTH_ONE_IO_WORKER
   if (env->rank!=0)return NULL;
 #endif
   //Pop a blocked read I/O operation from the list
@@ -1193,12 +1201,12 @@ static inline myth_thread_t myth_io_polling(struct myth_running_env *env) {
     freed_fds[freed_fds_size]=fd_data;
     freed_fds_size++;
   }
-#ifdef MYTH_IO_PROF_DETAIL
+#if MYTH_IO_PROF_DETAIL
   t2=myth_get_rdtsc();
 #endif
   //Check I/O readiness
   ready=epoll_wait(env->io_struct.epfd,events,MYTH_EPOLL_SIZE,0);
-#ifdef MYTH_IO_PROF_DETAIL
+#if MYTH_IO_PROF_DETAIL
   t3=myth_get_rdtsc();
 #endif
   if (ready==-1){
@@ -1280,7 +1288,7 @@ static inline myth_thread_t myth_io_polling(struct myth_running_env *env) {
   }
   myth_flfree(env->rank,freed_fds_buf_size,freed_fds);
   myth_io_cs_exit(env);
-#ifdef MYTH_IO_PROF_DETAIL
+#if MYTH_IO_PROF_DETAIL
   t1=myth_get_rdtsc();
   if (g_sched_prof){
     if (hit){
@@ -1314,17 +1322,17 @@ static inline myth_thread_t myth_io_polling_sig(struct myth_running_env *env) {
   hit=0;
   if (myth_io_is_in_cs(env))return NULL;
   myth_io_cs_enter(env);
-#ifdef MYTH_IO_PROF_DETAIL
+#if MYTH_IO_PROF_DETAIL
   t0=myth_get_rdtsc();
 #endif
-#ifdef MYTH_ONE_IO_WORKER
+#if MYTH_ONE_IO_WORKER
   if (env->rank!=0)return NULL;
 #endif
-#ifdef MYTH_IO_PROF_DETAIL
+#if MYTH_IO_PROF_DETAIL
   t2=myth_get_rdtsc();
 #endif
   ready=epoll_wait(env->io_struct.epfd,events,MYTH_EPOLL_SIZE,0);
-#ifdef MYTH_IO_PROF_DETAIL
+#if MYTH_IO_PROF_DETAIL
   t3=myth_get_rdtsc();
 #endif
   if (ready==-1){
@@ -1398,7 +1406,7 @@ static inline myth_thread_t myth_io_polling_sig(struct myth_running_env *env) {
       }
     }
   }
-#ifdef MYTH_IO_PROF_DETAIL
+#if MYTH_IO_PROF_DETAIL
   t1=myth_get_rdtsc();
   if (g_sched_prof){
     if (hit){
@@ -1419,7 +1427,7 @@ static inline myth_thread_t myth_io_polling_sig(struct myth_running_env *env) {
   return first_runnable;
 }
 
-#ifdef MYTH_USE_SIGIO
+#if MYTH_USE_SIGIO
 static void myth_io_sighandler(int signum,siginfo_t *sinfo,void* ctx) {
   //	int ret;
   //	ret=write(1,"SIGIO\n",6);
@@ -1485,7 +1493,7 @@ static void myth_io_sighandler(int signum,siginfo_t *sinfo,void* ctx) {
 }
 #endif
 
-#ifdef MYTH_USE_IO_THREAD
+#if MYTH_USE_IO_THREAD
 static inline myth_thread_t myth_io_polling_thread(struct myth_running_env *env) {
   uint64_t t0,t1,t2,t3;
   int i;
@@ -1499,10 +1507,10 @@ static inline myth_thread_t myth_io_polling_thread(struct myth_running_env *env)
   t0=0;t1=0;t2=0;t3=0;
   hit=0;
   myth_io_cs_enter(env);
-#ifdef MYTH_IO_PROF_DETAIL
+#if MYTH_IO_PROF_DETAIL
   t0=myth_get_rdtsc();
 #endif
-#ifdef MYTH_ONE_IO_WORKER
+#if MYTH_ONE_IO_WORKER
   if (env->rank!=0)return NULL;
 #endif
   while ((op=myth_io_wait_list_pop(env,&env->io_struct.rd_reserve_list))!=NULL){
@@ -1532,14 +1540,14 @@ static inline myth_thread_t myth_io_polling_thread(struct myth_running_env *env)
       break;
     }
   }
-#ifdef MYTH_IO_PROF_DETAIL
+#if MYTH_IO_PROF_DETAIL
   t2=myth_get_rdtsc();
 #endif
   //wait by epoll
   myth_io_cs_exit(env);
-  ready=epoll_wait(env->io_struct.epfd,events,MYTH_EPOLL_SIZE,MYTH_IO_THREAD_PERIOD);
+  ready = epoll_wait(env->io_struct.epfd, events, MYTH_EPOLL_SIZE, MYTH_IO_THREAD_PERIOD);
   myth_io_cs_enter(env);
-#ifdef MYTH_IO_PROF_DETAIL
+#if MYTH_IO_PROF_DETAIL
   t3=myth_get_rdtsc();
 #endif
   if (ready==-1){
@@ -1613,7 +1621,7 @@ static inline myth_thread_t myth_io_polling_thread(struct myth_running_env *env)
       }
     }
   }
-#ifdef MYTH_IO_PROF_DETAIL
+#if MYTH_IO_PROF_DETAIL
   t1=myth_get_rdtsc();
   if (g_sched_prof){
     if (hit){

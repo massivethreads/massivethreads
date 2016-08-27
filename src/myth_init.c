@@ -6,31 +6,27 @@
 
 #include "myth/myth.h"
 
-#include "myth_misc.h"
+#include "myth_init.h"
 #include "myth_log.h"
-#include "myth_worker.h"
-#include "myth_tls.h"
-#include "myth_io.h"
-#include "myth_eco.h"
 
-#include "myth_misc_func.h"
+#include "myth_init_func.h"
 #include "myth_log_func.h"
-#include "myth_worker_func.h"
-#include "myth_tls_func.h"
-#include "myth_io_func.h"
 
-myth_attr_t g_attr;
+
+myth_globalattr_t g_attr;
+
+#if 0
 
 /* fill attr with default values;
    this gives the user a convenient way to customize
    MassiveThreads.
-   myth_attr_t attr[1];
+   myth_globalattr_t attr[1];
    myth_get_global_attr_default(attr);
    attr->n_workers = whatever;
    myth_set_global_attr(attr);
 */
-int myth_get_attr_default(myth_attr_t * attr) {
-  myth_attr_t a;
+int myth_get_attr_default(myth_globalattr_t * attr) {
+  myth_globalattr_t a;
   {
     /* number of workers */
     int nw = 0;
@@ -68,7 +64,7 @@ int myth_get_attr_default(myth_attr_t * attr) {
   return 0;
 }
 
-int myth_set_attr(const myth_attr_t * attr) {
+int myth_set_attr(const myth_globalattr_t * attr) {
   if (g_myth_init_state == myth_init_state_initialized) {
     fprintf(stderr,
 	    "myth_set_attr called after massivethreads has been initialized\n");
@@ -81,17 +77,18 @@ int myth_set_attr(const myth_attr_t * attr) {
   }
   return 1;			/* OK */
 }
+#endif
 
-int myth_init_ex_body_really(const myth_attr_t * attr) {
+int myth_init_ex_body_really(const myth_globalattr_t * attr) {
   myth_init_read_available_cpu_list();
-  myth_set_attr(attr);
+  myth_globalattr_set_default_body(attr);
   int nw = g_attr.n_workers;
   //Initialize logger
   myth_log_init();
   //Initialize memory allocators
   myth_flmalloc_init(nw);
   //myth_malloc_wrapper_init(nthreads);
-#ifdef MYTH_WRAP_SOCKIO
+#if MYTH_WRAP_SOCKIO
   //Initialize I/O
   myth_io_init();
 #endif
@@ -103,7 +100,7 @@ int myth_init_ex_body_really(const myth_attr_t * attr) {
   g_envs = myth_malloc(sizeof(myth_running_env) * nw);
   //Initialize TLS for worker thread descriptor
   myth_env_init();
-#ifdef MYTH_ECO_MODE
+#if MYTH_ECO_MODE
   myth_eco_init();
 #endif
 
@@ -115,6 +112,7 @@ int myth_init_ex_body_really(const myth_attr_t * attr) {
   }
   g_envs[0].worker = real_pthread_self();
   myth_worker_thread_fn((void*)0);
+  return 0;
 }
 
 int myth_init_once_ctl_try_set(volatile int * var, int old, int new) {
@@ -131,7 +129,7 @@ volatile int g_myth_init_state = myth_init_state_uninit;
 cpu_set_t g_proc_cpuset;
 
 //Initialize
-int myth_init_ex_body(const myth_attr_t * attr) {
+int myth_init_ex_body(const myth_globalattr_t * attr) {
   if (g_myth_init_state == myth_init_state_initialized) {
     return 1;			/* OK */
   }
@@ -150,6 +148,7 @@ int myth_init_ex_body(const myth_attr_t * attr) {
 
 void myth_emit_log(FILE *fp_prof_out) {
   //Write profiling log
+  (void)fp_prof_out;
   uint64_t t1, t0, tx;
   {
     t0=0; t1=0; tx=0;
@@ -161,25 +160,25 @@ void myth_emit_log(FILE *fp_prof_out) {
     }
     tx /= 100;
   }
-#ifdef MYTH_PROF_SHOW_WORKER
+#if MYTH_PROF_SHOW_WORKER
   int i;
   for (i=0; i < g_attr.n_workers; i++) {
     double nc = env[i].prof_data.create_cnt;
-#if defined MYTH_CREATE_PROF && !defined MYTH_PROF_COUNT_CSV
+#if MYTH_CREATE_PROF && !MYTH_PROF_COUNT_CSV
     fprintf(fp_prof_out,
 	    "Create threads %lu : %lf cycles/creation\n",
 	    (unsigned long)env[i].prof_data.create_cnt,
 	    env[i].prof_data.create_cycles/nc -tx);
 #endif
-#if defined MYTH_CREATE_PROF_DETAIL && !defined MYTH_PROF_COUNT_CSV
+#if MYTH_CREATE_PROF_DETAIL && !MYTH_PROF_COUNT_CSV
     fprintf(fp_prof_out,"A:%lf B:%lf C:%lf D:%lf\n"
 	    ,env[i].prof_data.create_cyclesA / nc - tx
 	    ,env[i].prof_data.create_cyclesB / nc - tx
 	    ,env[i].prof_data.create_cyclesC / nc - tx
 	    ,env[i].prof_data.create_cyclesD / nc - tx);
 #endif
-#if defined MYTH_ENTRY_POINT_PROF && !defined MYTH_PROF_COUNT_CSV
-#ifdef SWITCH_AFTER_CREATE
+#if MYTH_ENTRY_POINT_PROF && !MYTH_PROF_COUNT_CSV
+#if SWITCH_AFTER_CREATE
     fprintf(fp_prof_out,
 	    "Ran threads %lu : %lf cycle overhead/run\n",
 	    (unsigned long)env[i].prof_data.ep_cnt,
@@ -195,18 +194,18 @@ void myth_emit_log(FILE *fp_prof_out) {
 	    ,env[i].prof_data.ep_cyclesB/(double)env[i].prof_data.ep_cnt-tx);
 #endif
 #endif
-#if defined MYTH_JOIN_PROF  && !defined MYTH_PROF_COUNT_CSV
+#if MYTH_JOIN_PROF  && !MYTH_PROF_COUNT_CSV
     fprintf(fp_prof_out,
 	    "Joins %lu : %lf cycles/join\n",
 	    (unsigned long)env[i].prof_data.join_cnt,
 	    env[i].prof_data.join_cycles/(double)env[i].prof_data.join_cnt-tx);
 #endif
-#ifdef MYTH_ALLOC_PROF
+#if MYTH_ALLOC_PROF
     fprintf(fp_prof_out,
 	    "Malloc %lu\n",
 	    (unsigned long)env[i].prof_data.malloc_cnt);
 #endif
-#ifdef MYTH_PROF_COUNT_CSV
+#if MYTH_PROF_COUNT_CSV
     fprintf(fp_prof_out,
 	    "%lu,%lu,%lu\n",
 	    (unsigned long)env[i].prof_data.create_cnt,
@@ -219,7 +218,7 @@ void myth_emit_log(FILE *fp_prof_out) {
   MAY_BE_UNUSED int i;
   i=0;
   sum1=0;sum2=0;sum3=0;sum4=0;sum5=0;
-#if defined MYTH_CREATE_PROF && !defined MYTH_PROF_COUNT_CSV
+#if MYTH_CREATE_PROF && !MYTH_PROF_COUNT_CSV
   sum1=0;sum2=0;
   for (i=0;i<g_attr.n_workers;i++){
     sum1+=g_envs[i].prof_data.create_cnt;
@@ -228,7 +227,7 @@ void myth_emit_log(FILE *fp_prof_out) {
   fprintf(fp_prof_out,"Create threads %lu : %lf cycles/creation\n",
 	  (unsigned long)sum1,sum2/(double)sum1-tx);
 #endif
-#if defined MYTH_CREATE_PROF_DETAIL && !defined MYTH_PROF_COUNT_CSV
+#if MYTH_CREATE_PROF_DETAIL && !MYTH_PROF_COUNT_CSV
   sum1=0;sum2=0;sum3=0;sum4=0;
   for (i=0;i<g_attr.n_workers;i++){
     sum1+=g_envs[i].prof_data.create_d_cnt;
@@ -241,14 +240,14 @@ void myth_emit_log(FILE *fp_prof_out) {
   fprintf(fp_prof_out,"Context switch : %lf\n",sum3/(double)sum1-tx);
   fprintf(fp_prof_out,"Runqueue operation(push) : %lf\n",sum4/(double)sum1-tx);
 #endif
-#if defined MYTH_ENTRY_POINT_PROF && !defined MYTH_PROF_COUNT_CSV
+#if MYTH_ENTRY_POINT_PROF && !MYTH_PROF_COUNT_CSV
   sum1=0;sum2=0;sum3=0;
   for (i=0;i<g_attr.n_workers;i++){
     sum1+=g_envs[i].prof_data.ep_cnt;
     sum2+=g_envs[i].prof_data.ep_cyclesA;
     sum3+=g_envs[i].prof_data.ep_cyclesB;
   }
-#ifdef SWITCH_AFTER_CREATE
+#if SWITCH_AFTER_CREATE
   fprintf(fp_prof_out,"Ran threads %lu : %lf cycle overhead/run\n",(unsigned long)sum1,sum3/(double)sum1-tx);
 #else
   fprintf(fp_prof_out,"Ran threads %lu : %lf cycle overhead/run\n",(unsigned long)sum1,(sum2+sum3)/(double)sum1-tx*2);
@@ -257,7 +256,7 @@ void myth_emit_log(FILE *fp_prof_out) {
 	  ,sum3/(double)sum1-tx);
 #endif
 #endif
-#if defined MYTH_EP_PROF_DETAIL
+#if MYTH_EP_PROF_DETAIL
   sum1=0;sum2=0;sum3=0;sum4=0;
   for (i=0;i<g_attr.n_workers;i++){
     sum1+=g_envs[i].prof_data.ep_d_cnt;
@@ -270,7 +269,7 @@ void myth_emit_log(FILE *fp_prof_out) {
   fprintf(fp_prof_out,"Context switch : %lf\n",sum3/(double)sum1-tx);
   fprintf(fp_prof_out,"Runqueue operation(pop) : %lf\n",sum4/(double)sum1-tx);
 #endif
-#if defined MYTH_JOIN_PROF  && !defined MYTH_PROF_COUNT_CSV
+#if MYTH_JOIN_PROF  && !MYTH_PROF_COUNT_CSV
   sum1=0;sum2=0;
   for (i=0;i<g_attr.n_workers;i++){
     sum1+=g_envs[i].prof_data.join_cnt;
@@ -278,7 +277,7 @@ void myth_emit_log(FILE *fp_prof_out) {
   }
   fprintf(fp_prof_out,"Joins %lu : %lf cycles/join\n",(unsigned long)sum1,sum2/(double)sum1-tx);
 #endif
-#if defined MYTH_JOIN_PROF_DETAIL
+#if MYTH_JOIN_PROF_DETAIL
   sum1=0;sum2=0;sum3=0;sum4=0;
   for (i=0;i<g_attr.n_workers;i++){
     sum1+=g_envs[i].prof_data.join_d_cnt;
@@ -289,7 +288,7 @@ void myth_emit_log(FILE *fp_prof_out) {
   fprintf(fp_prof_out,"Join operation : %lf\n",sum2/(double)sum1-tx);
   fprintf(fp_prof_out,"Frame release : %lf\n",sum3/(double)sum1-tx);
 #endif
-#ifdef MYTH_WS_PROF_DETAIL
+#if MYTH_WS_PROF_DETAIL
   sum1=0;sum2=0;sum3=0;sum4=0;
   fprintf(fp_prof_out,"WS attempts:\n");
   for (i=0;i<g_attr.n_workers;i++){
@@ -307,7 +306,7 @@ void myth_emit_log(FILE *fp_prof_out) {
   fprintf(fp_prof_out,"Hit  : %ld ( %lf )\n",(unsigned long)sum1,sum2/(double)sum1-tx);
   fprintf(fp_prof_out,"Miss : %ld ( %lf )\n",(unsigned long)sum3,sum4/(double)sum3-tx);
 #endif
-#ifdef MYTH_SWITCH_PROF
+#if MYTH_SWITCH_PROF
   sum1=0;sum2=0;sum3=0;sum4=0;
   for (i=0;i<g_attr.n_workers;i++){
     sum1+=g_envs[i].prof_data.sw_cnt;
@@ -316,7 +315,7 @@ void myth_emit_log(FILE *fp_prof_out) {
   fprintf(fp_prof_out,"Context switch (count : %ld ):\n",(unsigned long)sum1);
   fprintf(fp_prof_out,"Overhead : %lf cycles\n",sum2/(double)sum1-tx);
 #endif
-#ifdef MYTH_ALLOC_PROF
+#if MYTH_ALLOC_PROF
   sum1=0;sum2=0;
   sum3=0;sum4=0;
   for (i=0;i<g_attr.n_workers;i++){
@@ -352,7 +351,7 @@ void myth_emit_log(FILE *fp_prof_out) {
   fprintf(fp_prof_out,"mmap/malloc : %lf cycles/alloc, addlist : %lf cycles/alloc\n",sum3/(double)sum2,sum4/(double)sum2);
 
 #endif
-#if defined MYTH_IO_PROF_DETAIL
+#if MYTH_IO_PROF_DETAIL
   sum1=0;sum2=0;sum3=0;sum4=0;
   for (i=0;i<g_attr.n_workers;i++){
     sum1+=g_envs[i].prof_data.io_succ_send_cnt;
@@ -396,7 +395,7 @@ void myth_emit_log(FILE *fp_prof_out) {
   fprintf(fp_prof_out,"miss: %lu ( %lf cycles)\n",(unsigned long)sum3,sum4/(double)sum3-tx);
   fprintf(fp_prof_out,"overall: %lu ( %lf cycles)\n",(unsigned long)(sum1+sum3),(sum2+sum4)/(double)(sum1+sum3)-tx);
 #endif
-#ifdef MYTH_PROF_COUNT_CSV
+#if MYTH_PROF_COUNT_CSV
   sum1=0;sum2=0;sum3=0;
   for (i=0;i<g_attr.n_workers;i++){
     sum1+=g_envs[i].prof_data.create_cnt;
@@ -416,7 +415,7 @@ static void myth_fini_body_really(void) {
   //Unload DLL and functions
   //myth_free_original_funcs();
   myth_tls_fini();
-#ifdef MYTH_WRAP_SOCKIO
+#if MYTH_WRAP_SOCKIO
   myth_io_fini();
 #endif
   //Finalize logger
@@ -452,6 +451,7 @@ int myth_fini_body() {
   // Restore affinity
   sched_setaffinity(getpid(), sizeof(cpu_set_t), &g_proc_cpuset);
   g_myth_init_state = myth_init_state_uninit;
+  return 0;
 }
 
 

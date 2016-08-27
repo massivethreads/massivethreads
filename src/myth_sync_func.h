@@ -6,8 +6,18 @@
 #define MYTH_SYNC_FUNC_H_
 
 #include "myth/myth.h"
+
+#include "myth_config.h"
+#include "myth_context.h"
+#include "myth_worker.h"
+#include "myth_thread.h"
+
+#include "myth_context_func.h"
+#include "myth_desc_func.h"
 #include "myth_sleep_queue_func.h"
-#include "myth_internal_lock_func.h"
+#include "myth_sched_func.h"
+
+#include "myth_spinlock_func.h"
 
 //#define ALIGN_MUTEX
 
@@ -381,16 +391,53 @@ static inline int myth_wake_many_from_stack(myth_sleep_stack_t * s,
   return n;
 }
 
+/* ----------- once ----------- */
 
+static inline int myth_once_try_set(myth_once_t * once_control,
+				    int old, int new) {
+  return __sync_bool_compare_and_swap(&once_control->state, old, new);
+}
+
+static inline int myth_once_wait_until(myth_once_t * once_control,
+				       int state) {
+  int s = once_control->state;
+  while (s != state) {
+    myth_yield();
+    s = once_control->state;
+  }
+  return 0;
+}
+
+static inline int
+myth_once_body(myth_once_t * once_control, void (*init_routine)(void)) {
+  int s = once_control->state;
+  if (s == myth_once_state_init) {
+   if (myth_once_try_set(once_control, myth_once_state_init,
+			 myth_once_state_in_progress)) {
+     init_routine();
+     once_control->state = myth_once_state_completed;
+     return 0;
+   }
+  }
+  myth_once_wait_until(once_control, myth_once_state_completed);
+  return 0;
+}
 
 /* ----------- mutex ----------- */
 
 /* initialize mutex */
-static inline int myth_mutex_init_body(myth_mutex_t * mutex, 
+static inline int
+myth_mutexattr_init_body(myth_mutexattr_t *attr);
+
+  static inline int myth_mutex_init_body(myth_mutex_t * mutex, 
 				       const myth_mutexattr_t * attr) {
-  (void)attr;
   myth_sleep_queue_init(mutex->sleep_q);
   mutex->state = 0;
+  if (attr) {
+    mutex->attr = *attr;
+  } else {
+    myth_mutexattr_init_body(&mutex->attr);
+  }
   return 0;
 }
 
@@ -399,6 +446,23 @@ static inline int myth_mutex_destroy_body(myth_mutex_t * mutex)
 {
   myth_sleep_queue_destroy(mutex->sleep_q);
   return 0;
+}
+
+static inline int myth_mutex_trylock_body(myth_mutex_t * mutex) {
+  /* TODO: spin block */
+  while (1) {
+    long s = mutex->state;
+    /* check the lock bit */
+    if (s & 1) {
+      /* lock bit set. do nothing and go home */
+      return EBUSY;
+    } else if (__sync_bool_compare_and_swap(&mutex->state, s, s + 1)) {
+      /* I set the lock bit */
+      return 0;
+    } else {
+      continue;
+    }
+  }
 }
 
 /* lock mutex.
@@ -451,6 +515,32 @@ static inline int myth_mutex_lock_body(myth_mutex_t * mutex) {
   return 0;
 }
   
+/* timedlock
+   the current implementation repeats trylock and then yield,
+   until it succeds trylock.
+   we want to make it block on the mutex, so that it will
+   promptly wake up when the mutex is unlocked.
+*/
+static inline int
+myth_mutex_timedlock_body(myth_mutex_t * mutex,
+			  const struct timespec *restrict abstime) {
+  if (myth_mutex_trylock_body(mutex) == 0) {
+    return 0;
+  } else {
+    struct timespec tp[1];
+    while (1) {
+      int err = clock_gettime(CLOCK_REALTIME, tp);
+      assert(err == 0);
+      if (myth_timespec_gt(tp, abstime)) return ETIMEDOUT;
+      if (myth_mutex_trylock_body(mutex) == 0) {
+	return 0;
+      } else {
+	myth_yield_ex_body(myth_yield_option_local_first);
+      }
+    }
+  }
+}
+
 /* clear lock bit, done after dequeueing
    a thread to wake up from the sleep queue and
    before putting it in the run queue */
@@ -496,29 +586,150 @@ static inline int myth_mutex_unlock_body(myth_mutex_t * mutex) {
   return 0;
 }
 
-static inline int myth_mutex_trylock_body(myth_mutex_t * mutex) {
-  /* TODO: spin block */
-  while (1) {
-    long s = mutex->state;
-    /* check the lock bit */
-    if (s & 1) {
-      /* lock bit set. do nothing and go home */
-      return EBUSY;
-    } else if (__sync_bool_compare_and_swap(&mutex->state, s, s + 1)) {
-      /* I set the lock bit */
-      return 0;
-    } else {
-      continue;
-    }
+static inline int
+myth_mutexattr_init_body(myth_mutexattr_t *attr) {
+  attr->type = MYTH_MUTEX_DEFAULT;
+  return 0;
+}
+
+static inline int
+myth_mutexattr_destroy_body(myth_mutexattr_t *attr) {
+  (void)attr;
+  return 0;
+}
+
+static inline int
+myth_mutexattr_gettype_body(const myth_mutexattr_t *restrict attr,
+			    int *restrict type) {
+  *type = attr->type;
+  return 0;
+}
+
+static inline int
+myth_mutexattr_settype_body(myth_mutexattr_t *attr, int type) {
+  attr->type = type;
+  return 0;
+}
+
+/* ----------- reader-writer lock ----------- */
+
+static inline int unimplemented(void) {
+  assert(0);
+}
+
+static inline int
+myth_rwlockattr_init_body(myth_rwlockattr_t *attr);
+
+static inline int
+myth_rwlock_init_body(myth_rwlock_t *restrict rwlock,
+		      const myth_rwlockattr_t *restrict attr) {
+  myth_sleep_queue_init(rwlock->sleep_q);
+  rwlock->state = 0;
+  if (attr) {
+    rwlock->attr = *attr;
+  } else {
+    myth_rwlockattr_init_body(&rwlock->attr);
   }
+  return 0;
+}
+// myth_rwlock_t rwlock = MYTH_RWLOCK_INITIALIZER;
+
+static inline int
+myth_rwlock_destroy_body(myth_rwlock_t *rwlock) {
+  myth_sleep_queue_destroy(rwlock->sleep_q);
+  return 0;
+}
+
+static inline int
+myth_rwlock_rdlock_body(myth_rwlock_t *rwlock) {
+  (void)rwlock;
+  unimplemented();
+  return 0;
+}
+
+static inline int
+myth_rwlock_tryrdlock_body(myth_rwlock_t *rwlock) {
+  (void)rwlock;
+  unimplemented();
+  return 0;
+}
+
+static inline int
+myth_rwlock_timedrdlock_body(myth_rwlock_t *restrict rwlock,
+			     const struct timespec *restrict abstime) {
+  (void)rwlock;
+  (void)abstime;
+  unimplemented();
+  return 0;
+}
+
+static inline int
+myth_rwlock_wrlock_body(myth_rwlock_t *rwlock) {
+  (void)rwlock;
+  unimplemented();
+  return 0;
+}
+
+static inline int
+myth_rwlock_trywrlock_body(myth_rwlock_t *rwlock) {
+  (void)rwlock;
+  unimplemented();
+  return 0;
+}
+
+static inline int
+myth_rwlock_timedwrlock_body(myth_rwlock_t *restrict rwlock,
+			     const struct timespec *restrict abstime) {
+  (void)rwlock;
+  (void)abstime;
+  unimplemented();
+  return 0;
+}
+
+static inline int
+myth_rwlock_unlock_body(myth_rwlock_t *rwlock) {
+  (void)rwlock;
+  unimplemented();
+  return 0;
+}
+
+static inline int
+myth_rwlockattr_init_body(myth_rwlockattr_t *attr) {
+  attr->kind = MYTH_RWLOCK_PREFER_READER;
+  return 0;
+}
+
+static inline int
+myth_rwlockattr_destroy_body(myth_rwlockattr_t *attr) {
+  (void)attr;
+  return 0;
+}
+
+static inline int
+myth_rwlockattr_getkind_body(const myth_rwlockattr_t *attr, int *pref) {
+  *pref = attr->kind;
+  return 0;
+}
+
+static inline int
+myth_rwlockattr_setkind_body(myth_rwlockattr_t *attr, int pref) {
+  attr->kind = pref;
+  return 0;
 }
 
 /* ----------- condition variable ----------- */
 
-static inline int myth_cond_init_body(myth_cond_t * cond, 
+static inline int
+myth_condattr_init_body(myth_condattr_t *attr);
+
+  static inline int myth_cond_init_body(myth_cond_t * cond, 
 				      const myth_condattr_t * attr) {
-  (void)attr;
   myth_sleep_queue_init(cond->sleep_q);
+  if (attr) {
+    cond->attr = *attr;
+  } else {
+    myth_condattr_init_body(&cond->attr);
+  }
   return 0;
 }
 
@@ -542,17 +753,46 @@ static inline int myth_cond_wait_body(myth_cond_t * cond, myth_mutex_t * mutex) 
   return myth_mutex_lock(mutex);
 }
 
+static inline int
+myth_cond_timedwait_body(myth_cond_t * cond, myth_mutex_t * mutex,
+			 const struct timespec *restrict abstime) {
+  (void)cond;
+  (void)mutex;
+  (void)abstime;
+  unimplemented();
+  myth_block_on_queue(cond->sleep_q, mutex);
+  return myth_mutex_lock(mutex);
+}
+
+static inline int
+myth_condattr_init_body(myth_condattr_t *attr) {
+  (void)attr;
+  return 0;
+}
+
+static inline int
+myth_condattr_destroy_body(myth_condattr_t *attr) {
+  (void)attr;
+  return 0;
+}
+
 /* ----------- barrier ----------- */
 
-static inline int myth_barrier_init_body(myth_barrier_t * barrier, 
+static inline int myth_barrierattr_init_body(myth_barrierattr_t *attr);
+
+  static inline int myth_barrier_init_body(myth_barrier_t * barrier, 
 					 const myth_barrierattr_t * attr, 
 					 long n_threads) {
-  (void)attr;
+  //myth_sleep_queue_init(barrier->sleep_q);
+  myth_sleep_stack_init(barrier->sleep_s);
   /* 2 *(number of threads that reached) + invalid */
   barrier->state = 0;
   barrier->n_threads = n_threads;
-  //myth_sleep_queue_init(barrier->sleep_q);
-  myth_sleep_stack_init(barrier->sleep_s);
+  if (attr) {
+    barrier->attr = *attr;
+  } else {
+    myth_barrierattr_init_body(&barrier->attr);
+  }
   return 0;
 }
 
@@ -591,6 +831,16 @@ static inline int myth_barrier_wait_body(myth_barrier_t * barrier) {
   }
 }
 
+static inline int myth_barrierattr_init_body(myth_barrierattr_t *attr) {
+  (void)attr;
+  return 0;
+}
+
+static inline int myth_barrierattr_destroy_body(myth_barrierattr_t *attr) {
+  (void)attr;
+  return 0;
+}
+
 /* ----------- join counter ----------- */
 
 /* calc number of bits enough to represent x
@@ -605,21 +855,28 @@ static inline int calc_bits(long x) {
   return b;
 }
 
-static inline int myth_join_counter_init_body(myth_join_counter_t * jc, 
-					      const myth_join_counterattr_t * attr, 
-					      long n_threads) {
+static inline int myth_join_counterattr_init_body(myth_join_counterattr_t * attr);
+
+static inline int
+myth_join_counter_init_body(myth_join_counter_t * jc, 
+			    const myth_join_counterattr_t * attr, 
+			    long n_threads) {
   //Create a join counter with initial value val
   //val must be positive
-  (void)attr;
   int b = calc_bits(n_threads);
   long mask = (1L << b) - 1;
+  myth_sleep_queue_init(jc->sleep_q);
   jc->n_threads = n_threads;
   jc->n_threads_bits = b;
   jc->state_mask = mask;
   assert((n_threads & mask) == n_threads);
   /* number of waiters|number of decrements so far */
   jc->state = 0;
-  myth_sleep_queue_init(jc->sleep_q);
+  if (attr) {
+    jc->attr = *attr;
+  } else {
+    myth_join_counterattr_init_body(&jc->attr);
+  }
   return 0;
 }
 
@@ -667,15 +924,29 @@ static inline int myth_join_counter_dec_body(myth_join_counter_t * jc) {
   return 0;
 }
 
-#if 1				/* felock */
+static inline int myth_join_counterattr_init_body(myth_join_counterattr_t * attr) {
+  (void)attr;
+  return 0;
+}
 
+static inline int myth_join_counterattr_destroy_body(myth_join_counterattr_t * attr) {
+  (void)attr;
+  return 0;
+}
+
+
+/* ----------- felock----------- */
 static inline int myth_felock_init_body(myth_felock_t * fe,
 					const myth_felockattr_t * attr) {
-  (void)attr;
   myth_mutex_init_body(fe->mutex, 0);
   myth_cond_init_body(&fe->cond[0], 0);
   myth_cond_init_body(&fe->cond[1], 0);
   fe->status = 0;
+  if (attr) {
+    fe->attr = *attr;
+  } else {
+    myth_felockattr_init(&fe->attr);
+  }
   return 0;
 }
 
@@ -714,166 +985,14 @@ static inline int myth_felock_status_body(myth_felock_t * fe) {
   return fe->status;
 }
 
-
-#else
-
-static inline int myth_felock_init_body(myth_felock_t * felock,
-					const myth_felockattr_t * attr)
-{
+static inline int myth_felockattr_init_body(myth_felockattr_t * attr) {
   (void)attr;
-  myth_mutex_init_body(felock->lock, 0);
-  felock->fe=0;
-  felock->fsize = felock->esize = DEFAULT_FESIZE;
-  felock->ne = felock->nf = 0;
-  felock->el = felock->def_el;
-  felock->fl = felock->def_fl;
   return 0;
 }
 
-static inline int myth_felock_destroy_body(myth_felock_t * felock)
-{
-  myth_running_env_t env;
-  env = myth_get_current_env();
-  myth_mutex_destroy_body(felock->lock);
-  if (felock->el != felock->def_el){
-    assert(felock->esize>DEFAULT_FESIZE);
-    myth_flfree(env->rank, sizeof(myth_thread_t) * felock->esize, felock->el);
-  }
-  if (felock->fl != felock->def_fl){
-    assert(felock->fsize > DEFAULT_FESIZE);
-    myth_flfree(env->rank, sizeof(myth_thread_t) * felock->fsize, felock->fl);
-  }
+static inline int myth_felockattr_destroy_body(myth_felockattr_t * attr) {
+  (void)attr;
   return 0;
 }
-
-static inline int myth_felock_lock_body(myth_felock_t * felock)
-{
-  return myth_mutex_lock_body(felock->lock);
-}
-
-MYTH_CTX_CALLBACK void myth_felock_wait_lock_1(void *arg1,void *arg2,void *arg3)
-{
-  myth_running_env_t env = (myth_running_env_t)arg1;;
-  myth_thread_t next = (myth_thread_t)arg2;
-  myth_felock_t * fe = (myth_felock_t *)arg3;
-  env->this_thread=next;
-  if (next){
-    next->env=env;
-  }
-  myth_mutex_unlock_body(fe->lock);
-}
-
-static inline int myth_felock_wait_lock_body(myth_felock_t * felock, int val)
-{
-  myth_running_env_t e = myth_get_current_env();
-  myth_thread_t this_thread = e->this_thread;
-  while (1) {
-    myth_mutex_lock_body(felock->lock);
-    volatile myth_running_env_t ev;
-    ev = myth_get_current_env();
-    myth_running_env_t env;
-    env = ev;
-    assert(this_thread == env->this_thread);
-    if ((!!val) == (!!felock->fe)){
-      return 0;
-    }
-    //add to queue
-#if 1
-    if (val){
-      //wait for fe to be !0
-      //check size and reallocate
-      if (felock->fsize <= felock->nf){
-	if (felock->fsize == DEFAULT_FESIZE){
-	  felock->fl = myth_flmalloc(env->rank, 
-				     sizeof(myth_thread_t) * felock->fsize * 2);
-	  memcpy(felock->fl, felock->def_fl, 
-		 sizeof(myth_thread_t) * felock->fsize);
-	} else {
-	  felock->fl = myth_flrealloc(env->rank,
-				      sizeof(myth_thread_t) * felock->fsize,
-				      felock->fl,
-				      sizeof(myth_thread_t) * felock->fsize * 2);
-	}
-	felock->fsize *= 2;
-      }
-      //add
-      felock->fl[felock->nf] = this_thread;
-      felock->nf++;
-    } else {
-      //wait for fe to be 0
-      //check size and reallocate
-      if (felock->esize <= felock->ne){
-	if (felock->esize == DEFAULT_FESIZE){
-	  felock->el = myth_flmalloc(env->rank, 
-				     sizeof(myth_thread_t) * felock->esize * 2);
-	  memcpy(felock->el, felock->def_el, 
-		 sizeof(myth_thread_t) * felock->esize);
-	} else {
-	  felock->el = myth_flrealloc(env->rank,
-				      sizeof(myth_thread_t) * felock->esize,
-				      felock->el,
-				      sizeof(myth_thread_t) * felock->esize * 2);
-	}
-	felock->esize *= 2;
-      }
-      //add
-      felock->el[felock->ne] = this_thread;
-      felock->ne++;
-    }
-    myth_thread_t next;
-    myth_context_t next_ctx;
-    next = myth_queue_pop(&env->runnable_q);
-    if (next){
-      next->env = env;
-      next_ctx = &next->context;
-    }
-    else{
-      next_ctx = &env->sched.context;
-    }
-    myth_swap_context_withcall(&this_thread->context, next_ctx, 
-			       myth_felock_wait_lock_1,
-			       (void*)env, (void*)next, (void*)felock);
-#else
-    myth_mutex_unlock_body(&felock->lock);
-    myth_yield_body();
-#endif
-  }
-}
-
-static inline int myth_felock_unlock_body(myth_felock_t * felock)
-{
-  myth_running_env_t env = myth_get_current_env();
-  myth_thread_t next;
-  if (felock->fe){
-    if (felock->nf){
-      felock->nf--;
-      next = felock->fl[felock->nf];
-      next->env = env;
-      myth_queue_push(&env->runnable_q, next);
-    }
-  } else {
-    if (felock->ne){
-      felock->ne--;
-      next = felock->el[felock->ne];
-      next->env = env;
-      myth_queue_push(&env->runnable_q, next);
-    }
-  }
-  return myth_mutex_unlock_body(felock->lock);
-}
-
-static inline int myth_felock_set_unlock_body(myth_felock_t * felock, int val)
-{
-  felock->fe = val;
-  return myth_felock_unlock_body(felock);
-}
-
-static inline int myth_felock_status_body(myth_felock_t * felock)
-{
-  return felock->fe;
-}
-
-
-#endif
 
 #endif /* MYTH_SYNC_FUNC_H_ */

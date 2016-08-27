@@ -1,10 +1,10 @@
 /* 
- * myth_context_gvar.h
+ * myth_context.c
  */
-#include "myth/myth_config.h"
+#include "myth_config.h"
 #include "myth_context.h"
 
-#if defined MYTH_CONTEXT_ARCH_UNIVERSAL
+#if MYTH_CONTEXT == MYTH_CONTEXT_UCONTEXT
 
 volatile __thread myth_ctx_withcall_param g_ctx_withcall_params;
 

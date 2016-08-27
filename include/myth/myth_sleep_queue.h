@@ -5,20 +5,14 @@
 #ifndef MYTH_SLEEP_QUEUE_H_
 #define MYTH_SLEEP_QUEUE_H_
 
+#include "myth_spinlock.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 #ifndef MYTH_SLEEP_QUEUE_DBG
 #define MYTH_SLEEP_QUEUE_DBG 0
-#endif
-
-#ifndef MYTH_SLEEP_QUEUE_LOCK
-#define MYTH_SLEEP_QUEUE_LOCK 1
-#endif
-
-#if MYTH_SLEEP_QUEUE_LOCK
-#include <myth/myth_internal_lock.h>
 #endif
 
   /* myth_sleep_queue_item_t represents a pointer 
@@ -31,16 +25,10 @@ extern "C" {
   typedef struct {
     volatile myth_sleep_queue_item_t head;
     volatile myth_sleep_queue_item_t tail;
-#if MYTH_SLEEP_QUEUE_LOCK
-    myth_internal_lock_t ilock[1];
-#endif
+    myth_spinlock_t ilock[1];
   } myth_sleep_queue_t;
   
-  /* TODO: the last element initializes internal lock.
-     this works only when myth_internal_lock is a hand-made 
-     spin lock. I'll rather make it always so, as doing
-     pthread_mutex here does not make much sense*/
-#define MYTH_SLEEP_QUEUE_INITIALIZER { 0, 0, { 0 } }
+#define MYTH_SLEEP_QUEUE_INITIALIZER { 0, 0, MYTH_INTERNAL_LOCK_INITIALIZER }
 
   typedef struct {
     volatile myth_sleep_queue_item_t top;

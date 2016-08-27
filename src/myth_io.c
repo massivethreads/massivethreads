@@ -4,12 +4,12 @@
 
 #include <assert.h>
 
-#include "myth_desc.h"
 #include "myth_worker.h"
 #include "myth_io.h"
 
-#include "myth_io_proto.h"
+//#include "myth_io_proto.h"
 
+#include "myth_desc_func.h"
 #include "myth_worker_func.h"
 #include "myth_io_func.h"
 
@@ -18,7 +18,7 @@ myth_fd_map_t g_fd_map;
 int g_recvfrom_cnt,g_sendto_cnt;
 int g_n_recvfrom_cnt,g_n_sendto_cnt;
 
-#ifdef MYTH_WRAP_SOCKIO
+#if MYTH_WRAP_SOCKIO
 
 int socket (int domain, int type, int protocol) {
   return myth_socket_body(domain,type,protocol);

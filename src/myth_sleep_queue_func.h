@@ -8,11 +8,10 @@
 #include <assert.h>
 #include "myth/myth_sleep_queue.h"
 
-#if MYTH_SLEEP_QUEUE_LOCK
-#include "myth_internal_lock_func.h"
-#endif
+#include "myth_config.h"
+#include "myth_spinlock_func.h"
 
-#if !MYTH_SLEEP_QUEUE_LOCK
+#if 0
 /* stuff needed for non-blocking version */
 
 static inline myth_sleep_queue_item_t
@@ -69,29 +68,23 @@ static inline myth_sleep_queue_item_t clear_last_bit(myth_sleep_queue_item_t p) 
   void * q = p;
   return q - 1;
 }
-#endif	/* ! MYTH_SLEEP_QUEUE_LOCK */
+#endif	/* 0 */
 
 static inline void myth_sleep_queue_init(myth_sleep_queue_t * q) {
   q->head = q->tail = 0;
-#if MYTH_SLEEP_QUEUE_LOCK
-  myth_internal_lock_init(q->ilock);
-#endif
+  myth_spin_init_body(q->ilock);
 }
 
 static inline void myth_sleep_queue_destroy(myth_sleep_queue_t * q) {
   assert(q->head == 0);
   assert(q->tail == 0);
-#if MYTH_SLEEP_QUEUE_LOCK
-  myth_internal_lock_destroy(q->ilock);
-#endif
+  myth_spin_destroy(q->ilock);
 }
-
-#if MYTH_SLEEP_QUEUE_LOCK
 
 static inline long myth_sleep_queue_enq(myth_sleep_queue_t * q, 
 					myth_sleep_queue_item_t t) {
   t->next = 0;
-  myth_internal_lock_lock(q->ilock);
+  myth_spin_lock_body(q->ilock);
   myth_sleep_queue_item_t tail = q->tail;
   if (tail) {
     tail->next = t;
@@ -99,12 +92,12 @@ static inline long myth_sleep_queue_enq(myth_sleep_queue_t * q,
     q->head = t;
   }
   q->tail = t;
-  myth_internal_lock_unlock(q->ilock);
+  myth_spin_unlock_body(q->ilock);
   return 0;		/* done */
 }
 
 static inline myth_sleep_queue_item_t myth_sleep_queue_deq(myth_sleep_queue_t * q) {
-  myth_internal_lock_lock(q->ilock);
+  myth_spin_lock_body(q->ilock);
   myth_sleep_queue_item_t head = q->head;
   if (head) {
     myth_sleep_queue_item_t next = head->next;
@@ -113,11 +106,13 @@ static inline myth_sleep_queue_item_t myth_sleep_queue_deq(myth_sleep_queue_t * 
       q->tail = 0;
     }
   }
-  myth_internal_lock_unlock(q->ilock);
+  myth_spin_unlock_body(q->ilock);
   return head;		/* done */
 }
 
-#else  /* MYTH_SLEEP_QUEUE_LOCK */
+
+#if 0				/* non-blocking version */
+
 /* enqueue an element t to q.  */
 static inline long myth_sleep_queue_enq(myth_sleep_queue_t * q, 
 					myth_sleep_queue_item_t t) {
@@ -219,7 +214,7 @@ static inline myth_sleep_queue_item_t myth_sleep_queue_deq(myth_sleep_queue_t * 
   }
 }
 
-#endif	/* MYTH_SLEEP_QUEUE_LOCK */
+#endif	/* 0 */
 
 
 static inline void myth_sleep_stack_init(myth_sleep_stack_t * s) {

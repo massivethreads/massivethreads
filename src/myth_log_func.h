@@ -5,7 +5,22 @@
 #ifndef MYTH_LOG_FUNC_H_
 #define MYTH_LOG_FUNC_H_
 
-#ifdef MYTH_COLLECT_LOG
+#include <stdio.h>
+#include "myth/myth.h"
+
+#include "myth_config.h"
+#include "myth_init.h"
+#include "myth_worker.h"
+#include "myth_log.h"
+#include "myth_sched.h"
+
+#include "myth_init_func.h"
+#include "myth_worker_func.h"
+#include "myth_misc_func.h"
+#include "myth_spinlock_func.h"
+
+#if MYTH_COLLECT_LOG
+
 extern FILE *g_log_fp;
 
 /*
@@ -36,7 +51,7 @@ extern FILE *g_log_fp;
 
 static inline void myth_log_add(myth_running_env_t env,myth_log_entry_t e) {
   if (!g_log_worker_stat)return;
-  myth_internal_lock_lock(&env->log_lock);
+  myth_spin_lock_body(&env->log_lock);
   env->log_data[env->log_count]=*e;
   env->log_data[env->log_count].rank=env->rank;
   env->log_data[env->log_count].tsc=myth_get_rdtsc();
@@ -48,7 +63,7 @@ static inline void myth_log_add(myth_running_env_t env,myth_log_entry_t e) {
     env->log_data=myth_flrealloc(env->rank,sizeof(myth_log_entry)*env->log_buf_size,env->log_data,sizeof(myth_log_entry)*new_log_buf_size);
     env->log_buf_size=new_log_buf_size;
   }
-  myth_internal_lock_unlock(&env->log_lock);
+  myth_spin_unlock_body(&env->log_lock);
 }
 
 static inline void myth_log_add_context_switch(myth_running_env_t env,myth_thread_t th) {
@@ -57,7 +72,7 @@ static inline void myth_log_add_context_switch(myth_running_env_t env,myth_threa
   //store state to log_entry
   e.type=MYTH_LOG_SWITCH;
   e.u.ctx_switch.th=th;
-#ifdef MYTH_ENABLE_THREAD_ANNOTATION
+#if MYTH_ENABLE_THREAD_ANNOTATION
   e.u.ctx_switch.recycle_count=(th && th!=TRREAD_PTR_SCHED_SLEEP)?th->recycle_count:0;
 #endif
   //strcpy(e->u.str,(th)?th->annotation_str:"Scheduler");
@@ -77,7 +92,7 @@ static inline void myth_log_fini(void) {
   myth_log_flush_body();
   int i;
   for (i=0;i<g_attr.n_workers;i++){
-    myth_internal_lock_destroy(&g_envs[i].log_lock);
+    myth_spin_destroy(&g_envs[i].log_lock);
   }
 }
 
@@ -85,26 +100,31 @@ static inline void myth_log_worker_init(myth_running_env_t env) {
   env->log_buf_size=MYTH_LOG_INITIAL_BUFFER_SIZE;
   env->log_data=myth_flmalloc(env->rank,sizeof(myth_log_entry)*env->log_buf_size);
   env->log_count=0;
-  myth_internal_lock_init(&env->log_lock);
+  myth_spin_init_body(&env->log_lock);
 }
 
 static inline void myth_log_worker_fini(myth_running_env_t env) {
+  (void)env;
   //Add dummy context switch event
   //myth_log_add_context_switch(env,NULL);
 }
 
 static inline void myth_log_annotate_thread_body(myth_thread_t th,char *name) {
-#ifdef MYTH_ENABLE_THREAD_ANNOTATION
+#if MYTH_ENABLE_THREAD_ANNOTATION
   myth_log_entry e;
   e.type=MYTH_LOG_THREAD_ANNOTATION;
   e.u.annotation.th=th;
   e.u.annotation.recycle_count=(th)?th->recycle_count:0;
   strncpy(e.u.annotation.str,name,MYTH_THREAD_ANNOTATION_MAXLEN-1);
   myth_log_add(myth_get_current_env(),&e);
+#else
+  (void)th;
+  (void)name;
 #endif
 }
 
-static inline void myth_log_get_thread_annotation(myth_log_entry_t logs,int logcount,myth_thread_t th,int recycle_count,char *ret) {
+static inline void myth_log_get_thread_annotation(myth_log_entry_t logs, int logcount,
+						  myth_thread_t th,int recycle_count,char *ret) {
   if (!th){
     strcpy(ret,"Scheduler");
     return;
@@ -113,7 +133,7 @@ static inline void myth_log_get_thread_annotation(myth_log_entry_t logs,int logc
     strcpy(ret,"Sleep");
     return;
   }
-#ifdef MYTH_ENABLE_THREAD_ANNOTATION
+#if MYTH_ENABLE_THREAD_ANNOTATION
   int i;
   for (i=logcount-1;i>=0;i--){
     assert(logs[i].type==MYTH_LOG_THREAD_ANNOTATION);
@@ -125,16 +145,19 @@ static inline void myth_log_get_thread_annotation(myth_log_entry_t logs,int logc
   sprintf(ret,"%p@%d",th,recycle_count);
 #else
   strcpy(ret,"Computation");
+  (void)logs;
+  (void)logcount;
+  (void)recycle_count;
 #endif
 }
 
 /*
   static inline void myth_log_get_thread_annotation_body(myth_thread_t th,char *name)
   {
-  #ifdef MYTH_ENABLE_THREAD_ANNOTATION
-  myth_internal_lock_lock(&th->lock);
+  #if MYTH_ENABLE_THREAD_ANNOTATION
+  myth_spin_lock_body(&th->lock);
   strcpy(name,th->annotation_str);
-  myth_internal_lock_unlock(&th->lock);
+  myth_spin_unlock_body(&th->lock);
   #else
   strcpy(name,"");
   #endif
@@ -155,7 +178,7 @@ static inline void myth_log_reset_body(void) {
   int i,j;
   for (i=0;i<g_attr.n_workers;i++){
     myth_running_env_t e=&g_envs[i];
-    myth_internal_lock_lock(&e->log_lock);
+    myth_spin_lock_body(&e->log_lock);
     qsort(e->log_data,e->log_count,sizeof(myth_log_entry),myth_log_entry_compare);
     int n_annotation=0;
     for (j=0;j<e->log_count;j++){
@@ -165,7 +188,7 @@ static inline void myth_log_reset_body(void) {
     }
     n_annotation=j;
     e->log_count=n_annotation;
-    myth_internal_lock_unlock(&e->log_lock);
+    myth_spin_unlock_body(&e->log_lock);
   }
 }
 
@@ -176,7 +199,7 @@ static inline void myth_log_flush_body(void) {
   int i;
   int total_log_entry_count=0;
   for (i=0;i<g_attr.n_workers;i++){
-    myth_internal_lock_lock(&g_envs[i].log_lock);
+    myth_spin_lock_body(&g_envs[i].log_lock);
     total_log_entry_count+=g_envs[i].log_count;
   }
   myth_log_entry_t all_logs=real_malloc(sizeof(myth_log_entry)*total_log_entry_count);
@@ -184,7 +207,7 @@ static inline void myth_log_flush_body(void) {
   for (i=0;i<g_attr.n_workers;i++){
     memcpy(&all_logs[pos],g_envs[i].log_data,sizeof(myth_log_entry)*g_envs[i].log_count);
     pos+=g_envs[i].log_count;
-    myth_internal_lock_unlock(&g_envs[i].log_lock);
+    myth_spin_unlock_body(&g_envs[i].log_lock);
   }
   //sort by type and timestamp
   qsort(all_logs,total_log_entry_count,sizeof(myth_log_entry),myth_log_entry_compare);
@@ -218,13 +241,13 @@ static inline void myth_log_flush_body(void) {
     myth_log_get_thread_annotation(all_logs,n_annotation,le->u.ctx_switch.th,le->u.ctx_switch.recycle_count,th_name);
     t0=le->tsc-g_tsc_base;
     while (1){
-#ifdef MYTH_LOG_MERGE_SAME_NAME_THREADS
+#if MYTH_LOG_MERGE_SAME_NAME_THREADS
       char n[100];
       myth_log_get_thread_annotation(all_logs,n_annotation,le2->u.ctx_switch.th,le2->u.ctx_switch.recycle_count,n);
 #endif
       if (rank!=le2->rank ||
 	  le2->u.ctx_switch.th==THREAD_PTR_SCHED_TERM ||
-#ifdef MYTH_LOG_MERGE_SAME_NAME_THREADS
+#if MYTH_LOG_MERGE_SAME_NAME_THREADS
 	  strcmp(th_name,n)!=0 ||
 #endif
 	  i==n_switch+n_annotation-1-1){
@@ -250,7 +273,7 @@ static inline void myth_log_flush_body(void) {
   uint64_t min_ts=0xFFFFFFFFFFFFFFFFULL;
   uint64_t *idle_sum,*user_sum,idle_sum_all,user_sum_all;
   uint64_t *ws_count,ws_count_all;
-#ifdef MYTH_LOG_EMIT_TEXTLOG
+#if MYTH_LOG_EMIT_TEXTLOG
   //Emit category
   fprintf(g_log_fp,"Category[ index=0 name=Work_Stealing topo=Arrow color=(255,255,255,255,true) width=3 ]\n");
   fprintf(g_log_fp,"Category[ index=181 name=User_Computation topo=State color=(255,0,0,127,true) width=1 ]\n");
@@ -326,7 +349,7 @@ static inline void myth_log_flush_body(void) {
     tx_logs[i].te-=min_ts;
     tx_logs[i].ts-=min_ts;
   }
-#ifdef MYTH_LOG_EMIT_TEXTLOG
+#if MYTH_LOG_EMIT_TEXTLOG
   for (i=0;i<textlog_count;i++){
     fprintf(g_log_fp,"Primitive[ TimeBBox(%llu,%llu) Category=%d (%llu, %d) (%llu, %d) ]\n",
 	    (unsigned long long)tx_logs[i].ts,(unsigned long long)tx_logs[i].te,
@@ -338,14 +361,14 @@ static inline void myth_log_flush_body(void) {
 #endif
   idle_sum_all=user_sum_all=ws_count_all=0;
   for (i=0;i<g_attr.n_workers;i++){
-#ifdef MYTH_LOG_EMIT_STAT_WORKER
+#if MYTH_LOG_EMIT_STAT_WORKER
     FILE *fp_stat_out;
     fp_stat_out=stdout;
     fprintf(fp_stat_out,"Worker %d : %llu,%llu,%lf (%llu Work-Stealing)\n",i,(unsigned long long)user_sum[i],(unsigned long long)idle_sum[i],(double)user_sum[i]/(double)(idle_sum[i]+user_sum[i]),(unsigned long long)ws_count[i]);
 #endif
     idle_sum_all+=idle_sum[i];user_sum_all+=user_sum[i];ws_count_all+=ws_count[i];
   }
-#ifdef MYTH_LOG_EMIT_STAT_ALL
+#if MYTH_LOG_EMIT_STAT_ALL
   FILE *fp_stat_out;
   fp_stat_out=stdout;
   fprintf(fp_stat_out,"Total work-stealing count : %llu ( %lf per core)\n",(unsigned long long)ws_count_all,(double)ws_count_all/(double)g_attr.n_workers);

@@ -15,18 +15,16 @@
 #include <sys/mman.h>
 #include <sched.h>
 
-#include "config.h"
-
-#include "myth/myth_config.h"
-#include "myth_real_fun.h"
+#include "myth_config.h"
 
 //Variable attribute which may be unused to supress warnings
 #define MAY_BE_UNUSED __attribute__((unused))
 
 //Sanity check which can be removed for performance
 //Do not write expressions with side-effect! It may not be executed!
-#ifdef MYTH_SANITY_CHECK
-static inline void myth_assert(expr){ assert(expr); }
+#if MYTH_SANITY_CHECK
+//static inline void myth_assert(expr){ assert(expr); }
+#define myth_assert(expr) assert(expr)
 #else
 #define myth_assert(expr)
 #endif
@@ -39,14 +37,15 @@ static inline void myth_assert(expr){ assert(expr); }
 
 //Unreachable marker that causes segmentation fault
 //useful for debugging context-switching codes
-#if defined USE_MYTH_UNREACHABLE
-#if (defined MYTH_ARCH_i386 || defined MYTH_ARCH_amd64)
+#if !USE_MYTH_UNREACHABLE
+#define myth_unreachable()
+
+#elif MYTH_ARCH == MYTH_ARCH_i386 || MYTH_ARCH == MYTH_ARCH_amd64 || MYTH_ARCH == MYTH_ARCH_amd64_knc
 #define myth_unreachable() asm volatile("ud2\n")
+
 #elif GCC_VERSION >= 40500
 #define myth_unreachable() __builtin_unreachable()
-#else
-#define myth_unreachable()
-#endif
+
 #else
 #define myth_unreachable()
 #endif

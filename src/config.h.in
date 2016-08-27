@@ -52,8 +52,14 @@
    */
 #undef LT_OBJDIR
 
-/* whether worker thread binding is enabled */
+/* Default bind workers */
 #undef MYTH_BIND_WORKERS
+
+/* Default child first */
+#undef MYTH_CHILD_FIRST
+
+/* Default guard size */
+#undef MYTH_DEF_GUARD_SIZE
 
 /* Default stack size */
 #undef MYTH_DEF_STACK_SIZE

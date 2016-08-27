@@ -1,17 +1,23 @@
 /* 
  * myth_eco.c
  */
-#include "myth_eco.h"
-//#include "myth_original_lib.h"
 #include <linux/futex.h>
 #include <limits.h>
 #include <semaphore.h>
 #include <assert.h>
 
-#include "myth_io.h"
-#include "myth_io_func.h"
-#include "myth_wsqueue_func.h"
+#include "myth_config.h"
+
+#include "myth_misc.h"
+#include "myth_worker.h"
+#include "myth_thread.h"
+#include "myth_init.h"
+#include "myth_eco.h"
+#include "myth_real_fun.h"
+
+#include "myth_misc_func.h"
 #include "myth_worker_func.h"
+
 
 sleep_queue_t g_sleep_queue;
 int g_eco_mode_enabled=0;
@@ -19,9 +25,9 @@ pthread_mutex_t *queue_lock;
 int sleeper;
 int task_num;
 
-#ifdef MYTH_ECO_MODE
+#if MYTH_ECO_MODE
 
-#ifdef MYTH_ECO_TEST
+#if MYTH_ECO_TEST
 static void myth_eco_sched_loop(myth_running_env_t env) {
   //  printf("%d\n",FINISH);
   while (1) {
@@ -29,7 +35,7 @@ static void myth_eco_sched_loop(myth_running_env_t env) {
     myth_thread_t next_run;
     //Get runnable thread
     next_run=myth_queue_pop(&env->runnable_q);
-#ifdef MYTH_WRAP_SOCKIO
+#if MYTH_WRAP_SOCKIO
     //If there is no runnable thread, check I/O
     if (!next_run){
       next_run=myth_io_polling(env);
@@ -65,12 +71,12 @@ static void myth_eco_sched_loop(myth_running_env_t env) {
 	env->this_thread=next_run;
 	next_run->env=env;
 	//Switch to runnable thread
-#ifdef MYTH_SCHED_LOOP_DEBUG
+#if MYTH_SCHED_LOOP_DEBUG
 	myth_dprintf("myth_sched_loop:switching to thread:%p\n",next_run);
 #endif
 	myth_assert(next_run->status==MYTH_STATUS_READY);
 	myth_swap_context(&env->sched.context, &next_run->context);
-#ifdef MYTH_SCHED_LOOP_DEBUG
+#if MYTH_SCHED_LOOP_DEBUG
 	myth_dprintf("myth_sched_loop:returned from thread:%p\n",(void*)next_run);
 #endif
 	env->this_thread=NULL;
@@ -89,7 +95,7 @@ static void myth_eco_sched_loop(myth_running_env_t env) {
 	  if(temp == 0) return;
 	}
       env->this_thread=NULL;
-#ifdef MYTH_SCHED_LOOP_DEBUG
+#if MYTH_SCHED_LOOP_DEBUG
       myth_dprintf("env %p received exit signal,exiting\n",env);
 #endif
       return;
@@ -101,7 +107,7 @@ static void myth_eco_sched_loop(myth_running_env_t env) {
 myth_thread_t myth_eco_steal(int rank) {
   myth_running_env_t env,busy_env;
   myth_thread_t next_run=NULL;
-#ifdef MYTH_WS_PROF_DETAIL
+#if MYTH_WS_PROF_DETAIL
   uint64_t t0,t1;
   t0=myth_get_rdtsc();
 #endif
@@ -122,7 +128,7 @@ myth_thread_t myth_eco_steal(int rank) {
     //Try to steal thread
     next_run=myth_queue_take(&busy_env->runnable_q);
     if (next_run){
-#ifdef MYTH_SCHED_LOOP_DEBUG
+#if MYTH_SCHED_LOOP_DEBUG
       myth_dprintf("env %p is stealing thread %p from %p...\n",env,steal_th,busy_env);
 #endif
       myth_assert(next_run->status==MYTH_STATUS_READY);
@@ -132,13 +138,13 @@ myth_thread_t myth_eco_steal(int rank) {
   }
   if(!next_run) {
     if(busy_env->c == STEALING) {
-#ifdef MYTH_ECO_TEST
+#if MYTH_ECO_TEST
       if(env->thief_count < 3) {
 	env->thief_count++;
 	return 0;
       }
 #endif
-      myth_sleep();
+      myth_sleep_1();
       // This line seems not correct, it may occur infinite recursion
       //return myth_eco_steal(env->rank);
       return NULL;
@@ -147,7 +153,7 @@ myth_thread_t myth_eco_steal(int rank) {
       MAY_BE_UNUSED int tmp = task_num;
       next_run = myth_eco_all_task_check(env);
       if(!next_run){
-	myth_sleep();
+	myth_sleep_1();
       } else {
 	return next_run;
       }
@@ -165,7 +171,7 @@ myth_thread_t myth_eco_steal(int rank) {
     }
   }
 
-#ifdef MYTH_WS_PROF_DETAIL
+#if MYTH_WS_PROF_DETAIL
   t1=myth_get_rdtsc();
   if (g_sched_prof){
     env->prof_data.ws_attempt_count[busy_env->rank]++;
@@ -178,7 +184,7 @@ myth_thread_t myth_eco_steal(int rank) {
     }
   }
 #endif
-#ifdef MYTH_ECO_TEST
+#if MYTH_ECO_TEST
   env->thief_count = 0;
 #endif
   return next_run;
@@ -189,7 +195,7 @@ myth_thread_t myth_eco_all_task_check(myth_running_env_t env)
   myth_running_env_t busy_env;
   myth_thread_t next_run=NULL;
   int i=0;
-#ifdef MYTH_WS_PROF_DETAIL
+#if MYTH_WS_PROF_DETAIL
   uint64_t t0,t1;
   t0=myth_get_rdtsc();
 #endif
@@ -211,22 +217,22 @@ myth_thread_t myth_eco_all_task_check(myth_running_env_t env)
 }
 
 // wait
-void myth_sleep(void) {
+void myth_sleep_1(void) {
   int s;
   int *my_sem = &(g_envs[g_worker_rank].my_sem);
   s = *my_sem = 2;
   if(myth_sleeper_push(my_sem,g_worker_rank,-1) == 0) {
-#if defined(MYTH_ECO_CIRCLE_STEAL) || defined(MYTH_ECO_TEIAN_STEAL)
+#if MYTH_ECO_CIRCLE_STEAL || MYTH_ECO_TEIAN_STEAL
     g_envs[g_worker_rank].c = SLEEPING;
 #endif
     while( s != 0 ) {
       futex_wait( my_sem, 2 );
       s = fetch_and_store((void *) my_sem, 2);
     }
-#ifdef MYTH_ECO_DEBUG
+#if MYTH_ECO_DEBUG
     printf("wake up!\n");
 #endif
-#if defined(MYTH_ECO_CIRCLE_STEAL) || defined(MYTH_ECO_TEIAN_STEAL)
+#if MYTH_ECO_CIRCLE_STEAL || MYTH_ECO_TEIAN_STEAL
     g_envs[g_worker_rank].c = STEALING;
 #endif
 
@@ -239,14 +245,14 @@ void myth_sleep_2(int num) {
   int *my_sem = &(g_envs[g_worker_rank].my_sem);
   s = *my_sem = 2;
   if(myth_sleeper_push(my_sem,g_worker_rank,num) == 0) {
-#if defined(MYTH_ECO_CIRCLE_STEAL) || defined(MYTH_ECO_TEIAN_STEAL)
+#if MYTH_ECO_CIRCLE_STEAL || MYTH_ECO_TEIAN_STEAL
     g_envs[g_worker_rank].c = SLEEPING;
 #endif
     while( s != 0 ) {
       futex_wait( my_sem, 2 );
       s = fetch_and_store((void *) my_sem, 2);
     }
-#ifdef MYTH_ECO_DEBUG
+#if MYTH_ECO_DEBUG
     printf("wake up!\n");
 #endif
     g_envs[g_worker_rank].c = STEALING;
@@ -257,7 +263,7 @@ void myth_go_asleep(void) {
   int s;
   int *my_sem = &(g_envs[g_worker_rank].my_sem);
   s = *my_sem = 2;
-#if defined(MYTH_ECO_CIRCLE_STEAL) || defined(MYTH_ECO_TEIAN_STEAL)
+#if MYTH_ECO_CIRCLE_STEAL || MYTH_ECO_TEIAN_STEAL
   g_envs[g_worker_rank].c = SLEEPING;
 #endif
   while(myth_sleeper_push(my_sem,g_worker_rank,-1) != 0) {;}
@@ -266,10 +272,10 @@ void myth_go_asleep(void) {
     futex_wait( my_sem, 2 );
     s = fetch_and_store((void *) my_sem, 2);
   }
-#ifdef MYTH_ECO_DEBUG
+#if MYTH_ECO_DEBUG
   printf("wake up!\n");
 #endif
-#if defined(MYTH_ECO_CIRCLE_STEAL) || defined(MYTH_ECO_TEIAN_STEAL)
+#if MYTH_ECO_CIRCLE_STEAL || MYTH_ECO_TEIAN_STEAL
   g_envs[g_worker_rank].c = STEALING;
 #endif
 }
@@ -308,7 +314,7 @@ void myth_wakeup_all(void) {
     myth_wakeup_one();
     i++;
   }
-#ifdef MYTH_ECO_MODE_DEBUG
+#if MYTH_ECO_MODE_DEBUG
   printf("wakeup\n");
 #endif
 }
@@ -337,7 +343,7 @@ void myth_eco_init(void) {
   g_sleep_queue = NULL;// = myth_malloc(sizeof(struct sleep_queue));
   for(i = 0; i < g_attr.n_workers; i++) {
     g_envs[i].my_sem = 0;
-#ifdef MYTH_ECO_TEIAN_STEAL
+#if MYTH_ECO_TEIAN_STEAL
     g_envs[i].knowledge = 0;
 #endif
   }
@@ -347,7 +353,7 @@ void myth_eco_init(void) {
   //  g_sleep_queue->tail = g_sleep_queue;
   //  g_sleep_queue->head_sem = NULL;
   //  g_sleep_queue->head_rank = g_attr.n_workers+1;
-#ifdef MYTH_ECO_TEIAN_STEAL
+#if MYTH_ECO_TEIAN_STEAL
   task_num = 0;
   g_envs[0].c = RUNNING;
   for(i = 1; i < g_attr.n_workers; i++) g_envs[i].c = STEALING;
@@ -449,7 +455,7 @@ int futex_wakeup_all( void *futex ) {
 
 int fetch_and_store(volatile void *ptr, int addend) {
   int result;
-#if defined MYTH_ARCH_i386 || defined MYTH_ARCH_amd64
+#if MYTH_ARCH == MYTH_ARCH_i386 || MYTH_ARCH == MYTH_ARCH_amd64 || MYTH_ARCH == MYTH_ARCH_amd64_knc
   __asm__ __volatile__("lock\nxadd" "" " %0,%1"
 		       : "=r"(result),"=m"(*(volatile int*)ptr)
 		       : "0"(addend), "m"(*(volatile int*)ptr)

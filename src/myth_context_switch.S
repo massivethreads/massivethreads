@@ -1,16 +1,17 @@
 
-#include "myth/myth_config.h"
+#include "myth_config.h"
 
 .text
 
-#ifdef MYTH_ARCH_i386
+#if MYTH_ARCH == MYTH_ARCH_i386
 
-#ifdef USE_JUMP_INSN_A
+#if USE_JUMP_INSN_A
 #define MY_RET_A pop %eax;jmp *%eax
 #else
 #define MY_RET_A ret
 #endif
-#ifdef USE_JUMP_INSN_B
+
+#if USE_JUMP_INSN_B
 #define MY_RET_B pop %eax;jmp *%eax
 #else
 #define MY_RET_B ret
@@ -129,9 +130,9 @@ myth_set_context_withcall_s:
 
 .size myth_set_context_withcall_s,.-myth_set_context_withcall_s
 
-#elif defined MYTH_ARCH_amd64
+#elif MYTH_ARCH == MYTH_ARCH_amd64 || MYTH_ARCH == MYTH_ARCH_amd64_knc
 
-#ifdef MYTH_SAVE_FPCSR
+#if MYTH_SAVE_FPCSR
 #define PUSH_FPCSR \
 	sub $16,%rsp;\
 	stmxcsr 8(%rsp);\
@@ -145,12 +146,13 @@ myth_set_context_withcall_s:
 #define POP_FPCSR
 #endif
 
-#ifdef USE_JUMP_INSN_A
+#if USE_JUMP_INSN_A
 #define MY_RET_A pop %rax;jmp *%rax
 #else
 #define MY_RET_A ret
 #endif
-#ifdef USE_JUMP_INSN_B
+
+#if USE_JUMP_INSN_B
 #define MY_RET_B pop %rax;jmp *%rax
 #else
 #define MY_RET_B ret
@@ -253,8 +255,8 @@ myth_set_context_withcall_s:
 	MY_RET_B
 .size myth_set_context_withcall_s,.-myth_set_context_withcall_s
 
-#elif defined MYTH_ARCH_sparc
-#ifdef MYTH_ARCH_sparc_v9
+#elif MYTH_ARCH == MYTH_ARCH_sparc_v9
+
 #define BIAS 2047 /* Required by V9 ABI */
 #define FRAMESIZE 176
 #define SP 128
@@ -330,7 +332,7 @@ myth_swap_context_withcall_s:
    jmpl %o7+8, %g0
 .size myth_swap_context_withcall_s, .-myth_swap_context_withcall_s
 
-#else
+#elif MYTH_ARCH == MYTH_ARCH_sparc_v8
 
 #define ST_FLUSH_WINDOWS 0x3
 #define FRAMESIZE 92
@@ -404,9 +406,11 @@ myth_swap_context_withcall_s:
   restore
    jmpl %o7+8, %g0
 .size myth_swap_context_withcall_s, .-myth_swap_context_withcall_s
-#endif
 
-#elif defined MYTH_ARCH_UNIVERSAL
+#elif MYTH_ARCH == MYTH_ARCH_UNIVERSAL
+
 #else
-#error "specify architecture"
-#endif
+
+#error "invalid MYTH_ARCH"
+
+#endif /* MYTH_ARCH */

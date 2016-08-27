@@ -5,21 +5,24 @@
 #include "myth/myth.h"
 
 #include "myth_init.h"
+#include "myth_misc.h"
 #include "myth_sched.h"
-#include "myth_worker.h"
-#include "myth_io.h"
 
-#include "myth_worker_func.h"
-#include "myth_io_func.h"
+#include "myth_init_func.h"
 #include "myth_sync_func.h"
 #include "myth_sched_func.h"
-#include "myth_tls_func.h"
+/* TODO: wsapi should be factored out in a separate file */
+#include "myth_wsqueue_func.h"
+
+/* --------------------------------
+   --- global initialization functions 
+   -------------------------------- */
 
 int myth_init(void) {
   return myth_init_ex_body(0);
 }
 
-int myth_init_ex(myth_attr_t * attr) {
+int myth_init_ex(myth_globalattr_t * attr) {
   return myth_init_ex_body(attr);
 }
 
@@ -27,43 +30,71 @@ void myth_fini(void) {
   myth_fini_body();
 }
 
-#if 0
-void myth_fini_ex(void) {
-  myth_fini_ex_body();
+int myth_globalattr_init(myth_globalattr_t * attr) {
+  return myth_globalattr_init_body(attr);
 }
 
-void myth_exit_workers_ex(void) {
-  myth_notify_workers_exit();
+int myth_globalattr_destroy(myth_globalattr_t * attr) {
+  return myth_globalattr_destroy_body(attr);
 }
 
-void myth_ext_exit_workers_ex(void) {
-  myth_exit_workers_ex();
+int myth_globalattr_set_default(myth_globalattr_t * attr) {
+  return myth_globalattr_set_default_body(attr);
 }
 
-void myth_worker_start_ex(int rank) {
-  myth_worker_start_ex_body(rank);
+int myth_globalattr_get_stacksize(myth_globalattr_t * attr,
+				  size_t *stacksize) {
+  return myth_globalattr_get_stacksize_body(attr, stacksize);
 }
 
-void myth_startpoint_init_ex(int rank) {
-  myth_startpoint_init_ex_body(rank);
+int myth_globalattr_set_stacksize(myth_globalattr_t * attr,
+				  size_t stacksize) {
+  return myth_globalattr_set_stacksize_body(attr, stacksize);
 }
 
-void myth_startpoint_exit_ex(int rank) {
-  myth_startpoint_exit_ex_body(rank);
-}
-#endif
-
-int myth_get_worker_num(void) {
-  return myth_get_worker_num_body();
+int myth_globalattr_get_guardsize(myth_globalattr_t * attr,
+				  size_t *guardsize) {
+  return myth_globalattr_get_guardsize_body(attr, guardsize);
 }
 
-int myth_get_num_workers(void) {
-  return myth_get_num_workers_body();
+int myth_globalattr_set_guardsize(myth_globalattr_t * attr,
+				  size_t guardsize) {
+  return myth_globalattr_set_guardsize_body(attr, guardsize);
 }
 
-myth_thread_t myth_self(void) {
-  return myth_self_body();
+int myth_globalattr_get_n_workers(myth_globalattr_t * attr,
+				  size_t *n_workers) {
+  return myth_globalattr_get_n_workers_body(attr, n_workers);
 }
+
+int myth_globalattr_set_n_workers(myth_globalattr_t * attr,
+				  size_t n_workers) {
+  return myth_globalattr_set_n_workers_body(attr, n_workers);
+}
+
+int myth_globalattr_get_bind_workers(myth_globalattr_t * attr,
+				     int *bind_workers) {
+  return myth_globalattr_get_bind_workers_body(attr, bind_workers);
+}
+
+int myth_globalattr_set_bind_workers(myth_globalattr_t * attr,
+				     int bind_workers) {
+  return myth_globalattr_set_bind_workers_body(attr, bind_workers);
+}
+
+int myth_globalattr_get_child_first(myth_globalattr_t * attr,
+				    int *child_first) {
+  return myth_globalattr_get_child_first_body(attr, child_first);
+}
+
+int myth_globalattr_set_child_first(myth_globalattr_t * attr,
+				    int child_first) {
+  return myth_globalattr_set_child_first_body(attr, child_first);
+}
+
+/* --------------------------------------------------
+   --- basic thread functions (myth_create, etc.)
+   -------------------------------------------------- */
 
 myth_thread_t myth_create(myth_func_t func,void *arg) {
   myth_thread_t id = 0;
@@ -81,21 +112,19 @@ void myth_exit(void *ret) {
   myth_exit_body(ret);
 }
 
-int myth_detach(myth_thread_t th) {
-  return myth_detach_body(th);
+int myth_join(myth_thread_t th,void **result) {
+  return myth_join_body(th,result);
 }
 
-void myth_yield(int force_worksteal) {
-  myth_yield_body(force_worksteal);
+int myth_tryjoin_body(myth_thread_t th,void **result) {
+  return myth_tryjoin_body(th, result);
 }
 
-void myth_yield2(void) {
-  myth_yield2_body();
+int myth_timedjoin_body(myth_thread_t th, void **result,
+			const struct timespec *abstime) {
+  return myth_timedjoin_body(th, result, abstime);
 }
 
-void myth_join(myth_thread_t th,void **result) {
-  myth_join_body(th,result);
-}
 
 int myth_create_join_many_ex(myth_thread_t * ids,
 			     myth_thread_attr_t * attrs,
@@ -129,6 +158,83 @@ int myth_create_join_various_ex(myth_thread_t * ids,
 					  nthreads);
 }
 
+int myth_detach(myth_thread_t th) {
+  return myth_detach_body(th);
+}
+
+/* ---------------------------
+   --- myth_self and equality
+   --------------------------- */
+
+myth_thread_t myth_self(void) {
+  return myth_self_body();
+}
+
+int myth_equal(myth_thread_t t1, myth_thread_t t2) {
+  return myth_equal_body(t1, t2);
+}
+
+/* -----------------------------
+   --- thread attributes
+   ----------------------------- */
+
+int myth_thread_attr_init(myth_thread_attr_t * attr) {
+  return myth_thread_attr_init_body(attr);
+}
+
+int myth_thread_attr_getdetachstate(const myth_thread_attr_t *attr,
+				    int *detachstate) {
+  return myth_thread_attr_getdetachstate_body(attr, detachstate);
+}
+
+int myth_thread_attr_setdetachstate(myth_thread_attr_t *attr,
+				    int detachstate) {
+  return myth_thread_attr_setdetachstate_body(attr, detachstate);
+}
+
+int myth_thread_attr_getguardsize(const myth_thread_attr_t *attr,
+				  size_t *guardsize) {
+  return myth_thread_attr_getguardsize_body(attr, guardsize);
+}
+
+int myth_thread_attr_setguardsize(myth_thread_attr_t *attr, size_t guardsize) {
+  return myth_thread_attr_setguardsize_body(attr, guardsize);
+}
+
+int myth_thread_attr_getstacksize(const myth_thread_attr_t *attr, size_t *stacksize) {
+  return myth_thread_attr_getstacksize_body(attr, stacksize);
+}
+
+int myth_thread_attr_setstacksize(myth_thread_attr_t *attr, size_t stacksize) {
+  return myth_thread_attr_setstacksize_body(attr, stacksize);
+}
+
+int myth_thread_attr_getstack(const myth_thread_attr_t *attr,
+			  void **stackaddr, size_t *stacksize) {
+  return myth_thread_attr_getstack_body(attr, stackaddr, stacksize);
+}
+
+int myth_thread_attr_setstack(myth_thread_attr_t *attr,
+			      void *stackaddr, size_t stacksize) {
+  return myth_thread_attr_setstack_body(attr, stackaddr, stacksize);
+}
+
+int myth_getconcurrency(void) {
+  return myth_getconcurrency_body();
+}
+
+void myth_yield_ex(int yield_opt) {
+  myth_yield_ex_body(yield_opt);
+}
+
+void myth_yield(void) {
+  myth_yield_body();
+}
+
+/* ------------------------------
+   --- cancel 
+   ------------------------------ */
+
 int myth_setcancelstate(int state, int *oldstate) {
   return myth_setcancelstate_body(state,oldstate);
 }
@@ -145,74 +251,18 @@ void myth_testcancel(void) {
   myth_testcancel_body();
 }
 
-int myth_key_create(myth_key_t *__key,void (*__destr_function) (void *)) {
-  return myth_key_create_body(__key,__destr_function);
+
+/* ----------------------------------
+   --- once 
+   ---------------------------------- */
+
+int myth_once(myth_once_t * once_control, void (*init_routine)(void)) {
+  return myth_once_body(once_control, init_routine);
 }
 
-int myth_key_delete(myth_key_t __key) {
-  return myth_key_delete_body(__key);
-}
-
-void *myth_getspecific(myth_key_t __key) {
-  return myth_getspecific_body(__key);
-}
-
-int myth_setspecific(myth_key_t __key,void *__pointer) {
-  return myth_setspecific_body(__key,__pointer);
-}
-
-void myth_log_start(void) {
-  myth_log_start_body();
-}
-
-void myth_log_pause(void) {
-  myth_log_pause_body();
-}
-
-void myth_log_flush(void) {
-  myth_log_flush_body();
-}
-
-void myth_log_reset(void) {
-  myth_log_reset_body();
-}
-
-void myth_log_annotate_thread(myth_thread_t th,char *name) {
-  myth_log_annotate_thread_body(th,name);
-}
-/*
-  void myth_log_get_thread_annotation(myth_thread_t th,char *name)
-  {
-  myth_log_get_thread_annotation_body(th,name);
-  }
-*/
-
-void myth_sched_prof_start(void) {
-  myth_sched_prof_start_body();
-}
-
-void myth_sched_prof_pause(void) {
-  myth_sched_prof_pause_body();
-}
-
-//Debug function
-/*void myth_dprintf_1(char *func,char *fmt,...)
-  {
-  #ifdef MYTH_DEBUG
-  static pthread_mutex_t mtx=PTHREAD_MUTEX_INITIALIZER;
-  myth_running_env_t env;
-  char tmp[1000];
-  va_list ap;
-  env=myth_get_current_env();
-  va_start(ap,fmt);
-  vsprintf(tmp,fmt,ap);
-  va_end(ap);
-  pthread_mutex_lock(&mtx);
-  fprintf(stderr,"%s(%d):%s",func,env->rank,tmp);
-  fflush(stderr);
-  pthread_mutex_unlock(&mtx);
-  #endif
-  }*/
+/* -------------------------
+   --- mutex 
+   ------------------------- */
 
 int myth_mutex_init(myth_mutex_t * mutex, const myth_mutexattr_t * attr) {
   return myth_mutex_init_body(mutex, attr);
@@ -230,13 +280,102 @@ int myth_mutex_lock(myth_mutex_t * mutex) {
   return myth_mutex_lock_body(mutex);
 }
 
+int myth_mutex_timedlock(myth_mutex_t *restrict mutex,
+			 const struct timespec *restrict abstime) {
+  return myth_mutex_timedlock_body(mutex, abstime);
+}
+
 int myth_mutex_unlock(myth_mutex_t * mutex) {
   return myth_mutex_unlock_body(mutex);
 }
 
+int myth_mutexattr_init(myth_mutexattr_t *attr) {
+  return myth_mutexattr_init_body(attr);
+}
+
+int myth_mutexattr_destroy(myth_mutexattr_t *attr) {
+  return myth_mutexattr_destroy_body(attr);
+}
+
+int myth_mutexattr_gettype(const myth_mutexattr_t *restrict attr,
+			   int *restrict type) {
+  return myth_mutexattr_gettype_body(attr, type);
+}
+
+int myth_mutexattr_settype(myth_mutexattr_t *attr, int type) {
+  return myth_mutexattr_settype_body(attr, type);
+}
+
+/* ---------------------------
+   --- reader-writer lock 
+   --------------------------- */
+
+int myth_rwlock_init(myth_rwlock_t *restrict rwlock,
+		     const myth_rwlockattr_t *restrict attr) {
+  return myth_rwlock_init_body(rwlock, attr);
+}
+// myth_rwlock_t rwlock = MYTH_RWLOCK_INITIALIZER;
+
+int myth_rwlock_destroy(myth_rwlock_t *rwlock) {
+  return myth_rwlock_destroy_body(rwlock);
+}
+
+int myth_rwlock_rdlock(myth_rwlock_t *rwlock) {
+  return myth_rwlock_rdlock_body(rwlock);
+}
+
+int myth_rwlock_tryrdlock(myth_rwlock_t *rwlock) {
+  return myth_rwlock_tryrdlock_body(rwlock);
+}
+
+int myth_rwlock_timedrdlock(myth_rwlock_t *restrict rwlock,
+			    const struct timespec *restrict abstime) {
+  return myth_rwlock_timedrdlock_body(rwlock, abstime);
+}
+
+int myth_rwlock_wrlock(myth_rwlock_t *rwlock) {
+  return myth_rwlock_wrlock_body(rwlock);
+}
+
+int myth_rwlock_trywrlock(myth_rwlock_t *rwlock) {
+  return myth_rwlock_trywrlock_body(rwlock);
+}
+
+int myth_rwlock_timedwrlock(myth_rwlock_t *restrict rwlock,
+			    const struct timespec *restrict abstime) {
+  return myth_rwlock_timedwrlock_body(rwlock, abstime);
+}
+
+int myth_rwlock_unlock(myth_rwlock_t *rwlock) {
+  return myth_rwlock_unlock_body(rwlock);
+}
+
+int myth_rwlockattr_init(myth_rwlockattr_t *attr) {
+  return myth_rwlockattr_init_body(attr);
+}
+
+int myth_rwlockattr_destroy(myth_rwlockattr_t *attr) {
+  return myth_rwlockattr_destroy_body(attr);
+}
+
+int myth_rwlockattr_getkind(const myth_rwlockattr_t *attr,
+			    int *pref) {
+  return myth_rwlockattr_getkind_body(attr, pref);
+}
+
+int myth_rwlockattr_setkind(myth_rwlockattr_t *attr,
+			    int pref) {
+  return myth_rwlockattr_setkind_body(attr, pref);
+}
+
+/* ------------------------------
+   --- condition variables 
+   ------------------------------ */
+
 int myth_cond_init(myth_cond_t * cond, const myth_condattr_t * attr) {
   return myth_cond_init_body(cond, attr);
 }
+// myth_cond_t cond = MYTH_COND_INITIALIZER;
 
 int myth_cond_destroy(myth_cond_t * cond) {
   return myth_cond_destroy_body(cond);
@@ -254,6 +393,48 @@ int myth_cond_wait(myth_cond_t * cond, myth_mutex_t * mutex) {
   return myth_cond_wait_body(cond, mutex);
 }
 
+int myth_cond_timedwait(myth_cond_t *restrict cond,
+			myth_mutex_t *restrict mutex,
+			const struct timespec *restrict abstime) {
+  return myth_cond_timedwait_body(cond, mutex, abstime);
+}
+
+int myth_condattr_init(myth_condattr_t *attr) {
+  return myth_condattr_init_body(attr);
+}
+
+int myth_condattr_destroy(myth_condattr_t *attr) {
+  return myth_condattr_destroy_body(attr);
+}
+
+/* ----------------------
+   --- spin locks
+   ---------------------- */
+
+int myth_spin_init(myth_spinlock_t *lock) {
+  return myth_spin_init_body(lock);
+}
+
+int myth_spin_destroy(myth_spinlock_t *lock) {
+  return myth_spin_destroy_body(lock);
+}
+
+int myth_spin_lock(myth_spinlock_t *lock) {
+  return myth_spin_lock_body(lock);
+}
+
+int myth_spin_trylock(myth_spinlock_t *lock) {
+  return myth_spin_trylock_body(lock);
+}
+
+int myth_spin_unlock(myth_spinlock_t *lock) {
+  return myth_spin_unlock_body(lock);
+}
+
+/* ----------------------------
+   --- barrier 
+   ---------------------------- */
+
 int myth_barrier_init(myth_barrier_t * barrier,
 		      const myth_barrierattr_t * attr,
 		      unsigned int nthreads) {
@@ -268,6 +449,17 @@ int myth_barrier_wait(myth_barrier_t * barrier) {
   return myth_barrier_wait_body(barrier);
 }
 
+int myth_barrierattr_init(myth_barrierattr_t *attr) {
+  return myth_barrierattr_init_body(attr);
+}
+
+int myth_barrierattr_destroy(myth_barrierattr_t *attr) {
+  return myth_barrierattr_destroy_body(attr);
+}
+
+/* ----------------------------
+   --- join counter
+   ---------------------------- */
 
 int myth_join_counter_init(myth_join_counter_t * jc, 
 			   const myth_join_counterattr_t * attr, int val) {
@@ -281,6 +473,18 @@ int myth_join_counter_wait(myth_join_counter_t * jc) {
 int myth_join_counter_dec(myth_join_counter_t * jc) {
   return myth_join_counter_dec_body(jc);
 }
+
+int myth_join_counterattr_init(myth_join_counterattr_t * attr) {
+  return myth_join_counterattr_init_body(attr);
+}
+
+int myth_join_counterattr_destroy(myth_join_counterattr_t * attr) {
+  return myth_join_counterattr_destroy_body(attr);
+}
+
+/* ----------------------------
+   --- full empty lock
+   ---------------------------- */
 
 int myth_felock_init(myth_felock_t * fe, const myth_felockattr_t * attr) {
   return myth_felock_init_body(fe, attr);
@@ -310,6 +514,103 @@ int myth_felock_status(myth_felock_t * fe) {
   return myth_felock_status_body(fe);
 }
 
+int myth_felockattr_init(myth_felockattr_t * attr) {
+  return myth_felockattr_init_body(attr);
+}
+
+int myth_felockattr_destroy(myth_felockattr_t * attr) {
+  return myth_felockattr_destroy_body(attr);
+}
+
+/* --------------------------------
+   --- thread local storage 
+   -------------------------------- */
+
+int myth_key_create(myth_key_t *key, void (*destructor)(void *)) {
+  return myth_key_create_body(key, destructor);
+}
+
+int myth_key_delete(myth_key_t key) {
+  return myth_key_delete_body(key);
+}
+
+void *myth_getspecific(myth_key_t key) {
+  return myth_getspecific_body(key);
+}
+
+int myth_setspecific(myth_key_t key, const void * pointer) {
+  return myth_setspecific_body(key, pointer);
+}
+
+/* --------------------------------------------------
+   --- worker functions
+   -------------------------------------------------- */
+
+int myth_get_worker_num(void) {
+  return myth_get_worker_num_body();
+}
+
+int myth_get_num_workers(void) {
+  return myth_get_num_workers_body();
+}
+
+/* --------------------------------
+   --- thread-related functions 
+   -------------------------------- */
+
+int myth_sched_yield(void) {
+  return myth_yield_body();
+}
+
+unsigned int myth_sleep(unsigned int s) {
+  return myth_sleep_body(s);
+}
+
+int myth_usleep(useconds_t usec) {
+  return myth_usleep_body(usec);
+}
+
+int myth_nanosleep(const struct timespec *req, struct timespec *rem) {
+  return myth_nanosleep_body(req, rem);
+}
+
+
+/* --------------------------------
+   --- logging and profiling functions
+   -------------------------------- */
+
+void myth_log_start(void) {
+  myth_log_start_body();
+}
+
+void myth_log_pause(void) {
+  myth_log_pause_body();
+}
+
+void myth_log_flush(void) {
+  myth_log_flush_body();
+}
+
+void myth_log_reset(void) {
+  myth_log_reset_body();
+}
+
+void myth_log_annotate_thread(myth_thread_t th,char *name) {
+  myth_log_annotate_thread_body(th,name);
+}
+
+void myth_sched_prof_start(void) {
+  myth_sched_prof_start_body();
+}
+
+void myth_sched_prof_pause(void) {
+  myth_sched_prof_pause_body();
+}
+
+/* --------------------------------
+   --- work stealing api functions
+   TODO: should move somewhere else
+   -------------------------------- */
 
 size_t myth_wsapi_get_hint_size(myth_thread_t th) {
   if (th==NULL)th=myth_self();
@@ -359,15 +660,15 @@ myth_thread_t myth_wsapi_runqueue_take(int victim,
   int b,top;
   q = &g_envs[victim].runnable_q;
   wc = &q->wc;
-#ifdef QUICK_CHECK_ON_STEAL
+#if QUICK_CHECK_ON_STEAL
   if (q->top-q->base<=0){
     return NULL;
   }
 #endif
-#if defined USE_LOCK || defined USE_LOCK_TAKE
-  myth_internal_lock_lock(&q->m_lock);
+#if USE_LOCK || USE_LOCK_TAKE
+  myth_spin_lock_body(&q->m_lock);
 #endif
-  //#ifdef TRY_LOCK_BEFORE_STEAL
+  //#if TRY_LOCK_BEFORE_STEAL
 #if 1
   if (!myth_wsqueue_lock_trylock(&q->lock)){
     return NULL;
@@ -397,8 +698,8 @@ myth_thread_t myth_wsapi_runqueue_take(int victim,
       myth_wsqueue_wbarrier();
       wc->seq=s+2;
       myth_wsqueue_lock_unlock(&q->lock);
-#if defined USE_LOCK || defined USE_LOCK_TAKE
-      myth_internal_lock_unlock(&q->m_lock);
+#if USE_LOCK || USE_LOCK_TAKE
+      myth_spin_unlock_body(&q->m_lock);
 #endif
       return ret;
     }
@@ -406,8 +707,8 @@ myth_thread_t myth_wsapi_runqueue_take(int victim,
   }
   q->base=b;
   myth_wsqueue_lock_unlock(&q->lock);
-#if defined USE_LOCK || defined USE_LOCK_TAKE
-  myth_internal_lock_unlock(&q->m_lock);
+#if USE_LOCK || USE_LOCK_TAKE
+  myth_spin_unlock_body(&q->m_lock);
 #endif
   return NULL;
 }
@@ -552,10 +853,16 @@ myth_thread_t myth_wsapi_runqueue_pop(void) {
   return myth_queue_pop(&env->runnable_q);
 }
 
-//TODO: temporalily disable
+/* --------------------------------
+   --- disabled functions
+   -------------------------------- */
+
 #if 0
 
-//serialize
+/* --------------------------------
+   --- serialize functions
+   -------------------------------- */
+
 void myth_serialize(myth_thread_t th, myth_pickle_t * p) {
   myth_serialize_body(th,p);
 }
@@ -589,3 +896,31 @@ void myth_release_desc(myth_thread_t th) {
   myth_release_desc_body(th);
 }
 #endif
+
+
+/* --------------------------------
+   --- not recently tested
+   -------------------------------- */
+
+#if 0
+void myth_exit_workers_ex(void) {
+  myth_notify_workers_exit();
+}
+
+void myth_ext_exit_workers_ex(void) {
+  myth_exit_workers_ex();
+}
+
+void myth_worker_start_ex(int rank) {
+  myth_worker_start_ex_body(rank);
+}
+
+void myth_startpoint_init_ex(int rank) {
+  myth_startpoint_init_ex_body(rank);
+}
+
+void myth_startpoint_exit_ex(int rank) {
+  myth_startpoint_exit_ex_body(rank);
+}
+#endif
+

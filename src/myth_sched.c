@@ -4,15 +4,8 @@
 
 #include <signal.h>
 
-#include "config.h"
-
-#include "myth/myth.h"
-
-#include "myth_wsqueue.h"
 #include "myth_sched.h"
-#include "myth_wsqueue_func.h"
 #include "myth_sched_func.h"
-
 
 //Global variable declarations
 //Global thread index
@@ -28,13 +21,16 @@ int g_log_worker_stat=0;
 
 #define PAGE_ALIGN(n) ((((n)+(PAGE_SIZE)-1)/(PAGE_SIZE))*PAGE_SIZE)
 
-#ifdef TLS_BY_PTHREAD
+/* TODO:
+   this does not belong here. 
+   should create myth_worker.c and move there */
+#if WENV_IMPL == WENV_IMPL_PTHREAD
 //TLS by pthread
 pthread_key_t g_env_key;
-#elif defined TLS_BY_ELF
+#elif WENV_IMPL == WENV_IMPL_ELF
 //TLS by GCC extension
-__thread int g_worker_rank;
-#elif defined TLS_NONE
+__thread int g_worker_rank = -1;
+#elif WENV_IMPL == WENV_IMPL_NONE
 //Simple global variable. Works only on single worker thread
 #else
 #error
@@ -74,7 +70,7 @@ void myth_alrm_sighandler(int signum, siginfo_t *sinfo, void* ctx) {
 #endif
   if (!myth_queue_is_operating(&env->runnable_q))
     {
-#ifdef MYTH_WRAP_SOCKIO
+#if MYTH_WRAP_SOCKIO
       myth_thread_t ret;
       ret=myth_io_polling_sig(env);
       if (ret)myth_queue_push(&env->runnable_q,ret);
