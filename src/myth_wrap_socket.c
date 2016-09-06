@@ -2,10 +2,10 @@
  * myth_wrap_socket.c : socket
  */
 
-#include "myth_real_fun.h"
+#include "myth_real.h"
 #include "myth_wrap_util_func.h"
 
-int socket(int domain, int type, int protocol) {
+int __wrap(socket)(int domain, int type, int protocol) {
   int _ = enter_wrapped_func("%d, %d, %d", domain, type, protocol);
   int x = real_socket(domain, type, protocol);
   (void)_;
@@ -13,7 +13,7 @@ int socket(int domain, int type, int protocol) {
   return x;
 }
 
-int socketpair(int domain, int type, int protocol, int sv[2]) {
+int __wrap(socketpair)(int domain, int type, int protocol, int sv[2]) {
   int _ = enter_wrapped_func("%d, %d, %d, %p", domain, type, protocol, sv);
   int x = real_socketpair(domain, type, protocol, sv);
   (void)_;
@@ -21,7 +21,7 @@ int socketpair(int domain, int type, int protocol, int sv[2]) {
   return x;
 }
 
-int accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen) {
+int __wrap(accept)(int sockfd, struct sockaddr *addr, socklen_t *addrlen) {
   int _ = enter_wrapped_func("%d, %p, %p", sockfd, addr, addrlen);
   int x = real_accept(sockfd, addr, addrlen);
   (void)_;
@@ -30,8 +30,8 @@ int accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen) {
 }
 
 #if _GNU_SOURCE
-int accept4(int sockfd, struct sockaddr *addr,
-	    socklen_t *addrlen, int flags) {
+int __wrap(accept4)(int sockfd, struct sockaddr *addr,
+		    socklen_t *addrlen, int flags) {
   int _ = enter_wrapped_func("%d, %p, %p, %d", sockfd, addr, addrlen, flags);
   int x = real_accept4(sockfd, addr, addrlen, flags);
   (void)_;
@@ -40,7 +40,7 @@ int accept4(int sockfd, struct sockaddr *addr,
 }
 #endif
 
-int bind(int sockfd, const struct sockaddr *addr, socklen_t addrlen) {
+int __wrap(bind)(int sockfd, const struct sockaddr *addr, socklen_t addrlen) {
   int _ = enter_wrapped_func("%d, %p, %lu", sockfd, addr, addrlen);
   int x = real_bind(sockfd, addr, addrlen);
   (void)_;
@@ -48,7 +48,7 @@ int bind(int sockfd, const struct sockaddr *addr, socklen_t addrlen) {
   return x;
 }
 
-int close(int fd) {
+int __wrap(close)(int fd) {
   int _ = enter_wrapped_func("%d", fd);
   int x = real_close(fd);
   (void)_;
@@ -56,8 +56,8 @@ int close(int fd) {
   return x;
 }
 
-int connect(int sockfd, const struct sockaddr *addr,
-	    socklen_t addrlen) {
+int __wrap(connect)(int sockfd, const struct sockaddr *addr,
+		    socklen_t addrlen) {
   int _ = enter_wrapped_func("%d, %p, %lu", sockfd, addr, addrlen);
   int x = real_connect(sockfd, addr, addrlen);
   (void)_;
@@ -65,7 +65,7 @@ int connect(int sockfd, const struct sockaddr *addr,
   return x;
 }
 
-int fcntl(int fd, int cmd, ... /* arg */ ) {
+int __wrap(fcntl)(int fd, int cmd, ... /* arg */ ) {
   switch (cmd) {
     /* cmd not taking any arg */
   case F_GETFD:
@@ -138,7 +138,7 @@ int fcntl(int fd, int cmd, ... /* arg */ ) {
   }
 }
 
-int listen(int sockfd, int backlog) {
+int __wrap(listen)(int sockfd, int backlog) {
   int _ = enter_wrapped_func("%d, %d", sockfd, backlog);
   int x = real_listen(sockfd, backlog);
   (void)_;
@@ -146,7 +146,7 @@ int listen(int sockfd, int backlog) {
   return x;
 }
 
-ssize_t recv(int sockfd, void *buf, size_t len, int flags) {
+ssize_t __wrap(recv)(int sockfd, void *buf, size_t len, int flags) {
   int _ = enter_wrapped_func("%d, %p, %lu, %d", sockfd, buf, len, flags);
   ssize_t x = real_recv(sockfd, buf, len, flags);
   (void)_;
@@ -154,8 +154,8 @@ ssize_t recv(int sockfd, void *buf, size_t len, int flags) {
   return x;
 }
 
-ssize_t recvfrom(int sockfd, void *buf, size_t len, int flags,
-		 struct sockaddr *src_addr, socklen_t *addrlen) {
+ssize_t __wrap(recvfrom)(int sockfd, void *buf, size_t len, int flags,
+			 struct sockaddr *src_addr, socklen_t *addrlen) {
   int _ = enter_wrapped_func("%d, %p, %lu, %d, %p, %p",
 			     sockfd, buf, len, flags, src_addr, addrlen);
   ssize_t x = real_recvfrom(sockfd, buf, len, flags, src_addr, addrlen);
@@ -164,7 +164,7 @@ ssize_t recvfrom(int sockfd, void *buf, size_t len, int flags,
   return x;
 }
 
-ssize_t recvmsg(int sockfd, struct msghdr *msg, int flags) {
+ssize_t __wrap(recvmsg)(int sockfd, struct msghdr *msg, int flags) {
   int _ = enter_wrapped_func("%d, %p, %d", sockfd, msg, flags);
   ssize_t x = real_recvmsg(sockfd, msg, flags);
   (void)_;
@@ -172,7 +172,7 @@ ssize_t recvmsg(int sockfd, struct msghdr *msg, int flags) {
   return x;
 }
 
-ssize_t read(int fd, void *buf, size_t count) {
+ssize_t __wrap(read)(int fd, void *buf, size_t count) {
   int _ = enter_wrapped_func("%d, %p, %lu", fd, buf, count);
   ssize_t x = real_read(fd, buf, count);
   (void)_;
@@ -180,8 +180,8 @@ ssize_t read(int fd, void *buf, size_t count) {
   return x;
 }
 
-int select(int nfds, fd_set *readfds, fd_set *writefds,
-	   fd_set *exceptfds, struct timeval *timeout) {
+int __wrap(select)(int nfds, fd_set *readfds, fd_set *writefds,
+		   fd_set *exceptfds, struct timeval *timeout) {
   int _ = enter_wrapped_func("%d, %p, %p, %p, %p", nfds, readfds, writefds, exceptfds, timeout);
   int x = real_select(nfds, readfds, writefds, exceptfds, timeout);
   (void)_;
@@ -189,7 +189,7 @@ int select(int nfds, fd_set *readfds, fd_set *writefds,
   return x;
 }
 
-ssize_t send(int sockfd, const void *buf, size_t len, int flags) {
+ssize_t __wrap(send)(int sockfd, const void *buf, size_t len, int flags) {
   int _ = enter_wrapped_func("%d, %p, %lu, %d", sockfd, buf, len, flags);
   ssize_t x = real_send(sockfd, buf, len, flags);
   (void)_;
@@ -197,8 +197,8 @@ ssize_t send(int sockfd, const void *buf, size_t len, int flags) {
   return x;
 }
 
-ssize_t sendto(int sockfd, const void *buf, size_t len, int flags,
-	       const struct sockaddr *dest_addr, socklen_t addrlen) {
+ssize_t __wrap(sendto)(int sockfd, const void *buf, size_t len, int flags,
+		       const struct sockaddr *dest_addr, socklen_t addrlen) {
   int _ = enter_wrapped_func("%d, %p, %lu, %d, %p, %p",
 			     sockfd, buf, len, flags, dest_addr, addrlen);
   ssize_t x = real_sendto(sockfd, buf, len, flags, dest_addr, addrlen);
@@ -207,7 +207,7 @@ ssize_t sendto(int sockfd, const void *buf, size_t len, int flags,
   return x;
 }
 
-ssize_t sendmsg(int sockfd, const struct msghdr *msg, int flags) {
+ssize_t __wrap(sendmsg)(int sockfd, const struct msghdr *msg, int flags) {
   int _ = enter_wrapped_func("%d, %p, %d", sockfd, msg, flags);
   ssize_t x = real_sendmsg(sockfd, msg, flags);
   (void)_;
@@ -215,7 +215,7 @@ ssize_t sendmsg(int sockfd, const struct msghdr *msg, int flags) {
   return x;
 }
 
-ssize_t write(int fd, const void *buf, size_t count) {
+ssize_t __wrap(write)(int fd, const void *buf, size_t count) {
   int _ = enter_wrapped_func("%d, %p, %lu", fd, buf, count);
   ssize_t x = real_write(fd, buf, count);
   (void)_;

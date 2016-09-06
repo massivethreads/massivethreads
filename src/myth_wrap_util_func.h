@@ -65,4 +65,14 @@ static void __attribute__((unused)) sorry_unimplemented_(char * function) {
 
 #define sorry_unimplemented() sorry_unimplemented_(__func__)
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+#define __wrap(x) __wrap_ ## x
+//#define __real(x) __real_ ## x
+#elif MYTH_WRAP == MYTH_WRAP_DL
+#define __wrap(x) x
+//#define __real(x) x
+#else
+#error MYTH_WRAP must be set to MYTH_WRAP_LD or MYTH_WRAP_DL
+#endif
+
 #endif	/* MYTH_WRAP_UTIL_FUNC_H */

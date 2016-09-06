@@ -202,7 +202,7 @@ static inline void myth_log_flush_body(void) {
     myth_spin_lock_body(&g_envs[i].log_lock);
     total_log_entry_count+=g_envs[i].log_count;
   }
-  myth_log_entry_t all_logs=real_malloc(sizeof(myth_log_entry)*total_log_entry_count);
+  myth_log_entry_t all_logs = myth_malloc(sizeof(myth_log_entry)*total_log_entry_count);
   int pos=0;
   for (i=0;i<g_attr.n_workers;i++){
     memcpy(&all_logs[pos],g_envs[i].log_data,sizeof(myth_log_entry)*g_envs[i].log_count);
@@ -279,10 +279,10 @@ static inline void myth_log_flush_body(void) {
   fprintf(g_log_fp,"Category[ index=181 name=User_Computation topo=State color=(255,0,0,127,true) width=1 ]\n");
   fprintf(g_log_fp,"Category[ index=182 name=Thread_Idle topo=State color=(0,0,255,127,true) width=1 ]\n");
 #endif
-  tx_logs=malloc(sizeof(myth_textlog_entry)*textlog_size);
-  idle_sum=malloc(sizeof(uint64_t)*g_attr.n_workers);
-  user_sum=malloc(sizeof(uint64_t)*g_attr.n_workers);
-  ws_count=malloc(sizeof(uint64_t)*g_attr.n_workers);
+  tx_logs = myth_malloc(sizeof(myth_textlog_entry)*textlog_size);
+  idle_sum = myth_malloc(sizeof(uint64_t)*g_attr.n_workers);
+  user_sum = myth_malloc(sizeof(uint64_t)*g_attr.n_workers);
+  ws_count = myth_malloc(sizeof(uint64_t)*g_attr.n_workers);
   //Merge all the logs and sort by time
   for (i=0;i<g_attr.n_workers;i++){
     int log_num;
@@ -356,7 +356,7 @@ static inline void myth_log_flush_body(void) {
 	    tx_logs[i].cat,(unsigned long long)tx_logs[i].ts,
 	    tx_logs[i].id_a,(unsigned long long)tx_logs[i].te,tx_logs[i].id_b);
   }
-  free(tx_logs);
+  myth_free(tx_logs);
   fclose(g_log_fp);
 #endif
   idle_sum_all=user_sum_all=ws_count_all=0;
@@ -375,9 +375,9 @@ static inline void myth_log_flush_body(void) {
   fprintf(fp_stat_out,"Total user time : %llu ( %lf per core)\n",(unsigned long long)user_sum_all,(double)user_sum_all/(double)g_attr.n_workers);
   fprintf(fp_stat_out,"Total idle time : %llu ( %lf per core)\n",(unsigned long long)idle_sum_all,(double)idle_sum_all/(double)g_attr.n_workers);
 #endif
-  free(idle_sum);
-  free(user_sum);
-  free(ws_count);
+  myth_free(idle_sum);
+  myth_free(user_sum);
+  myth_free(ws_count);
   /*
     for (i=0;i<g_attr.n_workers;i++){
     myth_flfree(g_envs[i].rank,sizeof(myth_log_entry)*g_envs[i].log_buf_size,g_envs[i].log_data);

@@ -65,8 +65,8 @@ static inline void myth_freelist_push(myth_freelist_t * fl, void * h_);
 static inline void * myth_freelist_pop(myth_freelist_t * fl);
 
 static inline void * myth_malloc(size_t size);
-static inline void myth_free(void *ptr,size_t size);
-static inline void myth_free_no_size(void *ptr);
+static inline void myth_free_with_size(void *ptr,size_t size);
+static inline void myth_free(void *ptr);
 static inline void *myth_realloc(void *ptr,size_t size);
 static inline void *myth_mmap(void *addr,size_t length,int prot,
 			      int flags,int fd,off_t offset);

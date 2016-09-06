@@ -265,6 +265,11 @@
 #define MYTH_CONTEXT_sparc_v9  6
 #define MYTH_CONTEXT_sparc_v8  7
 
-
+/* ------------------
+   MYTH_WRAP choices
+   ------------------ */
+#define MYTH_WRAP_VANILLA 2
+#define MYTH_WRAP_DL      3
+#define MYTH_WRAP_LD      4
 
 #endif /* MYTH_CONFIG_H_ */

@@ -13,7 +13,7 @@
 #include "myth_thread.h"
 #include "myth_init.h"
 #include "myth_eco.h"
-#include "myth_real_fun.h"
+#include "myth_real.h"
 
 #include "myth_misc_func.h"
 #include "myth_worker_func.h"
@@ -288,7 +288,7 @@ int myth_wakeup_one(void) {
   if(tmp == NULL) return -1;//nobody sleeping
   my_sem = tmp->head_sem;
   rank = tmp->head_rank;
-  free(tmp);//free
+  myth_free(tmp);//free
   if(my_sem == 0) return -1;//ideally not operated
   if(( s = __sync_fetch_and_sub(my_sem,1)) != 1) {
     *my_sem = 0;
@@ -361,28 +361,28 @@ void myth_eco_init(void) {
 #endif
 }
 void myth_eco_des(void) {
-  free(queue_lock);
+  myth_free(queue_lock);
 }
 
 int myth_sleeper_push(int *sem, int rank,int num) {
   int rem = sleeper;
   //lock
-  (*real_pthread_mutex_lock)(queue_lock);
+  real_pthread_mutex_lock(queue_lock);
   if(num != -1) {
     if(num != task_num) {
 	//unlock
-	(*real_pthread_mutex_unlock)(queue_lock);
+	real_pthread_mutex_unlock(queue_lock);
 	return -1;
     }      
   }
   if(!__sync_bool_compare_and_swap(&sleeper,rem,rem+1)) { //atomic(sleeper++;)
     //unlock
-    (*real_pthread_mutex_unlock)(queue_lock);
+    real_pthread_mutex_unlock(queue_lock);
     return -1;
   }
   if(g_envs[rank].exit_flag == 1) {
     //unlock
-    (*real_pthread_mutex_unlock)(queue_lock);
+    real_pthread_mutex_unlock(queue_lock);
     return -1;
   }
   
@@ -404,16 +404,16 @@ int myth_sleeper_push(int *sem, int rank,int num) {
   }
 
   //unlock
-  (*real_pthread_mutex_unlock)(queue_lock);
+  real_pthread_mutex_unlock(queue_lock);
   return 0;
 }
 
 sleep_queue_t myth_sleeper_pop(void) {
   //lock
-  (*real_pthread_mutex_lock)(queue_lock);
+  real_pthread_mutex_lock(queue_lock);
 
   if(g_sleep_queue == NULL) {
-    (*real_pthread_mutex_unlock)(queue_lock);
+    real_pthread_mutex_unlock(queue_lock);
     return NULL;
   }
 
@@ -427,7 +427,7 @@ sleep_queue_t myth_sleeper_pop(void) {
   }
 
   //unlock
-  (*real_pthread_mutex_unlock)(queue_lock);
+  real_pthread_mutex_unlock(queue_lock);
 
   return address;
 }

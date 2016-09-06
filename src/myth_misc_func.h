@@ -17,7 +17,7 @@
 
 #include "myth_config.h"
 #include "myth_misc.h"
-#include "myth_real_fun.h"
+#include "myth_real.h"
 
 
 //Access to time stamp counter
@@ -110,8 +110,7 @@ extern myth_freelist_t **g_myth_freelist;
 
 static inline void myth_flmalloc_init(int nthreads) {
 #if !MYTH_FLMALLOC_TLS
-  //assert(real_malloc);
-  g_myth_freelist = real_malloc(sizeof(myth_freelist_t*)*nthreads);
+  g_myth_freelist = myth_malloc(sizeof(myth_freelist_t*)*nthreads);
 #endif
 }
 
@@ -119,14 +118,13 @@ static inline void myth_flmalloc_init_worker(int rank) {
   int i;
   //Allocate freelists
 #if MYTH_FLMALLOC_TLS
-  g_myth_freelist=real_malloc(sizeof(myth_freelist_t)*FREE_LIST_NUM);
+  g_myth_freelist = myth_malloc(sizeof(myth_freelist_t)*FREE_LIST_NUM);
   //Initialize
   for (i=0;i<FREE_LIST_NUM;i++){
     myth_freelist_init(&g_myth_freelist[i]);
   }
 #else
-  assert(real_malloc);
-  g_myth_freelist[rank]=real_malloc(sizeof(myth_freelist_t)*FREE_LIST_NUM);
+  g_myth_freelist[rank] = myth_malloc(sizeof(myth_freelist_t)*FREE_LIST_NUM);
   //Initialize
   for (i=0;i<FREE_LIST_NUM;i++){
     myth_freelist_init(&g_myth_freelist[rank][i]);
@@ -137,7 +135,7 @@ static inline void myth_flmalloc_init_worker(int rank) {
 extern uint64_t g_mmap_total,g_mmap_count;
 static inline void myth_flmalloc_fini() {
 #if !MYTH_FLMALLOC_TLS
-  real_free(g_myth_freelist);
+  myth_free(g_myth_freelist);
 #endif
 }
 
@@ -149,9 +147,9 @@ static inline void myth_flmalloc_fini_worker(int rank) {
     }*/
   //Release the array
 #if MYTH_FLMALLOC_TLS
-  real_free(g_myth_freelist);
+  myth_free(g_myth_freelist);
 #else
-  real_free(g_myth_freelist[rank]);
+  myth_free(g_myth_freelist[rank]);
 #endif
 #if MYTH_FLMALLOC_PROF
   fprintf(stderr,"%lu mallocs : %lf cycles/malloc\n",(unsigned long)g_myth_flmalloc_cnt,g_myth_flmalloc_cycles/(double)g_myth_flmalloc_cnt);
@@ -197,7 +195,7 @@ static inline void * myth_flmalloc(int rank, size_t size) {
 	p += realsize;
       }
 #else
-      ptr = malloc(realsize);
+      ptr = myth_malloc(realsize);
       if (!ptr){
 	perror("malloc");
 	assert(0);
@@ -266,7 +264,7 @@ static inline void myth_flmalloc_fini_worker(int rank) {
 #endif
 }
 static inline void *myth_malloc(size_t size);
-static inline void myth_free(void *ptr,size_t size);
+static inline void myth_free_with_size(void *ptr,size_t size);
 static inline void* myth_flmalloc(int rank,size_t s) {
   void *ret;
 #if MYTH_FLMALLOC_PROF
@@ -297,27 +295,24 @@ static inline void myth_flfree(int rank,size_t size,void *ptr) {
 //malloc with error checking
 static inline void * myth_malloc(size_t size) {
   void *ptr;
-#if 0
-  if (!real_malloc) return NULL;
-#endif
   ptr = real_malloc(size);
   myth_assert(ptr);
   return ptr;
 }
 
 /* TODO: integrate with myth_free_no_size */
-static inline void myth_free(void *ptr,size_t size) {
+static inline void myth_free_with_size(void *ptr,size_t size) {
   (void)size;
   real_free(ptr);
 }
 
-static inline void myth_free_no_size(void *ptr) {
+static inline void myth_free(void *ptr) {
   real_free(ptr);
 }
 
 static inline void *myth_realloc(void *ptr,size_t size) {
   void *ret;
-  ret=real_realloc(ptr,size);
+  ret = real_realloc(ptr,size);
   myth_assert(ret);
   return ret;
 }
@@ -358,7 +353,7 @@ static inline int myth_munmap(void *addr,size_t length)
 #if 1
   return munmap(addr,length);
 #else
-  free(addr);
+  myth_free(addr);
   return 0;
 #endif
 }

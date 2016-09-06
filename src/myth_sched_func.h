@@ -328,13 +328,12 @@ static inline void free_myth_thread_struct_stack(myth_running_env_t e,myth_threa
 
 //Return a new thread descriptor from external
 static inline myth_thread_t get_new_myth_thread_struct_desc_ext(void) {
-  assert(real_malloc);
-  return real_malloc(sizeof(struct myth_thread));
+  return myth_malloc(sizeof(struct myth_thread));
 }
 
 //Release thread descriptor
 static inline void free_myth_thread_struct_desc_ext(myth_thread_t th) {
-  real_free(th);
+  myth_free(th);
 }
 
 MYTH_CTX_CALLBACK void myth_create_1(void *arg1,void *arg2,void *arg3) {

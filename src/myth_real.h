@@ -1,9 +1,9 @@
 /* 
- * myth_real_fun.h
+ * myth_real.h
  */
 #pragma once
-#ifndef MYTH_REAL_FUN_H_
-#define MYTH_REAL_FUN_H_
+#ifndef MYTH_REAL_H_
+#define MYTH_REAL_H_
 
 #include <fcntl.h>
 #include <malloc.h>
@@ -19,6 +19,7 @@
 #include <sys/types.h>
 
 #include "myth_config.h"
+
 
 int real_pthread_create(pthread_t *thread, const pthread_attr_t *attr,
 			void *(*start_routine) (void *), void *arg);
@@ -69,6 +70,7 @@ int real_pthread_getattr_default_np(pthread_attr_t *attr);
 int real_pthread_setattr_default_np(const pthread_attr_t *attr);
 int real_pthread_getattr_np(pthread_t thread, pthread_attr_t *attr);
 #endif
+
 int real_pthread_setschedparam(pthread_t thread, int policy,
 			       const struct sched_param *param);
 int real_pthread_getschedparam(pthread_t thread, int *policy,
@@ -78,6 +80,7 @@ int real_pthread_setschedprio(pthread_t thread, int prio);
 int real_pthread_getname_np(pthread_t thread, char *name, size_t len);
 int real_pthread_setname_np(pthread_t thread, const char *name);
 #endif
+
 int real_pthread_getconcurrency(void);
 int real_pthread_setconcurrency(int new_level);
 #if _GNU_SOURCE
@@ -87,8 +90,9 @@ int real_pthread_setaffinity_np(pthread_t thread, size_t cpusetsize,
 int real_pthread_getaffinity_np(pthread_t thread, size_t cpusetsize,
 				cpu_set_t *cpuset);
 #endif
+
 int real_pthread_once(pthread_once_t *once_control,
-		      void real_init_routine(void));
+			void init_routine(void));
 int real_pthread_setcancelstate(int state, int *oldstate);
 int real_pthread_setcanceltype(int type, int *oldtype);
 int real_pthread_cancel(pthread_t thread);
@@ -183,13 +187,12 @@ int real_pthread_barrierattr_getpshared(const pthread_barrierattr_t *restrict at
 					int *restrict pshared);
 int real_pthread_barrierattr_setpshared(pthread_barrierattr_t *attr,
 					int pshared);
-int real_pthread_key_create(pthread_key_t *key, void real_destructor(void*));
+int real_pthread_key_create(pthread_key_t *key, void destructor(void*));
 int real_pthread_key_delete(pthread_key_t key);
 void * real_pthread_getspecific(pthread_key_t key);
 int real_pthread_setspecific(pthread_key_t key, const void *value);
 int real_pthread_getcpuclockid(pthread_t thread, clockid_t *clock_id);
-int real_pthread_atfork(void real_prepare(void), void real_parent(void),
-			void real_child(void));
+int real_pthread_atfork(void prepare(void), void parent(void), void child(void));
 int real_pthread_kill(pthread_t thread, int sig);
 void real_pthread_kill_other_threads_np(void);
 int real_pthread_sigqueue(pthread_t thread, int sig,
@@ -237,5 +240,6 @@ ssize_t real_sendto(int sockfd, const void *buf, size_t len, int flags,
 ssize_t real_sendmsg(int sockfd, const struct msghdr *msg, int flags);
 ssize_t real_write(int fd, const void *buf, size_t count);
 
+#endif /* MYTH_REAL_H_ */
 
-#endif	/* MYTH_REAL_FUN_H_ */
+

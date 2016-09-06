@@ -5,6 +5,8 @@
 #include <assert.h>
 #include <stdarg.h>
 
+#include "myth_config.h"
+
 /* this is how function-wrapping works.
 
    let's say we want to wrap a function (e.g., pthread_create).
@@ -39,11 +41,10 @@
    
  */
 
-#include "myth_real_fun.h"
-//#include "myth_config.h"
-//#include "myth_misc.h"
+#include "myth_config.h"
+#include "myth_real.h"
 
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_DL
 /* used for ensure_real_functions */
 #include <stdio.h>
 #include <stdlib.h>
@@ -613,1294 +614,2209 @@ static int ensure_real_functions_(const char * caller_fun) {
 
 #define ensure_real_functions() ensure_real_functions_(__func__)
 
-#endif	/* MYTH_WRAP */
+#endif	/* MYTH_WRAP == MYTH_WRAP_DL */
 
 
 /* original versions of wrapped functions */
 
-
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_create(pthread_t *thread, const pthread_attr_t *attr,
+			  void *(*start_routine) (void *), void *arg);
+#endif
 int real_pthread_create(pthread_t *thread, const pthread_attr_t *attr,
 			 void *(*start_routine) (void *), void *arg) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_create(thread, attr, start_routine, arg);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_create(thread, attr, start_routine, arg);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_create) ensure_real_functions();
   assert(real_function_table.pthread_create);
   return real_function_table.pthread_create(thread, attr, start_routine, arg);
 #else
-  return pthread_create(thread, attr, start_routine, arg);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+void __real_pthread_exit(void *retval) __attribute__((noreturn));
+#endif
 void real_pthread_exit(void *retval) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  pthread_exit(retval);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  __real_pthread_exit(retval);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_exit) ensure_real_functions();
   assert(real_function_table.pthread_exit);
   real_function_table.pthread_exit(retval);
 #else
-  pthread_exit(retval);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_join(pthread_t thread, void **retval);
+#endif
 int real_pthread_join(pthread_t thread, void **retval) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_join(thread, retval);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_join(thread, retval);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_join) ensure_real_functions();
   assert(real_function_table.pthread_join);
   return real_function_table.pthread_join(thread, retval);
 #else
-  return pthread_join(thread, retval);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
 #if _GNU_SOURCE
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_tryjoin_np(pthread_t thread, void **retval);
+#endif
 int real_pthread_tryjoin_np(pthread_t thread, void **retval) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_tryjoin_np(thread, retval);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_tryjoin_np(thread, retval);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_tryjoin_np) ensure_real_functions();
   assert(real_function_table.pthread_tryjoin_np);
   return real_function_table.pthread_tryjoin_np(thread, retval);
 #else
-  return pthread_tryjoin_np(thread, retval);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_timedjoin_np(pthread_t thread, void **retval,
+			      const struct timespec *abstime);
+#endif
 int real_pthread_timedjoin_np(pthread_t thread, void **retval, const struct timespec *abstime) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_timedjoin_np(thread, retval, abstime);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_timedjoin_np(thread, retval, abstime);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_timedjoin_np) ensure_real_functions();
   assert(real_function_table.pthread_timedjoin_np);
   return real_function_table.pthread_timedjoin_np(thread, retval, abstime);
 #else
-  return pthread_timedjoin_np(thread, retval, abstime);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 #endif	/* _GNU_SOURCE */
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_detach(pthread_t thread);
+#endif
 int real_pthread_detach(pthread_t thread) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_detach(thread);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_detach(thread);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_detach) ensure_real_functions();
   assert(real_function_table.pthread_detach);
   return real_function_table.pthread_detach(thread);
 #else
-  return pthread_detach(thread);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+pthread_t __real_pthread_self(void);
+#endif
 pthread_t real_pthread_self(void) {
-#if MYTH_WRAP
-  if (!real_function_table.pthread_self) ensure_real_functions();
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_self();
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_self();
+#elif MYTH_WRAP == MYTH_WRAP_DL
+  if (!real_function_table.pthread_self) {
+    if (real_function_table_init_state
+	== real_function_table_init_state_initializing) {
+      return 0;
+    }
+    ensure_real_functions();
+  }
   assert(real_function_table.pthread_self);
   return real_function_table.pthread_self();
 #else
-  return pthread_self();
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_equal(pthread_t t1, pthread_t t2);
+#endif
 int real_pthread_equal(pthread_t t1, pthread_t t2) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_equal(t1, t2);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_equal(t1, t2);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_equal) ensure_real_functions();
   assert(real_function_table.pthread_equal);
   return real_function_table.pthread_equal(t1, t2);
 #else
-  return pthread_equal(t1, t2);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_attr_init(pthread_attr_t *attr);
+#endif
 int real_pthread_attr_init(pthread_attr_t *attr) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_attr_init(attr);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_attr_init(attr);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_attr_init) ensure_real_functions();
   assert(real_function_table.pthread_attr_init);
   return real_function_table.pthread_attr_init(attr);
 #else
-  return pthread_attr_init(attr);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_attr_destroy(pthread_attr_t *attr);
+#endif
 int real_pthread_attr_destroy(pthread_attr_t *attr) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_attr_destroy(attr);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_attr_destroy(attr);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_attr_destroy) ensure_real_functions();
   assert(real_function_table.pthread_attr_destroy);
   return real_function_table.pthread_attr_destroy(attr);
 #else
-  return pthread_attr_destroy(attr);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_attr_getdetachstate(const pthread_attr_t *attr, int *detachstate);
+#endif
 int real_pthread_attr_getdetachstate(const pthread_attr_t *attr, int *detachstate) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_attr_getdetachstate(attr, detachstate);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_attr_getdetachstate(attr, detachstate);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_attr_getdetachstate) ensure_real_functions();
   assert(real_function_table.pthread_attr_getdetachstate);
   return real_function_table.pthread_attr_getdetachstate(attr, detachstate);
 #else
-  return pthread_attr_getdetachstate(attr, detachstate);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_attr_setdetachstate(pthread_attr_t *attr, int detachstate);
+#endif
 int real_pthread_attr_setdetachstate(pthread_attr_t *attr, int detachstate) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_attr_setdetachstate(attr, detachstate);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_attr_setdetachstate(attr, detachstate);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_attr_setdetachstate) ensure_real_functions();
   assert(real_function_table.pthread_attr_setdetachstate);
   return real_function_table.pthread_attr_setdetachstate(attr, detachstate);
 #else
-  return pthread_attr_setdetachstate(attr, detachstate);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_attr_getguardsize(const pthread_attr_t *attr, size_t *guardsize);
+#endif
 int real_pthread_attr_getguardsize(const pthread_attr_t *attr, size_t *guardsize) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_attr_getguardsize(attr, guardsize);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_attr_getguardsize(attr, guardsize);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_attr_getguardsize) ensure_real_functions();
   assert(real_function_table.pthread_attr_getguardsize);
   return real_function_table.pthread_attr_getguardsize(attr, guardsize);
 #else
-  return pthread_attr_getguardsize(attr, guardsize);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_attr_setguardsize(pthread_attr_t *attr, size_t guardsize);
+#endif
 int real_pthread_attr_setguardsize(pthread_attr_t *attr, size_t guardsize) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_attr_setguardsize(attr, guardsize);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_attr_setguardsize(attr, guardsize);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_attr_setguardsize) ensure_real_functions();
   assert(real_function_table.pthread_attr_setguardsize);
   return real_function_table.pthread_attr_setguardsize(attr, guardsize);
 #else
-  return pthread_attr_setguardsize(attr, guardsize);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_attr_getschedparam(const pthread_attr_t *attr,
+				    struct sched_param *param);
+#endif
 int real_pthread_attr_getschedparam(const pthread_attr_t *attr,
 				    struct sched_param *param) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_attr_getschedparam(attr, param);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_attr_getschedparam(attr, param);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_attr_getschedparam) ensure_real_functions();
   assert(real_function_table.pthread_attr_getschedparam);
   return real_function_table.pthread_attr_getschedparam(attr, param);
 #else
-  return pthread_attr_getschedparam(attr, param);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_attr_setschedparam(pthread_attr_t *attr,
+				    const struct sched_param *param);
+#endif
 int real_pthread_attr_setschedparam(pthread_attr_t *attr,
 				    const struct sched_param *param) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_attr_setschedparam(attr, param);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_attr_setschedparam(attr, param);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_attr_setschedparam) ensure_real_functions();
   assert(real_function_table.pthread_attr_setschedparam);
   return real_function_table.pthread_attr_setschedparam(attr, param);
 #else
-  return pthread_attr_setschedparam(attr, param);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_attr_getschedpolicy(const pthread_attr_t *attr, int *policy);
+#endif
 int real_pthread_attr_getschedpolicy(const pthread_attr_t *attr, int *policy) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_attr_getschedpolicy(attr, policy);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_attr_getschedpolicy(attr, policy);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_attr_getschedpolicy) ensure_real_functions();
   assert(real_function_table.pthread_attr_getschedpolicy);
   return real_function_table.pthread_attr_getschedpolicy(attr, policy);
 #else
-  return pthread_attr_getschedpolicy(attr, policy);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_attr_setschedpolicy(pthread_attr_t *attr, int policy);
+#endif
 int real_pthread_attr_setschedpolicy(pthread_attr_t *attr, int policy) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_attr_setschedpolicy(attr, policy);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_attr_setschedpolicy(attr, policy);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_attr_setschedpolicy) ensure_real_functions();
   assert(real_function_table.pthread_attr_setschedpolicy);
   return real_function_table.pthread_attr_setschedpolicy(attr, policy);
 #else
-  return pthread_attr_setschedpolicy(attr, policy);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_attr_getinheritsched(const pthread_attr_t *attr,
+				      int *inheritsched);
+#endif
 int real_pthread_attr_getinheritsched(const pthread_attr_t *attr,
 				      int *inheritsched) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_attr_getinheritsched(attr, inheritsched);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_attr_getinheritsched(attr, inheritsched);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_attr_getinheritsched) ensure_real_functions();
   assert(real_function_table.pthread_attr_getinheritsched);
   return real_function_table.pthread_attr_getinheritsched(attr, inheritsched);
 #else
-  return pthread_attr_getinheritsched(attr, inheritsched);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_attr_setinheritsched(pthread_attr_t *attr,
+				      int inheritsched);
+#endif
 int real_pthread_attr_setinheritsched(pthread_attr_t *attr,
 				      int inheritsched) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_attr_setinheritsched(attr, inheritsched);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_attr_setinheritsched(attr, inheritsched);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_attr_setinheritsched) ensure_real_functions();
   assert(real_function_table.pthread_attr_setinheritsched);
   return real_function_table.pthread_attr_setinheritsched(attr, inheritsched);
 #else
-  return pthread_attr_setinheritsched(attr, inheritsched);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_attr_getscope(const pthread_attr_t *attr, int *scope);
+#endif
 int real_pthread_attr_getscope(const pthread_attr_t *attr, int *scope) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_attr_getscope(attr, scope);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_attr_getscope(attr, scope);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_attr_getscope) ensure_real_functions();
   assert(real_function_table.pthread_attr_getscope);
   return real_function_table.pthread_attr_getscope(attr, scope);
 #else
-  return pthread_attr_getscope(attr, scope);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_attr_setscope(pthread_attr_t *attr, int scope);
+#endif
 int real_pthread_attr_setscope(pthread_attr_t *attr, int scope) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_attr_setscope(attr, scope);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_attr_setscope(attr, scope);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_attr_setscope) ensure_real_functions();
   assert(real_function_table.pthread_attr_setscope);
   return real_function_table.pthread_attr_setscope(attr, scope);
 #else
-  return pthread_attr_setscope(attr, scope);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
 #if 0				/* deprecated */
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_attr_getstackaddr(const pthread_attr_t *attr, void **stackaddr);
+#endif
 int real_pthread_attr_getstackaddr(const pthread_attr_t *attr, void **stackaddr) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_attr_getstackaddr(attr, stackaddr);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_attr_getstackaddr(attr, stackaddr);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_attr_getstackaddr) ensure_real_functions();
   assert(real_function_table.pthread_attr_getstackaddr);
   return real_function_table.pthread_attr_getstackaddr(attr, stackaddr);
 #else
-  return pthread_attr_getstackaddr(attr, stackaddr);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_attr_setstackaddr(pthread_attr_t *attr, void *stackaddr);
+#endif
 int real_pthread_attr_setstackaddr(pthread_attr_t *attr, void *stackaddr) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_attr_setstackaddr(attr, stackaddr);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_attr_setstackaddr(attr, stackaddr);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_attr_setstackaddr) ensure_real_functions();
   assert(real_function_table.pthread_attr_setstackaddr);
   return real_function_table.pthread_attr_setstackaddr(attr, stackaddr);
 #else
-  return pthread_attr_setstackaddr(attr, stackaddr);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 #endif
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_attr_getstacksize(const pthread_attr_t *attr, size_t *stacksize);
+#endif
 int real_pthread_attr_getstacksize(const pthread_attr_t *attr, size_t *stacksize) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_attr_getstacksize(attr, stacksize);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_attr_getstacksize(attr, stacksize);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_attr_getstacksize) ensure_real_functions();
   assert(real_function_table.pthread_attr_getstacksize);
   return real_function_table.pthread_attr_getstacksize(attr, stacksize);
 #else
-  return pthread_attr_getstacksize(attr, stacksize);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_attr_setstacksize(pthread_attr_t *attr, size_t stacksize);
+#endif
 int real_pthread_attr_setstacksize(pthread_attr_t *attr, size_t stacksize) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_attr_setstacksize(attr, stacksize);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_attr_setstacksize(attr, stacksize);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_attr_setstacksize) ensure_real_functions();
   assert(real_function_table.pthread_attr_setstacksize);
   return real_function_table.pthread_attr_setstacksize(attr, stacksize);
 #else
-  return pthread_attr_setstacksize(attr, stacksize);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_attr_getstack(const pthread_attr_t *attr,
+			       void **stackaddr, size_t *stacksize);
+#endif
 int real_pthread_attr_getstack(const pthread_attr_t *attr,
 			       void **stackaddr, size_t *stacksize) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_attr_getstack(attr, stackaddr, stacksize);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_attr_getstack(attr, stackaddr, stacksize);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_attr_getstack) ensure_real_functions();
   assert(real_function_table.pthread_attr_getstack);
   return real_function_table.pthread_attr_getstack(attr, stackaddr, stacksize);
 #else
-  return pthread_attr_getstack(attr, stackaddr, stacksize);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_attr_setstack(pthread_attr_t *attr,
+			       void *stackaddr, size_t stacksize);
+#endif
 int real_pthread_attr_setstack(pthread_attr_t *attr,
 			       void *stackaddr, size_t stacksize) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_attr_setstack(attr, stackaddr, stacksize);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_attr_setstack(attr, stackaddr, stacksize);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_attr_setstack) ensure_real_functions();
   assert(real_function_table.pthread_attr_setstack);
   return real_function_table.pthread_attr_setstack(attr, stackaddr, stacksize);
 #else
-  return pthread_attr_setstack(attr, stackaddr, stacksize);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
 #if _GNU_SOURCE
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_attr_setaffinity_np(pthread_attr_t *attr,
+				     size_t cpusetsize, const cpu_set_t *cpuset);
+#endif
 int real_pthread_attr_setaffinity_np(pthread_attr_t *attr,
 				     size_t cpusetsize, const cpu_set_t *cpuset) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_attr_setaffinity_np(attr, cpusetsize, cpuset);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_attr_setaffinity_np(attr, cpusetsize, cpuset);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_attr_setaffinity_np) ensure_real_functions();
   assert(real_function_table.pthread_attr_setaffinity_np);
   return real_function_table.pthread_attr_setaffinity_np(attr, cpusetsize, cpuset);
 #else
-  return pthread_attr_setaffinity_np(attr, cpusetsize, cpuset);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_attr_getaffinity_np(const pthread_attr_t *attr,
+				     size_t cpusetsize, cpu_set_t *cpuset);
+#endif
 int real_pthread_attr_getaffinity_np(const pthread_attr_t *attr,
 				     size_t cpusetsize, cpu_set_t *cpuset) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_attr_getaffinity_np(attr, cpusetsize, cpuset);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_attr_getaffinity_np(attr, cpusetsize, cpuset);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_attr_getaffinity_np) ensure_real_functions();
   assert(real_function_table.pthread_attr_getaffinity_np);
   return real_function_table.pthread_attr_getaffinity_np(attr, cpusetsize, cpuset);
 #else
-  return pthread_attr_getaffinity_np(attr, cpusetsize, cpuset);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_getattr_default_np(pthread_attr_t *attr);
+#endif
 int real_pthread_getattr_default_np(pthread_attr_t *attr) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_getattr_default_np(attr);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_getattr_default_np(attr);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_getattr_default_np) ensure_real_functions();
   assert(real_function_table.pthread_getattr_default_np);
   return real_function_table.pthread_getattr_default_np(attr);
 #else
-  return pthread_getattr_default_np(attr);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_setattr_default_np(const pthread_attr_t *attr);
+#endif
 int real_pthread_setattr_default_np(const pthread_attr_t *attr) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_setattr_default_np(attr);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_setattr_default_np(attr);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_setattr_default_np) ensure_real_functions();
   assert(real_function_table.pthread_setattr_default_np);
   return real_function_table.pthread_setattr_default_np(attr);
 #else
-  return pthread_setattr_default_np(attr);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_getattr_np(pthread_t thread, pthread_attr_t *attr);
+#endif
 int real_pthread_getattr_np(pthread_t thread, pthread_attr_t *attr) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_getattr_np(thread, attr);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_getattr_np(thread, attr);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_getattr_np) ensure_real_functions();
   assert(real_function_table.pthread_getattr_np);
   return real_function_table.pthread_getattr_np(thread, attr);
 #else
-  return pthread_getattr_np(thread, attr);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 #endif	/* _GNU_SOURCE */
 
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_setschedparam(pthread_t thread, int policy,
+			       const struct sched_param *param);
+#endif
 int real_pthread_setschedparam(pthread_t thread, int policy,
 			       const struct sched_param *param) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_setschedparam(thread, policy, param);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_setschedparam(thread, policy, param);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_setschedparam) ensure_real_functions();
   assert(real_function_table.pthread_setschedparam);
   return real_function_table.pthread_setschedparam(thread, policy, param);
 #else
-  return pthread_setschedparam(thread, policy, param);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_getschedparam(pthread_t thread, int *policy,
+			       struct sched_param *param);
+#endif
 int real_pthread_getschedparam(pthread_t thread, int *policy,
 			       struct sched_param *param) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_getschedparam(thread, policy, param);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_getschedparam(thread, policy, param);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_getschedparam) ensure_real_functions();
   assert(real_function_table.pthread_getschedparam);
   return real_function_table.pthread_getschedparam(thread, policy, param);
 #else
-  return pthread_getschedparam(thread, policy, param);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_setschedprio(pthread_t thread, int prio);
+#endif
 int real_pthread_setschedprio(pthread_t thread, int prio) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_setschedprio(thread, prio);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_setschedprio(thread, prio);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_setschedprio) ensure_real_functions();
   assert(real_function_table.pthread_setschedprio);
   return real_function_table.pthread_setschedprio(thread, prio);
 #else
-  return pthread_setschedprio(thread, prio);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
 #if _GNU_SOURCE
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_getname_np(pthread_t thread, char *name, size_t len);
+#endif
 int real_pthread_getname_np(pthread_t thread, char *name, size_t len) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_getname_np(thread, name, len);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_getname_np(thread, name, len);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_getname_np) ensure_real_functions();
   assert(real_function_table.pthread_getname_np);
   return real_function_table.pthread_getname_np(thread, name, len);
 #else
-  return pthread_getname_np(thread, name, len);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_setname_np(pthread_t thread, const char *name);
+#endif
 int real_pthread_setname_np(pthread_t thread, const char *name) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_setname_np(thread, name);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_setname_np(thread, name);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_setname_np) ensure_real_functions();
   assert(real_function_table.pthread_setname_np);
   return real_function_table.pthread_setname_np(thread, name);
 #else
-  return pthread_setname_np(thread, name);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 #endif	/* _GNU_SOURCE */
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_getconcurrency(void);
+#endif
 int real_pthread_getconcurrency(void) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_getconcurrency();
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_getconcurrency();
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_getconcurrency) ensure_real_functions();
   assert(real_function_table.pthread_getconcurrency);
   return real_function_table.pthread_getconcurrency();
 #else
-  return pthread_getconcurrency();
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_setconcurrency(int new_level);
+#endif
 int real_pthread_setconcurrency(int new_level) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_setconcurrency(new_level);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_setconcurrency(new_level);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_setconcurrency) ensure_real_functions();
   assert(real_function_table.pthread_setconcurrency);
   return real_function_table.pthread_setconcurrency(new_level);
 #else
-  return pthread_setconcurrency(new_level);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
 #if _GNU_SOURCE
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_yield(void);
+#endif
 int real_pthread_yield(void) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_yield();
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_yield();
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_yield) ensure_real_functions();
   assert(real_function_table.pthread_yield);
   return real_function_table.pthread_yield();
 #else
-  return pthread_yield();
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_setaffinity_np(pthread_t thread, size_t cpusetsize,
+				const cpu_set_t *cpuset);
+#endif
 int real_pthread_setaffinity_np(pthread_t thread, size_t cpusetsize,
 				const cpu_set_t *cpuset) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_setaffinity_np(thread, cpusetsize, cpuset);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_setaffinity_np(thread, cpusetsize, cpuset);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_setaffinity_np) ensure_real_functions();
   assert(real_function_table.pthread_setaffinity_np);
   return real_function_table.pthread_setaffinity_np(thread, cpusetsize, cpuset);
 #else
-  return pthread_setaffinity_np(thread, cpusetsize, cpuset);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_getaffinity_np(pthread_t thread, size_t cpusetsize,
+				cpu_set_t *cpuset);
+#endif
 int real_pthread_getaffinity_np(pthread_t thread, size_t cpusetsize,
 				cpu_set_t *cpuset) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_getaffinity_np(thread, cpusetsize, cpuset);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_getaffinity_np(thread, cpusetsize, cpuset);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_getaffinity_np) ensure_real_functions();
   assert(real_function_table.pthread_getaffinity_np);
   return real_function_table.pthread_getaffinity_np(thread, cpusetsize, cpuset);
 #else
-  return pthread_getaffinity_np(thread, cpusetsize, cpuset);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 #endif	/* _GNU_SOURCE */
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_once(pthread_once_t *once_control,
+			void init_routine(void));
+#endif
 int real_pthread_once(pthread_once_t *once_control,
 		      void (*init_routine)(void)) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_once(once_control, init_routine);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_once(once_control, init_routine);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_once) ensure_real_functions();
   assert(real_function_table.pthread_once);
   return real_function_table.pthread_once(once_control, init_routine);
 #else
-  return pthread_once(once_control, init_routine);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_setcancelstate(int state, int *oldstate);
+#endif
 int real_pthread_setcancelstate(int state, int *oldstate) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_setcancelstate(state, oldstate);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_setcancelstate(state, oldstate);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_setcancelstate) ensure_real_functions();
   assert(real_function_table.pthread_setcancelstate);
   return real_function_table.pthread_setcancelstate(state, oldstate);
 #else
-  return pthread_setcancelstate(state, oldstate);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_setcanceltype(int type, int *oldtype);
+#endif
 int real_pthread_setcanceltype(int type, int *oldtype) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_setcanceltype(type, oldtype);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_setcanceltype(type, oldtype);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_setcanceltype) ensure_real_functions();
   assert(real_function_table.pthread_setcanceltype);
   return real_function_table.pthread_setcanceltype(type, oldtype);
 #else
-  return pthread_setcanceltype(type, oldtype);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_cancel(pthread_t thread);
+#endif
 int real_pthread_cancel(pthread_t thread) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_cancel(thread);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_cancel(thread);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_cancel) ensure_real_functions();
   assert(real_function_table.pthread_cancel);
   return real_function_table.pthread_cancel(thread);
 #else
-  return pthread_cancel(thread);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+void __real_pthread_testcancel(void);
+#endif
 void real_pthread_testcancel(void) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_testcancel();
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_testcancel();
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_testcancel) ensure_real_functions();
   assert(real_function_table.pthread_testcancel);
   return real_function_table.pthread_testcancel();
 #else
-  return pthread_testcancel();
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_mutex_init(pthread_mutex_t *restrict mutex,
+			    const pthread_mutexattr_t *restrict attr);
+#endif
 int real_pthread_mutex_init(pthread_mutex_t *restrict mutex,
 			    const pthread_mutexattr_t *restrict attr) {
-#if MYTH_WRAP
-  if (!real_function_table.pthread_mutex_init) ensure_real_functions();
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_mutex_init(mutex, attr);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_mutex_init(mutex, attr);
+#elif MYTH_WRAP == MYTH_WRAP_DL
+  if (!real_function_table.pthread_mutex_init) {
+    ensure_real_functions();
+  }
   assert(real_function_table.pthread_mutex_init);
   return real_function_table.pthread_mutex_init(mutex, attr);
 #else
-  return pthread_mutex_init(mutex, attr);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_mutex_destroy(pthread_mutex_t *mutex);
+#endif
 int real_pthread_mutex_destroy(pthread_mutex_t *mutex) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_mutex_destroy(mutex);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_mutex_destroy(mutex);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_mutex_destroy) ensure_real_functions();
   assert(real_function_table.pthread_mutex_destroy);
   return real_function_table.pthread_mutex_destroy(mutex);
 #else
-  return pthread_mutex_destroy(mutex);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_mutex_trylock(pthread_mutex_t *mutex);
+#endif
 int real_pthread_mutex_trylock(pthread_mutex_t *mutex) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_mutex_trylock(mutex);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_mutex_trylock(mutex);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_mutex_trylock) ensure_real_functions();
   assert(real_function_table.pthread_mutex_trylock);
   return real_function_table.pthread_mutex_trylock(mutex);
 #else
-  return pthread_mutex_trylock(mutex);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_mutex_lock(pthread_mutex_t *mutex);
+#endif
 int real_pthread_mutex_lock(pthread_mutex_t *mutex) {
-#if MYTH_WRAP
-  if (!real_function_table.pthread_mutex_lock) ensure_real_functions();
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_mutex_lock(mutex);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_mutex_lock(mutex);
+#elif MYTH_WRAP == MYTH_WRAP_DL
+  if (!real_function_table.pthread_mutex_lock) {
+    if (real_function_table_init_state
+	== real_function_table_init_state_initializing) {
+      return 0;
+    }
+    ensure_real_functions();
+  }
   assert(real_function_table.pthread_mutex_lock);
   return real_function_table.pthread_mutex_lock(mutex);
 #else
-  return pthread_mutex_lock(mutex);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_mutex_timedlock(pthread_mutex_t *restrict mutex,
+				 const struct timespec *restrict abstime);
+#endif
 int real_pthread_mutex_timedlock(pthread_mutex_t *restrict mutex,
 			    const struct timespec *restrict abstime) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_mutex_timedlock(mutex, abstime);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_mutex_timedlock(mutex, abstime);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_mutex_timedlock) ensure_real_functions();
   assert(real_function_table.pthread_mutex_timedlock);
   return real_function_table.pthread_mutex_timedlock(mutex, abstime);
 #else
-  return pthread_mutex_timedlock(mutex, abstime);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_mutex_unlock(pthread_mutex_t *mutex);
+#endif
 int real_pthread_mutex_unlock(pthread_mutex_t *mutex) {
-#if MYTH_WRAP
-  if (!real_function_table.pthread_mutex_unlock) ensure_real_functions();
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_mutex_unlock(mutex);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_mutex_unlock(mutex);
+#elif MYTH_WRAP == MYTH_WRAP_DL
+  if (!real_function_table.pthread_mutex_unlock) {
+    ensure_real_functions();
+  }
   assert(real_function_table.pthread_mutex_unlock);
   return real_function_table.pthread_mutex_unlock(mutex);
 #else
-  return pthread_mutex_unlock(mutex);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_mutex_getprioceiling(const pthread_mutex_t *restrict mutex,
+				      int *restrict prioceiling);
+#endif
 int real_pthread_mutex_getprioceiling(const pthread_mutex_t *restrict mutex,
 				      int *restrict prioceiling) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_mutex_getprioceiling(mutex, prioceiling);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_mutex_getprioceiling(mutex, prioceiling);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_mutex_getprioceiling) ensure_real_functions();
   assert(real_function_table.pthread_mutex_getprioceiling);
   return real_function_table.pthread_mutex_getprioceiling(mutex, prioceiling);
 #else
-  return pthread_mutex_getprioceiling(mutex, prioceiling);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_mutex_setprioceiling(pthread_mutex_t *restrict mutex,
+				      int prioceiling, int *restrict old_ceiling);
+#endif
 int real_pthread_mutex_setprioceiling(pthread_mutex_t *restrict mutex,
 				      int prioceiling, int *restrict old_ceiling) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_mutex_setprioceiling(mutex, prioceiling, old_ceiling);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_mutex_setprioceiling(mutex, prioceiling, old_ceiling);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_mutex_setprioceiling) ensure_real_functions();
   assert(real_function_table.pthread_mutex_setprioceiling);
   return real_function_table.pthread_mutex_setprioceiling(mutex, prioceiling, old_ceiling);
 #else
-  return pthread_mutex_setprioceiling(mutex, prioceiling, old_ceiling);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_mutex_consistent(pthread_mutex_t *mutex);
+#endif
 int real_pthread_mutex_consistent(pthread_mutex_t *mutex) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_mutex_consistent(mutex);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_mutex_consistent(mutex);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_mutex_consistent) ensure_real_functions();
   assert(real_function_table.pthread_mutex_consistent);
   return real_function_table.pthread_mutex_consistent(mutex);
 #else
-  return pthread_mutex_consistent(mutex);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_mutexattr_init(pthread_mutexattr_t *attr);
+#endif
 int real_pthread_mutexattr_init(pthread_mutexattr_t *attr) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_mutexattr_init(attr);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_mutexattr_init(attr);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_mutexattr_init) ensure_real_functions();
   assert(real_function_table.pthread_mutexattr_init);
   return real_function_table.pthread_mutexattr_init(attr);
 #else
-  return pthread_mutexattr_init(attr);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_mutexattr_destroy(pthread_mutexattr_t *attr);
+#endif
 int real_pthread_mutexattr_destroy(pthread_mutexattr_t *attr) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_mutexattr_destroy(attr);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_mutexattr_destroy(attr);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_mutexattr_destroy) ensure_real_functions();
   assert(real_function_table.pthread_mutexattr_destroy);
   return real_function_table.pthread_mutexattr_destroy(attr);
 #else
-  return pthread_mutexattr_destroy(attr);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_mutexattr_getpshared(const pthread_mutexattr_t *restrict attr,
+				      int *restrict pshared);
+#endif
 int real_pthread_mutexattr_getpshared(const pthread_mutexattr_t *restrict attr,
 				      int *restrict pshared) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_mutexattr_getpshared(attr, pshared);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_mutexattr_getpshared(attr, pshared);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_mutexattr_getpshared) ensure_real_functions();
   assert(real_function_table.pthread_mutexattr_getpshared);
   return real_function_table.pthread_mutexattr_getpshared(attr, pshared);
 #else
-  return pthread_mutexattr_getpshared(attr, pshared);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_mutexattr_setpshared(pthread_mutexattr_t *attr,
+				      int pshared);
+#endif
 int real_pthread_mutexattr_setpshared(pthread_mutexattr_t *attr,
 				      int pshared) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_mutexattr_setpshared(attr, pshared);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_mutexattr_setpshared(attr, pshared);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_mutexattr_setpshared) ensure_real_functions();
   assert(real_function_table.pthread_mutexattr_setpshared);
   return real_function_table.pthread_mutexattr_setpshared(attr, pshared);
 #else
-  return pthread_mutexattr_setpshared(attr, pshared);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_mutexattr_gettype(const pthread_mutexattr_t *restrict attr,
+				   int *restrict type);
+#endif
 int real_pthread_mutexattr_gettype(const pthread_mutexattr_t *restrict attr,
 				   int *restrict type) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_mutexattr_gettype(attr, type);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_mutexattr_gettype(attr, type);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_mutexattr_gettype) ensure_real_functions();
   assert(real_function_table.pthread_mutexattr_gettype);
   return real_function_table.pthread_mutexattr_gettype(attr, type);
 #else
-  return pthread_mutexattr_gettype(attr, type);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_mutexattr_settype(pthread_mutexattr_t *attr, int type);
+#endif
 int real_pthread_mutexattr_settype(pthread_mutexattr_t *attr, int type) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_mutexattr_settype(attr, type);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_mutexattr_settype(attr, type);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_mutexattr_settype) ensure_real_functions();
   assert(real_function_table.pthread_mutexattr_settype);
   return real_function_table.pthread_mutexattr_settype(attr, type);
 #else
-  return pthread_mutexattr_settype(attr, type);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_mutexattr_getprotocol(const pthread_mutexattr_t *restrict attr,
+				       int *restrict protocol);
+#endif
 int real_pthread_mutexattr_getprotocol(const pthread_mutexattr_t *restrict attr,
 				       int *restrict protocol) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_mutexattr_getprotocol(attr, protocol);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_mutexattr_getprotocol(attr, protocol);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_mutexattr_getprotocol) ensure_real_functions();
   assert(real_function_table.pthread_mutexattr_getprotocol);
   return real_function_table.pthread_mutexattr_getprotocol(attr, protocol);
 #else
-  return pthread_mutexattr_getprotocol(attr, protocol);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_mutexattr_setprotocol(pthread_mutexattr_t *attr, int protocol);
+#endif
 int real_pthread_mutexattr_setprotocol(pthread_mutexattr_t *attr, int protocol) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_mutexattr_setprotocol(attr, protocol);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_mutexattr_setprotocol(attr, protocol);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_mutexattr_setprotocol) ensure_real_functions();
   assert(real_function_table.pthread_mutexattr_setprotocol);
   return real_function_table.pthread_mutexattr_setprotocol(attr, protocol);
 #else
-  return pthread_mutexattr_setprotocol(attr, protocol);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_mutexattr_getprioceiling(const pthread_mutexattr_t *restrict attr,
+					  int *restrict prioceiling);
+#endif
 int real_pthread_mutexattr_getprioceiling(const pthread_mutexattr_t *restrict attr,
 					  int *restrict prioceiling) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_mutexattr_getprioceiling(attr, prioceiling);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_mutexattr_getprioceiling(attr, prioceiling);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_mutexattr_getprioceiling) ensure_real_functions();
   assert(real_function_table.pthread_mutexattr_getprioceiling);
   return real_function_table.pthread_mutexattr_getprioceiling(attr, prioceiling);
 #else
-  return pthread_mutexattr_getprioceiling(attr, prioceiling);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_mutexattr_setprioceiling(pthread_mutexattr_t *attr,
+					  int prioceiling);
+#endif
 int real_pthread_mutexattr_setprioceiling(pthread_mutexattr_t *attr,
 					  int prioceiling) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_mutexattr_setprioceiling(attr, prioceiling);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_mutexattr_setprioceiling(attr, prioceiling);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_mutexattr_setprioceiling) ensure_real_functions();
   assert(real_function_table.pthread_mutexattr_setprioceiling);
   return real_function_table.pthread_mutexattr_setprioceiling(attr, prioceiling);
 #else
-  return pthread_mutexattr_setprioceiling(attr, prioceiling);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_mutexattr_getrobust(const pthread_mutexattr_t *restrict attr,
+				     int *restrict robust);
+#endif
 int real_pthread_mutexattr_getrobust(const pthread_mutexattr_t *restrict attr,
 				     int *restrict robust) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_mutexattr_getrobust(attr, robust);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_mutexattr_getrobust(attr, robust);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_mutexattr_getrobust) ensure_real_functions();
   assert(real_function_table.pthread_mutexattr_getrobust);
   return real_function_table.pthread_mutexattr_getrobust(attr, robust);
 #else
-  return pthread_mutexattr_getrobust(attr, robust);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_mutexattr_setrobust(pthread_mutexattr_t *attr, int robust);
+#endif
 int real_pthread_mutexattr_setrobust(pthread_mutexattr_t *attr, int robust) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_mutexattr_setrobust(attr, robust);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_mutexattr_setrobust(attr, robust);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_mutexattr_setrobust) ensure_real_functions();
   assert(real_function_table.pthread_mutexattr_setrobust);
   return real_function_table.pthread_mutexattr_setrobust(attr, robust);
 #else
-  return pthread_mutexattr_setrobust(attr, robust);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_rwlock_init(pthread_rwlock_t *restrict rwlock,
+			     const pthread_rwlockattr_t *restrict attr);
+#endif
 int real_pthread_rwlock_init(pthread_rwlock_t *restrict rwlock,
 			     const pthread_rwlockattr_t *restrict attr) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_rwlock_init(rwlock, attr);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_rwlock_init(rwlock, attr);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_rwlock_init) ensure_real_functions();
   assert(real_function_table.pthread_rwlock_init);
   return real_function_table.pthread_rwlock_init(rwlock, attr);
 #else
-  return pthread_rwlock_init(rwlock, attr);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_rwlock_destroy(pthread_rwlock_t *rwlock);
+#endif
 int real_pthread_rwlock_destroy(pthread_rwlock_t *rwlock) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_rwlock_destroy(rwlock);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_rwlock_destroy(rwlock);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_rwlock_destroy) ensure_real_functions();
   assert(real_function_table.pthread_rwlock_destroy);
   return real_function_table.pthread_rwlock_destroy(rwlock);
 #else
-  return pthread_rwlock_destroy(rwlock);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_rwlock_rdlock(pthread_rwlock_t *rwlock);
+#endif
 int real_pthread_rwlock_rdlock(pthread_rwlock_t *rwlock) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_rwlock_rdlock(rwlock);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_rwlock_rdlock(rwlock);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_rwlock_rdlock) ensure_real_functions();
   assert(real_function_table.pthread_rwlock_rdlock);
   return real_function_table.pthread_rwlock_rdlock(rwlock);
 #else
-  return pthread_rwlock_rdlock(rwlock);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_rwlock_tryrdlock(pthread_rwlock_t *rwlock);
+#endif
 int real_pthread_rwlock_tryrdlock(pthread_rwlock_t *rwlock) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_rwlock_tryrdlock(rwlock);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_rwlock_tryrdlock(rwlock);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_rwlock_tryrdlock) ensure_real_functions();
   assert(real_function_table.pthread_rwlock_tryrdlock);
   return real_function_table.pthread_rwlock_tryrdlock(rwlock);
 #else
-  return pthread_rwlock_tryrdlock(rwlock);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_rwlock_timedrdlock(pthread_rwlock_t *restrict rwlock,
+				    const struct timespec *restrict abstime);
+#endif
 int real_pthread_rwlock_timedrdlock(pthread_rwlock_t *restrict rwlock,
 				    const struct timespec *restrict abstime) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_rwlock_timedrdlock(rwlock, abstime);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_rwlock_timedrdlock(rwlock, abstime);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_rwlock_timedrdlock) ensure_real_functions();
   assert(real_function_table.pthread_rwlock_timedrdlock);
   return real_function_table.pthread_rwlock_timedrdlock(rwlock, abstime);
 #else
-  return pthread_rwlock_timedrdlock(rwlock, abstime);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_rwlock_wrlock(pthread_rwlock_t *rwlock);
+#endif
 int real_pthread_rwlock_wrlock(pthread_rwlock_t *rwlock) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_rwlock_wrlock(rwlock);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_rwlock_wrlock(rwlock);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_rwlock_wrlock) ensure_real_functions();
   assert(real_function_table.pthread_rwlock_wrlock);
   return real_function_table.pthread_rwlock_wrlock(rwlock);
 #else
-  return pthread_rwlock_wrlock(rwlock);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_rwlock_trywrlock(pthread_rwlock_t *rwlock);
+#endif
 int real_pthread_rwlock_trywrlock(pthread_rwlock_t *rwlock) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_rwlock_trywrlock(rwlock);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_rwlock_trywrlock(rwlock);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_rwlock_trywrlock) ensure_real_functions();
   assert(real_function_table.pthread_rwlock_trywrlock);
   return real_function_table.pthread_rwlock_trywrlock(rwlock);
 #else
-  return pthread_rwlock_trywrlock(rwlock);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_rwlock_timedwrlock(pthread_rwlock_t *restrict rwlock,
+				    const struct timespec *restrict abstime);
+#endif
 int real_pthread_rwlock_timedwrlock(pthread_rwlock_t *restrict rwlock,
 				    const struct timespec *restrict abstime) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_rwlock_timedwrlock(rwlock, abstime);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_rwlock_timedwrlock(rwlock, abstime);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_rwlock_timedwrlock) ensure_real_functions();
   assert(real_function_table.pthread_rwlock_timedwrlock);
   return real_function_table.pthread_rwlock_timedwrlock(rwlock, abstime);
 #else
-  return pthread_rwlock_timedwrlock(rwlock, abstime);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_rwlock_unlock(pthread_rwlock_t *rwlock);
+#endif
 int real_pthread_rwlock_unlock(pthread_rwlock_t *rwlock) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_rwlock_unlock(rwlock);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_rwlock_unlock(rwlock);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_rwlock_unlock) ensure_real_functions();
   assert(real_function_table.pthread_rwlock_unlock);
   return real_function_table.pthread_rwlock_unlock(rwlock);
 #else
-  return pthread_rwlock_unlock(rwlock);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_rwlockattr_init(pthread_rwlockattr_t *attr);
+#endif
 int real_pthread_rwlockattr_init(pthread_rwlockattr_t *attr) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_rwlockattr_init(attr);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_rwlockattr_init(attr);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_rwlockattr_init) ensure_real_functions();
   assert(real_function_table.pthread_rwlockattr_init);
   return real_function_table.pthread_rwlockattr_init(attr);
 #else
-  return pthread_rwlockattr_init(attr);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_rwlockattr_destroy(pthread_rwlockattr_t *attr);
+#endif
 int real_pthread_rwlockattr_destroy(pthread_rwlockattr_t *attr) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_rwlockattr_destroy(attr);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_rwlockattr_destroy(attr);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_rwlockattr_destroy) ensure_real_functions();
   assert(real_function_table.pthread_rwlockattr_destroy);
   return real_function_table.pthread_rwlockattr_destroy(attr);
 #else
-  return pthread_rwlockattr_destroy(attr);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_rwlockattr_getpshared(const pthread_rwlockattr_t *restrict attr,
+				       int *restrict pshared);
+#endif
 int real_pthread_rwlockattr_getpshared(const pthread_rwlockattr_t *restrict attr,
 				       int *restrict pshared) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_rwlockattr_getpshared(attr, pshared);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_rwlockattr_getpshared(attr, pshared);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_rwlockattr_getpshared) ensure_real_functions();
   assert(real_function_table.pthread_rwlockattr_getpshared);
   return real_function_table.pthread_rwlockattr_getpshared(attr, pshared);
 #else
-  return pthread_rwlockattr_getpshared(attr, pshared);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_rwlockattr_setpshared(pthread_rwlockattr_t *attr,
+				       int pshared);
+#endif
 int real_pthread_rwlockattr_setpshared(pthread_rwlockattr_t *attr,
 				       int pshared) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_rwlockattr_setpshared(attr, pshared);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_rwlockattr_setpshared(attr, pshared);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_rwlockattr_setpshared) ensure_real_functions();
   assert(real_function_table.pthread_rwlockattr_setpshared);
   return real_function_table.pthread_rwlockattr_setpshared(attr, pshared);
 #else
-  return pthread_rwlockattr_setpshared(attr, pshared);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_rwlockattr_getkind_np(const pthread_rwlockattr_t *attr,
+				       int *pref);
+#endif
 int real_pthread_rwlockattr_getkind_np(const pthread_rwlockattr_t *attr,
 				       int *pref) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_rwlockattr_getkind_np(attr, pref);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_rwlockattr_getkind_np(attr, pref);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_rwlockattr_getkind_np) ensure_real_functions();
   assert(real_function_table.pthread_rwlockattr_getkind_np);
   return real_function_table.pthread_rwlockattr_getkind_np(attr, pref);
 #else
-  return pthread_rwlockattr_getkind_np(attr, pref);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_rwlockattr_setkind_np(pthread_rwlockattr_t *attr,
+				       int pref);
+#endif
 int real_pthread_rwlockattr_setkind_np(pthread_rwlockattr_t *attr,
 				       int pref) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_rwlockattr_setkind_np(attr, pref);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_rwlockattr_setkind_np(attr, pref);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_rwlockattr_setkind_np) ensure_real_functions();
   assert(real_function_table.pthread_rwlockattr_setkind_np);
   return real_function_table.pthread_rwlockattr_setkind_np(attr, pref);
 #else
-  return pthread_rwlockattr_setkind_np(attr, pref);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_cond_init(pthread_cond_t *restrict cond,
+			   const pthread_condattr_t *restrict attr);
+#endif
 int real_pthread_cond_init(pthread_cond_t *restrict cond,
 			   const pthread_condattr_t *restrict attr) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_cond_init(cond, attr);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_cond_init(cond, attr);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_cond_init) ensure_real_functions();
   assert(real_function_table.pthread_cond_init);
   return real_function_table.pthread_cond_init(cond, attr);
 #else
-  return pthread_cond_init(cond, attr);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_cond_destroy(pthread_cond_t *cond);
+#endif
 int real_pthread_cond_destroy(pthread_cond_t *cond) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_cond_destroy(cond);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_cond_destroy(cond);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_cond_destroy) ensure_real_functions();
   assert(real_function_table.pthread_cond_destroy);
   return real_function_table.pthread_cond_destroy(cond);
 #else
-  return pthread_cond_destroy(cond);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_cond_signal(pthread_cond_t *cond);
+#endif
 int real_pthread_cond_signal(pthread_cond_t *cond) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_cond_signal(cond);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_cond_signal(cond);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_cond_signal) ensure_real_functions();
   assert(real_function_table.pthread_cond_signal);
   return real_function_table.pthread_cond_signal(cond);
 #else
-  return pthread_cond_signal(cond);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_cond_broadcast(pthread_cond_t *cond);
+#endif
 int real_pthread_cond_broadcast(pthread_cond_t *cond) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_cond_broadcast(cond);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_cond_broadcast(cond);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_cond_broadcast) ensure_real_functions();
   assert(real_function_table.pthread_cond_broadcast);
   return real_function_table.pthread_cond_broadcast(cond);
 #else
-  return pthread_cond_broadcast(cond);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_cond_wait(pthread_cond_t *restrict cond,
+			   pthread_mutex_t *restrict mutex);
+#endif
 int real_pthread_cond_wait(pthread_cond_t *restrict cond,
 			   pthread_mutex_t *restrict mutex) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_cond_wait(cond, mutex);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_cond_wait(cond, mutex);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_cond_wait) ensure_real_functions();
   assert(real_function_table.pthread_cond_wait);
   return real_function_table.pthread_cond_wait(cond, mutex);
 #else
-  return pthread_cond_wait(cond, mutex);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_cond_timedwait(pthread_cond_t *restrict cond,
+			   pthread_mutex_t *restrict mutex,
+				const struct timespec *restrict abstime);
+#endif
 int real_pthread_cond_timedwait(pthread_cond_t *restrict cond,
 				pthread_mutex_t *restrict mutex,
 				const struct timespec *restrict abstime) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_cond_timedwait(cond, mutex, abstime);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_cond_timedwait(cond, mutex, abstime);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_cond_timedwait) ensure_real_functions();
   assert(real_function_table.pthread_cond_timedwait);
   return real_function_table.pthread_cond_timedwait(cond, mutex, abstime);
 #else
-  return pthread_cond_timedwait(cond, mutex, abstime);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_condattr_init(pthread_condattr_t *attr);
+#endif
 int real_pthread_condattr_init(pthread_condattr_t *attr) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_condattr_init(attr);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_condattr_init(attr);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_condattr_init) ensure_real_functions();
   assert(real_function_table.pthread_condattr_init);
   return real_function_table.pthread_condattr_init(attr);
 #else
-  return pthread_condattr_init(attr);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_condattr_destroy(pthread_condattr_t *attr);
+#endif
 int real_pthread_condattr_destroy(pthread_condattr_t *attr) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_condattr_destroy(attr);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_condattr_destroy(attr);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_condattr_destroy) ensure_real_functions();
   assert(real_function_table.pthread_condattr_destroy);
   return real_function_table.pthread_condattr_destroy(attr);
 #else
-  return pthread_condattr_destroy(attr);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_condattr_getpshared(const pthread_condattr_t *restrict attr,
+				     int *restrict pshared);
+#endif
 int real_pthread_condattr_getpshared(const pthread_condattr_t *restrict attr,
 				     int *restrict pshared) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_condattr_getpshared(attr, pshared);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_condattr_getpshared(attr, pshared);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_condattr_getpshared) ensure_real_functions();
   assert(real_function_table.pthread_condattr_getpshared);
   return real_function_table.pthread_condattr_getpshared(attr, pshared);
 #else
-  return pthread_condattr_getpshared(attr, pshared);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_condattr_setpshared(pthread_condattr_t *attr,
+				     int pshared);
+#endif
 int real_pthread_condattr_setpshared(pthread_condattr_t *attr,
 				     int pshared) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_condattr_setpshared(attr, pshared);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_condattr_setpshared(attr, pshared);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_condattr_setpshared) ensure_real_functions();
   assert(real_function_table.pthread_condattr_setpshared);
   return real_function_table.pthread_condattr_setpshared(attr, pshared);
 #else
-  return pthread_condattr_setpshared(attr, pshared);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_condattr_getclock(const pthread_condattr_t *restrict attr,
+				   clockid_t *restrict clock_id);
+#endif
 int real_pthread_condattr_getclock(const pthread_condattr_t *restrict attr,
 				   clockid_t *restrict clock_id) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_condattr_getclock(attr, clock_id);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_condattr_getclock(attr, clock_id);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_condattr_getclock) ensure_real_functions();
   assert(real_function_table.pthread_condattr_getclock);
   return real_function_table.pthread_condattr_getclock(attr, clock_id);
 #else
-  return pthread_condattr_getclock(attr, clock_id);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_condattr_setclock(pthread_condattr_t *attr,
+				   clockid_t clock_id);
+#endif
 int real_pthread_condattr_setclock(pthread_condattr_t *attr,
 				   clockid_t clock_id) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_condattr_setclock(attr, clock_id);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_condattr_setclock(attr, clock_id);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_condattr_setclock) ensure_real_functions();
   assert(real_function_table.pthread_condattr_setclock);
   return real_function_table.pthread_condattr_setclock(attr, clock_id);
 #else
-  return pthread_condattr_setclock(attr, clock_id);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_spin_init(pthread_spinlock_t *lock, int pshared);
+#endif
 int real_pthread_spin_init(pthread_spinlock_t *lock, int pshared) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_spin_init(lock, pshared);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_spin_init(lock, pshared);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_spin_init) ensure_real_functions();
   assert(real_function_table.pthread_spin_init);
   return real_function_table.pthread_spin_init(lock, pshared);
 #else
-  return pthread_spin_init(lock, pshared);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_spin_destroy(pthread_spinlock_t *lock);
+#endif
 int real_pthread_spin_destroy(pthread_spinlock_t *lock) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_spin_destroy(lock);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_spin_destroy(lock);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_spin_destroy) ensure_real_functions();
   assert(real_function_table.pthread_spin_destroy);
   return real_function_table.pthread_spin_destroy(lock);
 #else
-  return pthread_spin_destroy(lock);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_spin_lock(pthread_spinlock_t *lock);
+#endif
 int real_pthread_spin_lock(pthread_spinlock_t *lock) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_spin_lock(lock);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_spin_lock(lock);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_spin_lock) ensure_real_functions();
   assert(real_function_table.pthread_spin_lock);
   return real_function_table.pthread_spin_lock(lock);
 #else
-  return pthread_spin_lock(lock);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_spin_trylock(pthread_spinlock_t *lock);
+#endif
 int real_pthread_spin_trylock(pthread_spinlock_t *lock) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_spin_trylock(lock);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_spin_trylock(lock);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_spin_trylock) ensure_real_functions();
   assert(real_function_table.pthread_spin_trylock);
   return real_function_table.pthread_spin_trylock(lock);
 #else
-  return pthread_spin_trylock(lock);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_spin_unlock(pthread_spinlock_t *lock);
+#endif
 int real_pthread_spin_unlock(pthread_spinlock_t *lock) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_spin_unlock(lock);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_spin_unlock(lock);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_spin_unlock) ensure_real_functions();
   assert(real_function_table.pthread_spin_unlock);
   return real_function_table.pthread_spin_unlock(lock);
 #else
-  return pthread_spin_unlock(lock);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_barrier_init(pthread_barrier_t *restrict barrier,
+			      const pthread_barrierattr_t *restrict attr,
+			      unsigned count);
+#endif
 int real_pthread_barrier_init(pthread_barrier_t *restrict barrier,
 			      const pthread_barrierattr_t *restrict attr,
 			      unsigned count) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_barrier_init(barrier, attr, count);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_barrier_init(barrier, attr, count);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_barrier_init) ensure_real_functions();
   assert(real_function_table.pthread_barrier_init);
   return real_function_table.pthread_barrier_init(barrier, attr, count);
 #else
-  return pthread_barrier_init(barrier, attr, count);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_barrier_destroy(pthread_barrier_t *barrier);
+#endif
 int real_pthread_barrier_destroy(pthread_barrier_t *barrier) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_barrier_destroy(barrier);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_barrier_destroy(barrier);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_barrier_destroy) ensure_real_functions();
   assert(real_function_table.pthread_barrier_destroy);
   return real_function_table.pthread_barrier_destroy(barrier);
 #else
-  return pthread_barrier_destroy(barrier);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_barrier_wait(pthread_barrier_t *barrier);
+#endif
 int real_pthread_barrier_wait(pthread_barrier_t *barrier) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_barrier_wait(barrier);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_barrier_wait(barrier);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_barrier_wait) ensure_real_functions();
   assert(real_function_table.pthread_barrier_wait);
   return real_function_table.pthread_barrier_wait(barrier);
 #else
-  return pthread_barrier_wait(barrier);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_barrierattr_init(pthread_barrierattr_t *attr);
+#endif
 int real_pthread_barrierattr_init(pthread_barrierattr_t *attr) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_barrierattr_init(attr);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_barrierattr_init(attr);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_barrierattr_init) ensure_real_functions();
   assert(real_function_table.pthread_barrierattr_init);
   return real_function_table.pthread_barrierattr_init(attr);
 #else
-  return pthread_barrierattr_init(attr);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_barrierattr_destroy(pthread_barrierattr_t *attr);
+#endif
 int real_pthread_barrierattr_destroy(pthread_barrierattr_t *attr) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_barrierattr_destroy(attr);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_barrierattr_destroy(attr);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_barrierattr_destroy) ensure_real_functions();
   assert(real_function_table.pthread_barrierattr_destroy);
   return real_function_table.pthread_barrierattr_destroy(attr);
 #else
-  return pthread_barrierattr_destroy(attr);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_barrierattr_getpshared(const pthread_barrierattr_t *restrict attr,
+					int *restrict pshared);
+#endif
 int real_pthread_barrierattr_getpshared(const pthread_barrierattr_t *restrict attr,
 					int *restrict pshared) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_barrierattr_getpshared(attr, pshared);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_barrierattr_getpshared(attr, pshared);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_barrierattr_getpshared) ensure_real_functions();
   assert(real_function_table.pthread_barrierattr_getpshared);
   return real_function_table.pthread_barrierattr_getpshared(attr, pshared);
 #else
-  return pthread_barrierattr_getpshared(attr, pshared);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_barrierattr_setpshared(pthread_barrierattr_t *attr,
+					int pshared);
+#endif
 int real_pthread_barrierattr_setpshared(pthread_barrierattr_t *attr,
 					int pshared) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_barrierattr_setpshared(attr, pshared);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_barrierattr_setpshared(attr, pshared);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_barrierattr_setpshared) ensure_real_functions();
   assert(real_function_table.pthread_barrierattr_setpshared);
   return real_function_table.pthread_barrierattr_setpshared(attr, pshared);
 #else
-  return pthread_barrierattr_setpshared(attr, pshared);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_key_create(pthread_key_t *key, void destructor(void*));
+#endif
 int real_pthread_key_create(pthread_key_t *key, void (*destructor)(void*)) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_key_create(key, destructor);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_key_create(key, destructor);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_key_create) ensure_real_functions();
   assert(real_function_table.pthread_key_create);
   return real_function_table.pthread_key_create(key, destructor);
 #else
-  return pthread_key_create(key, destructor);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_key_delete(pthread_key_t key);
+#endif
 int real_pthread_key_delete(pthread_key_t key) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_key_delete(key);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_key_delete(key);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_key_delete) ensure_real_functions();
   assert(real_function_table.pthread_key_delete);
   return real_function_table.pthread_key_delete(key);
 #else
-  return pthread_key_delete(key);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+void * __real_pthread_getspecific(pthread_key_t key);
+#endif
 void * real_pthread_getspecific(pthread_key_t key) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_getspecific(key);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_getspecific(key);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_getspecific) ensure_real_functions();
   assert(real_function_table.pthread_getspecific);
   return real_function_table.pthread_getspecific(key);
 #else
-  return pthread_getspecific(key);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_setspecific(pthread_key_t key, const void *value);
+#endif
 int real_pthread_setspecific(pthread_key_t key, const void *value) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_setspecific(key, value);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_setspecific(key, value);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_setspecific) ensure_real_functions();
   assert(real_function_table.pthread_setspecific);
   return real_function_table.pthread_setspecific(key, value);
 #else
-  return pthread_setspecific(key, value);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_getcpuclockid(pthread_t thread, clockid_t *clock_id);
+#endif
 int real_pthread_getcpuclockid(pthread_t thread, clockid_t *clock_id) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_getcpuclockid(thread, clock_id);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_getcpuclockid(thread, clock_id);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_getcpuclockid) ensure_real_functions();
   assert(real_function_table.pthread_getcpuclockid);
   return real_function_table.pthread_getcpuclockid(thread, clock_id);
 #else
-  return pthread_getcpuclockid(thread, clock_id);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
 #if 0
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_atfork(void prepare(void), void parent(void), void child(void));
+#endif
 int real_pthread_atfork(void (*prepare)(void), void (*parent)(void),
 		   void (*child)(void)) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_atfork(prepare, parent, child);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_atfork(prepare, parent, child);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_atfork) ensure_real_functions();
   assert(real_function_table.pthread_atfork);
   return real_function_table.pthread_atfork(prepare, parent, child);
 #else
-  return pthread_atfork(prepare, parent, child);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 #endif
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_kill(pthread_t thread, int sig);
+#endif
 int real_pthread_kill(pthread_t thread, int sig) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_kill(thread, sig);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_kill(thread, sig);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_kill) ensure_real_functions();
   assert(real_function_table.pthread_kill);
   return real_function_table.pthread_kill(thread, sig);
 #else
-  return pthread_kill(thread, sig);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
 #if 0
+#if MYTH_WRAP == MYTH_WRAP_LD
+void __real_pthread_kill_other_threads_np(void);
+#endif
 void real_pthread_kill_other_threads_np(void) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_kill_other_threads_np();
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_kill_other_threads_np();
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_kill_other_threads_np) ensure_real_functions();
   assert(real_function_table.pthread_kill_other_threads_np);
   return real_function_table.pthread_kill_other_threads_np();
 #else
-  return pthread_kill_other_threads_np();
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 #endif
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_sigqueue(pthread_t thread, int sig,
+			  const union sigval value);
+#endif
 int real_pthread_sigqueue(pthread_t thread, int sig,
 			  const union sigval value) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_sigqueue(thread, sig, value);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_sigqueue(thread, sig, value);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_sigqueue) ensure_real_functions();
   assert(real_function_table.pthread_sigqueue);
   return real_function_table.pthread_sigqueue(thread, sig, value);
 #else
-  return pthread_sigqueue(thread, sig, value);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_pthread_sigmask(int how, const sigset_t *set, sigset_t *oldset);
+#endif
 int real_pthread_sigmask(int how, const sigset_t *set, sigset_t *oldset) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pthread_sigmask(how, set, oldset);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pthread_sigmask(how, set, oldset);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_sigmask) ensure_real_functions();
   assert(real_function_table.pthread_sigmask);
   return real_function_table.pthread_sigmask(how, set, oldset);
 #else
-  return pthread_sigmask(how, set, oldset);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_sched_yield(void);
+#endif
 int real_sched_yield(void) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return sched_yield();
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return sched_yield();
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.sched_yield) ensure_real_functions();
   assert(real_function_table.sched_yield);
   return real_function_table.sched_yield();
 #else
-  return sched_yield();
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+unsigned int __real_sleep(useconds_t seconds);
+#endif
 unsigned int real_sleep(useconds_t seconds) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return sleep(seconds);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return sleep(seconds);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.sleep) ensure_real_functions();
   assert(real_function_table.sleep);
   return real_function_table.sleep(seconds);
 #else
-  return sleep(seconds);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_usleep(useconds_t usec);
+#endif
 int real_usleep(useconds_t usec) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return usleep(usec);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return usleep(usec);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.usleep) ensure_real_functions();
   assert(real_function_table.usleep);
   return real_function_table.usleep(usec);
 #else
-  return usleep(usec);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_nanosleep(const struct timespec *req, struct timespec *rem);
+#endif
 int real_nanosleep(const struct timespec *req, struct timespec *rem) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return nanosleep(req, rem);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return nanosleep(req, rem);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.nanosleep) ensure_real_functions();
   assert(real_function_table.nanosleep);
   return real_function_table.nanosleep(req, rem);
 #else
-  return nanosleep(req, rem);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_DL
 #define uncollectable_memory_sz 16384
 enum { uncollectable_memory_min_log_alignment = 3 };
 static char s_uncollectable_memory[uncollectable_memory_sz];
@@ -1945,11 +2861,18 @@ static size_t uncollectable_alloc_size(void * ptr) {
   assert(size);
   return size;
 }
-#endif	/* MYTH_WRAP */
+#endif	/* MYTH_WRAP == MYTH_WRAP_DL */
 
 /* alloc */
+#if MYTH_WRAP == MYTH_WRAP_LD
+void * __real_malloc(size_t size);
+#endif
 void * real_malloc(size_t size) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return malloc(size);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_malloc(size);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.malloc) {
     if (real_function_table_init_state == real_function_table_init_state_initializing) {
       void * p = aligned_alloc_uncollectable(1, size);
@@ -1957,15 +2880,25 @@ void * real_malloc(size_t size) {
     }
     ensure_real_functions();
   }
-  assert(real_function_table.malloc);
-  return real_function_table.malloc(size);
+  {
+    assert(real_function_table.malloc);
+    void * a = real_function_table.malloc(size);
+    return a;
+  }
 #else
-  return malloc(size);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+void __real_free(void * ptr);
+#endif
 void real_free(void * ptr) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  free(ptr);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  __real_free(ptr);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if ((void *)s_uncollectable_memory <= ptr
       && ptr < (void *)s_uncollectable_memory + uncollectable_memory_sz) {
   return;
@@ -1974,14 +2907,22 @@ void real_free(void * ptr) {
   assert(real_function_table.free);
   real_function_table.free(ptr);
 #else
-  free(ptr);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+void * __real_calloc(size_t nmemb, size_t size);
+#endif
 void * real_calloc(size_t nmemb, size_t size) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return calloc(nmemb, size);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_calloc(nmemb, size);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.calloc) {
-    if (real_function_table_init_state == real_function_table_init_state_initializing) {
+    if (real_function_table_init_state
+	== real_function_table_init_state_initializing) {
       void * p = aligned_alloc_uncollectable(1, nmemb * size);
       /* NOTE: no need to zero this area, as the returned address
 	 is in a global array and the same address is never reused */
@@ -1992,12 +2933,19 @@ void * real_calloc(size_t nmemb, size_t size) {
   assert(real_function_table.calloc);
   return real_function_table.calloc(nmemb, size);
 #else
-  return calloc(nmemb, size);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+void * __real_realloc(void *ptr, size_t size);
+#endif
 void * real_realloc(void *ptr, size_t size) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return realloc(ptr, size);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_realloc(ptr, size);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.realloc) {
     if (real_function_table_init_state == real_function_table_init_state_initializing) {
       void * p = aligned_alloc_uncollectable(1, size);
@@ -2010,135 +2958,222 @@ void * real_realloc(void *ptr, size_t size) {
   assert(real_function_table.realloc);
   return real_function_table.realloc(ptr, size);
 #else
-  return realloc(ptr, size);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_posix_memalign(void **memptr, size_t alignment, size_t size);
+#endif
 int real_posix_memalign(void **memptr, size_t alignment, size_t size) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return posix_memalign(memptr, alignment, size);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_posix_memalign(memptr, alignment, size);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.posix_memalign) ensure_real_functions();
   assert(real_function_table.posix_memalign);
   return real_function_table.posix_memalign(memptr, alignment, size);
 #else
-  return posix_memalign(memptr, alignment, size);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+void * __real_aligned_alloc(size_t alignment, size_t size);
+#endif
 void * real_aligned_alloc(size_t alignment, size_t size) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return aligned_alloc(alignment, size);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_aligned_alloc(alignment, size);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.aligned_alloc) ensure_real_functions();
   assert(real_function_table.aligned_alloc);
   return real_function_table.aligned_alloc(alignment, size);
 #else
-  return aligned_alloc(alignment, size);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+void * __real_valloc(size_t size);
+#endif
 void * real_valloc(size_t size) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return valloc(size);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_valloc(size);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.valloc) ensure_real_functions();
   assert(real_function_table.valloc);
   return real_function_table.valloc(size);
 #else
-  return valloc(size);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+void * __real_memalign(size_t alignment, size_t size);
+#endif
 void * real_memalign(size_t alignment, size_t size) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return memalign(alignment, size);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_memalign(alignment, size);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.memalign) ensure_real_functions();
   assert(real_function_table.memalign);
   return real_function_table.memalign(alignment, size);
 #else
-  return memalign(alignment, size);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+void * __real_pvalloc(size_t size);
+#endif
 void * real_pvalloc(size_t size) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return pvalloc(size);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_pvalloc(size);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pvalloc) ensure_real_functions();
   assert(real_function_table.pvalloc);
   return real_function_table.pvalloc(size);
 #else
-  return pvalloc(size);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
 /* socket */
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_socket(int domain, int type, int protocol);
+#endif
 int real_socket(int domain, int type, int protocol) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return socket(domain, type, protocol);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_socket(domain, type, protocol);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.socket) ensure_real_functions();
   assert(real_function_table.socket);
   return real_function_table.socket(domain, type, protocol);
 #else
-  return socket(domain, type, protocol);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_socketpair(int domain, int type, int protocol, int sv[2]);
+#endif
 int real_socketpair(int domain, int type, int protocol, int sv[2]) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return socketpair(domain, type, protocol, sv);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_socketpair(domain, type, protocol, sv);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.socketpair) ensure_real_functions();
   assert(real_function_table.socketpair);
   return real_function_table.socketpair(domain, type, protocol, sv);
 #else
-  return socketpair(domain, type, protocol, sv);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen);
+#endif
 int real_accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return accept(sockfd, addr, addrlen);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_accept(sockfd, addr, addrlen);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.accept) ensure_real_functions();
   assert(real_function_table.socketpair);
   return real_function_table.accept(sockfd, addr, addrlen);
 #else
-  return accept(sockfd, addr, addrlen);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
 #if _GNU_SOURCE
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_accept4(int sockfd, struct sockaddr *addr, socklen_t *addrlen, int flags);
+#endif
 int real_accept4(int sockfd, struct sockaddr *addr, socklen_t *addrlen, int flags) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return accept4(sockfd, addr, addrlen, flags);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_accept4(sockfd, addr, addrlen, flags);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.accept4) ensure_real_functions();
   assert(real_function_table.socketpair);
   return real_function_table.accept4(sockfd, addr, addrlen, flags);
 #else
-  return accept4(sockfd, addr, addrlen, flags);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 #endif	/* _GNU_SOURCE */
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_bind(int sockfd, const struct sockaddr *addr, socklen_t addrlen);
+#endif
 int real_bind(int sockfd, const struct sockaddr *addr, socklen_t addrlen) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return bind(sockfd, addr, addrlen);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_bind(sockfd, addr, addrlen);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.bind) ensure_real_functions();
   assert(real_function_table.socketpair);
   return real_function_table.bind(sockfd, addr, addrlen);
 #else
-  return bind(sockfd, addr, addrlen);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_close(int fd);
+#endif
 int real_close(int fd) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return close(fd);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_close(fd);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.close) ensure_real_functions();
   assert(real_function_table.socketpair);
   return real_function_table.close(fd);
 #else
-  return close(fd);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen);
+#endif
 int real_connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return connect(sockfd, addr, addrlen);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_connect(sockfd, addr, addrlen);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.connect) ensure_real_functions();
   assert(real_function_table.socketpair);
   return real_function_table.connect(sockfd, addr, addrlen);
 #else
-  return connect(sockfd, addr, addrlen);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_fcntl(int fd, int cmd, ... /* arg */ );
+#endif
 int real_fcntl(int fd, int cmd, ...) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.fcntl) ensure_real_functions();
   assert(real_function_table.fcntl);
 #endif
@@ -2155,10 +3190,14 @@ int real_fcntl(int fd, int cmd, ...) {
 #if defined(F_ADD_SEALS)
   case F_GET_SEALS:		/*  (void; since Linux 3.17) */
 #endif
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+    return fcntl(fd, cmd);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+    return __real_fcntl(fd, cmd);
+#elif MYTH_WRAP == MYTH_WRAP_DL
     return real_function_table.fcntl(fd, cmd);
 #else
-    return fcntl(fd, cmd);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
     /* cmd taking int */
   case F_DUPFD:
@@ -2183,10 +3222,14 @@ int real_fcntl(int fd, int cmd, ...) {
       va_start(ap, cmd);
       int arg = va_arg(ap, int);
       va_end(ap);
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+      return fcntl(fd, cmd, arg);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+      return __real_fcntl(fd, cmd, arg);
+#elif MYTH_WRAP == MYTH_WRAP_DL
       return real_function_table.fcntl(fd, cmd, arg);
 #else
-      return fcntl(fd, cmd, arg);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
     }
   case F_SETLK:
@@ -2207,10 +3250,14 @@ int real_fcntl(int fd, int cmd, ...) {
       va_start(ap, cmd);
       void * arg = va_arg(ap, void*);
       va_end(ap);
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+      return fcntl(fd, cmd, arg);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+      return __real_fcntl(fd, cmd, arg);
+#elif MYTH_WRAP == MYTH_WRAP_DL
       return real_function_table.fcntl(fd, cmd, arg);
 #else
-      return fcntl(fd, cmd, arg);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
     }
   default:
@@ -2221,113 +3268,190 @@ int real_fcntl(int fd, int cmd, ...) {
       va_start(ap, cmd);
       void * arg = va_arg(ap, void*);
       va_end(ap);
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+      return fcntl(fd, cmd, arg);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+      return __real_fcntl(fd, cmd, arg);
+#elif MYTH_WRAP == MYTH_WRAP_DL
       return real_function_table.fcntl(fd, cmd, arg);
 #else
-      return fcntl(fd, cmd, arg);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
     }
   }
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_listen(int sockfd, int backlog);
+#endif
 int real_listen(int sockfd, int backlog) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return listen(sockfd, backlog);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_listen(sockfd, backlog);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.listen) ensure_real_functions();
   assert(real_function_table.socketpair);
   return real_function_table.listen(sockfd, backlog);
 #else
-  return listen(sockfd, backlog);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+ssize_t __real_recv(int sockfd, void *buf, size_t len, int flags);
+#endif
 ssize_t real_recv(int sockfd, void *buf, size_t len, int flags) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return recv(sockfd, buf, len, flags);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_recv(sockfd, buf, len, flags);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.recv) ensure_real_functions();
   assert(real_function_table.socketpair);
   return real_function_table.recv(sockfd, buf, len, flags);
 #else
-  return recv(sockfd, buf, len, flags);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+ssize_t __real_recvfrom(int sockfd, void *buf, size_t len, int flags,
+		      struct sockaddr *src_addr, socklen_t *addrlen);
+#endif
 ssize_t real_recvfrom(int sockfd, void *buf, size_t len, int flags,
 		      struct sockaddr *src_addr, socklen_t *addrlen) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return recvfrom(sockfd, buf, len, flags, src_addr, addrlen);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_recvfrom(sockfd, buf, len, flags, src_addr, addrlen);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.recvfrom) ensure_real_functions();
   assert(real_function_table.socketpair);
   return real_function_table.recvfrom(sockfd, buf, len, flags, src_addr, addrlen);
 #else
-  return recvfrom(sockfd, buf, len, flags, src_addr, addrlen);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
   
+#if MYTH_WRAP == MYTH_WRAP_LD
+ssize_t __real_recvmsg(int sockfd, struct msghdr *msg, int flags);
+#endif
 ssize_t real_recvmsg(int sockfd, struct msghdr *msg, int flags) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return recvmsg(sockfd, msg, flags);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_recvmsg(sockfd, msg, flags);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.recvmsg) ensure_real_functions();
   assert(real_function_table.socketpair);
   return real_function_table.recvmsg(sockfd, msg, flags);
 #else
-  return recvmsg(sockfd, msg, flags);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+ssize_t __real_read(int fd, void *buf, size_t count);
+#endif
 ssize_t real_read(int fd, void *buf, size_t count) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return read(fd, buf, count);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_read(fd, buf, count);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.read) ensure_real_functions();
   assert(real_function_table.socketpair);
   return real_function_table.read(fd, buf, count);
 #else
-  return read(fd, buf, count);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+int __real_select(int nfds, fd_set *readfds, fd_set *writefds,
+		fd_set *exceptfds, struct timeval *timeout);
+#endif
 int real_select(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds, struct timeval *timeout) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return select(nfds, readfds, writefds, exceptfds, timeout);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_select(nfds, readfds, writefds, exceptfds, timeout);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.select) ensure_real_functions();
   assert(real_function_table.socketpair);
   return real_function_table.select(nfds, readfds, writefds, exceptfds, timeout);
 #else
-  return select(nfds, readfds, writefds, exceptfds, timeout);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+ssize_t __real_send(int sockfd, const void *buf, size_t len, int flags);
+#endif
 ssize_t real_send(int sockfd, const void *buf, size_t len, int flags) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return send(sockfd, buf, len, flags);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_send(sockfd, buf, len, flags);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.send) ensure_real_functions();
   assert(real_function_table.socketpair);
   return real_function_table.send(sockfd, buf, len, flags);
 #else
-  return send(sockfd, buf, len, flags);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+ssize_t __real_sendto(int sockfd, const void *buf, size_t len, int flags,
+		    const struct sockaddr *dest_addr, socklen_t addrlen);
+#endif
 ssize_t real_sendto(int sockfd, const void *buf, size_t len, int flags, const struct sockaddr *dest_addr, socklen_t addrlen) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return sendto(sockfd, buf, len, flags, dest_addr, addrlen);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_sendto(sockfd, buf, len, flags, dest_addr, addrlen);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.sendto) ensure_real_functions();
   assert(real_function_table.socketpair);
   return real_function_table.sendto(sockfd, buf, len, flags, dest_addr, addrlen);
 #else
-  return sendto(sockfd, buf, len, flags, dest_addr, addrlen);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+ssize_t __real_sendmsg(int sockfd, const struct msghdr *msg, int flags);
+#endif
 ssize_t real_sendmsg(int sockfd, const struct msghdr *msg, int flags) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return sendmsg(sockfd, msg, flags);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_sendmsg(sockfd, msg, flags);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.sendmsg) ensure_real_functions();
   assert(real_function_table.socketpair);
   return real_function_table.sendmsg(sockfd, msg, flags);
 #else
-  return sendmsg(sockfd, msg, flags);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 
+#if MYTH_WRAP == MYTH_WRAP_LD
+ssize_t __real_write(int fd, const void *buf, size_t count);
+#endif
 ssize_t real_write(int fd, const void *buf, size_t count) {
-#if MYTH_WRAP
+#if MYTH_WRAP == MYTH_WRAP_VANILLA
+  return write(fd, buf, count);
+#elif MYTH_WRAP == MYTH_WRAP_LD
+  return __real_write(fd, buf, count);
+#elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.write) ensure_real_functions();
   assert(real_function_table.socketpair);
   return real_function_table.write(fd, buf, count);
 #else
-  return write(fd, buf, count);
+#error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
 

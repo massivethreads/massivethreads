@@ -49,7 +49,7 @@ void myth_alrm_sighandler(int signum, siginfo_t *sinfo, void* ctx) {
     //broadcast signal
     for (i=0;i<g_attr.n_workers;i++){
       if (i!=env->rank){
-	real_pthread_kill(g_envs[i].worker,SIGVTALRM);
+	real_pthread_kill(g_envs[i].worker, SIGVTALRM);
       }
     }
   }

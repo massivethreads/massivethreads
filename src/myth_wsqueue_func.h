@@ -127,7 +127,7 @@ static inline void myth_queue_fini(myth_thread_queue_t q){
 #if USE_LOCK || USE_LOCK_ANY
   myth_spin_destroy(&q->m_lock);
 #endif
-  myth_free(q->ptr,0);
+  myth_free_with_size(q->ptr,0);
 }
 
 static inline void myth_queue_clear(myth_thread_queue_t q)

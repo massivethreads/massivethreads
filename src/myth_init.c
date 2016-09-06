@@ -421,7 +421,7 @@ static void myth_fini_body_really(void) {
   //Finalize logger
   myth_log_fini();
   //Release worker thread descriptors
-  myth_free(g_envs,sizeof(myth_running_env)*g_attr.n_workers);
+  myth_free_with_size(g_envs, sizeof(myth_running_env)*g_attr.n_workers);
   //Release allocator
   myth_flmalloc_fini();
   //myth_malloc_wrapper_fini();

@@ -176,31 +176,30 @@ static inline void myth_fd_map_destroy(myth_fd_map_t fm) {
     myth_fd_map_entry_t fe;
     fe=&fm->entry[i];
     myth_spin_destroy(&fe->lock);
-    myth_free(fe->data,0);
-    myth_free(fe->key,0);
+    myth_free_with_size(fe->data,0);
+    myth_free_with_size(fe->key,0);
   }
   myth_spin_destroy(&fm->lock);
-  myth_free(fm->entry,0);
-  myth_free(fm,0);
+  myth_free_with_size(fm->entry,0);
+  myth_free_with_size(fm,0);
 }
 
 static inline void myth_io_wait_list_init(myth_io_wait_list_t wl) {
   myth_spin_init_body(&wl->lock);
-  wl->count=0;
-  wl->size=1;
-  assert(real_malloc);
-  wl->io_ops=real_malloc(sizeof(myth_io_op_t)*1);
+  wl->count = 0;
+  wl->size = 1;
+  wl->io_ops = myth_malloc(sizeof(myth_io_op_t)*1);
 }
 
 static inline void myth_io_wait_list_destroy(myth_io_wait_list_t wl) {
   myth_spin_destroy(&wl->lock);
-  real_free(wl->io_ops);
+  myth_free(wl->io_ops);
 }
 
 static inline void myth_io_cs_enter(myth_running_env_t e) {
 #if MYTH_USE_IO_THREAD
   int ret;
-  ret=real_pthread_mutex_lock(&e->io_struct.mtx);
+  ret = real_pthread_mutex_lock(&e->io_struct.mtx);
   if (ret!=0){
     fprintf(stderr,"errno:%d\n",ret);
     errno=ret;
@@ -354,7 +353,7 @@ static void *myth_io_thread_func(void* args) {
   //change scheduling policy
   struct sched_param param;
   param.sched_priority=1;
-  if (pthread_setschedparam(real_pthread_self(),SCHED_RR,&param)!=0){
+  if (pthread_setschedparam(real_pthread_self(), SCHED_RR, &param)!=0){
     perror(NULL);
   }
   while (!io->exit_flag) {

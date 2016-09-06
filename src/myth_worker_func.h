@@ -256,7 +256,7 @@ static inline void myth_cleanup_worker(int rank)
   }
   //Release scheduler's stack
   if (env->sched.stack)
-    myth_free(env->sched.stack,0);
+    myth_free_with_size(env->sched.stack,0);
 #if MYTH_WRAP_SOCKIO
   //Release I/O
   myth_io_worker_fini(env,&env->io_struct);

@@ -107,7 +107,7 @@ myth_tls_tree_destroy_rec(myth_tls_tree_node_t * n,
 			  int depth, myth_key_t base, myth_key_t stride) {
   assert(n);
   if (depth == myth_tls_tree_depth) {
-    myth_free_no_size(n);
+    myth_free(n);
   } else {
     int i;
     int c_stride = stride >> myth_tls_tree_node_log_n_children;

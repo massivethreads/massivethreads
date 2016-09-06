@@ -6,7 +6,7 @@
 #define should_not_reach_here() assert(0)
 
 #include "myth/myth.h"
-#include "myth_real_fun.h"
+#include "myth_real.h"
 #include "myth_wrap_util_func.h"
 
 #include "myth_sched_func.h"
@@ -59,9 +59,8 @@ pthread_attr_to_myth(const pthread_attr_t * p, myth_thread_attr_t * m) {
   }
 }
 
-/* pthread_create (3)   - create a new thread */
-int pthread_create(pthread_t *thread, const pthread_attr_t *attr,
-		   void *(*start_routine) (void *), void *arg) {
+int __wrap(pthread_create)(pthread_t *thread, const pthread_attr_t *attr,
+			   void *(*start_routine) (void *), void *arg) {
   int _ = enter_wrapped_func("%p, %p, %p, %p", thread, attr, start_routine, arg);
   int ret;
     (void)_;
@@ -77,7 +76,7 @@ int pthread_create(pthread_t *thread, const pthread_attr_t *attr,
 }
 
 /* pthread_exit (3)     - terminate calling thread */
-void pthread_exit(void *retval) {
+void __wrap(pthread_exit)(void *retval) {
   /* since pthread_exit does not return ... */
   enter_wrapped_func("%p", retval);
   leave_wrapped_func("(void)");
@@ -90,7 +89,7 @@ void pthread_exit(void *retval) {
 }
 
 /* pthread_join (3)     - join with a terminated thread */
-int pthread_join(pthread_t thread, void **retval) {
+int __wrap(pthread_join)(pthread_t thread, void **retval) {
   int _ = enter_wrapped_func("%x, %p", thread, retval);
   int ret;
   (void)_;
@@ -105,7 +104,7 @@ int pthread_join(pthread_t thread, void **retval) {
 
 #if _GNU_SOURCE
 /* pthread_tryjoin_np (3) - try to join with a terminated thread */
-int pthread_tryjoin_np(pthread_t thread, void **retval) {
+int __wrap(pthread_tryjoin_np)(pthread_t thread, void **retval) {
   int _ = enter_wrapped_func("%x, %p", thread, retval);
   int ret;
   (void)_;
@@ -119,7 +118,7 @@ int pthread_tryjoin_np(pthread_t thread, void **retval) {
 }
 
 /* pthread_timedjoin_np (3) - try to join with a terminated thread */
-int pthread_timedjoin_np(pthread_t thread, void **retval,
+int __wrap(pthread_timedjoin_np)(pthread_t thread, void **retval,
 			 const struct timespec *abstime) {
   int _ = enter_wrapped_func("%x, %p, %p", thread, retval, abstime);
   int ret;
@@ -135,7 +134,7 @@ int pthread_timedjoin_np(pthread_t thread, void **retval,
 #endif
 
 /* pthread_detach (3)   - detach a thread */
-int pthread_detach(pthread_t thread) {
+int __wrap(pthread_detach)(pthread_t thread) {
   int _ = enter_wrapped_func("%x", thread);
   int ret;
   (void)_;
@@ -154,7 +153,7 @@ int pthread_detach(pthread_t thread) {
 
 /* pthread_self (3)     - obtain ID of the calling thread */
 /* pthread_self (3posix) - get the calling thread ID */
-pthread_t pthread_self(void) {
+pthread_t __wrap(pthread_self)(void) {
   int _ = enter_wrapped_func(0);
   pthread_t ret;
   (void)_;
@@ -168,7 +167,7 @@ pthread_t pthread_self(void) {
 }
 
 /* pthread_equal (3)    - compare thread IDs */
-int pthread_equal(pthread_t t1, pthread_t t2) {
+int __wrap(pthread_equal)(pthread_t t1, pthread_t t2) {
   int _ = enter_wrapped_func("%x, %x", t1, t2);
   int ret;
   (void)_;
@@ -186,7 +185,7 @@ int pthread_equal(pthread_t t1, pthread_t t2) {
    ----------------------------- */
 
 /* pthread_attr_init (3) - initialize and destroy thread attributes object */
-int pthread_attr_init(pthread_attr_t *attr) {
+int __wrap(pthread_attr_init)(pthread_attr_t *attr) {
   int _ = enter_wrapped_func("%p", attr);
   int ret = real_pthread_attr_init(attr);
   (void)_;
@@ -195,7 +194,7 @@ int pthread_attr_init(pthread_attr_t *attr) {
 }
 
 /* pthread_attr_destroy (3) - initialize and destroy thread attributes object */
-int pthread_attr_destroy(pthread_attr_t *attr) {
+int __wrap(pthread_attr_destroy)(pthread_attr_t *attr) {
   int _ = enter_wrapped_func("%p", attr);
   int ret = real_pthread_attr_destroy(attr);
   (void)_;
@@ -204,7 +203,8 @@ int pthread_attr_destroy(pthread_attr_t *attr) {
 }
 
 /* pthread_attr_getdetachstate (3) - set/get detach state attribute in thread attributes object */
-int pthread_attr_getdetachstate(const pthread_attr_t *attr, int *detachstate) {
+int __wrap(pthread_attr_getdetachstate)
+     (const pthread_attr_t *attr, int *detachstate) {
   int _ = enter_wrapped_func("%p, %p", attr, detachstate);
   int ret = real_pthread_attr_getdetachstate(attr, detachstate);
   (void)_;
@@ -213,7 +213,8 @@ int pthread_attr_getdetachstate(const pthread_attr_t *attr, int *detachstate) {
 }
 
 /* pthread_attr_setdetachstate (3) - set/get detach state attribute in thread attributes object */
-int pthread_attr_setdetachstate(pthread_attr_t *attr, int detachstate) {
+int __wrap(pthread_attr_setdetachstate)
+     (pthread_attr_t *attr, int detachstate) {
   int _ = enter_wrapped_func("%p, %d", attr, detachstate);
   int ret = real_pthread_attr_setdetachstate(attr, detachstate);
   (void)_;
@@ -223,7 +224,8 @@ int pthread_attr_setdetachstate(pthread_attr_t *attr, int detachstate) {
 
 /* pthread_attr_getguardsize (3) - set/get guard size attribute in thread attributes object */
 /* pthread_attr_getguardsize (3posix) - get and set the thread guardsize attribute */
-int pthread_attr_getguardsize(const pthread_attr_t *attr, size_t *guardsize) {
+int __wrap(pthread_attr_getguardsize)
+     (const pthread_attr_t *attr, size_t *guardsize) {
   int _ = enter_wrapped_func("%p, %p", attr, guardsize);
   int ret = real_pthread_attr_getguardsize(attr, guardsize);
   (void)_;
@@ -232,7 +234,7 @@ int pthread_attr_getguardsize(const pthread_attr_t *attr, size_t *guardsize) {
 }
 
 /* pthread_attr_setguardsize (3) - set/get guard size attribute in thread attributes object */
-int pthread_attr_setguardsize(pthread_attr_t *attr, size_t guardsize) {
+int __wrap(pthread_attr_setguardsize)(pthread_attr_t *attr, size_t guardsize) {
   int _ = enter_wrapped_func("%p, %lu", attr, guardsize);
   int ret = real_pthread_attr_setguardsize(attr, guardsize);
   (void)_;
@@ -241,8 +243,8 @@ int pthread_attr_setguardsize(pthread_attr_t *attr, size_t guardsize) {
 }
 
 /* pthread_attr_getschedparam (3) - set/get scheduling parameter attributes in thread attrib... */
-int pthread_attr_getschedparam(const pthread_attr_t *attr,
-			       struct sched_param *param) {
+int __wrap(pthread_attr_getschedparam)(const pthread_attr_t *attr,
+				       struct sched_param *param) {
   int _ = enter_wrapped_func("%p, %p", attr, param);
   int ret = real_pthread_attr_getschedparam(attr, param);
   (void)_;
@@ -251,8 +253,8 @@ int pthread_attr_getschedparam(const pthread_attr_t *attr,
 }
 
 /* pthread_attr_setschedparam (3) - set/get scheduling parameter attributes in thread attrib... */
-int pthread_attr_setschedparam(pthread_attr_t *attr,
-			       const struct sched_param *param) {
+int __wrap(pthread_attr_setschedparam)(pthread_attr_t *attr,
+				       const struct sched_param *param) {
   int _ = enter_wrapped_func("%p, %p", attr, param);
   int ret = real_pthread_attr_setschedparam(attr, param);
   (void)_;
@@ -261,7 +263,8 @@ int pthread_attr_setschedparam(pthread_attr_t *attr,
 }
 
 /* pthread_attr_getschedpolicy (3) - set/get scheduling policy attribute in thread attribute... */
-int pthread_attr_getschedpolicy(const pthread_attr_t *attr, int *policy) {
+int __wrap(pthread_attr_getschedpolicy)
+     (const pthread_attr_t *attr, int *policy) {
   int _ = enter_wrapped_func("%p, %p", attr, policy);
   int ret = real_pthread_attr_getschedpolicy(attr, policy);
   (void)_;
@@ -270,7 +273,8 @@ int pthread_attr_getschedpolicy(const pthread_attr_t *attr, int *policy) {
 }
 
 /* pthread_attr_setschedpolicy (3) - set/get scheduling policy attribute in thread attribute... */
-int pthread_attr_setschedpolicy(pthread_attr_t *attr, int policy) {
+int __wrap(pthread_attr_setschedpolicy)
+     (pthread_attr_t *attr, int policy) {
   int _ = enter_wrapped_func("%p, %d", attr, policy);
   int ret = real_pthread_attr_setschedpolicy(attr, policy);
   (void)_;
@@ -279,8 +283,8 @@ int pthread_attr_setschedpolicy(pthread_attr_t *attr, int policy) {
 }
 
 /* pthread_attr_getinheritsched (3) - set/get inherit-scheduler attribute in thread attribut... */
-int pthread_attr_getinheritsched(const pthread_attr_t *attr,
-				 int *inheritsched) {
+int __wrap(pthread_attr_getinheritsched)
+     (const pthread_attr_t *attr, int *inheritsched) {
   int _ = enter_wrapped_func("%p, %p", attr, inheritsched);
   int ret = real_pthread_attr_getinheritsched(attr, inheritsched);
   (void)_;
@@ -289,8 +293,8 @@ int pthread_attr_getinheritsched(const pthread_attr_t *attr,
 }
 
 /* pthread_attr_setinheritsched (3) - set/get inherit-scheduler attribute in thread attribut... */
-int pthread_attr_setinheritsched(pthread_attr_t *attr,
-				 int inheritsched) {
+int __wrap(pthread_attr_setinheritsched)
+     (pthread_attr_t *attr, int inheritsched) {
   int _ = enter_wrapped_func("%p, %d", attr, inheritsched);
   int ret = real_pthread_attr_setinheritsched(attr, inheritsched);
   (void)_;
@@ -299,7 +303,8 @@ int pthread_attr_setinheritsched(pthread_attr_t *attr,
 }
 
 /* pthread_attr_getscope (3) - set/get contention scope attribute in thread attributes object */
-int pthread_attr_getscope(const pthread_attr_t *attr, int *scope) {
+int __wrap(pthread_attr_getscope)
+     (const pthread_attr_t *attr, int *scope) {
   int _ = enter_wrapped_func("%p, %p", attr, scope);
   int ret = real_pthread_attr_getscope(attr, scope);
   (void)_;
@@ -308,7 +313,7 @@ int pthread_attr_getscope(const pthread_attr_t *attr, int *scope) {
 }
 
 /* pthread_attr_setscope (3) - set/get contention scope attribute in thread attributes object */
-int pthread_attr_setscope(pthread_attr_t *attr, int scope) {
+int __wrap(pthread_attr_setscope)(pthread_attr_t *attr, int scope) {
   int _ = enter_wrapped_func("%p, %d", attr, scope);
   int ret = real_pthread_attr_setscope(attr, scope);
   (void)_;
@@ -318,7 +323,8 @@ int pthread_attr_setscope(pthread_attr_t *attr, int scope) {
 
 #if 0				/* deprecated */
 /* pthread_attr_getstackaddr (3) - set/get stack address attribute in thread attributes object */
-int pthread_attr_getstackaddr(const pthread_attr_t *attr, void **stackaddr) {
+int __wrap(pthread_attr_getstackaddr)
+     (const pthread_attr_t *attr, void **stackaddr) {
   int _ = enter_wrapped_func("%p, %p", attr, stackaddr);
   int ret = real_pthread_attr_getstackaddr(attr, stackaddr);
   leave_wrapped_func("%d", ret);
@@ -326,7 +332,8 @@ int pthread_attr_getstackaddr(const pthread_attr_t *attr, void **stackaddr) {
 }
 
 /* pthread_attr_setstackaddr (3) - set/get stack address attribute in thread attributes object */
-int pthread_attr_setstackaddr(pthread_attr_t *attr, void *stackaddr) {
+int __wrap(pthread_attr_setstackaddr)
+     (pthread_attr_t *attr, void *stackaddr) {
   int _ = enter_wrapped_func("%p, %p", attr, stackaddr);
   int ret = real_pthread_attr_setstackaddr(attr, stackaddr);
   leave_wrapped_func("%d", ret);
@@ -335,7 +342,8 @@ int pthread_attr_setstackaddr(pthread_attr_t *attr, void *stackaddr) {
 #endif
 
 /* pthread_attr_getstacksize (3) - set/get stack size attribute in thread attributes object */
-int pthread_attr_getstacksize(const pthread_attr_t *attr, size_t *stacksize) {
+int __wrap(pthread_attr_getstacksize)
+     (const pthread_attr_t *attr, size_t *stacksize) {
   int _ = enter_wrapped_func("%p, %p", attr, stacksize);
   int ret = real_pthread_attr_getstacksize(attr, stacksize);
   (void)_;
@@ -344,7 +352,8 @@ int pthread_attr_getstacksize(const pthread_attr_t *attr, size_t *stacksize) {
 }
 
 /* pthread_attr_setstacksize (3) - set/get stack size attribute in thread attributes object */
-int pthread_attr_setstacksize(pthread_attr_t *attr, size_t stacksize) {
+int __wrap(pthread_attr_setstacksize)
+     (pthread_attr_t *attr, size_t stacksize) {
   int _ = enter_wrapped_func("%p, %lu", attr, stacksize);
   int ret = real_pthread_attr_setstacksize(attr, stacksize);
   (void)_;
@@ -353,8 +362,8 @@ int pthread_attr_setstacksize(pthread_attr_t *attr, size_t stacksize) {
 }
 
 /* pthread_attr_getstack (3) - set/get stack attributes in thread attributes object */
-int pthread_attr_getstack(const pthread_attr_t *attr,
-			  void **stackaddr, size_t *stacksize) {
+int __wrap(pthread_attr_getstack)(const pthread_attr_t *attr,
+				  void **stackaddr, size_t *stacksize) {
   int _ = enter_wrapped_func("%p, %p, %p", attr, stackaddr, stacksize);
   int ret = real_pthread_attr_getstack(attr, stackaddr, stacksize);
   (void)_;
@@ -363,8 +372,8 @@ int pthread_attr_getstack(const pthread_attr_t *attr,
 }
 
 /* pthread_attr_setstack (3) - set/get stack attributes in thread attributes object */
-int pthread_attr_setstack(pthread_attr_t *attr,
-			  void *stackaddr, size_t stacksize) {
+int __wrap(pthread_attr_setstack)(pthread_attr_t *attr,
+				  void *stackaddr, size_t stacksize) {
   int _ = enter_wrapped_func("%p, %p, %lu", attr, stackaddr, stacksize);
   int ret = real_pthread_attr_setstack(attr, stackaddr, stacksize);
   (void)_;
@@ -374,8 +383,8 @@ int pthread_attr_setstack(pthread_attr_t *attr,
 
 #if _GNU_SOURCE
 /* pthread_attr_setaffinity_np (3) - set/get CPU affinity attribute in thread attributes object */
-int pthread_attr_setaffinity_np(pthread_attr_t *attr,
-				size_t cpusetsize, const cpu_set_t *cpuset) {
+int __wrap(pthread_attr_setaffinity_np)(pthread_attr_t *attr,
+					size_t cpusetsize, const cpu_set_t *cpuset) {
   int _ = enter_wrapped_func("%p, %lu, %p", attr, cpusetsize, cpuset);
   int ret = real_pthread_attr_setaffinity_np(attr, cpusetsize, cpuset);
   (void)_;
@@ -384,8 +393,8 @@ int pthread_attr_setaffinity_np(pthread_attr_t *attr,
 }
 
 /* pthread_attr_getaffinity_np (3) - set/get CPU affinity attribute in thread attributes object */
-int pthread_attr_getaffinity_np(const pthread_attr_t *attr,
-				size_t cpusetsize, cpu_set_t *cpuset) {
+int __wrap(pthread_attr_getaffinity_np)(const pthread_attr_t *attr,
+					size_t cpusetsize, cpu_set_t *cpuset) {
   int _ = enter_wrapped_func("%p, %lu, %p", attr, cpusetsize, cpuset);
   int ret = real_pthread_attr_getaffinity_np(attr, cpusetsize, cpuset);
   (void)_;
@@ -394,7 +403,7 @@ int pthread_attr_getaffinity_np(const pthread_attr_t *attr,
 }
 
 /* Get the default attributes used by pthread_create in this process.  */
-int pthread_getattr_default_np(pthread_attr_t *attr) {
+int __wrap(pthread_getattr_default_np)(pthread_attr_t *attr) {
   int _ = enter_wrapped_func("%p", attr);
   int ret = real_pthread_getattr_default_np(attr);
   (void)_;
@@ -404,7 +413,7 @@ int pthread_getattr_default_np(pthread_attr_t *attr) {
 
 /* Set the default attributes to be used by pthread_create in this
    process.  */
-int pthread_setattr_default_np(const pthread_attr_t *attr) {
+int __wrap(pthread_setattr_default_np)(const pthread_attr_t *attr) {
   int _ = enter_wrapped_func("%p", attr);
   int ret = real_pthread_setattr_default_np(attr);
   (void)_;
@@ -413,7 +422,7 @@ int pthread_setattr_default_np(const pthread_attr_t *attr) {
 }
 
 /* pthread_getattr_np (3) - get attributes of created thread */
-int pthread_getattr_np(pthread_t thread, pthread_attr_t *attr) {
+int __wrap(pthread_getattr_np)(pthread_t thread, pthread_attr_t *attr) {
   int _ = enter_wrapped_func("%x, %p", thread, attr);
   int ret = real_pthread_getattr_np(thread, attr);
   (void)_;
@@ -425,8 +434,8 @@ int pthread_getattr_np(pthread_t thread, pthread_attr_t *attr) {
 
 /* pthread_setschedparam (3) - set/get scheduling policy and parameters of a thread */
 /* pthread_setschedparam (3posix) - dynamic thread scheduling parameters access (REALTIME TH... */
-int pthread_setschedparam(pthread_t thread, int policy,
-			  const struct sched_param *param) {
+int __wrap(pthread_setschedparam)(pthread_t thread, int policy,
+				  const struct sched_param *param) {
   int _ = enter_wrapped_func("%x, %d, %p", thread, policy, param);
   int ret;
   (void)_;
@@ -441,8 +450,8 @@ int pthread_setschedparam(pthread_t thread, int policy,
 }
 
 /* pthread_getschedparam (3) - set/get scheduling policy and parameters of a thread */
-int pthread_getschedparam(pthread_t thread, int *policy,
-			  struct sched_param *param) {
+int __wrap(pthread_getschedparam)(pthread_t thread, int *policy,
+				  struct sched_param *param) {
   int _ = enter_wrapped_func("%x, %p, %p", thread, policy, param);
   int ret;
   (void)_;
@@ -458,7 +467,7 @@ int pthread_getschedparam(pthread_t thread, int *policy,
 
 /* pthread_setschedprio (3) - set scheduling priority of a thread */
 /* pthread_setschedprio (3posix) - dynamic thread scheduling parameters access (REALTIME THR... */
-int pthread_setschedprio(pthread_t thread, int prio) {
+int __wrap(pthread_setschedprio)(pthread_t thread, int prio) {
   int _ = enter_wrapped_func("%x, %d", thread, prio);
   int ret;
   (void)_;
@@ -474,7 +483,7 @@ int pthread_setschedprio(pthread_t thread, int prio) {
 
 #if _GNU_SOURCE
 /* pthread_getname_np (3) - set/get the name of a thread */
-int pthread_getname_np(pthread_t thread, char *name, size_t len) {
+int __wrap(pthread_getname_np)(pthread_t thread, char *name, size_t len) {
   int _ = enter_wrapped_func("%x, %s, %lu", thread, name, len);
   int ret;
   (void)_;
@@ -489,7 +498,7 @@ int pthread_getname_np(pthread_t thread, char *name, size_t len) {
 }
 
 /* pthread_setname_np (3) - set/get the name of a thread */
-int pthread_setname_np(pthread_t thread, const char *name) {
+int __wrap(pthread_setname_np)(pthread_t thread, const char *name) {
   int _ = enter_wrapped_func("%x, %s", thread, name);
   int ret;
   (void)_;
@@ -505,7 +514,7 @@ int pthread_setname_np(pthread_t thread, const char *name) {
 #endif
 
 /* pthread_getconcurrency (3) - set/get the concurrency level */
-int pthread_getconcurrency(void) {
+int __wrap(pthread_getconcurrency)(void) {
   int _ = enter_wrapped_func(0);
   int ret;
   (void)_;
@@ -520,7 +529,7 @@ int pthread_getconcurrency(void) {
 
 /* pthread_setconcurrency (3) - set/get the concurrency level */
 /* pthread_setconcurrency (3posix) - set the level of concurrency */
-int pthread_setconcurrency(int new_level) {
+int __wrap(pthread_setconcurrency)(int new_level) {
   int _ = enter_wrapped_func("%d", new_level);
   int ret;
   (void)_;
@@ -536,7 +545,7 @@ int pthread_setconcurrency(int new_level) {
 
 #if _GNU_SOURCE
 /* pthread_yield (3)    - yield the processor */
-int pthread_yield(void) {
+int __wrap(pthread_yield)(void) {
   int _ = enter_wrapped_func(0);
   int ret;
   (void)_;
@@ -552,8 +561,8 @@ int pthread_yield(void) {
 
 #if _GNU_SOURCE
 /* pthread_setaffinity_np (3) - set/get CPU affinity of a thread */
-int pthread_setaffinity_np(pthread_t thread, size_t cpusetsize,
-			   const cpu_set_t *cpuset) {
+int __wrap(pthread_setaffinity_np)
+     (pthread_t thread, size_t cpusetsize, const cpu_set_t *cpuset) {
   int _ = enter_wrapped_func("%x, %lu, %p", thread, cpusetsize, cpuset);
   int ret;
   (void)_;
@@ -568,8 +577,8 @@ int pthread_setaffinity_np(pthread_t thread, size_t cpusetsize,
 }
 
 /* pthread_getaffinity_np (3) - set/get CPU affinity of a thread */
-int pthread_getaffinity_np(pthread_t thread, size_t cpusetsize,
-			   cpu_set_t *cpuset) {
+int __wrap(pthread_getaffinity_np)(pthread_t thread, size_t cpusetsize,
+				   cpu_set_t *cpuset) {
   int _ = enter_wrapped_func("%x, %lu, %p", thread, cpusetsize, cpuset);
   int ret;
   (void)_;
@@ -591,7 +600,7 @@ int pthread_getaffinity_np(pthread_t thread, size_t cpusetsize,
 
 /* pthread_setcancelstate (3) - set cancelability state and type */
 /* pthread_setcancelstate (3posix) - set cancelability state */
-int pthread_setcancelstate(int state, int *oldstate) {
+int __wrap(pthread_setcancelstate)(int state, int *oldstate) {
   int _ = enter_wrapped_func("%d, %p", state, oldstate);
   int ret;
   (void)_;
@@ -606,7 +615,7 @@ int pthread_setcancelstate(int state, int *oldstate) {
 }
 
 /* pthread_setcanceltype (3) - set cancelability state and type */
-int pthread_setcanceltype(int type, int *oldtype) {
+int __wrap(pthread_setcanceltype)(int type, int *oldtype) {
   int _ = enter_wrapped_func("%d, %p", type, oldtype);
   int ret;
   (void)_;
@@ -621,7 +630,7 @@ int pthread_setcanceltype(int type, int *oldtype) {
 }
 
 /* pthread_cancel (3)   - send a cancellation request to a thread */
-int pthread_cancel(pthread_t thread) {
+int __wrap(pthread_cancel)(pthread_t thread) {
   int _ = enter_wrapped_func("%x", thread);
   int ret;
   (void)_;
@@ -637,7 +646,7 @@ int pthread_cancel(pthread_t thread) {
 
 /* pthread_testcancel (3) - request delivery of any pending cancellation request */
 /* pthread_testcancel (3posix) - set cancelability state */
-void pthread_testcancel(void) {
+void __wrap(pthread_testcancel)(void) {
   enter_wrapped_func(0);
   if (myth_should_wrap_pthread()) {
     myth_wrap_pthread_warn_non_conforming();
@@ -652,8 +661,8 @@ void pthread_testcancel(void) {
    ---------------------------------- */
 
 /* pthread_once (3posix) - dynamic package initialization */
-int pthread_once(pthread_once_t *once_control,
-		 void (*init_routine)(void)) {
+int __wrap(pthread_once)(pthread_once_t *once_control,
+			 void (*init_routine)(void)) {
   int _ = enter_wrapped_func("%p, %p", once_control, init_routine);
   int ret;
   (void)_;
@@ -701,8 +710,8 @@ pthread_mutexattr_to_myth(const pthread_mutexattr_t * p,
 }
 
 /* pthread_mutex_init (3posix) - destroy and initialize a mutex */
-int pthread_mutex_init(pthread_mutex_t *restrict mutex,
-		       const pthread_mutexattr_t *restrict attr) {
+int __wrap(pthread_mutex_init)(pthread_mutex_t *restrict mutex,
+			       const pthread_mutexattr_t *restrict attr) {
   int _ = enter_wrapped_func("%p, %p", mutex, attr);
   int ret;
   (void)_;
@@ -721,7 +730,7 @@ int pthread_mutex_init(pthread_mutex_t *restrict mutex,
 
 
 /* pthread_mutex_destroy (3posix) - destroy and initialize a mutex */
-int pthread_mutex_destroy(pthread_mutex_t *mutex) {
+int __wrap(pthread_mutex_destroy)(pthread_mutex_t *mutex) {
   int _ = enter_wrapped_func("%p", mutex);
   int ret;
   (void)_;
@@ -735,7 +744,7 @@ int pthread_mutex_destroy(pthread_mutex_t *mutex) {
 }
 
 /* pthread_mutex_trylock (3posix) - lock and unlock a mutex */
-int pthread_mutex_trylock(pthread_mutex_t *mutex) {
+int __wrap(pthread_mutex_trylock)(pthread_mutex_t *mutex) {
   int _ = enter_wrapped_func("%p", mutex);
   int ret;
   (void)_;
@@ -749,7 +758,7 @@ int pthread_mutex_trylock(pthread_mutex_t *mutex) {
 }
 
 /* pthread_mutex_lock (3posix) - lock and unlock a mutex */
-int pthread_mutex_lock(pthread_mutex_t *mutex) {
+int __wrap(pthread_mutex_lock)(pthread_mutex_t *mutex) {
   int _ = enter_wrapped_func("%p", mutex);
   int ret;
   (void)_;
@@ -763,8 +772,8 @@ int pthread_mutex_lock(pthread_mutex_t *mutex) {
 }
 
 /* pthread_mutex_timedlock (3posix) - lock a mutex */
-int pthread_mutex_timedlock(pthread_mutex_t *restrict mutex,
-			    const struct timespec *restrict abstime) {
+int __wrap(pthread_mutex_timedlock)(pthread_mutex_t *restrict mutex,
+				    const struct timespec *restrict abstime) {
   int _ = enter_wrapped_func("%p, %p", mutex, abstime);
   int ret;
   (void)_;
@@ -778,7 +787,7 @@ int pthread_mutex_timedlock(pthread_mutex_t *restrict mutex,
 }
 
 /* pthread_mutex_unlock (3posix) - lock and unlock a mutex */
-int pthread_mutex_unlock(pthread_mutex_t *mutex) {
+int __wrap(pthread_mutex_unlock)(pthread_mutex_t *mutex) {
   int _ = enter_wrapped_func("%p", mutex);
   int ret;
   (void)_;
@@ -792,8 +801,8 @@ int pthread_mutex_unlock(pthread_mutex_t *mutex) {
 }
 
 /* pthread_mutex_getprioceiling (3posix) - get and set the priority ceiling of a mutex (REAL... */
-int pthread_mutex_getprioceiling(const pthread_mutex_t *restrict mutex,
-				 int *restrict prioceiling) {
+int __wrap(pthread_mutex_getprioceiling)(const pthread_mutex_t *restrict mutex,
+					 int *restrict prioceiling) {
   int _ = enter_wrapped_func("%p, %p", mutex, prioceiling);
   int ret;
   (void)_;
@@ -808,8 +817,9 @@ int pthread_mutex_getprioceiling(const pthread_mutex_t *restrict mutex,
 }
 
 /* pthread_mutex_setprioceiling (3posix) - change the priority ceiling of a mutex (REALTIME ... */
-int pthread_mutex_setprioceiling(pthread_mutex_t *restrict mutex,
-				 int prioceiling, int *restrict old_ceiling) {
+int __wrap(pthread_mutex_setprioceiling)
+     (pthread_mutex_t *restrict mutex, int prioceiling,
+      int *restrict old_ceiling) {
   int _ = enter_wrapped_func("%p, %d, %p", mutex, prioceiling, old_ceiling);
   int ret;
   (void)_;
@@ -824,7 +834,7 @@ int pthread_mutex_setprioceiling(pthread_mutex_t *restrict mutex,
 }
 
 /* pthread_mutex_consistent (3posix) - mark state protected by robust mutex as consistent */
-int pthread_mutex_consistent(pthread_mutex_t *mutex) {
+int __wrap(pthread_mutex_consistent)(pthread_mutex_t *mutex) {
   int _ = enter_wrapped_func("%p", mutex);
   int ret;
   (void)_;
@@ -839,7 +849,7 @@ int pthread_mutex_consistent(pthread_mutex_t *mutex) {
 }
 
 /* pthread_mutexattr_init (3posix) - initialize the mutex attributes object */
-int pthread_mutexattr_init(pthread_mutexattr_t *attr) {
+int __wrap(pthread_mutexattr_init)(pthread_mutexattr_t *attr) {
   int _ = enter_wrapped_func("%p", attr);
   int ret = real_pthread_mutexattr_init(attr);
   (void)_;
@@ -848,7 +858,7 @@ int pthread_mutexattr_init(pthread_mutexattr_t *attr) {
 }
 
 /* pthread_mutexattr_destroy (3posix) - destroy and initialize the mutex attributes object */
-int pthread_mutexattr_destroy(pthread_mutexattr_t *attr) {
+int __wrap(pthread_mutexattr_destroy)(pthread_mutexattr_t *attr) {
   int _ = enter_wrapped_func("%p", attr);
   int ret = real_pthread_mutexattr_destroy(attr);
   (void)_;
@@ -857,8 +867,8 @@ int pthread_mutexattr_destroy(pthread_mutexattr_t *attr) {
 }
 
 /* pthread_mutexattr_getpshared (3posix) - get and set the process-shared attribute */
-int pthread_mutexattr_getpshared(const pthread_mutexattr_t *restrict attr,
-				 int *restrict pshared) {
+int __wrap(pthread_mutexattr_getpshared)
+     (const pthread_mutexattr_t *restrict attr, int *restrict pshared) {
   int _ = enter_wrapped_func("%p, %p", attr, pshared);
   int ret = real_pthread_mutexattr_getpshared(attr, pshared);
   (void)_;
@@ -867,8 +877,8 @@ int pthread_mutexattr_getpshared(const pthread_mutexattr_t *restrict attr,
 }
 
 /* pthread_mutexattr_setpshared (3posix) - set the process-shared attribute */
-int pthread_mutexattr_setpshared(pthread_mutexattr_t *attr,
-				 int pshared) {
+int __wrap(pthread_mutexattr_setpshared)(pthread_mutexattr_t *attr,
+					 int pshared) {
   int _ = enter_wrapped_func("%p, %d", attr, pshared);
   int ret = real_pthread_mutexattr_setpshared(attr, pshared);
   (void)_;
@@ -877,8 +887,8 @@ int pthread_mutexattr_setpshared(pthread_mutexattr_t *attr,
 }
 
 /* pthread_mutexattr_gettype (3posix) - get and set the mutex type attribute */
-int pthread_mutexattr_gettype(const pthread_mutexattr_t *restrict attr,
-			      int *restrict type) {
+int __wrap(pthread_mutexattr_gettype)
+     (const pthread_mutexattr_t *restrict attr, int *restrict type) {
   int _ = enter_wrapped_func("%p, %p", attr, type);
   int ret = real_pthread_mutexattr_gettype(attr, type);
   (void)_;
@@ -887,7 +897,7 @@ int pthread_mutexattr_gettype(const pthread_mutexattr_t *restrict attr,
 }
 
 /* pthread_mutexattr_settype (3posix) - set the mutex type attribute */
-int pthread_mutexattr_settype(pthread_mutexattr_t *attr, int type) {
+int __wrap(pthread_mutexattr_settype)(pthread_mutexattr_t *attr, int type) {
   int _ = enter_wrapped_func("%p, %d", attr, type);
   int ret = real_pthread_mutexattr_settype(attr, type);
   (void)_;
@@ -896,8 +906,8 @@ int pthread_mutexattr_settype(pthread_mutexattr_t *attr, int type) {
 }
 
 /* pthread_mutexattr_getprotocol (3posix) - get and set the protocol attribute of the mutex ... */
-int pthread_mutexattr_getprotocol(const pthread_mutexattr_t *restrict attr,
-				  int *restrict protocol) {
+int __wrap(pthread_mutexattr_getprotocol)
+     (const pthread_mutexattr_t *restrict attr, int *restrict protocol) {
   int _ = enter_wrapped_func("%p, %p", attr, protocol);
   int ret = real_pthread_mutexattr_getprotocol(attr, protocol);
   (void)_;
@@ -906,7 +916,8 @@ int pthread_mutexattr_getprotocol(const pthread_mutexattr_t *restrict attr,
 }
 
 /* pthread_mutexattr_setprotocol (3posix) - set the protocol attribute of the mutex attribut... */
-int pthread_mutexattr_setprotocol(pthread_mutexattr_t *attr, int protocol) {
+int __wrap(pthread_mutexattr_setprotocol)
+     (pthread_mutexattr_t *attr, int protocol) {
   int _ = enter_wrapped_func("%p, %d", attr, protocol);
   int ret = real_pthread_mutexattr_setprotocol(attr, protocol);
   (void)_;
@@ -915,8 +926,8 @@ int pthread_mutexattr_setprotocol(pthread_mutexattr_t *attr, int protocol) {
 }
 
 /* pthread_mutexattr_getprioceiling (3posix) - get and set the prioceiling attribute of the ... */
-int pthread_mutexattr_getprioceiling(const pthread_mutexattr_t *restrict attr,
-				     int *restrict prioceiling) {
+int __wrap(pthread_mutexattr_getprioceiling)
+     (const pthread_mutexattr_t *restrict attr, int *restrict prioceiling) {
   int _ = enter_wrapped_func("%p, %d", attr, prioceiling);
   int ret = real_pthread_mutexattr_getprioceiling(attr, prioceiling);
   (void)_;
@@ -925,8 +936,8 @@ int pthread_mutexattr_getprioceiling(const pthread_mutexattr_t *restrict attr,
 }
 
 /* pthread_mutexattr_setprioceiling (3posix) - set the prioceiling attribute of the mutex at... */
-int pthread_mutexattr_setprioceiling(pthread_mutexattr_t *attr,
-				     int prioceiling) {
+int __wrap(pthread_mutexattr_setprioceiling)
+     (pthread_mutexattr_t *attr, int prioceiling) {
   int _ = enter_wrapped_func("%p, %d", attr, prioceiling);
   int ret = real_pthread_mutexattr_setprioceiling(attr, prioceiling);
   (void)_;
@@ -935,8 +946,8 @@ int pthread_mutexattr_setprioceiling(pthread_mutexattr_t *attr,
 }
 
 /* pthread_mutexattr_getrobust (3posix) - get and set the mutex robust attribute */
-int pthread_mutexattr_getrobust(const pthread_mutexattr_t *restrict attr,
-				int *restrict robust) {
+int __wrap(pthread_mutexattr_getrobust)
+     (const pthread_mutexattr_t *restrict attr, int *restrict robust) {
   int _ = enter_wrapped_func("%p, %p", attr, robust);
   int ret = real_pthread_mutexattr_getrobust(attr, robust);
   (void)_;
@@ -945,7 +956,8 @@ int pthread_mutexattr_getrobust(const pthread_mutexattr_t *restrict attr,
 }
 
 /* pthread_mutexattr_setrobust (3posix) - get and set the mutex robust attribute */
-int pthread_mutexattr_setrobust(pthread_mutexattr_t *attr, int robust) {
+int __wrap(pthread_mutexattr_setrobust)
+     (pthread_mutexattr_t *attr, int robust) {
   int _ = enter_wrapped_func("%p, %d", attr, robust);
   int ret = real_pthread_mutexattr_setrobust(attr, robust);
   (void)_;
@@ -986,8 +998,8 @@ pthread_rwlockattr_to_myth(const pthread_rwlockattr_t * p,
   }
 }
 
-int pthread_rwlock_init(pthread_rwlock_t *restrict rwlock,
-			const pthread_rwlockattr_t *restrict attr) {
+int __wrap(pthread_rwlock_init)(pthread_rwlock_t *restrict rwlock,
+				const pthread_rwlockattr_t *restrict attr) {
   int _ = enter_wrapped_func("%p, %p", rwlock, attr);
   int ret;
   (void)_;
@@ -1005,7 +1017,7 @@ int pthread_rwlock_init(pthread_rwlock_t *restrict rwlock,
 // pthread_rwlock_t rwlock = PTHREAD_RWLOCK_INITIALIZER;
 
 /* pthread_rwlock_destroy (3posix) - destroy and initialize a read-write lock object */
-int pthread_rwlock_destroy(pthread_rwlock_t *rwlock) {
+int __wrap(pthread_rwlock_destroy)(pthread_rwlock_t *rwlock) {
   int _ = enter_wrapped_func("%p", rwlock);
   int ret;
   (void)_;
@@ -1019,7 +1031,7 @@ int pthread_rwlock_destroy(pthread_rwlock_t *rwlock) {
 }
 
 /* pthread_rwlock_rdlock (3posix) - lock a read-write lock object for reading */
-int pthread_rwlock_rdlock(pthread_rwlock_t *rwlock) {
+int __wrap(pthread_rwlock_rdlock)(pthread_rwlock_t *rwlock) {
   int _ = enter_wrapped_func("%p", rwlock);
   int ret;
   (void)_;
@@ -1033,7 +1045,7 @@ int pthread_rwlock_rdlock(pthread_rwlock_t *rwlock) {
 }
 
 /* pthread_rwlock_tryrdlock (3posix) - lock a read-write lock object for reading */
-int pthread_rwlock_tryrdlock(pthread_rwlock_t *rwlock) {
+int __wrap(pthread_rwlock_tryrdlock)(pthread_rwlock_t *rwlock) {
   int _ = enter_wrapped_func("%p", rwlock);
   int ret;
   (void)_;
@@ -1047,8 +1059,9 @@ int pthread_rwlock_tryrdlock(pthread_rwlock_t *rwlock) {
 }
 
 /* pthread_rwlock_timedrdlock (3posix) - lock a read-write lock for reading */
-int pthread_rwlock_timedrdlock(pthread_rwlock_t *restrict rwlock,
-			       const struct timespec *restrict abstime) {
+int __wrap(pthread_rwlock_timedrdlock)
+     (pthread_rwlock_t *restrict rwlock,
+      const struct timespec *restrict abstime) {
   int _ = enter_wrapped_func("%p, %p", rwlock, abstime);
   int ret;
   (void)_;
@@ -1062,7 +1075,7 @@ int pthread_rwlock_timedrdlock(pthread_rwlock_t *restrict rwlock,
 }
 
 /* pthread_rwlock_wrlock (3posix) - lock a read-write lock object for writing */
-int pthread_rwlock_wrlock(pthread_rwlock_t *rwlock) {
+int __wrap(pthread_rwlock_wrlock)(pthread_rwlock_t *rwlock) {
   int _ = enter_wrapped_func("%p", rwlock);
   int ret;
   (void)_;
@@ -1076,7 +1089,7 @@ int pthread_rwlock_wrlock(pthread_rwlock_t *rwlock) {
 }
 
 /* pthread_rwlock_trywrlock (3posix) - lock a read-write lock object for writing */
-int pthread_rwlock_trywrlock(pthread_rwlock_t *rwlock) {
+int __wrap(pthread_rwlock_trywrlock)(pthread_rwlock_t *rwlock) {
   int _ = enter_wrapped_func("%p", rwlock);
   int ret;
   (void)_;
@@ -1090,8 +1103,9 @@ int pthread_rwlock_trywrlock(pthread_rwlock_t *rwlock) {
 }
 
 /* pthread_rwlock_timedwrlock (3posix) - lock a read-write lock for writing */
-int pthread_rwlock_timedwrlock(pthread_rwlock_t *restrict rwlock,
-			       const struct timespec *restrict abstime) {
+int __wrap(pthread_rwlock_timedwrlock)
+     (pthread_rwlock_t *restrict rwlock,
+      const struct timespec *restrict abstime) {
   int _ = enter_wrapped_func("%p, %p", rwlock, abstime);
   int ret;
   (void)_;
@@ -1105,7 +1119,7 @@ int pthread_rwlock_timedwrlock(pthread_rwlock_t *restrict rwlock,
 }
 
 /* pthread_rwlock_unlock (3posix) - unlock a read-write lock object */
-int pthread_rwlock_unlock(pthread_rwlock_t *rwlock) {
+int __wrap(pthread_rwlock_unlock)(pthread_rwlock_t *rwlock) {
   int _ = enter_wrapped_func("%p", rwlock);
   int ret;
   (void)_;
@@ -1119,7 +1133,7 @@ int pthread_rwlock_unlock(pthread_rwlock_t *rwlock) {
 }
 
 /* pthread_rwlockattr_init (3posix) - initialize the read-write lock attributes object */
-int pthread_rwlockattr_init(pthread_rwlockattr_t *attr) {
+int __wrap(pthread_rwlockattr_init)(pthread_rwlockattr_t *attr) {
   int _ = enter_wrapped_func("%p", attr);
   int ret = real_pthread_rwlockattr_init(attr);
   (void)_;
@@ -1128,7 +1142,7 @@ int pthread_rwlockattr_init(pthread_rwlockattr_t *attr) {
 }
 
 /* pthread_rwlockattr_destroy (3posix) - destroy and initialize the read-write lock attribut... */
-int pthread_rwlockattr_destroy(pthread_rwlockattr_t *attr) {
+int __wrap(pthread_rwlockattr_destroy)(pthread_rwlockattr_t *attr) {
   int _ = enter_wrapped_func("%p", attr);
   int ret = real_pthread_rwlockattr_destroy(attr);
   (void)_;
@@ -1137,8 +1151,8 @@ int pthread_rwlockattr_destroy(pthread_rwlockattr_t *attr) {
 }
 
 /* pthread_rwlockattr_getpshared (3posix) - get and set the process-shared attribute of the ... */
-int pthread_rwlockattr_getpshared(const pthread_rwlockattr_t *restrict attr,
-				  int *restrict pshared) {
+int __wrap(pthread_rwlockattr_getpshared)
+     (const pthread_rwlockattr_t *restrict attr, int *restrict pshared) {
   int _ = enter_wrapped_func("%p, %p", attr, pshared);
   int ret = real_pthread_rwlockattr_getpshared(attr, pshared);
   (void)_;
@@ -1147,8 +1161,8 @@ int pthread_rwlockattr_getpshared(const pthread_rwlockattr_t *restrict attr,
 }
 
 /* pthread_rwlockattr_setpshared (3posix) - set the process-shared attribute of the read-wri... */
-int pthread_rwlockattr_setpshared(pthread_rwlockattr_t *attr,
-				  int pshared) {
+int __wrap(pthread_rwlockattr_setpshared)
+     (pthread_rwlockattr_t *attr, int pshared) {
   int _ = enter_wrapped_func("%p, %d", attr, pshared);
   int ret = real_pthread_rwlockattr_setpshared(attr, pshared);
   (void)_;
@@ -1157,8 +1171,8 @@ int pthread_rwlockattr_setpshared(pthread_rwlockattr_t *attr,
 }
 
 /* pthread_rwlockattr_getkind_np (3) - set/get the read-write lock kind of the thread read-w... */
-int pthread_rwlockattr_getkind_np(const pthread_rwlockattr_t *attr,
-				  int *pref) {
+int __wrap(pthread_rwlockattr_getkind_np)(const pthread_rwlockattr_t *attr,
+					  int *pref) {
   int _ = enter_wrapped_func("%p, %p", attr, pref);
   int ret = real_pthread_rwlockattr_getkind_np(attr, pref);
   (void)_;
@@ -1167,8 +1181,8 @@ int pthread_rwlockattr_getkind_np(const pthread_rwlockattr_t *attr,
 }
 
 /* pthread_rwlockattr_setkind_np (3) - set/get the read-write lock kind of the thread read-w... */
-int pthread_rwlockattr_setkind_np(pthread_rwlockattr_t *attr,
-				  int pref) {
+int __wrap(pthread_rwlockattr_setkind_np)(pthread_rwlockattr_t *attr,
+					  int pref) {
   int _ = enter_wrapped_func("%p, %d", attr, pref);
   int ret = real_pthread_rwlockattr_setkind_np(attr, pref);
   (void)_;
@@ -1191,8 +1205,8 @@ pthread_condattr_to_myth(const pthread_condattr_t * p, myth_condattr_t * m) {
   }
 }
 
-int pthread_cond_init(pthread_cond_t *restrict cond,
-		      const pthread_condattr_t *restrict attr) {
+int __wrap(pthread_cond_init)(pthread_cond_t *restrict cond,
+			      const pthread_condattr_t *restrict attr) {
   int _ = enter_wrapped_func("%p, %p", cond, attr);
   int ret;
   (void)_;
@@ -1210,7 +1224,7 @@ int pthread_cond_init(pthread_cond_t *restrict cond,
 // pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
 
 /* pthread_cond_destroy (3posix) - destroy and initialize condition variables */
-int pthread_cond_destroy(pthread_cond_t *cond) {
+int __wrap(pthread_cond_destroy)(pthread_cond_t *cond) {
   int _ = enter_wrapped_func("%p", cond);
   int ret;
   (void)_;
@@ -1224,7 +1238,7 @@ int pthread_cond_destroy(pthread_cond_t *cond) {
 }
 
 /* pthread_cond_signal (3posix) - signal a condition */
-int pthread_cond_signal(pthread_cond_t *cond) {
+int __wrap(pthread_cond_signal)(pthread_cond_t *cond) {
   int _ = enter_wrapped_func("%p", cond);
   (void)_;
   int ret;
@@ -1238,7 +1252,7 @@ int pthread_cond_signal(pthread_cond_t *cond) {
 }
 
 /* pthread_cond_broadcast (3posix) - broadcast or signal a condition */
-int pthread_cond_broadcast(pthread_cond_t *cond) {
+int __wrap(pthread_cond_broadcast)(pthread_cond_t *cond) {
   int _ = enter_wrapped_func("%p", cond);
   int ret;
   (void)_;
@@ -1251,8 +1265,8 @@ int pthread_cond_broadcast(pthread_cond_t *cond) {
   return ret;
 }
 
-int pthread_cond_wait(pthread_cond_t *restrict cond,
-		      pthread_mutex_t *restrict mutex) {
+int __wrap(pthread_cond_wait)(pthread_cond_t *restrict cond,
+			      pthread_mutex_t *restrict mutex) {
   int _ = enter_wrapped_func("%p, %p", cond, mutex);
   int ret;
   (void)_;
@@ -1266,9 +1280,9 @@ int pthread_cond_wait(pthread_cond_t *restrict cond,
 }
 
 /* pthread_cond_timedwait (3posix) - wait on a condition */
-int pthread_cond_timedwait(pthread_cond_t *restrict cond,
-			   pthread_mutex_t *restrict mutex,
-			   const struct timespec *restrict abstime) {
+int __wrap(pthread_cond_timedwait)(pthread_cond_t *restrict cond,
+				   pthread_mutex_t *restrict mutex,
+				   const struct timespec *restrict abstime) {
   int _ = enter_wrapped_func("%p, %p, %p", cond, mutex, abstime);
   (void)_;
   int ret;
@@ -1283,7 +1297,7 @@ int pthread_cond_timedwait(pthread_cond_t *restrict cond,
 }
 
 /* pthread_condattr_init (3posix) - initialize the condition variable attributes object */
-int pthread_condattr_init(pthread_condattr_t *attr) {
+int __wrap(pthread_condattr_init)(pthread_condattr_t *attr) {
   int _ = enter_wrapped_func("%p", attr);
   int ret = real_pthread_condattr_init(attr);
   (void)_;
@@ -1292,7 +1306,7 @@ int pthread_condattr_init(pthread_condattr_t *attr) {
 }
 
 /* pthread_condattr_destroy (3posix) - destroy and initialize the condition variable attribu... */
-int pthread_condattr_destroy(pthread_condattr_t *attr) {
+int __wrap(pthread_condattr_destroy)(pthread_condattr_t *attr) {
   int _ = enter_wrapped_func("%p", attr);
   int ret = real_pthread_condattr_destroy(attr);
   (void)_;
@@ -1301,8 +1315,8 @@ int pthread_condattr_destroy(pthread_condattr_t *attr) {
 }
 
 /* pthread_condattr_getpshared (3posix) - get and set the process-shared condition variable ... */
-int pthread_condattr_getpshared(const pthread_condattr_t *restrict attr,
-				int *restrict pshared) {
+int __wrap(pthread_condattr_getpshared)
+     (const pthread_condattr_t *restrict attr, int *restrict pshared) {
   int _ = enter_wrapped_func("%p, %p", attr, pshared);
   (void)_;
   int ret = real_pthread_condattr_getpshared(attr, pshared);
@@ -1311,8 +1325,8 @@ int pthread_condattr_getpshared(const pthread_condattr_t *restrict attr,
 }
 
 /* pthread_condattr_setpshared (3posix) - set the process-shared condition variable attribute */
-int pthread_condattr_setpshared(pthread_condattr_t *attr,
-				int pshared) {
+int __wrap(pthread_condattr_setpshared)(pthread_condattr_t *attr,
+					int pshared) {
   int _ = enter_wrapped_func("%p, %d", attr, pshared);
   int ret = real_pthread_condattr_setpshared(attr, pshared);
   (void)_;
@@ -1320,8 +1334,9 @@ int pthread_condattr_setpshared(pthread_condattr_t *attr,
   return ret;
 }
 /* pthread_condattr_getclock (3posix) - get and set the clock selection condition variable a... */
-int pthread_condattr_getclock(const pthread_condattr_t *restrict attr,
-			      clockid_t *restrict clock_id) {
+int __wrap(pthread_condattr_getclock)
+     (const pthread_condattr_t *restrict attr,
+      clockid_t *restrict clock_id) {
   int _ = enter_wrapped_func("%p, %p", attr, clock_id);
   int ret = real_pthread_condattr_getclock(attr, clock_id);
   (void)_;
@@ -1330,8 +1345,8 @@ int pthread_condattr_getclock(const pthread_condattr_t *restrict attr,
 }
 
 /* pthread_condattr_setclock (3posix) - set the clock selection condition variable attribute */
-int pthread_condattr_setclock(pthread_condattr_t *attr,
-			      clockid_t clock_id) {
+int __wrap(pthread_condattr_setclock)(pthread_condattr_t *attr,
+				      clockid_t clock_id) {
   int _ = enter_wrapped_func("%p, %x", attr, clock_id);
   (void)_;
   int ret = real_pthread_condattr_setclock(attr, clock_id);
@@ -1343,7 +1358,7 @@ int pthread_condattr_setclock(pthread_condattr_t *attr,
    --- spin locks
    ---------------------- */
 
-int pthread_spin_init(pthread_spinlock_t *lock, int pshared) {
+int __wrap(pthread_spin_init)(pthread_spinlock_t *lock, int pshared) {
   int _ = enter_wrapped_func("%p %d", lock, pshared);
   int ret;
   (void)_;
@@ -1358,7 +1373,7 @@ int pthread_spin_init(pthread_spinlock_t *lock, int pshared) {
 }
 
 /* pthread_spin_destroy (3posix) - destroy or initialize a spin lock object */
-int pthread_spin_destroy(pthread_spinlock_t *lock) {
+int __wrap(pthread_spin_destroy)(pthread_spinlock_t *lock) {
   int _ = enter_wrapped_func("%p", lock);
   int ret;
   (void)_;
@@ -1372,7 +1387,7 @@ int pthread_spin_destroy(pthread_spinlock_t *lock) {
 }
 
 /* pthread_spin_lock (3posix) - lock a spin lock object */
-int pthread_spin_lock(pthread_spinlock_t *lock) {
+int __wrap(pthread_spin_lock)(pthread_spinlock_t *lock) {
   int _ = enter_wrapped_func("%p", lock);
   int ret;
   (void)_;
@@ -1386,7 +1401,7 @@ int pthread_spin_lock(pthread_spinlock_t *lock) {
 }
 
 /* pthread_spin_trylock (3posix) - lock a spin lock object */
-int pthread_spin_trylock(pthread_spinlock_t *lock) {
+int __wrap(pthread_spin_trylock)(pthread_spinlock_t *lock) {
   int _ = enter_wrapped_func("%p", lock);
   int ret;
   (void)_;
@@ -1401,7 +1416,7 @@ int pthread_spin_trylock(pthread_spinlock_t *lock) {
 
 
 /* pthread_spin_unlock (3posix) - unlock a spin lock object */
-int pthread_spin_unlock(pthread_spinlock_t *lock) {
+int __wrap(pthread_spin_unlock)(pthread_spinlock_t *lock) {
   int _ = enter_wrapped_func("%p", lock);
   int ret;
   (void)_;
@@ -1429,9 +1444,9 @@ pthread_barrierattr_to_myth(const pthread_barrierattr_t * p,
   }
 }
 
-int pthread_barrier_init(pthread_barrier_t *restrict barrier,
-			 const pthread_barrierattr_t *restrict attr,
-			 unsigned count) {
+int __wrap(pthread_barrier_init)(pthread_barrier_t *restrict barrier,
+				 const pthread_barrierattr_t *restrict attr,
+				 unsigned count) {
   int _ = enter_wrapped_func("%p, %p, %u", barrier, attr, count);
   int ret;
   (void)_;
@@ -1448,7 +1463,7 @@ int pthread_barrier_init(pthread_barrier_t *restrict barrier,
 }
 
 /* pthread_barrier_destroy (3posix) - destroy and initialize a barrier object */
-int pthread_barrier_destroy(pthread_barrier_t *barrier) {
+int __wrap(pthread_barrier_destroy)(pthread_barrier_t *barrier) {
   int _ = enter_wrapped_func("%p", barrier);
   int ret;
   (void)_;
@@ -1462,7 +1477,7 @@ int pthread_barrier_destroy(pthread_barrier_t *barrier) {
 }
 
 /* pthread_barrier_wait (3posix) - synchronize at a barrier */
-int pthread_barrier_wait(pthread_barrier_t *barrier) {
+int __wrap(pthread_barrier_wait)(pthread_barrier_t *barrier) {
   int _ = enter_wrapped_func("%p", barrier);
   int ret;
   (void)_;
@@ -1476,7 +1491,7 @@ int pthread_barrier_wait(pthread_barrier_t *barrier) {
 }
 
 /* pthread_barrierattr_init (3posix) - initialize the barrier attributes object */
-int pthread_barrierattr_init(pthread_barrierattr_t *attr) {
+int __wrap(pthread_barrierattr_init)(pthread_barrierattr_t *attr) {
   int _ = enter_wrapped_func("%p", attr);
   int ret = real_pthread_barrierattr_init(attr);
   (void)_;
@@ -1485,7 +1500,7 @@ int pthread_barrierattr_init(pthread_barrierattr_t *attr) {
 }
 
 /* pthread_barrierattr_destroy (3posix) - destroy and initialize the barrier attributes object */
-int pthread_barrierattr_destroy(pthread_barrierattr_t *attr) {
+int __wrap(pthread_barrierattr_destroy)(pthread_barrierattr_t *attr) {
   int _ = enter_wrapped_func("%p", attr);
   int ret = real_pthread_barrierattr_destroy(attr);
   (void)_;
@@ -1494,8 +1509,8 @@ int pthread_barrierattr_destroy(pthread_barrierattr_t *attr) {
 }
 
 /* pthread_barrierattr_getpshared (3posix) - get and set the process-shared attribute of the... */
-int pthread_barrierattr_getpshared(const pthread_barrierattr_t *restrict attr,
-				   int *restrict pshared) {
+int __wrap(pthread_barrierattr_getpshared)
+     (const pthread_barrierattr_t *restrict attr, int *restrict pshared) {
   int _ = enter_wrapped_func("%p, %p", attr, pshared);
   int ret = real_pthread_barrierattr_getpshared(attr, pshared);
   (void)_;
@@ -1503,8 +1518,8 @@ int pthread_barrierattr_getpshared(const pthread_barrierattr_t *restrict attr,
   return ret;
 }
 /* pthread_barrierattr_setpshared (3posix) - set the process-shared attribute of the barrier... */
-int pthread_barrierattr_setpshared(pthread_barrierattr_t *attr,
-				   int pshared) {
+int __wrap(pthread_barrierattr_setpshared)
+     (pthread_barrierattr_t *attr, int pshared) {
   int _ = enter_wrapped_func("%p, %d", attr, pshared);
   int ret = real_pthread_barrierattr_setpshared(attr, pshared);
   (void)_;
@@ -1517,7 +1532,7 @@ int pthread_barrierattr_setpshared(pthread_barrierattr_t *attr,
    -------------------------------- */
 
 /* pthread_key_create (3posix) - thread-specific data key creation */
-int pthread_key_create(pthread_key_t *key, void (*destructor)(void *)) {
+int __wrap(pthread_key_create)(pthread_key_t *key, void (*destructor)(void *)) {
   int _ = enter_wrapped_func("%p, %p", key, destructor);
   int ret;
   (void)_;
@@ -1531,7 +1546,7 @@ int pthread_key_create(pthread_key_t *key, void (*destructor)(void *)) {
 }
 
 /* pthread_key_delete (3posix) - thread-specific data key deletion */
-int pthread_key_delete(pthread_key_t key) {
+int __wrap(pthread_key_delete)(pthread_key_t key) {
   int _ = enter_wrapped_func("%x", key);
   int ret;
   (void)_;
@@ -1545,7 +1560,7 @@ int pthread_key_delete(pthread_key_t key) {
 }
 
 /* pthread_getspecific (3posix) - thread-specific data management */
-void * pthread_getspecific(pthread_key_t key) {
+void * __wrap(pthread_getspecific)(pthread_key_t key) {
   int _ = enter_wrapped_func("%x", key);
   void * ret;
   (void)_;
@@ -1558,7 +1573,7 @@ void * pthread_getspecific(pthread_key_t key) {
   return ret;
 }
 /* pthread_setspecific (3posix) - thread-specific data management */
-int pthread_setspecific(pthread_key_t key, const void *value) {
+int __wrap(pthread_setspecific)(pthread_key_t key, const void *value) {
   int _ = enter_wrapped_func("%x, %p", key, value);
   int ret;
   (void)_;
@@ -1576,7 +1591,7 @@ int pthread_setspecific(pthread_key_t key, const void *value) {
    ------------------------------------------- */
 
 /* pthread_getcpuclockid (3) - retrieve ID of a threads CPU time clock */
-int pthread_getcpuclockid(pthread_t thread, clockid_t *clock_id) {
+int __wrap(pthread_getcpuclockid)(pthread_t thread, clockid_t *clock_id) {
   int _ = enter_wrapped_func("%x, %p", thread, clock_id);
   int ret;
   (void)_;
@@ -1592,8 +1607,8 @@ int pthread_getcpuclockid(pthread_t thread, clockid_t *clock_id) {
 
 #if 0
 /* pthread_atfork (3posix) - register fork handlers */
-int pthread_atfork(void (*prepare)(void), void (*parent)(void),
-		   void (*child)(void)) {
+int __wrap(pthread_atfork)(void (*prepare)(void), void (*parent)(void),
+			   void (*child)(void)) {
   int _ = enter_wrapped_func("%p, %p, %p", prepare, parent, child);
   int x = real_pthread_atfork(prepare, parent, child);
   leave_wrapped_func("%d", x);
@@ -1606,7 +1621,7 @@ int pthread_atfork(void (*prepare)(void), void (*parent)(void),
    ----------------------------- */
 /* pthread_kill (3)     - send a signal to a thread */
 /* pthread_kill (3posix) - send a signal to a thread */
-int pthread_kill(pthread_t thread, int sig) {
+int __wrap(pthread_kill)(pthread_t thread, int sig) {
   int _ = enter_wrapped_func("%x, %d", thread, sig);
   int ret;
   (void)_;
@@ -1622,7 +1637,7 @@ int pthread_kill(pthread_t thread, int sig) {
 
 #if 0
 /* pthread_kill_other_threads_np (3) - terminate all other threads in process */
-void pthread_kill_other_threads_np(void) {
+void __wrap(pthread_kill_other_threads_np)(void) {
   enter_wrapped_func(0);
   if (myth_should_wrap_pthread()) {
     myth_wrap_pthread_warn_non_conforming();
@@ -1634,8 +1649,8 @@ void pthread_kill_other_threads_np(void) {
 #endif
 
 /* pthread_sigqueue (3) - queue a signal and data to a thread */
-int pthread_sigqueue(pthread_t thread, int sig,
-		     const union sigval value) {
+int __wrap(pthread_sigqueue)(pthread_t thread, int sig,
+			     const union sigval value) {
   int _ = enter_wrapped_func("%x, %d, ...", thread, sig);
   int ret;
   (void)_;
@@ -1651,7 +1666,7 @@ int pthread_sigqueue(pthread_t thread, int sig,
 
 /* pthread_sigmask (3)  - examine and change mask of blocked signals */
 /* pthread_sigmask (3posix) - examine and change blocked signals */
-int pthread_sigmask(int how, const sigset_t *set, sigset_t *oldset) {
+int __wrap(pthread_sigmask)(int how, const sigset_t *set, sigset_t *oldset) {
   int _ = enter_wrapped_func("%d, %p, %p", how, set, oldset);
   int ret;
   (void)_;
@@ -1668,7 +1683,7 @@ int pthread_sigmask(int how, const sigset_t *set, sigset_t *oldset) {
 /* --------------------------------
    --- thread-related functions 
    -------------------------------- */
-int sched_yield(void) {
+int __wrap(sched_yield)(void) {
   int _ = enter_wrapped_func(0);
   int ret;
   (void)_;
@@ -1681,7 +1696,7 @@ int sched_yield(void) {
   return ret;
 }
 
-unsigned int sleep(unsigned int s) {
+unsigned int __wrap(sleep)(unsigned int s) {
   int _ = enter_wrapped_func("%u", s);
   int ret;
   (void)_;
@@ -1694,7 +1709,7 @@ unsigned int sleep(unsigned int s) {
   return ret;
 }
 
-int usleep(useconds_t usec) {
+int __wrap(usleep)(useconds_t usec) {
   int _ = enter_wrapped_func("%u", usec);
   int ret;
   (void)_;
@@ -1707,7 +1722,7 @@ int usleep(useconds_t usec) {
   return ret;
 }
 
-int nanosleep(const struct timespec *req, struct timespec *rem) {
+int __wrap(nanosleep)(const struct timespec *req, struct timespec *rem) {
   int _ = enter_wrapped_func("%p, %p", req, rem);
   int ret;
   (void)_;
@@ -1727,32 +1742,32 @@ int nanosleep(const struct timespec *req, struct timespec *rem) {
    ------------------------- */
 
 /* pthread_cleanup_push (3) - push and pop thread cancellation clean-up handlers */
-void pthread_cleanup_push(void (*routine)(void *),
-			  void *arg) {
+void __wrap(pthread_cleanup_push)(void (*routine)(void *),
+				  void *arg) {
   enter_wrapped_func("%p, %p", routine, arg);
-  real_version(routine, arg);
+  real_pthread_cleanup_push(routine, arg;
   leave_wrapped_func("%d", x);
 }
 
 /* pthread_cleanup_push_defer_np (3) - push and pop thread cancellation clean-up handlers wh... */
-void pthread_cleanup_push_defer_np(void (*routine)(void *),
-				   void *arg) {
+void __wrap(pthread_cleanup_push_defer_np)(void (*routine)(void *),
+					   void *arg) {
   enter_wrapped_func("%p, %p", routine, arg);
-  real_version(routine, arg);
+  real_pthread_cleanup_push_defer_np(routine, arg);
   leave_wrapped_func("%d", x);
 }
 
 /* pthread_cleanup_pop (3) - push and pop thread cancellation clean-up handlers */
-void pthread_cleanup_pop(int execute) {
+void __wrap(pthread_cleanup_pop)(int execute) {
   enter_wrapped_func("%d", execute);
-  real_version(execute);
+  real_pthread_cleanup_pop(execute);
   leave_wrapped_func("%d", x);
 }
 
 /* pthread_cleanup_pop_restore_np (3) - push and pop thread cancellation clean-up handlers w... */
-void pthread_cleanup_pop_restore_np(int execute) {
+void __wrap(pthread_cleanup_pop_restore_np)(int execute) {
   enter_wrapped_func("%d", execute);
-  real_version(execute);
+  real_pthread_cleanup_pop_restore_np(execute);
   leave_wrapped_func("%d", x);
 }
 
