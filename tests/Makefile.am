@@ -97,9 +97,7 @@ check_PROGRAMS = \
 #	pth_cond_broadcast_1_cc
 #
 
-# check_PROGRAMS = myth_lock myth_trylock myth_mixlock
 
-#  -I$(abs_top_srcdir)/src
 common_cflags = -I$(abs_top_srcdir)/include
 common_cxxflags = $(common_cflags)
 common_ldadd = $(abs_top_srcdir)/src/libmyth.la -lrt
