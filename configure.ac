@@ -228,7 +228,7 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 #define _ISOC11_SOURCE 1
 #include <stdlib.h>
 ]],
-	[[ aligned_alloc; ]])],
+	[[ aligned_alloc(1, 1); ]])],
 	[have_aligned_alloc="yes"],
 	[have_aligned_alloc="no"])
 AC_MSG_RESULT([$have_aligned_alloc])
@@ -237,12 +237,9 @@ if test x"$have_aligned_alloc" = "xyes" ; then
 else
    have_aligned_alloc=0
 fi
-
-AC_DEFINE_UNQUOTED([HAVE_ALIGNED_ALLOC],
-	[$have_aligned_alloc],
-	[if set, aligned_alloc is declared in stdlib.h])
-AM_CONDITIONAL([BUILD_TEST_ALIGNED_ALLOC],
-	[test x"$have_aligned_alloc" = "xyes"])
+AC_DEFINE_UNQUOTED([HAVE_ALIGNED_ALLOC],[$have_aligned_alloc],
+   	[if set, aligned_alloc is declared in stdlib.h])
+AM_CONDITIONAL([BUILD_TEST_ALIGNED_ALLOC],[test $have_aligned_alloc = 1])
 
 #
 # for C program tests that follow, we treat warnings as error,

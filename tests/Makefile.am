@@ -535,3 +535,5 @@ measure_wakeup_latency_cc_LDFLAGS  = $(pth_ldflags)
 # new_test_LDFLAGS  = $(pth_ldflags)
 
 TESTS = $(check_PROGRAMS)
+
+build_test_programs: $(check_PROGRAMS)
