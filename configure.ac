@@ -286,19 +286,19 @@ AC_CONFIG_FILES([
 	src/profiler/dag2any/Makefile
 	src/profiler/drview/Makefile
 	tests/Makefile 
-	tests/native/Makefile 
-	tests/c/Makefile 
-	tests/c/fib/Makefile 
-	tests/c/profiler/Makefile 
-	tests/c/profiler/minimum/Makefile 
-	tests/cxx/Makefile 
-	tests/cxx/mtbb/Makefile 
-	tests/cxx/mtbb/callable/Makefile
-	tests/cxx/mtbb/callable/bin/Makefile
-	tests/cxx/mtbb/callable/profiler/Makefile
-	tests/cxx/mtbb/lambda/Makefile
-	tests/cxx/mtbb/lambda/bin/Makefile
-	tests/cxx/mtbb/lambda/profiler/Makefile
 ])
+dnl tests/native/Makefile 
+dnl tests/c/Makefile 
+dnl tests/c/fib/Makefile 
+dnl tests/c/profiler/Makefile 
+dnl tests/c/profiler/minimum/Makefile 
+dnl tests/cxx/Makefile 
+dnl tests/cxx/mtbb/Makefile 
+dnl tests/cxx/mtbb/callable/Makefile
+dnl tests/cxx/mtbb/callable/bin/Makefile
+dnl tests/cxx/mtbb/callable/profiler/Makefile
+dnl tests/cxx/mtbb/lambda/Makefile
+dnl tests/cxx/mtbb/lambda/bin/Makefile
+dnl tests/cxx/mtbb/lambda/profiler/Makefile
 AC_CONFIG_HEADERS([src/config.h])
 AC_OUTPUT
