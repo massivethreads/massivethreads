@@ -232,9 +232,14 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 	[have_aligned_alloc="yes"],
 	[have_aligned_alloc="no"])
 AC_MSG_RESULT([$have_aligned_alloc])
+if test x"$have_aligned_alloc" = "xyes" ; then
+   have_aligned_alloc=1
+else
+   have_aligned_alloc=0
+fi
 
-AC_DEFINE([HAVE_ALIGNED_ALLOC],
-	[test x"$have_aligned_alloc" = "xyes"],
+AC_DEFINE_UNQUOTED([HAVE_ALIGNED_ALLOC],
+	[$have_aligned_alloc],
 	[if set, aligned_alloc is declared in stdlib.h])
 AM_CONDITIONAL([BUILD_TEST_ALIGNED_ALLOC],
 	[test x"$have_aligned_alloc" = "xyes"])

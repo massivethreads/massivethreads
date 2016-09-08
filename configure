@@ -5658,9 +5658,16 @@ fi
 rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $have_aligned_alloc" >&5
 $as_echo "$have_aligned_alloc" >&6; }
+if test x"$have_aligned_alloc" = "xyes" ; then
+   have_aligned_alloc=1
+else
+   have_aligned_alloc=0
+fi
 
 
-$as_echo "#define HAVE_ALIGNED_ALLOC test x\"\$have_aligned_alloc\" = \"xyes\"" >>confdefs.h
+cat >>confdefs.h <<_ACEOF
+#define HAVE_ALIGNED_ALLOC $have_aligned_alloc
+_ACEOF
 
  if test x"$have_aligned_alloc" = "xyes"; then
   BUILD_TEST_ALIGNED_ALLOC_TRUE=
