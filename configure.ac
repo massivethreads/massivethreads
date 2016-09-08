@@ -224,7 +224,7 @@ AM_CONDITIONAL([BUILD_MYTH_DL],
 # -----------------------------
 
 AC_MSG_CHECKING([aligned_alloc])
-AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+AC_LINK_IFELSE([AC_LANG_PROGRAM([[
 #define _ISOC11_SOURCE 1
 #include <stdlib.h>
 ]],
