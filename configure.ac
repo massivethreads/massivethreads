@@ -5,25 +5,14 @@ AC_CONFIG_MACRO_DIR([m4])
 # avoid executing autotools on the user side
 AM_MAINTAINER_MODE([disable])
 
+# -----------------------------
+# basics
+# -----------------------------
+
 AC_PROG_CC
-# use -O3 optimization instead of -O2
-if false ; then
-    if test "x$ac_test_CFLAGS" = "xset"; then
-	CFLAGS=$ac_save_CFLAGS
-    elif test "x$ac_cv_prog_cc_g" = "xyes"; then
-	if test "x$GCC" = "xyes"; then
-	    CFLAGS="-g -O3 -Wall -ftls-model=initial-exec"
-	else
-	    CFLAGS="-g"
-	fi
-    else
-	if test "x$GCC" = "xyes"; then
-	    CFLAGS="-O3 -Wall -ftls-model=initial-exec"
-	else
-	    CFLAGS=
-	fi
-    fi
-fi
+# recommended CFLAGS
+# -O3
+# -ftls-model=initial-exec
 AC_PROG_CC_C_O
 AM_PROG_CC_C_O
 AM_PROG_AS
@@ -39,133 +28,37 @@ AC_PROG_AWK
 # See the Autoconf documentation.
 AM_PROG_AR
 
-# Essential libraries
-AC_CHECK_LIB(dl, dlopen, [], [AC_MSG_ERROR(Test for dlopen failed.)])
-AC_CHECK_LIB(pthread, pthread_create, [], [AC_MSG_ERROR(Test for libpthread failed.)])
-AC_CHECK_LIB(rt, clock_gettime , [], [AC_MSG_ERROR(Test for clock_gettime failed.)])
+# =============================
+# process user options
+# =============================
 
-# Check sizes
-AC_CHECK_SIZEOF([int])
-AC_CHECK_SIZEOF([void*])
+# -----------------------
+# whether or not build libmyth-ld
+# -----------------------
 
-# Check functions
-# AC_CHECK_FUNCS(__builtin_unreachable __builtin_clz)
+AC_ARG_ENABLE([myth-ld],
+              [AS_HELP_STRING([--enable-myth-ld=yes|no],
+	                      [build libmyth-ld or not, a library that wraps some system functions with GNU linker options --wrap=function_name (default=yes)])],
+              [enable_myth_ld="${enableval}"],
+              [enable_myth_ld="yes"])
 
-#
-# check declarations
-#
+# only record --enable-myth-ld for now
+# we will later check if the linker supports --wrap and decide if
+# we really build libmyth-ld
 
-AC_MSG_CHECKING([declaration of aligned_alloc])
-AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#define _ISOC11_SOURCE 1
-#include <stdlib.h>
-]],
-					     [[ aligned_alloc; ]])], 
-                  [AC_MSG_RESULT([yes]); AC_DEFINE([HAVE_DECL_ALIGNED_ALLOC], [1], [if set, aligned_alloc is declared in stdlib.h])],
-		  [AC_MSG_RESULT([no]);  AC_DEFINE([HAVE_DECL_ALIGNED_ALLOC], [0], [if set, aligned_alloc is declared in stdlib.h])])
+# -----------------------
+# whether or not build libmyth-dl
+# -----------------------
 
+AC_ARG_ENABLE([myth-dl],
+              [AS_HELP_STRING([--enable-myth-dl=yes|no],
+	                      [build libmyth-dl or not, a library that wraps some system functions with dlopen/dlsym])],
+              [enable_myth_dl="${enableval}"],
+              [enable_myth_dl="yes"])
 
-dnl AC_CHECK_DECL([aligned_alloc])
-dnl if test "x$ac_cv_have_decl_aligned_alloc" = xyes; then
-dnl    AC_DEFINE([HAVE_DECL_ALIGNED_ALLOC], [1], [If set, aligned_alloc is declared]) 
-dnl else
-dnl    AC_DEFINE([HAVE_DECL_ALIGNED_ALLOC], [0], [If set, aligned_alloc is declared]) 
-dnl fi
-
-#
-# --enable-malloc-wrapper
-#   flag controlling the behavior of malloc
-#
-
-if false ; then
-
-   AC_ARG_ENABLE([malloc-wrapper],
-		 [AS_HELP_STRING([--enable-malloc-wrapper=yes|no],
-		   	         [Enable or disable malloc wrapper. "no" completely 
-				  disables it when compiling MassiveThreads. "yes" 
-				  enables it, but you can still disable it at runtime 
-				  by setting environment variable MYTH_DONT_WRAP_MALLOC=1.  
-				  Default is "yes".  If you experience a segfault for 
-				  programs which dont without MassiveThreads, it may be a 
-				  MassiveThreads bug around malloc wapper; chances are
-				  that MYTH_DONT_WRAP_MALLOC=0 at runtime or --disable-malloc 
-				  will avoid it at the cost of resorting to less scalable 
-				  malloc implementation.])],
-		 [enable_malloc_wrapper="yes"])
-
-   if test "x$enable_malloc_wrapper" != "xno" ; then
-       AC_DEFINE_UNQUOTED([MYTH_WRAP_MALLOC],[1],[If unset, we never wrap malloc])
-       AC_DEFINE_UNQUOTED([MYTH_WRAP_MALLOC_RUNTIME],[1],[If set, you can choose wrap malloc or not at runtime. default is to wrap.  set environment variable MYTH_DONT_WRAP_MALLOC=1 not to wrap it])
-   fi
-fi
-
-#
-# set user threads' default stack size
-#
-
-AC_ARG_WITH([default-stack-size],
-            [AS_HELP_STRING([--with-default-stack-size=S],
-                            [Set default stack size of threads to S bytes.
-                             Default: 131072.  You can change it at runtime
-			     by setting MYTH_DEF_STKSIZE.])],
-            [default_stack_size="$withval"],
-            [default_stack_size=131072])
-
-AC_DEFINE_UNQUOTED([MYTH_DEF_STACK_SIZE],[$default_stack_size],[Default stack size])
-
-#
-# set the scheduler thread's stack size
-#
-
-AC_ARG_WITH([sched-stack-size],
-            [AS_HELP_STRING([--with-sched-stack-size=S],
-                            [Set default stack size of the scheduler thread to S bytes.
-                             Default: 1048576.])],
-            [sched_stack_size="$withval"],
-            [sched_stack_size=1048576])
-
-AC_DEFINE_UNQUOTED([MYTH_SCHED_STACK_SIZE],[$sched_stack_size],[Scheduler stack size])
-
-#
-# set user threads' default guard size
-#
-
-AC_ARG_WITH([default-guard-size],
-            [AS_HELP_STRING([--with-default-guard-size=S],
-                            [Set default guard size of threads to S bytes.
-                             Default: 4096.  You can change it at runtime
-			     by setting MYTH_DEF_GUARDSIZE.])],
-            [default_guard_size="$withval"],
-            [default_guard_size=4096])
-
-AC_DEFINE_UNQUOTED([MYTH_DEF_GUARD_SIZE],[$default_guard_size],[Default guard size])
-
-#
-# bind workers or not
-#
-
-AC_ARG_WITH([bind-workers],
-            [AS_HELP_STRING([--with-bind-workers=0/1],
-                            [Set default value for bind-workers.
-                             Default: 1.  You can change it at runtime
-			     by setting MYTH_BIND_WORKERS.])],
-            [default_bind_workers="$withval"],
-            [default_bind_workers=1])
-
-AC_DEFINE_UNQUOTED([MYTH_BIND_WORKERS],[$default_bind_workers],[Default bind workers])
-
-#
-# child first or not
-#
-
-AC_ARG_WITH([child-first],
-            [AS_HELP_STRING([--with-child-first=0/1],
-                            [Set default value for child-first.
-                             Default: 1.  You can change it at runtime
-			     by setting MYTH_CHILD_FIRST.])],
-            [default_child_first="$withval"],
-            [default_child_first=1])
-
-AC_DEFINE_UNQUOTED([MYTH_CHILD_FIRST],[$default_child_first],[Default child first])
+# only record --enable-myth-dl for now
+# we will later check if dlopen/dlsym are available and decide if
+# we really build libmyth-dl
 
 #
 # --enable-eco-mode
@@ -185,9 +78,162 @@ AC_ARG_ENABLE([eco-mode],
 			     [enable_eco_mode="yes"])
 
 if test "x$enable_eco_mode" != "xno" ; then
-  AC_DEFINE_UNQUOTED([MYTH_ECO_MODE],[1],[If unset, eco-mode is disabled])
-  AC_DEFINE_UNQUOTED([MYTH_ECO_TEIAN_STEAL],[1],[If unset, eco-mode is disabled])
+  AC_DEFINE_UNQUOTED([MYTH_ECO_MODE],[1],[if 1, enable eco-mode])
+  AC_DEFINE_UNQUOTED([MYTH_ECO_TEIAN_STEAL],[1],[if 1, enable eco-mode])
+else
+  AC_DEFINE_UNQUOTED([MYTH_ECO_MODE],[0],[if 1, enable eco-mode])
+  AC_DEFINE_UNQUOTED([MYTH_ECO_TEIAN_STEAL],[0],[if 1, enable eco-mode])
 fi
+
+# -----------------------
+# set user threads' default stack size
+# -----------------------
+
+AC_ARG_WITH([default-stack-size],
+            [AS_HELP_STRING([--with-default-stack-size=S],
+                            [Set default stack size of threads to S bytes.
+                             Default: 131072.  You can change it at runtime
+			     by setting MYTH_DEF_STKSIZE.])],
+            [default_stack_size="$withval"],
+            [default_stack_size=131072])
+
+AC_DEFINE_UNQUOTED([MYTH_DEF_STACK_SIZE],
+	[$default_stack_size],[Default stack size])
+
+# -----------------------
+# set the scheduler thread's stack size
+# -----------------------
+
+AC_ARG_WITH([sched-stack-size],
+            [AS_HELP_STRING([--with-sched-stack-size=S],
+                            [Set default stack size of the scheduler thread to S bytes.
+                             Default: 1048576.])],
+            [sched_stack_size="$withval"],
+            [sched_stack_size=1048576])
+
+AC_DEFINE_UNQUOTED([MYTH_SCHED_STACK_SIZE],
+	[$sched_stack_size],[Scheduler stack size])
+
+# -----------------------
+# set user threads' default guard size
+# -----------------------
+
+AC_ARG_WITH([default-guard-size],
+            [AS_HELP_STRING([--with-default-guard-size=S],
+                            [Set default guard size of threads to S bytes.
+                             Default: 4096.  You can change it at runtime
+			     by setting MYTH_DEF_GUARDSIZE.])],
+            [default_guard_size="$withval"],
+            [default_guard_size=4096])
+
+AC_DEFINE_UNQUOTED([MYTH_DEF_GUARD_SIZE],
+	[$default_guard_size],[Default guard size])
+
+# -----------------------
+# bind workers or not
+# -----------------------
+
+AC_ARG_WITH([bind-workers],
+            [AS_HELP_STRING([--with-bind-workers=yes/no],
+                            [Set default value for bind-workers.
+                             Default: 1.  You can change it at runtime
+			     by setting MYTH_BIND_WORKERS.])],
+            [default_bind_workers="$withval"],
+            [default_bind_workers="yes"])
+
+if test "x$default_bind_workers" != "xno" ; then
+  AC_DEFINE_UNQUOTED([MYTH_BIND_WORKERS],[1],[if 1, bind workers by default])
+else						 
+  AC_DEFINE_UNQUOTED([MYTH_BIND_WORKERS],[0],[if 1, bind workers by default])
+fi
+
+#
+# child first or not
+#
+
+AC_ARG_WITH([child-first],
+            [AS_HELP_STRING([--with-child-first=yes/no],
+                            [Set default value for child-first.
+                             Default: 1.  You can change it at runtime
+			     by setting MYTH_CHILD_FIRST.])],
+            [default_child_first="$withval"],
+            [default_child_first="yes"])
+
+if test "x$default_child_first" != "xno" ; then
+   AC_DEFINE_UNQUOTED([MYTH_CHILD_FIRST],[1],[if 1, child first by default])
+else						 
+   AC_DEFINE_UNQUOTED([MYTH_CHILD_FIRST],[0],[if 1, child first by default])
+fi
+
+# -----------------------------
+# sizes
+# -----------------------------
+
+# Check sizes
+AC_CHECK_SIZEOF([int])
+AC_CHECK_SIZEOF([void*])
+
+# =============================
+# libraries
+# =============================
+
+# ---------------------
+# mandatory libraries
+# ---------------------
+
+AC_CHECK_LIB(pthread, pthread_create,
+		      [],
+		      [AC_MSG_ERROR(libpthread not available.)])
+
+# ---------------------
+# optional libraries
+# ---------------------
+
+AC_CHECK_LIB(rt, clock_gettime,
+		 [],
+		 [AC_MSG_ERROR(librt not available.)])
+
+# ---------------------
+# libraries affecting build targets depending on availability
+# ---------------------
+
+#
+# check if --wrap=xxxx is supported
+#
+AX_CHECK_LINK_FLAG([-Wl,--wrap=malloc],
+	[linker_accepts_wrap="yes"],
+	[linker_accepts_wrap="no"])
+
+AM_CONDITIONAL([BUILD_MYTH_LD],
+	[test x"$enable_myth_ld" = "xyes" -a x"$linker_accepts_wrap" = "xyes"])
+
+
+#
+# check if dlopen is supported
+#
+AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+#include <dlfcn.h>
+]],
+[[ dlopen("a", 0); ]])],
+   [dlopen_supported="yes"],
+   [dlopen_supported="no"])
+
+AM_CONDITIONAL([BUILD_MYTH_DL],
+	[test x"$enable_myth_dl" = "xyes" -a x"$dlopen_supported" = "xyes" ])
+
+# -----------------------------
+# declarations
+# -----------------------------
+
+AC_MSG_CHECKING([declaration of aligned_alloc])
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+#define _ISOC11_SOURCE 1
+#include <stdlib.h>
+]],
+	[[ aligned_alloc; ]])], 
+	[AC_MSG_RESULT([yes]); AC_DEFINE([HAVE_DECL_ALIGNED_ALLOC], [1], [if set, aligned_alloc is declared in stdlib.h])],
+	[AC_MSG_RESULT([no]);  AC_DEFINE([HAVE_DECL_ALIGNED_ALLOC], [0], [if set, aligned_alloc is declared in stdlib.h])])
+
 
 #
 # for C program tests that follow, we treat warnings as error,
@@ -251,5 +297,4 @@ AC_CONFIG_FILES([
 	tests/cxx/mtbb/lambda/profiler/Makefile
 ])
 AC_CONFIG_HEADERS([src/config.h])
-# AC_CONFIG_HEADERS([include/myth/config.h])
 AC_OUTPUT

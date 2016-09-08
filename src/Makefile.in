@@ -89,11 +89,14 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
+@BUILD_MYTH_LD_TRUE@am__append_1 = libmyth-ld.la
+@BUILD_MYTH_DL_TRUE@am__append_2 = libmyth-dl.la 
 subdir = src
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/libtool.m4 \
 	$(top_srcdir)/m4/ltoptions.m4 $(top_srcdir)/m4/ltsugar.m4 \
 	$(top_srcdir)/m4/ltversion.m4 $(top_srcdir)/m4/lt~obsolete.m4 \
+	$(top_srcdir)/m4/m4_ax_check_link_flag.m4 \
 	$(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
@@ -133,6 +136,11 @@ am__uninstall_files_from_dir = { \
 am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(includedir)"
 LTLIBRARIES = $(lib_LTLIBRARIES)
 libmyth_dl_la_LIBADD =
+am__libmyth_dl_la_SOURCES_DIST = myth_log.c myth_sched.c myth_worker.c \
+	myth_sync.c myth_init.c myth_misc.c myth_tls.c myth_thread.c \
+	myth_context.c myth_context_switch.S myth_eco.c \
+	myth_if_native.c myth_real.c myth_wrap_pthread.c \
+	myth_wrap_malloc.c myth_wrap_socket.c
 am__objects_1 = libmyth_dl_la-myth_log.lo libmyth_dl_la-myth_sched.lo \
 	libmyth_dl_la-myth_worker.lo libmyth_dl_la-myth_sync.lo \
 	libmyth_dl_la-myth_init.lo libmyth_dl_la-myth_misc.lo \
@@ -143,7 +151,8 @@ am__objects_1 = libmyth_dl_la-myth_log.lo libmyth_dl_la-myth_sched.lo \
 am__objects_2 = libmyth_dl_la-myth_wrap_pthread.lo \
 	libmyth_dl_la-myth_wrap_malloc.lo \
 	libmyth_dl_la-myth_wrap_socket.lo
-am_libmyth_dl_la_OBJECTS = $(am__objects_1) $(am__objects_2)
+@BUILD_MYTH_DL_TRUE@am_libmyth_dl_la_OBJECTS = $(am__objects_1) \
+@BUILD_MYTH_DL_TRUE@	$(am__objects_2)
 libmyth_dl_la_OBJECTS = $(am_libmyth_dl_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
@@ -152,7 +161,13 @@ am__v_lt_1 =
 libmyth_dl_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(libmyth_dl_la_CFLAGS) \
 	$(CFLAGS) $(libmyth_dl_la_LDFLAGS) $(LDFLAGS) -o $@
+@BUILD_MYTH_DL_TRUE@am_libmyth_dl_la_rpath = -rpath $(libdir)
 libmyth_ld_la_LIBADD =
+am__libmyth_ld_la_SOURCES_DIST = myth_log.c myth_sched.c myth_worker.c \
+	myth_sync.c myth_init.c myth_misc.c myth_tls.c myth_thread.c \
+	myth_context.c myth_context_switch.S myth_eco.c \
+	myth_if_native.c myth_real.c myth_wrap_pthread.c \
+	myth_wrap_malloc.c myth_wrap_socket.c
 am__objects_3 = libmyth_ld_la-myth_log.lo libmyth_ld_la-myth_sched.lo \
 	libmyth_ld_la-myth_worker.lo libmyth_ld_la-myth_sync.lo \
 	libmyth_ld_la-myth_init.lo libmyth_ld_la-myth_misc.lo \
@@ -163,11 +178,13 @@ am__objects_3 = libmyth_ld_la-myth_log.lo libmyth_ld_la-myth_sched.lo \
 am__objects_4 = libmyth_ld_la-myth_wrap_pthread.lo \
 	libmyth_ld_la-myth_wrap_malloc.lo \
 	libmyth_ld_la-myth_wrap_socket.lo
-am_libmyth_ld_la_OBJECTS = $(am__objects_3) $(am__objects_4)
+@BUILD_MYTH_LD_TRUE@am_libmyth_ld_la_OBJECTS = $(am__objects_3) \
+@BUILD_MYTH_LD_TRUE@	$(am__objects_4)
 libmyth_ld_la_OBJECTS = $(am_libmyth_ld_la_OBJECTS)
 libmyth_ld_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(libmyth_ld_la_CFLAGS) \
 	$(CFLAGS) $(libmyth_ld_la_LDFLAGS) $(LDFLAGS) -o $@
+@BUILD_MYTH_LD_TRUE@am_libmyth_ld_la_rpath = -rpath $(libdir)
 libmyth_la_LIBADD =
 am__objects_5 = libmyth_la-myth_log.lo libmyth_la-myth_sched.lo \
 	libmyth_la-myth_worker.lo libmyth_la-myth_sync.lo \
@@ -227,8 +244,8 @@ am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
 SOURCES = $(libmyth_dl_la_SOURCES) $(libmyth_ld_la_SOURCES) \
 	$(libmyth_la_SOURCES)
-DIST_SOURCES = $(libmyth_dl_la_SOURCES) $(libmyth_ld_la_SOURCES) \
-	$(libmyth_la_SOURCES)
+DIST_SOURCES = $(am__libmyth_dl_la_SOURCES_DIST) \
+	$(am__libmyth_ld_la_SOURCES_DIST) $(libmyth_la_SOURCES)
 RECURSIVE_TARGETS = all-recursive check-recursive cscopelist-recursive \
 	ctags-recursive dvi-recursive html-recursive info-recursive \
 	install-data-recursive install-dvi-recursive \
@@ -347,6 +364,7 @@ LIBTOOL = @LIBTOOL@
 LIPO = @LIPO@
 LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
+LT_SYS_LIBRARY_PATH = @LT_SYS_LIBRARY_PATH@
 MAINT = @MAINT@
 MAKEINFO = @MAKEINFO@
 MANIFEST_TOOL = @MANIFEST_TOOL@
@@ -466,7 +484,7 @@ WRAP_DL_LDFLAGS =
 
 # required when you use libtool (for building shared libs)
 ACLOCAL_AMFLAGS = -I m4
-lib_LTLIBRARIES = libmyth.la libmyth-ld.la libmyth-dl.la 
+lib_LTLIBRARIES = libmyth.la $(am__append_1) $(am__append_2)
 nobase_include_HEADERS = \
 	mtbb/task_group.h \
 	mtbb/parallel_for.h \
@@ -488,16 +506,16 @@ libmyth_la_CCASFLAGS = $(COMMON_CFLAGS) $(VANILLA_CFLAGS)
 libmyth_la_LDFLAGS = $(VANILLA_LDFLAGS)
 
 # wrap by ld --wrap 
-libmyth_ld_la_SOURCES = $(COMMON_SRCS) $(WRAP_SRCS)
-libmyth_ld_la_CFLAGS = $(COMMON_CFLAGS) $(WRAP_LD_CFLAGS)
-libmyth_ld_la_CCASFLAGS = $(COMMON_CFLAGS) $(WRAP_LD_CFLAGS)
-libmyth_ld_la_LDFLAGS = $(WRAP_LD_LDFLAGS)
+@BUILD_MYTH_LD_TRUE@libmyth_ld_la_SOURCES = $(COMMON_SRCS) $(WRAP_SRCS)
+@BUILD_MYTH_LD_TRUE@libmyth_ld_la_CFLAGS = $(COMMON_CFLAGS) $(WRAP_LD_CFLAGS)
+@BUILD_MYTH_LD_TRUE@libmyth_ld_la_CCASFLAGS = $(COMMON_CFLAGS) $(WRAP_LD_CFLAGS)
+@BUILD_MYTH_LD_TRUE@libmyth_ld_la_LDFLAGS = $(WRAP_LD_LDFLAGS)
 
 # wrap by dlopen
-libmyth_dl_la_SOURCES = $(COMMON_SRCS) $(WRAP_SRCS)
-libmyth_dl_la_CFLAGS = $(COMMON_CFLAGS) $(WRAP_DL_CFLAGS)
-libmyth_dl_la_CCASFLAGS = $(COMMON_CFLAGS) $(WRAP_DL_CFLAGS)
-libmyth_dl_la_LDFLAGS = $(WRAP_DL_LDFLAGS)
+@BUILD_MYTH_DL_TRUE@libmyth_dl_la_SOURCES = $(COMMON_SRCS) $(WRAP_SRCS)
+@BUILD_MYTH_DL_TRUE@libmyth_dl_la_CFLAGS = $(COMMON_CFLAGS) $(WRAP_DL_CFLAGS)
+@BUILD_MYTH_DL_TRUE@libmyth_dl_la_CCASFLAGS = $(COMMON_CFLAGS) $(WRAP_DL_CFLAGS)
+@BUILD_MYTH_DL_TRUE@libmyth_dl_la_LDFLAGS = $(WRAP_DL_LDFLAGS)
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
 
@@ -584,10 +602,10 @@ clean-libLTLIBRARIES:
 	}
 
 libmyth-dl.la: $(libmyth_dl_la_OBJECTS) $(libmyth_dl_la_DEPENDENCIES) $(EXTRA_libmyth_dl_la_DEPENDENCIES) 
-	$(AM_V_CCLD)$(libmyth_dl_la_LINK) -rpath $(libdir) $(libmyth_dl_la_OBJECTS) $(libmyth_dl_la_LIBADD) $(LIBS)
+	$(AM_V_CCLD)$(libmyth_dl_la_LINK) $(am_libmyth_dl_la_rpath) $(libmyth_dl_la_OBJECTS) $(libmyth_dl_la_LIBADD) $(LIBS)
 
 libmyth-ld.la: $(libmyth_ld_la_OBJECTS) $(libmyth_ld_la_DEPENDENCIES) $(EXTRA_libmyth_ld_la_DEPENDENCIES) 
-	$(AM_V_CCLD)$(libmyth_ld_la_LINK) -rpath $(libdir) $(libmyth_ld_la_OBJECTS) $(libmyth_ld_la_LIBADD) $(LIBS)
+	$(AM_V_CCLD)$(libmyth_ld_la_LINK) $(am_libmyth_ld_la_rpath) $(libmyth_ld_la_OBJECTS) $(libmyth_ld_la_LIBADD) $(LIBS)
 
 libmyth.la: $(libmyth_la_OBJECTS) $(libmyth_la_DEPENDENCIES) $(EXTRA_libmyth_la_DEPENDENCIES) 
 	$(AM_V_CCLD)$(libmyth_la_LINK) -rpath $(libdir) $(libmyth_la_OBJECTS) $(libmyth_la_LIBADD) $(LIBS)

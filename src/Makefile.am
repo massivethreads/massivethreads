@@ -38,7 +38,14 @@ WRAP_DL_LDFLAGS =
 # required when you use libtool (for building shared libs)
 ACLOCAL_AMFLAGS = -I m4
 
-lib_LTLIBRARIES = libmyth.la libmyth-ld.la libmyth-dl.la 
+lib_LTLIBRARIES =
+lib_LTLIBRARIES += libmyth.la
+if BUILD_MYTH_LD
+lib_LTLIBRARIES += libmyth-ld.la
+endif
+if BUILD_MYTH_DL
+lib_LTLIBRARIES += libmyth-dl.la 
+endif
 
 nobase_include_HEADERS = \
 	mtbb/task_group.h \
@@ -60,14 +67,18 @@ libmyth_la_CCASFLAGS = $(COMMON_CFLAGS) $(VANILLA_CFLAGS)
 libmyth_la_LDFLAGS   = $(VANILLA_LDFLAGS)
 
 # wrap by ld --wrap 
+if BUILD_MYTH_LD
 libmyth_ld_la_SOURCES   = $(COMMON_SRCS) $(WRAP_SRCS)
 libmyth_ld_la_CFLAGS    = $(COMMON_CFLAGS) $(WRAP_LD_CFLAGS)
 libmyth_ld_la_CCASFLAGS = $(COMMON_CFLAGS) $(WRAP_LD_CFLAGS)
 libmyth_ld_la_LDFLAGS   = $(WRAP_LD_LDFLAGS)
+endif
 
 # wrap by dlopen
+if BUILD_MYTH_DL
 libmyth_dl_la_SOURCES   = $(COMMON_SRCS) $(WRAP_SRCS)
 libmyth_dl_la_CFLAGS    = $(COMMON_CFLAGS) $(WRAP_DL_CFLAGS)
 libmyth_dl_la_CCASFLAGS = $(COMMON_CFLAGS) $(WRAP_DL_CFLAGS)
 libmyth_dl_la_LDFLAGS   = $(WRAP_DL_LDFLAGS)
+endif
 
