@@ -95,9 +95,9 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 check_PROGRAMS = myth_malloc$(EXEEXT) myth_calloc$(EXEEXT) \
-	myth_posix_memalign$(EXEEXT) myth_aligned_alloc$(EXEEXT) \
-	myth_valloc$(EXEEXT) myth_memalign$(EXEEXT) \
-	myth_pvalloc$(EXEEXT) myth_free$(EXEEXT) myth_realloc$(EXEEXT) \
+	myth_posix_memalign$(EXEEXT) myth_valloc$(EXEEXT) \
+	myth_memalign$(EXEEXT) myth_pvalloc$(EXEEXT) \
+	myth_free$(EXEEXT) myth_realloc$(EXEEXT) \
 	myth_create_0$(EXEEXT) myth_create_1$(EXEEXT) \
 	myth_create_2$(EXEEXT) myth_create_join_many$(EXEEXT) \
 	myth_yield_0$(EXEEXT) myth_yield_1$(EXEEXT) \
@@ -131,7 +131,9 @@ check_PROGRAMS = myth_malloc$(EXEEXT) myth_calloc$(EXEEXT) \
 	pth_yield_cc$(EXEEXT) pth_lock_cc$(EXEEXT) \
 	pth_trylock_cc$(EXEEXT) pth_mixlock_cc$(EXEEXT) \
 	pth_barrier_cc$(EXEEXT) measure_create_cc$(EXEEXT) \
-	measure_latency_cc$(EXEEXT) measure_wakeup_latency_cc$(EXEEXT)
+	measure_latency_cc$(EXEEXT) measure_wakeup_latency_cc$(EXEEXT) \
+	$(am__EXEEXT_1)
+@BUILD_TEST_ALIGNED_ALLOC_TRUE@am__append_1 = myth_aligned_alloc
 subdir = tests
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/libtool.m4 \
@@ -146,6 +148,8 @@ mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/src/config.h
 CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
+@BUILD_TEST_ALIGNED_ALLOC_TRUE@am__EXEEXT_1 =  \
+@BUILD_TEST_ALIGNED_ALLOC_TRUE@	myth_aligned_alloc$(EXEEXT)
 am_measure_create_OBJECTS = measure_create-measure_create.$(OBJEXT)
 measure_create_OBJECTS = $(am_measure_create_OBJECTS)
 am__DEPENDENCIES_1 = $(abs_top_srcdir)/src/libmyth.la
@@ -3369,13 +3373,6 @@ myth_posix_memalign.log: myth_posix_memalign$(EXEEXT)
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
 	"$$tst" $(AM_TESTS_FD_REDIRECT)
-myth_aligned_alloc.log: myth_aligned_alloc$(EXEEXT)
-	@p='myth_aligned_alloc$(EXEEXT)'; \
-	b='myth_aligned_alloc'; \
-	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
-	--log-file $$b.log --trs-file $$b.trs \
-	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
-	"$$tst" $(AM_TESTS_FD_REDIRECT)
 myth_valloc.log: myth_valloc$(EXEEXT)
 	@p='myth_valloc$(EXEEXT)'; \
 	b='myth_valloc'; \
@@ -3890,6 +3887,13 @@ measure_latency_cc.log: measure_latency_cc$(EXEEXT)
 measure_wakeup_latency_cc.log: measure_wakeup_latency_cc$(EXEEXT)
 	@p='measure_wakeup_latency_cc$(EXEEXT)'; \
 	b='measure_wakeup_latency_cc'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+myth_aligned_alloc.log: myth_aligned_alloc$(EXEEXT)
+	@p='myth_aligned_alloc$(EXEEXT)'; \
+	b='myth_aligned_alloc'; \
 	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \

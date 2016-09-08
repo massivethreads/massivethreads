@@ -185,10 +185,7 @@ AC_CHECK_LIB(pthread, pthread_create,
 		      [],
 		      [AC_MSG_ERROR(libpthread not available.)])
 
-# ---------------------
-# optional libraries
-# ---------------------
-
+# todo: make clock_gettime optional
 AC_CHECK_LIB(rt, clock_gettime,
 		 [],
 		 [AC_MSG_ERROR(librt not available.)])
@@ -211,29 +208,36 @@ AM_CONDITIONAL([BUILD_MYTH_LD],
 #
 # check if dlopen is supported
 #
-AC_LINK_IFELSE([AC_LANG_PROGRAM([[
-#include <dlfcn.h>
-]],
-[[ dlopen("a", 0); ]])],
-   [dlopen_supported="yes"],
-   [dlopen_supported="no"])
+# ---------------------
+# optional libraries
+# ---------------------
+
+AC_CHECK_LIB(dl, dlopen,
+		 [have_dlopen="yes"],
+		 [have_dlopen="no"])
 
 AM_CONDITIONAL([BUILD_MYTH_DL],
-	[test x"$enable_myth_dl" = "xyes" -a x"$dlopen_supported" = "xyes" ])
+	[test x"$enable_myth_dl" = "xyes" -a x"$have_dlopen" = "xyes" ])
 
 # -----------------------------
 # declarations
 # -----------------------------
 
-AC_MSG_CHECKING([declaration of aligned_alloc])
+AC_MSG_CHECKING([aligned_alloc])
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 #define _ISOC11_SOURCE 1
 #include <stdlib.h>
 ]],
-	[[ aligned_alloc; ]])], 
-	[AC_MSG_RESULT([yes]); AC_DEFINE([HAVE_DECL_ALIGNED_ALLOC], [1], [if set, aligned_alloc is declared in stdlib.h])],
-	[AC_MSG_RESULT([no]);  AC_DEFINE([HAVE_DECL_ALIGNED_ALLOC], [0], [if set, aligned_alloc is declared in stdlib.h])])
+	[[ aligned_alloc; ]])],
+	[have_aligned_alloc="yes"],
+	[have_aligned_alloc="no"])
+AC_MSG_RESULT([$have_aligned_alloc])
 
+AC_DEFINE([HAVE_ALIGNED_ALLOC],
+	[test x"$have_aligned_alloc" = "xyes"],
+	[if set, aligned_alloc is declared in stdlib.h])
+AM_CONDITIONAL([BUILD_TEST_ALIGNED_ALLOC],
+	[test x"$have_aligned_alloc" = "xyes"])
 
 #
 # for C program tests that follow, we treat warnings as error,

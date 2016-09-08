@@ -1,10 +1,10 @@
 /* src/config.h.in.  Generated from configure.ac by autoheader.  */
 
+/* if set, aligned_alloc is declared in stdlib.h */
+#undef HAVE_ALIGNED_ALLOC
+
 /* if set, sysv_abi attribute is available */
 #undef HAVE_ATTR_SYSV_ABI
-
-/* if set, aligned_alloc is declared in stdlib.h */
-#undef HAVE_DECL_ALIGNED_ALLOC
 
 /* Define to 1 if you have the <dlfcn.h> header file. */
 #undef HAVE_DLFCN_H

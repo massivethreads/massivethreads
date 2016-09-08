@@ -9,7 +9,6 @@ check_PROGRAMS = \
 	myth_malloc \
 	myth_calloc \
 	myth_posix_memalign \
-	myth_aligned_alloc \
 	myth_valloc \
 	myth_memalign \
 	myth_pvalloc \
@@ -85,6 +84,9 @@ check_PROGRAMS = \
 	measure_latency_cc \
 	measure_wakeup_latency_cc
 
+if BUILD_TEST_ALIGNED_ALLOC
+check_PROGRAMS += myth_aligned_alloc
+endif
 
 #	new_test
 # three programs that fail for now

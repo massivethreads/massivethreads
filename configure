@@ -674,6 +674,8 @@ CXXDEPMODE
 ac_ct_CXX
 CXXFLAGS
 CXX
+BUILD_TEST_ALIGNED_ALLOC_FALSE
+BUILD_TEST_ALIGNED_ALLOC_TRUE
 BUILD_MYTH_DL_FALSE
 BUILD_MYTH_DL_TRUE
 BUILD_MYTH_LD_FALSE
@@ -5466,10 +5468,7 @@ else
 fi
 
 
-# ---------------------
-# optional libraries
-# ---------------------
-
+# todo: make clock_gettime optional
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for clock_gettime in -lrt" >&5
 $as_echo_n "checking for clock_gettime in -lrt... " >&6; }
 if ${ac_cv_lib_rt_clock_gettime+:} false; then :
@@ -5575,28 +5574,54 @@ fi
 #
 # check if dlopen is supported
 #
+# ---------------------
+# optional libraries
+# ---------------------
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for dlopen in -ldl" >&5
+$as_echo_n "checking for dlopen in -ldl... " >&6; }
+if ${ac_cv_lib_dl_dlopen+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-ldl  $LIBS"
 cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
-#include <dlfcn.h>
-
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char dlopen ();
 int
 main ()
 {
- dlopen("a", 0);
+return dlopen ();
   ;
   return 0;
 }
 _ACEOF
 if ac_fn_c_try_link "$LINENO"; then :
-  dlopen_supported="yes"
+  ac_cv_lib_dl_dlopen=yes
 else
-  dlopen_supported="no"
+  ac_cv_lib_dl_dlopen=no
 fi
 rm -f core conftest.err conftest.$ac_objext \
     conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_dl_dlopen" >&5
+$as_echo "$ac_cv_lib_dl_dlopen" >&6; }
+if test "x$ac_cv_lib_dl_dlopen" = xyes; then :
+  have_dlopen="yes"
+else
+  have_dlopen="no"
+fi
 
- if test x"$enable_myth_dl" = "xyes" -a x"$dlopen_supported" = "xyes" ; then
+
+ if test x"$enable_myth_dl" = "xyes" -a x"$have_dlopen" = "xyes" ; then
   BUILD_MYTH_DL_TRUE=
   BUILD_MYTH_DL_FALSE='#'
 else
@@ -5609,8 +5634,8 @@ fi
 # declarations
 # -----------------------------
 
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking declaration of aligned_alloc" >&5
-$as_echo_n "checking declaration of aligned_alloc... " >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking aligned_alloc" >&5
+$as_echo_n "checking aligned_alloc... " >&6; }
 cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
@@ -5626,17 +5651,24 @@ main ()
 }
 _ACEOF
 if ac_fn_c_try_compile "$LINENO"; then :
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
-$as_echo "yes" >&6; };
-$as_echo "#define HAVE_DECL_ALIGNED_ALLOC 1" >>confdefs.h
-
+  have_aligned_alloc="yes"
 else
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
-$as_echo "no" >&6; };
-$as_echo "#define HAVE_DECL_ALIGNED_ALLOC 0" >>confdefs.h
-
+  have_aligned_alloc="no"
 fi
 rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $have_aligned_alloc" >&5
+$as_echo "$have_aligned_alloc" >&6; }
+
+
+$as_echo "#define HAVE_ALIGNED_ALLOC test x\"\$have_aligned_alloc\" = \"xyes\"" >>confdefs.h
+
+ if test x"$have_aligned_alloc" = "xyes"; then
+  BUILD_TEST_ALIGNED_ALLOC_TRUE=
+  BUILD_TEST_ALIGNED_ALLOC_FALSE='#'
+else
+  BUILD_TEST_ALIGNED_ALLOC_TRUE='#'
+  BUILD_TEST_ALIGNED_ALLOC_FALSE=
+fi
 
 
 #
@@ -17302,6 +17334,10 @@ Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${BUILD_MYTH_DL_TRUE}" && test -z "${BUILD_MYTH_DL_FALSE}"; then
   as_fn_error $? "conditional \"BUILD_MYTH_DL\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
+if test -z "${BUILD_TEST_ALIGNED_ALLOC_TRUE}" && test -z "${BUILD_TEST_ALIGNED_ALLOC_FALSE}"; then
+  as_fn_error $? "conditional \"BUILD_TEST_ALIGNED_ALLOC\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${am__fastdepCXX_TRUE}" && test -z "${am__fastdepCXX_FALSE}"; then
