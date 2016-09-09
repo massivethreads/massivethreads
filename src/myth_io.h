@@ -128,7 +128,7 @@ typedef struct myth_io_struct_perenv {
 #endif
 } myth_io_struct_perenv, *myth_io_struct_perenv_t;
 
-typedef struct myth_running_env * myth_running_env_t;
+//typedef struct myth_running_env * myth_running_env_t;
 
 //Fd-specific data structure
 typedef struct myth_io_struct_perfd {

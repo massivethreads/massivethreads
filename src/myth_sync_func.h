@@ -615,6 +615,7 @@ myth_mutexattr_settype_body(myth_mutexattr_t *attr, int type) {
 
 static inline int unimplemented(void) {
   assert(0);
+  return -1;
 }
 
 static inline int

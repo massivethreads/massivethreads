@@ -71,10 +71,10 @@ static inline myth_thread_t get_new_myth_thread_struct_desc(myth_running_env_t e
 #else
     alloc_size += 0xFFF;
     alloc_size &= ~0xFFF;
-#if MAP_STACK
-    void * th_ptr = myth_mmap(NULL,alloc_size,PROT_READ|PROT_WRITE,MAP_PRIVATE|MAP_ANONYMOUS|MAP_STACK,-1,0);
+#if defined(MAP_STACK)
+    char * th_ptr = myth_mmap(NULL,alloc_size,PROT_READ|PROT_WRITE,MAP_PRIVATE|MAP_ANONYMOUS|MAP_STACK,-1,0);
 #else
-    void * th_ptr = myth_mmap(NULL,alloc_size,PROT_READ|PROT_WRITE,MAP_PRIVATE|MAP_ANONYMOUS,-1,0);
+    char * th_ptr = myth_mmap(NULL,alloc_size,PROT_READ|PROT_WRITE,MAP_PRIVATE|MAP_ANONYMOUS,-1,0);
 #endif
 #endif
 #if MYTH_ALLOC_PROF
@@ -124,7 +124,7 @@ static inline myth_thread_t get_new_myth_thread_struct_desc(myth_running_env_t e
 #else
     alloc_size += 0xFFF;
     alloc_size &= ~0xFFF;
-#if MAP_STACK
+#if defined(MAP_STACK)
     void * th_ptr = mmap(NULL,alloc_size,PROT_READ|PROT_WRITE,MAP_PRIVATE|MAP_ANONYMOUS|MAP_STACK,-1,0);
 #else
     void * th_ptr = mmap(NULL,alloc_size,PROT_READ|PROT_WRITE,MAP_PRIVATE|MAP_ANONYMOUS,-1,0);
@@ -178,7 +178,7 @@ th_ptr -> 4080-4087:
     //Round up to 4KB
     size_in_bytes +=  0xFFF;
     size_in_bytes &= ~0xFFF;
-    void * th_ptr = myth_flmalloc(env->rank, size_in_bytes);
+    char * th_ptr = myth_flmalloc(env->rank, size_in_bytes);
     th_ptr += size_in_bytes - (sizeof(void*) * 2);
     uintptr_t *blk_size = (uintptr_t*) (th_ptr + sizeof(void*));
     *blk_size = size_in_bytes;
@@ -206,11 +206,11 @@ th_ptr -> 4080-4087:
 #else
     alloc_size += 0xFFF;
     alloc_size &= ~0xFFF;
-#if MAP_STACK
-    void * th_ptr = myth_mmap(NULL, alloc_size, PROT_READ|PROT_WRITE, 
+#if defined(MAP_STACK)
+    char * th_ptr = myth_mmap(NULL, alloc_size, PROT_READ|PROT_WRITE, 
 			      MAP_PRIVATE|MAP_ANONYMOUS|MAP_STACK, -1, 0);
 #else
-    vodi * th_ptr = myth_mmap(NULL, alloc_size, PROT_READ|PROT_WRITE,
+    char * th_ptr = myth_mmap(NULL, alloc_size, PROT_READ|PROT_WRITE,
 			      MAP_PRIVATE|MAP_ANONYMOUS, -1, 0);
 #endif /* MAP_STACK */
 #endif /* ALLOCATE_STACK_BY_MALLOC */
@@ -700,10 +700,10 @@ static inline void * myth_create_join_various_ex_aux(void * meta_arg_) {
   size_t result_stride = meta_arg->result_stride;
 
   if (b - a == 1) {
-    void * ids     = (meta_arg->ids   ? meta_arg->ids   + a * id_stride : 0);
-    void * funcs   = meta_arg->funcs   + a * func_stride;
-    void * args    = meta_arg->args    + a * arg_stride; 
-    void * results = (meta_arg->results ? meta_arg->results + a * result_stride : 0);  
+    void * ids     = (meta_arg->ids   ? (char *)meta_arg->ids   + a * id_stride : 0);
+    void * funcs   = (char *)meta_arg->funcs   + a * func_stride;
+    void * args    = (char *)meta_arg->args    + a * arg_stride; 
+    void * results = (meta_arg->results ? (char *)meta_arg->results + a * result_stride : 0);  
     if (ids) {
       ((myth_thread_t *)ids)[0] = myth_self();
     }
@@ -727,7 +727,7 @@ static inline void * myth_create_join_various_ex_aux(void * meta_arg_) {
 	id_stride, attr_stride, func_stride, arg_stride, result_stride, 
 	c, b }
     };
-    myth_thread_attr_t * attr_a = (attrs ? attrs + a * attr_stride : 0);
+    myth_thread_attr_t * attr_a = (myth_thread_attr_t *)(attrs ? (char *)attrs + a * attr_stride : 0);
     myth_thread_t cid = 0;
     int r0 = myth_create_ex_body(&cid, attr_a, myth_create_join_various_ex_aux, carg);
     assert(r0 == 0); /* TODO : better communicate error */
@@ -1370,7 +1370,7 @@ static inline myth_thread_t myth_deserialize_body(myth_pickle_t p)
   //Try to mmap with fixed address
   void *stack_start_addr;
   stack_start_addr=(void*)( ((char*)p->desc.stack)-(PAGE_ALIGNED_STACK_SIZE-sizeof(void*)) );
-#if MAP_STACK
+#if defined(MAP_STACK)
   stack_ptr=myth_mmap(stack_start_addr,PAGE_ALIGNED_STACK_SIZE,PROT_READ|PROT_WRITE,MAP_FIXED|MAP_PRIVATE|MAP_ANONYMOUS|MAP_STACK,-1,0);
 #else
   stack_ptr=myth_mmap(stack_start_addr,PAGE_ALIGNED_STACK_SIZE,PROT_READ|PROT_WRITE,MAP_FIXED|MAP_PRIVATE|MAP_ANONYMOUS,-1,0);
@@ -1395,7 +1395,7 @@ static inline myth_thread_t myth_ext_deserialize_body(myth_pickle_t p)
   //Try to mmap with fixed address
   void *stack_start_addr;
   stack_start_addr=(void*)( ((char*)p->desc.stack)-(PAGE_ALIGNED_STACK_SIZE-sizeof(void*)) );
-#if MAP_STACK
+#if defined(MAP_STACK)
   stack_ptr=myth_mmap(stack_start_addr,PAGE_ALIGNED_STACK_SIZE,PROT_READ|PROT_WRITE,MAP_FIXED|MAP_PRIVATE|MAP_ANONYMOUS|MAP_STACK,-1,0);
 #else
   stack_ptr=myth_mmap(stack_start_addr,PAGE_ALIGNED_STACK_SIZE,PROT_READ|PROT_WRITE,MAP_FIXED|MAP_PRIVATE|MAP_ANONYMOUS,-1,0);

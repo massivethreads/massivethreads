@@ -1,9 +1,12 @@
 /* 
  * myth_eco.c
  */
+/* semaphre.h should come before linux/futex.h on FX10
+   otherwise you get a compile-time error
+   redefinition of loff_t; */
+#include <semaphore.h>
 #include <linux/futex.h>
 #include <limits.h>
-#include <semaphore.h>
 #include <assert.h>
 
 #include "myth_config.h"
@@ -281,7 +284,6 @@ void myth_go_asleep(void) {
 }
 
 int myth_wakeup_one(void) {
-  int s;
   int rank;
   int *my_sem;
   sleep_queue_t tmp = myth_sleeper_pop();
@@ -290,7 +292,7 @@ int myth_wakeup_one(void) {
   rank = tmp->head_rank;
   myth_free(tmp);//free
   if(my_sem == 0) return -1;//ideally not operated
-  if(( s = __sync_fetch_and_sub(my_sem,1)) != 1) {
+  if(__sync_fetch_and_sub(my_sem,1) != 1) {
     *my_sem = 0;
     g_envs[rank].isSleepy = 1;
     g_envs[rank].ws_target = g_worker_rank;

@@ -19,7 +19,7 @@ void * f(void * x) {
     assert(r == 0);
   }
   for (t = 0; t < 10; t++) {
-    for (int i = 0; i < n_keys; i++) {
+    for (i = 0; i < n_keys; i++) {
       void * v = myth_getspecific(keys[i]);
       assert(v == vals[i]);
       v = (void *)jrand48(rg);

@@ -108,9 +108,15 @@ int __wrap(fcntl)(int fd, int cmd, ... /* arg */ ) {
   case F_SETLK:
   case F_SETLKW:
   case F_GETLK:
+#if defined(F_OFD_SETLK)
   case F_OFD_SETLK:
+#endif
+#if defined(F_OFD_SETLKW)
   case F_OFD_SETLKW:
+#endif
+#if defined(F_OFD_GETLK)
   case F_OFD_GETLK:
+#endif
 #if defined(F_GETOWN_EX)
   case F_GETOWN_EX:	 /* (since Linux 2.6.32) */
 #endif

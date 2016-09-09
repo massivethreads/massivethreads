@@ -149,7 +149,7 @@ static void myth_setup_worker(int rank) {
 #else
     alloc_size += 4095;
     alloc_size &= ~(0xFFF);
-#if MAP_STACK
+#if defined(MAP_STACK)
     th_ptr = mmap(NULL,alloc_size,PROT_READ|PROT_WRITE,MAP_PRIVATE|MAP_ANONYMOUS|MAP_STACK,-1,0);
 #else
     th_ptr = mmap(NULL,alloc_size,PROT_READ|PROT_WRITE,MAP_PRIVATE|MAP_ANONYMOUS,-1,0);
@@ -174,7 +174,7 @@ static void myth_setup_worker(int rank) {
 #else
     alloc_size += 4095;
     alloc_size &= ~(0xFFF);
-#if MAP_STACK
+#if defined(MAP_STACK)
     th_ptr = mmap(NULL,alloc_size,PROT_READ|PROT_WRITE,MAP_PRIVATE|MAP_ANONYMOUS|MAP_STACK,-1,0);
 #else
     th_ptr = mmap(NULL,alloc_size,PROT_READ|PROT_WRITE,MAP_PRIVATE|MAP_ANONYMOUS,-1,0);

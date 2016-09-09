@@ -1159,6 +1159,7 @@ int real_pthread_attr_getaffinity_np(const pthread_attr_t *attr,
 #endif
 }
 
+#if defined(HAVE_PTHREAD_GETATTR_DEFAULT_NP)
 #if MYTH_WRAP == MYTH_WRAP_LD
 int __real_pthread_getattr_default_np(pthread_attr_t *attr);
 #endif
@@ -1175,7 +1176,9 @@ int real_pthread_getattr_default_np(pthread_attr_t *attr) {
 #error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
+#endif	/* HAVE_PTHREAD_GETATTR_DEFAULT_NP */
 
+#if defined(HAVE_PTHREAD_SETATTR_DEFAULT_NP)
 #if MYTH_WRAP == MYTH_WRAP_LD
 int __real_pthread_setattr_default_np(const pthread_attr_t *attr);
 #endif
@@ -1192,6 +1195,7 @@ int real_pthread_setattr_default_np(const pthread_attr_t *attr) {
 #error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
+#endif	/* HAVE_PTHREAD_SETATTR_DEFAULT_NP */
 
 #if MYTH_WRAP == MYTH_WRAP_LD
 int __real_pthread_getattr_np(pthread_t thread, pthread_attr_t *attr);
@@ -1267,6 +1271,7 @@ int real_pthread_setschedprio(pthread_t thread, int prio) {
 #endif
 }
 
+#if defined(HAVE_PTHREAD_GETNAME_NP)
 #if _GNU_SOURCE
 #if MYTH_WRAP == MYTH_WRAP_LD
 int __real_pthread_getname_np(pthread_t thread, char *name, size_t len);
@@ -1284,7 +1289,9 @@ int real_pthread_getname_np(pthread_t thread, char *name, size_t len) {
 #error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
+#endif	/* HAVE_PTHREAD_GETNAME_NP */
 
+#if defined(HAVE_PTHREAD_SETNAME_NP)
 #if MYTH_WRAP == MYTH_WRAP_LD
 int __real_pthread_setname_np(pthread_t thread, const char *name);
 #endif
@@ -1301,6 +1308,8 @@ int real_pthread_setname_np(pthread_t thread, const char *name) {
 #error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
+#endif /* HAVE_PTHREAD_SETNAME_NP */
+
 #endif	/* _GNU_SOURCE */
 
 #if MYTH_WRAP == MYTH_WRAP_LD
@@ -1635,6 +1644,7 @@ int real_pthread_mutex_setprioceiling(pthread_mutex_t *restrict mutex,
 #endif
 }
 
+#if defined(HAVE_PTHREAD_MUTEX_CONSISTENT)
 #if MYTH_WRAP == MYTH_WRAP_LD
 int __real_pthread_mutex_consistent(pthread_mutex_t *mutex);
 #endif
@@ -1651,6 +1661,7 @@ int real_pthread_mutex_consistent(pthread_mutex_t *mutex) {
 #error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
+#endif	/* HAVE_PTHREAD_MUTEX_CONSISTENT */
 
 #if MYTH_WRAP == MYTH_WRAP_LD
 int __real_pthread_mutexattr_init(pthread_mutexattr_t *attr);
@@ -1834,6 +1845,7 @@ int real_pthread_mutexattr_setprioceiling(pthread_mutexattr_t *attr,
 #endif
 }
 
+#if defined(HAVE_PTHREAD_MUTEXATTR_GETROBUST)
 #if MYTH_WRAP == MYTH_WRAP_LD
 int __real_pthread_mutexattr_getrobust(const pthread_mutexattr_t *restrict attr,
 				     int *restrict robust);
@@ -1852,7 +1864,9 @@ int real_pthread_mutexattr_getrobust(const pthread_mutexattr_t *restrict attr,
 #error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
+#endif /* HAVE_PTHREAD_MUTEXATTR_GETROBUST */
 
+#if defined(HAVE_PTHREAD_MUTEXATTR_SETROBUST)
 #if MYTH_WRAP == MYTH_WRAP_LD
 int __real_pthread_mutexattr_setrobust(pthread_mutexattr_t *attr, int robust);
 #endif
@@ -1869,6 +1883,7 @@ int real_pthread_mutexattr_setrobust(pthread_mutexattr_t *attr, int robust) {
 #error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
+#endif	/* HAVE_PTHREAD_MUTEXATTR_SETROBUST */
 
 #if MYTH_WRAP == MYTH_WRAP_LD
 int __real_pthread_rwlock_init(pthread_rwlock_t *restrict rwlock,
@@ -2712,6 +2727,7 @@ void real_pthread_kill_other_threads_np(void) {
 }
 #endif
 
+#if defined(HAVE_PTHREAD_SIGQUEUE)
 #if MYTH_WRAP == MYTH_WRAP_LD
 int __real_pthread_sigqueue(pthread_t thread, int sig,
 			  const union sigval value);
@@ -2730,6 +2746,7 @@ int real_pthread_sigqueue(pthread_t thread, int sig,
 #error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
+#endif /* HAVE_PTHREAD_SIGQUEUE */
 
 #if MYTH_WRAP == MYTH_WRAP_LD
 int __real_pthread_sigmask(int how, const sigset_t *set, sigset_t *oldset);
@@ -2842,8 +2859,8 @@ static void * aligned_alloc_uncollectable(size_t alignment, size_t size) {
   intptr_t pi = (intptr_t)s_uncollectable_ptr;
   /* advance p to the next aligned address */
   intptr_t qi = (pi + (1 << log_alignment) - 1) >> log_alignment;
-  void * q = (void *)qi;
-  void * b = s_uncollectable_memory;
+  char * q = (char *)qi;
+  char * b = s_uncollectable_memory;
   assert(q + size <= b + uncollectable_memory_sz);
   intptr_t idx = (q  - b) >> uncollectable_memory_min_log_alignment;
   s_uncollectable_ptr = q + size;
@@ -2852,11 +2869,11 @@ static void * aligned_alloc_uncollectable(size_t alignment, size_t size) {
 }
 
 static size_t uncollectable_alloc_size(void * ptr) {
-  void * b = s_uncollectable_memory;
-  intptr_t idx = (ptr - b) >> uncollectable_memory_min_log_alignment;
+  char * b = s_uncollectable_memory;
+  intptr_t idx = ((char *)ptr - b) >> uncollectable_memory_min_log_alignment;
   size_t size;
   assert(b <= ptr);
-  assert(ptr < b + uncollectable_memory_sz);
+  assert((char *)ptr < b + uncollectable_memory_sz);
   size = s_uncollectable_memory_sz[idx];
   assert(size);
   return size;
@@ -2899,9 +2916,9 @@ void real_free(void * ptr) {
 #elif MYTH_WRAP == MYTH_WRAP_LD
   __real_free(ptr);
 #elif MYTH_WRAP == MYTH_WRAP_DL
-  if ((void *)s_uncollectable_memory <= ptr
-      && ptr < (void *)s_uncollectable_memory + uncollectable_memory_sz) {
-  return;
+  if (s_uncollectable_memory <= (char *)ptr
+      && (char *)ptr < s_uncollectable_memory + uncollectable_memory_sz) {
+    return;
   }
   if (!real_function_table.free) ensure_real_functions();
   assert(real_function_table.free);
@@ -2979,6 +2996,7 @@ int real_posix_memalign(void **memptr, size_t alignment, size_t size) {
 #endif
 }
 
+#if HAVE_ALIGNED_ALLOC
 #if MYTH_WRAP == MYTH_WRAP_LD
 void * __real_aligned_alloc(size_t alignment, size_t size);
 #endif
@@ -2995,6 +3013,7 @@ void * real_aligned_alloc(size_t alignment, size_t size) {
 #error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
+#endif	/* HAVE_ALIGNED_ALLOC */
 
 #if MYTH_WRAP == MYTH_WRAP_LD
 void * __real_valloc(size_t size);
@@ -3099,6 +3118,7 @@ int real_accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen) {
 #endif
 }
 
+#if defined(HAVE_ACCEPT4)
 #if _GNU_SOURCE
 #if MYTH_WRAP == MYTH_WRAP_LD
 int __real_accept4(int sockfd, struct sockaddr *addr, socklen_t *addrlen, int flags);
@@ -3116,6 +3136,8 @@ int real_accept4(int sockfd, struct sockaddr *addr, socklen_t *addrlen, int flag
 #error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
+#endif	/* HAVE_ACCEPT4 */
+
 #endif	/* _GNU_SOURCE */
 
 #if MYTH_WRAP == MYTH_WRAP_LD
@@ -3235,10 +3257,16 @@ int real_fcntl(int fd, int cmd, ...) {
   case F_SETLK:
   case F_SETLKW:
   case F_GETLK:
+#if defined(F_OFD_SETLK)
   case F_OFD_SETLK:
+#endif
+#if defined(F_OFD_SETLKW)
   case F_OFD_SETLKW:
+#endif
+#if defined(F_OFD_GETLK)
   case F_OFD_GETLK:
-#if defined(F_GETOWN_EX)
+#endif
+#if defined(F_GETOWN_EX)	 /* (since Linux 2.6.32) */
   case F_GETOWN_EX:	 /* (since Linux 2.6.32) */
 #endif
 #if defined(F_SETOWN_EX)

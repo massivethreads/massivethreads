@@ -8,9 +8,10 @@
 
 typedef unsigned long long ts_t;
 
-#define USE_RDTSC 1
+#define USE_RDTSC 0
 
 #if USE_RDTSC
+/* TODO : make it run on Sparc */
 static inline ts_t rdtsc() {
   unsigned long long u;
   asm volatile ("rdtsc;shlq $32,%%rdx;orq %%rdx,%%rax":"=a"(u)::"%rdx");
