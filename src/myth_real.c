@@ -2872,7 +2872,7 @@ static size_t uncollectable_alloc_size(void * ptr) {
   char * b = s_uncollectable_memory;
   intptr_t idx = ((char *)ptr - b) >> uncollectable_memory_min_log_alignment;
   size_t size;
-  assert(b <= ptr);
+  assert(b <= (char *)ptr);
   assert((char *)ptr < b + uncollectable_memory_sz);
   size = s_uncollectable_memory_sz[idx];
   assert(size);

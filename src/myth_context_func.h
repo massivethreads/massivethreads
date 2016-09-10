@@ -64,13 +64,6 @@ void myth_set_context_withcall_s(myth_context_t switch_to,
 #define PRESERVE_TLSREG(ctx) do { } while(0)
 #endif 
 
-typedef struct myth_ctx_withcall_param {
-  void(*fn)(void*, void*, void*);
-  void *arg1, *arg2, *arg3;
-} myth_ctx_withcall_param, *myth_ctx_withcall_param_t;
-
-extern volatile __thread myth_ctx_withcall_param g_ctx_withcall_params;
-
 static inline void myth_swap_context_s(myth_context_t switch_from,
 				       myth_context_t switch_to) {
   //clear

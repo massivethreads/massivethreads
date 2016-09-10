@@ -196,7 +196,7 @@
 #define USE_JUMP_INSN_B 1
 
 // force to use ucontext
-#define MYTH_FORCE_UCONTEXT 0
+#define MYTH_FORCE_UCONTEXT 1
 
 /* ------------------
    MYTH_ARCH choices

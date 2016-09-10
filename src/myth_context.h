@@ -59,6 +59,15 @@ typedef struct myth_context {
 #endif
 } myth_context, *myth_context_t;
 
+/* typedef required to pass params to swap_context */
+#if MYTH_CONTEXT == MYTH_CONTEXT_UCONTEXT
+typedef struct myth_ctx_withcall_param {
+  void(*fn)(void*, void*, void*);
+  void *arg1, *arg2, *arg3;
+} myth_ctx_withcall_param, *myth_ctx_withcall_param_t;
+
+extern volatile __thread myth_ctx_withcall_param g_ctx_withcall_params;
+#endif
 
 //Attributes of functions called after context switch
 #if MYTH_CONTEXT == MYTH_CONTEXT_i386
