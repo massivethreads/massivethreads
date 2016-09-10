@@ -19,6 +19,7 @@ void alloc_key() {
 
 void * f(void * x) {
   alloc_key();
+  return 0;
 }
 
 int create_and_delete_keys() {

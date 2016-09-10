@@ -785,6 +785,7 @@ enable_dependency_tracking
 enable_myth_ld
 enable_myth_dl
 enable_eco_mode
+enable_native_context
 with_default_stack_size
 with_sched_stack_size
 with_default_guard_size
@@ -1467,6 +1468,9 @@ Optional Features:
                           Default is "yes". When eco-mode scheduler is
                           enabled, thread creation overhead might be slightly
                           increased, whichever it is activated or not
+  --enable-native-context=yes|no
+                          use optimized assembly language context switch
+                          (default=yes)
   --enable-shared[=PKGS]  build shared libraries [default=yes]
   --enable-static[=PKGS]  build static libraries [default=yes]
   --enable-fast-install[=PKGS]
@@ -4831,6 +4835,30 @@ cat >>confdefs.h <<_ACEOF
 _ACEOF
 
 fi
+
+# -----------------------
+# use ucontext or native context
+# -----------------------
+
+# Check whether --enable-native-context was given.
+if test "${enable_native_context+set}" = set; then :
+  enableval=$enable_native_context; enable_native_context="${enableval}"
+else
+  enable_native_context="yes"
+fi
+
+
+if test x"$enable_native_context" = "xno" ; then
+   enable_native_context=1
+else
+   enable_native_context=0
+fi
+
+cat >>confdefs.h <<_ACEOF
+#define MYTH_FORCE_UCONTEXT $enable_native_context
+_ACEOF
+
+
 
 # -----------------------
 # set user threads' default stack size

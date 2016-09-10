@@ -86,6 +86,26 @@ else
 fi
 
 # -----------------------
+# use ucontext or native context
+# -----------------------
+
+AC_ARG_ENABLE([native-context],
+            [AS_HELP_STRING([--enable-native-context=yes|no],
+                            [use optimized assembly language context switch (default=yes)])],
+            [enable_native_context="${enableval}"],
+            [enable_native_context="yes"])
+
+if test x"$enable_native_context" = "xno" ; then
+   enable_native_context=1
+else
+   enable_native_context=0
+fi
+AC_DEFINE_UNQUOTED([MYTH_FORCE_UCONTEXT],
+	[$enable_native_context],
+	[use ucontext if set, otherwise assembly context])
+
+
+# -----------------------
 # set user threads' default stack size
 # -----------------------
 

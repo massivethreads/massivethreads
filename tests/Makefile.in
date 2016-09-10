@@ -96,7 +96,7 @@ build_triplet = @build@
 host_triplet = @host@
 check_PROGRAMS = myth_malloc$(EXEEXT) myth_calloc$(EXEEXT) \
 	myth_posix_memalign$(EXEEXT) myth_valloc$(EXEEXT) \
-	myth_memalign$(EXEEXT) myth_pvalloc$(EXEEXT) \
+	myth_memalign$(EXEEXT) $(am__EXEEXT_1) myth_pvalloc$(EXEEXT) \
 	myth_free$(EXEEXT) myth_realloc$(EXEEXT) \
 	myth_create_0$(EXEEXT) myth_create_1$(EXEEXT) \
 	myth_create_2$(EXEEXT) myth_create_join_many$(EXEEXT) \
@@ -109,9 +109,6 @@ check_PROGRAMS = myth_malloc$(EXEEXT) myth_calloc$(EXEEXT) \
 	myth_dag_1d$(EXEEXT) myth_dag_2d$(EXEEXT) \
 	myth_dag_random$(EXEEXT) myth_key_create$(EXEEXT) \
 	myth_key_getspecific$(EXEEXT) myth_key_destructor$(EXEEXT) \
-	pth_create_0$(EXEEXT) pth_create_1$(EXEEXT) \
-	pth_create_2$(EXEEXT) pth_yield$(EXEEXT) pth_lock$(EXEEXT) \
-	pth_trylock$(EXEEXT) pth_mixlock$(EXEEXT) pth_barrier$(EXEEXT) \
 	measure_create$(EXEEXT) measure_latency$(EXEEXT) \
 	measure_wakeup_latency$(EXEEXT) measure_malloc$(EXEEXT) \
 	myth_create_0_cc$(EXEEXT) myth_create_1_cc$(EXEEXT) \
@@ -126,13 +123,9 @@ check_PROGRAMS = myth_malloc$(EXEEXT) myth_calloc$(EXEEXT) \
 	myth_dag_1d_cc$(EXEEXT) myth_dag_2d_cc$(EXEEXT) \
 	myth_dag_random_cc$(EXEEXT) myth_key_create_cc$(EXEEXT) \
 	myth_key_getspecific_cc$(EXEEXT) \
-	myth_key_destructor_cc$(EXEEXT) pth_create_0_cc$(EXEEXT) \
-	pth_create_1_cc$(EXEEXT) pth_create_2_cc$(EXEEXT) \
-	pth_yield_cc$(EXEEXT) pth_lock_cc$(EXEEXT) \
-	pth_trylock_cc$(EXEEXT) pth_mixlock_cc$(EXEEXT) \
-	pth_barrier_cc$(EXEEXT) measure_create_cc$(EXEEXT) \
+	myth_key_destructor_cc$(EXEEXT) measure_create_cc$(EXEEXT) \
 	measure_latency_cc$(EXEEXT) measure_wakeup_latency_cc$(EXEEXT) \
-	$(am__EXEEXT_1)
+	new_test$(EXEEXT)
 @BUILD_TEST_ALIGNED_ALLOC_TRUE@am__append_1 = myth_aligned_alloc
 subdir = tests
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -609,111 +602,12 @@ myth_yield_2_cc_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CXXLD) \
 	$(myth_yield_2_cc_CXXFLAGS) $(CXXFLAGS) \
 	$(myth_yield_2_cc_LDFLAGS) $(LDFLAGS) -o $@
-am_pth_barrier_OBJECTS = pth_barrier-pth_barrier.$(OBJEXT)
-pth_barrier_OBJECTS = $(am_pth_barrier_OBJECTS)
-pth_barrier_DEPENDENCIES = $(am__DEPENDENCIES_1)
-pth_barrier_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
-	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(pth_barrier_CFLAGS) \
-	$(CFLAGS) $(pth_barrier_LDFLAGS) $(LDFLAGS) -o $@
-am_pth_barrier_cc_OBJECTS = pth_barrier_cc-pth_barrier_cc.$(OBJEXT)
-pth_barrier_cc_OBJECTS = $(am_pth_barrier_cc_OBJECTS)
-pth_barrier_cc_DEPENDENCIES = $(am__DEPENDENCIES_1)
-pth_barrier_cc_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX \
-	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CXXLD) \
-	$(pth_barrier_cc_CXXFLAGS) $(CXXFLAGS) \
-	$(pth_barrier_cc_LDFLAGS) $(LDFLAGS) -o $@
-am_pth_create_0_OBJECTS = pth_create_0-pth_create_0.$(OBJEXT)
-pth_create_0_OBJECTS = $(am_pth_create_0_OBJECTS)
-pth_create_0_DEPENDENCIES = $(am__DEPENDENCIES_1)
-pth_create_0_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
-	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(pth_create_0_CFLAGS) \
-	$(CFLAGS) $(pth_create_0_LDFLAGS) $(LDFLAGS) -o $@
-am_pth_create_0_cc_OBJECTS =  \
-	pth_create_0_cc-pth_create_0_cc.$(OBJEXT)
-pth_create_0_cc_OBJECTS = $(am_pth_create_0_cc_OBJECTS)
-pth_create_0_cc_DEPENDENCIES = $(am__DEPENDENCIES_1)
-pth_create_0_cc_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX \
-	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CXXLD) \
-	$(pth_create_0_cc_CXXFLAGS) $(CXXFLAGS) \
-	$(pth_create_0_cc_LDFLAGS) $(LDFLAGS) -o $@
-am_pth_create_1_OBJECTS = pth_create_1-pth_create_1.$(OBJEXT)
-pth_create_1_OBJECTS = $(am_pth_create_1_OBJECTS)
-pth_create_1_DEPENDENCIES = $(am__DEPENDENCIES_1)
-pth_create_1_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
-	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(pth_create_1_CFLAGS) \
-	$(CFLAGS) $(pth_create_1_LDFLAGS) $(LDFLAGS) -o $@
-am_pth_create_1_cc_OBJECTS =  \
-	pth_create_1_cc-pth_create_1_cc.$(OBJEXT)
-pth_create_1_cc_OBJECTS = $(am_pth_create_1_cc_OBJECTS)
-pth_create_1_cc_DEPENDENCIES = $(am__DEPENDENCIES_1)
-pth_create_1_cc_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX \
-	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CXXLD) \
-	$(pth_create_1_cc_CXXFLAGS) $(CXXFLAGS) \
-	$(pth_create_1_cc_LDFLAGS) $(LDFLAGS) -o $@
-am_pth_create_2_OBJECTS = pth_create_2-pth_create_2.$(OBJEXT)
-pth_create_2_OBJECTS = $(am_pth_create_2_OBJECTS)
-pth_create_2_DEPENDENCIES = $(am__DEPENDENCIES_1)
-pth_create_2_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
-	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(pth_create_2_CFLAGS) \
-	$(CFLAGS) $(pth_create_2_LDFLAGS) $(LDFLAGS) -o $@
-am_pth_create_2_cc_OBJECTS =  \
-	pth_create_2_cc-pth_create_2_cc.$(OBJEXT)
-pth_create_2_cc_OBJECTS = $(am_pth_create_2_cc_OBJECTS)
-pth_create_2_cc_DEPENDENCIES = $(am__DEPENDENCIES_1)
-pth_create_2_cc_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX \
-	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CXXLD) \
-	$(pth_create_2_cc_CXXFLAGS) $(CXXFLAGS) \
-	$(pth_create_2_cc_LDFLAGS) $(LDFLAGS) -o $@
-am_pth_lock_OBJECTS = pth_lock-pth_lock.$(OBJEXT)
-pth_lock_OBJECTS = $(am_pth_lock_OBJECTS)
-pth_lock_DEPENDENCIES = $(am__DEPENDENCIES_1)
-pth_lock_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
-	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(pth_lock_CFLAGS) \
-	$(CFLAGS) $(pth_lock_LDFLAGS) $(LDFLAGS) -o $@
-am_pth_lock_cc_OBJECTS = pth_lock_cc-pth_lock_cc.$(OBJEXT)
-pth_lock_cc_OBJECTS = $(am_pth_lock_cc_OBJECTS)
-pth_lock_cc_DEPENDENCIES = $(am__DEPENDENCIES_1)
-pth_lock_cc_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) \
-	$(LIBTOOLFLAGS) --mode=link $(CXXLD) $(pth_lock_cc_CXXFLAGS) \
-	$(CXXFLAGS) $(pth_lock_cc_LDFLAGS) $(LDFLAGS) -o $@
-am_pth_mixlock_OBJECTS = pth_mixlock-pth_mixlock.$(OBJEXT)
-pth_mixlock_OBJECTS = $(am_pth_mixlock_OBJECTS)
-pth_mixlock_DEPENDENCIES = $(am__DEPENDENCIES_1)
-pth_mixlock_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
-	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(pth_mixlock_CFLAGS) \
-	$(CFLAGS) $(pth_mixlock_LDFLAGS) $(LDFLAGS) -o $@
-am_pth_mixlock_cc_OBJECTS = pth_mixlock_cc-pth_mixlock_cc.$(OBJEXT)
-pth_mixlock_cc_OBJECTS = $(am_pth_mixlock_cc_OBJECTS)
-pth_mixlock_cc_DEPENDENCIES = $(am__DEPENDENCIES_1)
-pth_mixlock_cc_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX \
-	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CXXLD) \
-	$(pth_mixlock_cc_CXXFLAGS) $(CXXFLAGS) \
-	$(pth_mixlock_cc_LDFLAGS) $(LDFLAGS) -o $@
-am_pth_trylock_OBJECTS = pth_trylock-pth_trylock.$(OBJEXT)
-pth_trylock_OBJECTS = $(am_pth_trylock_OBJECTS)
-pth_trylock_DEPENDENCIES = $(am__DEPENDENCIES_1)
-pth_trylock_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
-	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(pth_trylock_CFLAGS) \
-	$(CFLAGS) $(pth_trylock_LDFLAGS) $(LDFLAGS) -o $@
-am_pth_trylock_cc_OBJECTS = pth_trylock_cc-pth_trylock_cc.$(OBJEXT)
-pth_trylock_cc_OBJECTS = $(am_pth_trylock_cc_OBJECTS)
-pth_trylock_cc_DEPENDENCIES = $(am__DEPENDENCIES_1)
-pth_trylock_cc_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX \
-	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CXXLD) \
-	$(pth_trylock_cc_CXXFLAGS) $(CXXFLAGS) \
-	$(pth_trylock_cc_LDFLAGS) $(LDFLAGS) -o $@
-am_pth_yield_OBJECTS = pth_yield-pth_yield.$(OBJEXT)
-pth_yield_OBJECTS = $(am_pth_yield_OBJECTS)
-pth_yield_DEPENDENCIES = $(am__DEPENDENCIES_1)
-pth_yield_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
-	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(pth_yield_CFLAGS) \
-	$(CFLAGS) $(pth_yield_LDFLAGS) $(LDFLAGS) -o $@
-am_pth_yield_cc_OBJECTS = pth_yield_cc-pth_yield_cc.$(OBJEXT)
-pth_yield_cc_OBJECTS = $(am_pth_yield_cc_OBJECTS)
-pth_yield_cc_DEPENDENCIES = $(am__DEPENDENCIES_1)
-pth_yield_cc_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) \
-	$(LIBTOOLFLAGS) --mode=link $(CXXLD) $(pth_yield_cc_CXXFLAGS) \
-	$(CXXFLAGS) $(pth_yield_cc_LDFLAGS) $(LDFLAGS) -o $@
+am_new_test_OBJECTS = new_test-new_test.$(OBJEXT)
+new_test_OBJECTS = $(am_new_test_OBJECTS)
+new_test_DEPENDENCIES = $(am__DEPENDENCIES_1)
+new_test_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(new_test_CFLAGS) \
+	$(CFLAGS) $(new_test_LDFLAGS) $(LDFLAGS) -o $@
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
 am__v_P_0 = false
@@ -801,15 +695,7 @@ SOURCES = $(measure_create_SOURCES) $(measure_create_cc_SOURCES) \
 	$(myth_valloc_SOURCES) $(myth_yield_0_SOURCES) \
 	$(myth_yield_0_cc_SOURCES) $(myth_yield_1_SOURCES) \
 	$(myth_yield_1_cc_SOURCES) $(myth_yield_2_SOURCES) \
-	$(myth_yield_2_cc_SOURCES) $(pth_barrier_SOURCES) \
-	$(pth_barrier_cc_SOURCES) $(pth_create_0_SOURCES) \
-	$(pth_create_0_cc_SOURCES) $(pth_create_1_SOURCES) \
-	$(pth_create_1_cc_SOURCES) $(pth_create_2_SOURCES) \
-	$(pth_create_2_cc_SOURCES) $(pth_lock_SOURCES) \
-	$(pth_lock_cc_SOURCES) $(pth_mixlock_SOURCES) \
-	$(pth_mixlock_cc_SOURCES) $(pth_trylock_SOURCES) \
-	$(pth_trylock_cc_SOURCES) $(pth_yield_SOURCES) \
-	$(pth_yield_cc_SOURCES)
+	$(myth_yield_2_cc_SOURCES) $(new_test_SOURCES)
 DIST_SOURCES = $(measure_create_SOURCES) $(measure_create_cc_SOURCES) \
 	$(measure_latency_SOURCES) $(measure_latency_cc_SOURCES) \
 	$(measure_malloc_SOURCES) $(measure_wakeup_latency_SOURCES) \
@@ -845,15 +731,7 @@ DIST_SOURCES = $(measure_create_SOURCES) $(measure_create_cc_SOURCES) \
 	$(myth_valloc_SOURCES) $(myth_yield_0_SOURCES) \
 	$(myth_yield_0_cc_SOURCES) $(myth_yield_1_SOURCES) \
 	$(myth_yield_1_cc_SOURCES) $(myth_yield_2_SOURCES) \
-	$(myth_yield_2_cc_SOURCES) $(pth_barrier_SOURCES) \
-	$(pth_barrier_cc_SOURCES) $(pth_create_0_SOURCES) \
-	$(pth_create_0_cc_SOURCES) $(pth_create_1_SOURCES) \
-	$(pth_create_1_cc_SOURCES) $(pth_create_2_SOURCES) \
-	$(pth_create_2_cc_SOURCES) $(pth_lock_SOURCES) \
-	$(pth_lock_cc_SOURCES) $(pth_mixlock_SOURCES) \
-	$(pth_mixlock_cc_SOURCES) $(pth_trylock_SOURCES) \
-	$(pth_trylock_cc_SOURCES) $(pth_yield_SOURCES) \
-	$(pth_yield_cc_SOURCES)
+	$(myth_yield_2_cc_SOURCES) $(new_test_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -1355,53 +1233,6 @@ myth_key_destructor_SOURCES = myth_key_destructor.c
 myth_key_destructor_CFLAGS = $(common_cflags)
 myth_key_destructor_LDADD = $(common_ldadd)
 myth_key_destructor_LDFLAGS = $(pth_ldflags)
-pth_create_0_SOURCES = pth_create_0.c
-pth_create_0_CFLAGS = $(common_cflags)
-pth_create_0_LDADD = $(common_ldadd)
-pth_create_0_LDFLAGS = $(pth_ldflags)
-pth_create_1_SOURCES = pth_create_1.c
-pth_create_1_CFLAGS = $(common_cflags)
-pth_create_1_LDADD = $(common_ldadd)
-pth_create_1_LDFLAGS = $(pth_ldflags)
-pth_create_2_SOURCES = pth_create_2.c
-pth_create_2_CFLAGS = $(common_cflags)
-pth_create_2_LDADD = $(common_ldadd)
-pth_create_2_LDFLAGS = $(pth_ldflags)
-pth_yield_SOURCES = pth_yield.c
-pth_yield_CFLAGS = $(common_cflags)
-pth_yield_LDADD = $(common_ldadd)
-pth_yield_LDFLAGS = $(pth_ldflags)
-pth_lock_SOURCES = pth_lock.c
-pth_lock_CFLAGS = $(common_cflags)
-pth_lock_LDADD = $(common_ldadd)
-pth_lock_LDFLAGS = $(pth_ldflags)
-pth_trylock_SOURCES = pth_trylock.c
-pth_trylock_CFLAGS = $(common_cflags)
-pth_trylock_LDADD = $(common_ldadd)
-pth_trylock_LDFLAGS = $(pth_ldflags)
-pth_mixlock_SOURCES = pth_mixlock.c
-pth_mixlock_CFLAGS = $(common_cflags)
-pth_mixlock_LDADD = $(common_ldadd)
-pth_mixlock_LDFLAGS = $(pth_ldflags)
-
-#pth_cond_signal_SOURCES = pth_cond_signal.c
-#pth_cond_signal_CFLAGS = $(common_cflags)
-#pth_cond_signal_LDADD  = $(common_ldadd)
-#pth_cond_signal_LDFLAGS  = $(pth_ldflags)
-
-#pth_cond_broadcast_0_SOURCES = pth_cond_broadcast_0.c
-#pth_cond_broadcast_0_CFLAGS = $(common_cflags)
-#pth_cond_broadcast_0_LDADD  = $(common_ldadd)
-#pth_cond_broadcast_0_LDFLAGS  = $(pth_ldflags)
-
-#pth_cond_broadcast_1_SOURCES = pth_cond_broadcast_1.c
-#pth_cond_broadcast_1_CFLAGS = $(common_cflags)
-#pth_cond_broadcast_1_LDADD  = $(common_ldadd)
-#pth_cond_broadcast_1_LDFLAGS  = $(pth_ldflags)
-pth_barrier_SOURCES = pth_barrier.c
-pth_barrier_CFLAGS = $(common_cflags)
-pth_barrier_LDADD = $(common_ldadd)
-pth_barrier_LDFLAGS = $(pth_ldflags)
 measure_create_SOURCES = measure_create.c
 measure_create_CFLAGS = $(common_cflags)
 measure_create_LDADD = $(common_ldadd)
@@ -1514,53 +1345,6 @@ myth_key_destructor_cc_SOURCES = myth_key_destructor_cc.cc
 myth_key_destructor_cc_CXXFLAGS = $(common_cxxflags)
 myth_key_destructor_cc_LDADD = $(common_ldadd)
 myth_key_destructor_cc_LDFLAGS = $(pth_ldflags)
-pth_create_0_cc_SOURCES = pth_create_0_cc.cc
-pth_create_0_cc_CXXFLAGS = $(common_cxxflags)
-pth_create_0_cc_LDADD = $(common_ldadd)
-pth_create_0_cc_LDFLAGS = $(pth_ldflags)
-pth_create_1_cc_SOURCES = pth_create_1_cc.cc
-pth_create_1_cc_CXXFLAGS = $(common_cxxflags)
-pth_create_1_cc_LDADD = $(common_ldadd)
-pth_create_1_cc_LDFLAGS = $(pth_ldflags)
-pth_create_2_cc_SOURCES = pth_create_2_cc.cc
-pth_create_2_cc_CXXFLAGS = $(common_cxxflags)
-pth_create_2_cc_LDADD = $(common_ldadd)
-pth_create_2_cc_LDFLAGS = $(pth_ldflags)
-pth_yield_cc_SOURCES = pth_yield_cc.cc
-pth_yield_cc_CXXFLAGS = $(common_cxxflags)
-pth_yield_cc_LDADD = $(common_ldadd)
-pth_yield_cc_LDFLAGS = $(pth_ldflags)
-pth_lock_cc_SOURCES = pth_lock_cc.cc
-pth_lock_cc_CXXFLAGS = $(common_cxxflags)
-pth_lock_cc_LDADD = $(common_ldadd)
-pth_lock_cc_LDFLAGS = $(pth_ldflags)
-pth_trylock_cc_SOURCES = pth_trylock_cc.cc
-pth_trylock_cc_CXXFLAGS = $(common_cxxflags)
-pth_trylock_cc_LDADD = $(common_ldadd)
-pth_trylock_cc_LDFLAGS = $(pth_ldflags)
-pth_mixlock_cc_SOURCES = pth_mixlock_cc.cc
-pth_mixlock_cc_CXXFLAGS = $(common_cxxflags)
-pth_mixlock_cc_LDADD = $(common_ldadd)
-pth_mixlock_cc_LDFLAGS = $(pth_ldflags)
-
-# pth_cond_signal_cc_SOURCES = pth_cond_signal_cc.cc
-# pth_cond_signal_cc_CXXFLAGS = $(common_cxxflags)
-# pth_cond_signal_cc_LDADD  = $(common_ldadd)
-# pth_cond_signal_cc_LDFLAGS  = $(pth_ldflags)
-
-# pth_cond_broadcast_0_cc_SOURCES = pth_cond_broadcast_0_cc.cc
-# pth_cond_broadcast_0_cc_CXXFLAGS = $(common_cxxflags)
-# pth_cond_broadcast_0_cc_LDADD  = $(common_ldadd)
-# pth_cond_broadcast_0_cc_LDFLAGS  = $(pth_ldflags)
-
-# pth_cond_broadcast_1_cc_SOURCES = pth_cond_broadcast_1_cc.cc
-# pth_cond_broadcast_1_cc_CXXFLAGS = $(common_cxxflags)
-# pth_cond_broadcast_1_cc_LDADD  = $(common_ldadd)
-# pth_cond_broadcast_1_cc_LDFLAGS  = $(pth_ldflags)
-pth_barrier_cc_SOURCES = pth_barrier_cc.cc
-pth_barrier_cc_CXXFLAGS = $(common_cxxflags)
-pth_barrier_cc_LDADD = $(common_ldadd)
-pth_barrier_cc_LDFLAGS = $(pth_ldflags)
 measure_create_cc_SOURCES = measure_create_cc.cc
 measure_create_cc_CXXFLAGS = $(common_cxxflags)
 measure_create_cc_LDADD = $(common_ldadd)
@@ -1574,10 +1358,91 @@ measure_wakeup_latency_cc_CXXFLAGS = $(common_cxxflags)
 measure_wakeup_latency_cc_LDADD = $(common_ldadd)
 measure_wakeup_latency_cc_LDFLAGS = $(pth_ldflags)
 
-# new_test_SOURCES = new_test.c
-# new_test_CXXFLAGS = $(common_cflags)
-# new_test_LDADD  = $(common_ldadd)
-# new_test_LDFLAGS  = $(pth_ldflags)
+# pth_create_0_SOURCES = pth_create_0.c
+# pth_create_0_CFLAGS = $(common_cflags)
+# pth_create_0_LDADD  = $(common_ldadd)
+# pth_create_0_LDFLAGS  = $(pth_ldflags)
+
+# pth_create_1_SOURCES = pth_create_1.c
+# pth_create_1_CFLAGS = $(common_cflags)
+# pth_create_1_LDADD  = $(common_ldadd)
+# pth_create_1_LDFLAGS  = $(pth_ldflags)
+
+# pth_create_2_SOURCES = pth_create_2.c
+# pth_create_2_CFLAGS = $(common_cflags)
+# pth_create_2_LDADD  = $(common_ldadd)
+# pth_create_2_LDFLAGS  = $(pth_ldflags)
+
+# pth_yield_SOURCES = pth_yield.c
+# pth_yield_CFLAGS = $(common_cflags)
+# pth_yield_LDADD  = $(common_ldadd)
+# pth_yield_LDFLAGS  = $(pth_ldflags)
+
+# pth_lock_SOURCES = pth_lock.c
+# pth_lock_CFLAGS = $(common_cflags)
+# pth_lock_LDADD  = $(common_ldadd)
+# pth_lock_LDFLAGS  = $(pth_ldflags)
+
+# pth_trylock_SOURCES = pth_trylock.c
+# pth_trylock_CFLAGS = $(common_cflags)
+# pth_trylock_LDADD  = $(common_ldadd)
+# pth_trylock_LDFLAGS  = $(pth_ldflags)
+
+# pth_mixlock_SOURCES = pth_mixlock.c
+# pth_mixlock_CFLAGS = $(common_cflags)
+# pth_mixlock_LDADD  = $(common_ldadd)
+# pth_mixlock_LDFLAGS  = $(pth_ldflags)
+
+# # this fails and omitted for now
+
+# pth_barrier_SOURCES = pth_barrier.c
+# pth_barrier_CFLAGS = $(common_cflags)
+# pth_barrier_LDADD  = $(common_ldadd)
+# pth_barrier_LDFLAGS  = $(pth_ldflags)
+
+# pth_create_0_cc_SOURCES = pth_create_0_cc.cc
+# pth_create_0_cc_CXXFLAGS = $(common_cxxflags)
+# pth_create_0_cc_LDADD  = $(common_ldadd)
+# pth_create_0_cc_LDFLAGS  = $(pth_ldflags)
+
+# pth_create_1_cc_SOURCES = pth_create_1_cc.cc
+# pth_create_1_cc_CXXFLAGS = $(common_cxxflags)
+# pth_create_1_cc_LDADD  = $(common_ldadd)
+# pth_create_1_cc_LDFLAGS  = $(pth_ldflags)
+
+# pth_create_2_cc_SOURCES = pth_create_2_cc.cc
+# pth_create_2_cc_CXXFLAGS = $(common_cxxflags)
+# pth_create_2_cc_LDADD  = $(common_ldadd)
+# pth_create_2_cc_LDFLAGS  = $(pth_ldflags)
+
+# pth_yield_cc_SOURCES = pth_yield_cc.cc
+# pth_yield_cc_CXXFLAGS = $(common_cxxflags)
+# pth_yield_cc_LDADD  = $(common_ldadd)
+# pth_yield_cc_LDFLAGS  = $(pth_ldflags)
+
+# pth_lock_cc_SOURCES = pth_lock_cc.cc
+# pth_lock_cc_CXXFLAGS = $(common_cxxflags)
+# pth_lock_cc_LDADD  = $(common_ldadd)
+# pth_lock_cc_LDFLAGS  = $(pth_ldflags)
+
+# pth_trylock_cc_SOURCES = pth_trylock_cc.cc
+# pth_trylock_cc_CXXFLAGS = $(common_cxxflags)
+# pth_trylock_cc_LDADD  = $(common_ldadd)
+# pth_trylock_cc_LDFLAGS  = $(pth_ldflags)
+
+# pth_mixlock_cc_SOURCES = pth_mixlock_cc.cc
+# pth_mixlock_cc_CXXFLAGS = $(common_cxxflags)
+# pth_mixlock_cc_LDADD  = $(common_ldadd)
+# pth_mixlock_cc_LDFLAGS  = $(pth_ldflags)
+
+# pth_barrier_cc_SOURCES = pth_barrier_cc.cc
+# pth_barrier_cc_CXXFLAGS = $(common_cxxflags)
+# pth_barrier_cc_LDADD  = $(common_ldadd)
+# pth_barrier_cc_LDFLAGS  = $(pth_ldflags)
+new_test_SOURCES = new_test.c
+new_test_CFLAGS = $(common_cflags)
+new_test_LDADD = $(common_ldadd)
+new_test_LDFLAGS = $(pth_ldflags)
 TESTS = $(check_PROGRAMS)
 all: all-am
 
@@ -1870,69 +1735,9 @@ myth_yield_2_cc$(EXEEXT): $(myth_yield_2_cc_OBJECTS) $(myth_yield_2_cc_DEPENDENC
 	@rm -f myth_yield_2_cc$(EXEEXT)
 	$(AM_V_CXXLD)$(myth_yield_2_cc_LINK) $(myth_yield_2_cc_OBJECTS) $(myth_yield_2_cc_LDADD) $(LIBS)
 
-pth_barrier$(EXEEXT): $(pth_barrier_OBJECTS) $(pth_barrier_DEPENDENCIES) $(EXTRA_pth_barrier_DEPENDENCIES) 
-	@rm -f pth_barrier$(EXEEXT)
-	$(AM_V_CCLD)$(pth_barrier_LINK) $(pth_barrier_OBJECTS) $(pth_barrier_LDADD) $(LIBS)
-
-pth_barrier_cc$(EXEEXT): $(pth_barrier_cc_OBJECTS) $(pth_barrier_cc_DEPENDENCIES) $(EXTRA_pth_barrier_cc_DEPENDENCIES) 
-	@rm -f pth_barrier_cc$(EXEEXT)
-	$(AM_V_CXXLD)$(pth_barrier_cc_LINK) $(pth_barrier_cc_OBJECTS) $(pth_barrier_cc_LDADD) $(LIBS)
-
-pth_create_0$(EXEEXT): $(pth_create_0_OBJECTS) $(pth_create_0_DEPENDENCIES) $(EXTRA_pth_create_0_DEPENDENCIES) 
-	@rm -f pth_create_0$(EXEEXT)
-	$(AM_V_CCLD)$(pth_create_0_LINK) $(pth_create_0_OBJECTS) $(pth_create_0_LDADD) $(LIBS)
-
-pth_create_0_cc$(EXEEXT): $(pth_create_0_cc_OBJECTS) $(pth_create_0_cc_DEPENDENCIES) $(EXTRA_pth_create_0_cc_DEPENDENCIES) 
-	@rm -f pth_create_0_cc$(EXEEXT)
-	$(AM_V_CXXLD)$(pth_create_0_cc_LINK) $(pth_create_0_cc_OBJECTS) $(pth_create_0_cc_LDADD) $(LIBS)
-
-pth_create_1$(EXEEXT): $(pth_create_1_OBJECTS) $(pth_create_1_DEPENDENCIES) $(EXTRA_pth_create_1_DEPENDENCIES) 
-	@rm -f pth_create_1$(EXEEXT)
-	$(AM_V_CCLD)$(pth_create_1_LINK) $(pth_create_1_OBJECTS) $(pth_create_1_LDADD) $(LIBS)
-
-pth_create_1_cc$(EXEEXT): $(pth_create_1_cc_OBJECTS) $(pth_create_1_cc_DEPENDENCIES) $(EXTRA_pth_create_1_cc_DEPENDENCIES) 
-	@rm -f pth_create_1_cc$(EXEEXT)
-	$(AM_V_CXXLD)$(pth_create_1_cc_LINK) $(pth_create_1_cc_OBJECTS) $(pth_create_1_cc_LDADD) $(LIBS)
-
-pth_create_2$(EXEEXT): $(pth_create_2_OBJECTS) $(pth_create_2_DEPENDENCIES) $(EXTRA_pth_create_2_DEPENDENCIES) 
-	@rm -f pth_create_2$(EXEEXT)
-	$(AM_V_CCLD)$(pth_create_2_LINK) $(pth_create_2_OBJECTS) $(pth_create_2_LDADD) $(LIBS)
-
-pth_create_2_cc$(EXEEXT): $(pth_create_2_cc_OBJECTS) $(pth_create_2_cc_DEPENDENCIES) $(EXTRA_pth_create_2_cc_DEPENDENCIES) 
-	@rm -f pth_create_2_cc$(EXEEXT)
-	$(AM_V_CXXLD)$(pth_create_2_cc_LINK) $(pth_create_2_cc_OBJECTS) $(pth_create_2_cc_LDADD) $(LIBS)
-
-pth_lock$(EXEEXT): $(pth_lock_OBJECTS) $(pth_lock_DEPENDENCIES) $(EXTRA_pth_lock_DEPENDENCIES) 
-	@rm -f pth_lock$(EXEEXT)
-	$(AM_V_CCLD)$(pth_lock_LINK) $(pth_lock_OBJECTS) $(pth_lock_LDADD) $(LIBS)
-
-pth_lock_cc$(EXEEXT): $(pth_lock_cc_OBJECTS) $(pth_lock_cc_DEPENDENCIES) $(EXTRA_pth_lock_cc_DEPENDENCIES) 
-	@rm -f pth_lock_cc$(EXEEXT)
-	$(AM_V_CXXLD)$(pth_lock_cc_LINK) $(pth_lock_cc_OBJECTS) $(pth_lock_cc_LDADD) $(LIBS)
-
-pth_mixlock$(EXEEXT): $(pth_mixlock_OBJECTS) $(pth_mixlock_DEPENDENCIES) $(EXTRA_pth_mixlock_DEPENDENCIES) 
-	@rm -f pth_mixlock$(EXEEXT)
-	$(AM_V_CCLD)$(pth_mixlock_LINK) $(pth_mixlock_OBJECTS) $(pth_mixlock_LDADD) $(LIBS)
-
-pth_mixlock_cc$(EXEEXT): $(pth_mixlock_cc_OBJECTS) $(pth_mixlock_cc_DEPENDENCIES) $(EXTRA_pth_mixlock_cc_DEPENDENCIES) 
-	@rm -f pth_mixlock_cc$(EXEEXT)
-	$(AM_V_CXXLD)$(pth_mixlock_cc_LINK) $(pth_mixlock_cc_OBJECTS) $(pth_mixlock_cc_LDADD) $(LIBS)
-
-pth_trylock$(EXEEXT): $(pth_trylock_OBJECTS) $(pth_trylock_DEPENDENCIES) $(EXTRA_pth_trylock_DEPENDENCIES) 
-	@rm -f pth_trylock$(EXEEXT)
-	$(AM_V_CCLD)$(pth_trylock_LINK) $(pth_trylock_OBJECTS) $(pth_trylock_LDADD) $(LIBS)
-
-pth_trylock_cc$(EXEEXT): $(pth_trylock_cc_OBJECTS) $(pth_trylock_cc_DEPENDENCIES) $(EXTRA_pth_trylock_cc_DEPENDENCIES) 
-	@rm -f pth_trylock_cc$(EXEEXT)
-	$(AM_V_CXXLD)$(pth_trylock_cc_LINK) $(pth_trylock_cc_OBJECTS) $(pth_trylock_cc_LDADD) $(LIBS)
-
-pth_yield$(EXEEXT): $(pth_yield_OBJECTS) $(pth_yield_DEPENDENCIES) $(EXTRA_pth_yield_DEPENDENCIES) 
-	@rm -f pth_yield$(EXEEXT)
-	$(AM_V_CCLD)$(pth_yield_LINK) $(pth_yield_OBJECTS) $(pth_yield_LDADD) $(LIBS)
-
-pth_yield_cc$(EXEEXT): $(pth_yield_cc_OBJECTS) $(pth_yield_cc_DEPENDENCIES) $(EXTRA_pth_yield_cc_DEPENDENCIES) 
-	@rm -f pth_yield_cc$(EXEEXT)
-	$(AM_V_CXXLD)$(pth_yield_cc_LINK) $(pth_yield_cc_OBJECTS) $(pth_yield_cc_LDADD) $(LIBS)
+new_test$(EXEEXT): $(new_test_OBJECTS) $(new_test_DEPENDENCIES) $(EXTRA_new_test_DEPENDENCIES) 
+	@rm -f new_test$(EXEEXT)
+	$(AM_V_CCLD)$(new_test_LINK) $(new_test_OBJECTS) $(new_test_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -2002,22 +1807,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/myth_yield_1_cc-myth_yield_1_cc.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/myth_yield_2-myth_yield_2.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/myth_yield_2_cc-myth_yield_2_cc.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pth_barrier-pth_barrier.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pth_barrier_cc-pth_barrier_cc.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pth_create_0-pth_create_0.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pth_create_0_cc-pth_create_0_cc.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pth_create_1-pth_create_1.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pth_create_1_cc-pth_create_1_cc.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pth_create_2-pth_create_2.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pth_create_2_cc-pth_create_2_cc.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pth_lock-pth_lock.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pth_lock_cc-pth_lock_cc.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pth_mixlock-pth_mixlock.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pth_mixlock_cc-pth_mixlock_cc.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pth_trylock-pth_trylock.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pth_trylock_cc-pth_trylock_cc.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pth_yield-pth_yield.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pth_yield_cc-pth_yield_cc.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/new_test-new_test.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
@@ -2544,117 +2334,19 @@ myth_yield_2-myth_yield_2.obj: myth_yield_2.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_yield_2_CFLAGS) $(CFLAGS) -c -o myth_yield_2-myth_yield_2.obj `if test -f 'myth_yield_2.c'; then $(CYGPATH_W) 'myth_yield_2.c'; else $(CYGPATH_W) '$(srcdir)/myth_yield_2.c'; fi`
 
-pth_barrier-pth_barrier.o: pth_barrier.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_barrier_CFLAGS) $(CFLAGS) -MT pth_barrier-pth_barrier.o -MD -MP -MF $(DEPDIR)/pth_barrier-pth_barrier.Tpo -c -o pth_barrier-pth_barrier.o `test -f 'pth_barrier.c' || echo '$(srcdir)/'`pth_barrier.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pth_barrier-pth_barrier.Tpo $(DEPDIR)/pth_barrier-pth_barrier.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='pth_barrier.c' object='pth_barrier-pth_barrier.o' libtool=no @AMDEPBACKSLASH@
+new_test-new_test.o: new_test.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(new_test_CFLAGS) $(CFLAGS) -MT new_test-new_test.o -MD -MP -MF $(DEPDIR)/new_test-new_test.Tpo -c -o new_test-new_test.o `test -f 'new_test.c' || echo '$(srcdir)/'`new_test.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/new_test-new_test.Tpo $(DEPDIR)/new_test-new_test.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='new_test.c' object='new_test-new_test.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_barrier_CFLAGS) $(CFLAGS) -c -o pth_barrier-pth_barrier.o `test -f 'pth_barrier.c' || echo '$(srcdir)/'`pth_barrier.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(new_test_CFLAGS) $(CFLAGS) -c -o new_test-new_test.o `test -f 'new_test.c' || echo '$(srcdir)/'`new_test.c
 
-pth_barrier-pth_barrier.obj: pth_barrier.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_barrier_CFLAGS) $(CFLAGS) -MT pth_barrier-pth_barrier.obj -MD -MP -MF $(DEPDIR)/pth_barrier-pth_barrier.Tpo -c -o pth_barrier-pth_barrier.obj `if test -f 'pth_barrier.c'; then $(CYGPATH_W) 'pth_barrier.c'; else $(CYGPATH_W) '$(srcdir)/pth_barrier.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pth_barrier-pth_barrier.Tpo $(DEPDIR)/pth_barrier-pth_barrier.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='pth_barrier.c' object='pth_barrier-pth_barrier.obj' libtool=no @AMDEPBACKSLASH@
+new_test-new_test.obj: new_test.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(new_test_CFLAGS) $(CFLAGS) -MT new_test-new_test.obj -MD -MP -MF $(DEPDIR)/new_test-new_test.Tpo -c -o new_test-new_test.obj `if test -f 'new_test.c'; then $(CYGPATH_W) 'new_test.c'; else $(CYGPATH_W) '$(srcdir)/new_test.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/new_test-new_test.Tpo $(DEPDIR)/new_test-new_test.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='new_test.c' object='new_test-new_test.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_barrier_CFLAGS) $(CFLAGS) -c -o pth_barrier-pth_barrier.obj `if test -f 'pth_barrier.c'; then $(CYGPATH_W) 'pth_barrier.c'; else $(CYGPATH_W) '$(srcdir)/pth_barrier.c'; fi`
-
-pth_create_0-pth_create_0.o: pth_create_0.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_create_0_CFLAGS) $(CFLAGS) -MT pth_create_0-pth_create_0.o -MD -MP -MF $(DEPDIR)/pth_create_0-pth_create_0.Tpo -c -o pth_create_0-pth_create_0.o `test -f 'pth_create_0.c' || echo '$(srcdir)/'`pth_create_0.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pth_create_0-pth_create_0.Tpo $(DEPDIR)/pth_create_0-pth_create_0.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='pth_create_0.c' object='pth_create_0-pth_create_0.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_create_0_CFLAGS) $(CFLAGS) -c -o pth_create_0-pth_create_0.o `test -f 'pth_create_0.c' || echo '$(srcdir)/'`pth_create_0.c
-
-pth_create_0-pth_create_0.obj: pth_create_0.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_create_0_CFLAGS) $(CFLAGS) -MT pth_create_0-pth_create_0.obj -MD -MP -MF $(DEPDIR)/pth_create_0-pth_create_0.Tpo -c -o pth_create_0-pth_create_0.obj `if test -f 'pth_create_0.c'; then $(CYGPATH_W) 'pth_create_0.c'; else $(CYGPATH_W) '$(srcdir)/pth_create_0.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pth_create_0-pth_create_0.Tpo $(DEPDIR)/pth_create_0-pth_create_0.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='pth_create_0.c' object='pth_create_0-pth_create_0.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_create_0_CFLAGS) $(CFLAGS) -c -o pth_create_0-pth_create_0.obj `if test -f 'pth_create_0.c'; then $(CYGPATH_W) 'pth_create_0.c'; else $(CYGPATH_W) '$(srcdir)/pth_create_0.c'; fi`
-
-pth_create_1-pth_create_1.o: pth_create_1.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_create_1_CFLAGS) $(CFLAGS) -MT pth_create_1-pth_create_1.o -MD -MP -MF $(DEPDIR)/pth_create_1-pth_create_1.Tpo -c -o pth_create_1-pth_create_1.o `test -f 'pth_create_1.c' || echo '$(srcdir)/'`pth_create_1.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pth_create_1-pth_create_1.Tpo $(DEPDIR)/pth_create_1-pth_create_1.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='pth_create_1.c' object='pth_create_1-pth_create_1.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_create_1_CFLAGS) $(CFLAGS) -c -o pth_create_1-pth_create_1.o `test -f 'pth_create_1.c' || echo '$(srcdir)/'`pth_create_1.c
-
-pth_create_1-pth_create_1.obj: pth_create_1.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_create_1_CFLAGS) $(CFLAGS) -MT pth_create_1-pth_create_1.obj -MD -MP -MF $(DEPDIR)/pth_create_1-pth_create_1.Tpo -c -o pth_create_1-pth_create_1.obj `if test -f 'pth_create_1.c'; then $(CYGPATH_W) 'pth_create_1.c'; else $(CYGPATH_W) '$(srcdir)/pth_create_1.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pth_create_1-pth_create_1.Tpo $(DEPDIR)/pth_create_1-pth_create_1.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='pth_create_1.c' object='pth_create_1-pth_create_1.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_create_1_CFLAGS) $(CFLAGS) -c -o pth_create_1-pth_create_1.obj `if test -f 'pth_create_1.c'; then $(CYGPATH_W) 'pth_create_1.c'; else $(CYGPATH_W) '$(srcdir)/pth_create_1.c'; fi`
-
-pth_create_2-pth_create_2.o: pth_create_2.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_create_2_CFLAGS) $(CFLAGS) -MT pth_create_2-pth_create_2.o -MD -MP -MF $(DEPDIR)/pth_create_2-pth_create_2.Tpo -c -o pth_create_2-pth_create_2.o `test -f 'pth_create_2.c' || echo '$(srcdir)/'`pth_create_2.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pth_create_2-pth_create_2.Tpo $(DEPDIR)/pth_create_2-pth_create_2.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='pth_create_2.c' object='pth_create_2-pth_create_2.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_create_2_CFLAGS) $(CFLAGS) -c -o pth_create_2-pth_create_2.o `test -f 'pth_create_2.c' || echo '$(srcdir)/'`pth_create_2.c
-
-pth_create_2-pth_create_2.obj: pth_create_2.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_create_2_CFLAGS) $(CFLAGS) -MT pth_create_2-pth_create_2.obj -MD -MP -MF $(DEPDIR)/pth_create_2-pth_create_2.Tpo -c -o pth_create_2-pth_create_2.obj `if test -f 'pth_create_2.c'; then $(CYGPATH_W) 'pth_create_2.c'; else $(CYGPATH_W) '$(srcdir)/pth_create_2.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pth_create_2-pth_create_2.Tpo $(DEPDIR)/pth_create_2-pth_create_2.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='pth_create_2.c' object='pth_create_2-pth_create_2.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_create_2_CFLAGS) $(CFLAGS) -c -o pth_create_2-pth_create_2.obj `if test -f 'pth_create_2.c'; then $(CYGPATH_W) 'pth_create_2.c'; else $(CYGPATH_W) '$(srcdir)/pth_create_2.c'; fi`
-
-pth_lock-pth_lock.o: pth_lock.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_lock_CFLAGS) $(CFLAGS) -MT pth_lock-pth_lock.o -MD -MP -MF $(DEPDIR)/pth_lock-pth_lock.Tpo -c -o pth_lock-pth_lock.o `test -f 'pth_lock.c' || echo '$(srcdir)/'`pth_lock.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pth_lock-pth_lock.Tpo $(DEPDIR)/pth_lock-pth_lock.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='pth_lock.c' object='pth_lock-pth_lock.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_lock_CFLAGS) $(CFLAGS) -c -o pth_lock-pth_lock.o `test -f 'pth_lock.c' || echo '$(srcdir)/'`pth_lock.c
-
-pth_lock-pth_lock.obj: pth_lock.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_lock_CFLAGS) $(CFLAGS) -MT pth_lock-pth_lock.obj -MD -MP -MF $(DEPDIR)/pth_lock-pth_lock.Tpo -c -o pth_lock-pth_lock.obj `if test -f 'pth_lock.c'; then $(CYGPATH_W) 'pth_lock.c'; else $(CYGPATH_W) '$(srcdir)/pth_lock.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pth_lock-pth_lock.Tpo $(DEPDIR)/pth_lock-pth_lock.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='pth_lock.c' object='pth_lock-pth_lock.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_lock_CFLAGS) $(CFLAGS) -c -o pth_lock-pth_lock.obj `if test -f 'pth_lock.c'; then $(CYGPATH_W) 'pth_lock.c'; else $(CYGPATH_W) '$(srcdir)/pth_lock.c'; fi`
-
-pth_mixlock-pth_mixlock.o: pth_mixlock.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_mixlock_CFLAGS) $(CFLAGS) -MT pth_mixlock-pth_mixlock.o -MD -MP -MF $(DEPDIR)/pth_mixlock-pth_mixlock.Tpo -c -o pth_mixlock-pth_mixlock.o `test -f 'pth_mixlock.c' || echo '$(srcdir)/'`pth_mixlock.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pth_mixlock-pth_mixlock.Tpo $(DEPDIR)/pth_mixlock-pth_mixlock.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='pth_mixlock.c' object='pth_mixlock-pth_mixlock.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_mixlock_CFLAGS) $(CFLAGS) -c -o pth_mixlock-pth_mixlock.o `test -f 'pth_mixlock.c' || echo '$(srcdir)/'`pth_mixlock.c
-
-pth_mixlock-pth_mixlock.obj: pth_mixlock.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_mixlock_CFLAGS) $(CFLAGS) -MT pth_mixlock-pth_mixlock.obj -MD -MP -MF $(DEPDIR)/pth_mixlock-pth_mixlock.Tpo -c -o pth_mixlock-pth_mixlock.obj `if test -f 'pth_mixlock.c'; then $(CYGPATH_W) 'pth_mixlock.c'; else $(CYGPATH_W) '$(srcdir)/pth_mixlock.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pth_mixlock-pth_mixlock.Tpo $(DEPDIR)/pth_mixlock-pth_mixlock.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='pth_mixlock.c' object='pth_mixlock-pth_mixlock.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_mixlock_CFLAGS) $(CFLAGS) -c -o pth_mixlock-pth_mixlock.obj `if test -f 'pth_mixlock.c'; then $(CYGPATH_W) 'pth_mixlock.c'; else $(CYGPATH_W) '$(srcdir)/pth_mixlock.c'; fi`
-
-pth_trylock-pth_trylock.o: pth_trylock.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_trylock_CFLAGS) $(CFLAGS) -MT pth_trylock-pth_trylock.o -MD -MP -MF $(DEPDIR)/pth_trylock-pth_trylock.Tpo -c -o pth_trylock-pth_trylock.o `test -f 'pth_trylock.c' || echo '$(srcdir)/'`pth_trylock.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pth_trylock-pth_trylock.Tpo $(DEPDIR)/pth_trylock-pth_trylock.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='pth_trylock.c' object='pth_trylock-pth_trylock.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_trylock_CFLAGS) $(CFLAGS) -c -o pth_trylock-pth_trylock.o `test -f 'pth_trylock.c' || echo '$(srcdir)/'`pth_trylock.c
-
-pth_trylock-pth_trylock.obj: pth_trylock.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_trylock_CFLAGS) $(CFLAGS) -MT pth_trylock-pth_trylock.obj -MD -MP -MF $(DEPDIR)/pth_trylock-pth_trylock.Tpo -c -o pth_trylock-pth_trylock.obj `if test -f 'pth_trylock.c'; then $(CYGPATH_W) 'pth_trylock.c'; else $(CYGPATH_W) '$(srcdir)/pth_trylock.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pth_trylock-pth_trylock.Tpo $(DEPDIR)/pth_trylock-pth_trylock.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='pth_trylock.c' object='pth_trylock-pth_trylock.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_trylock_CFLAGS) $(CFLAGS) -c -o pth_trylock-pth_trylock.obj `if test -f 'pth_trylock.c'; then $(CYGPATH_W) 'pth_trylock.c'; else $(CYGPATH_W) '$(srcdir)/pth_trylock.c'; fi`
-
-pth_yield-pth_yield.o: pth_yield.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_yield_CFLAGS) $(CFLAGS) -MT pth_yield-pth_yield.o -MD -MP -MF $(DEPDIR)/pth_yield-pth_yield.Tpo -c -o pth_yield-pth_yield.o `test -f 'pth_yield.c' || echo '$(srcdir)/'`pth_yield.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pth_yield-pth_yield.Tpo $(DEPDIR)/pth_yield-pth_yield.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='pth_yield.c' object='pth_yield-pth_yield.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_yield_CFLAGS) $(CFLAGS) -c -o pth_yield-pth_yield.o `test -f 'pth_yield.c' || echo '$(srcdir)/'`pth_yield.c
-
-pth_yield-pth_yield.obj: pth_yield.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_yield_CFLAGS) $(CFLAGS) -MT pth_yield-pth_yield.obj -MD -MP -MF $(DEPDIR)/pth_yield-pth_yield.Tpo -c -o pth_yield-pth_yield.obj `if test -f 'pth_yield.c'; then $(CYGPATH_W) 'pth_yield.c'; else $(CYGPATH_W) '$(srcdir)/pth_yield.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pth_yield-pth_yield.Tpo $(DEPDIR)/pth_yield-pth_yield.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='pth_yield.c' object='pth_yield-pth_yield.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_yield_CFLAGS) $(CFLAGS) -c -o pth_yield-pth_yield.obj `if test -f 'pth_yield.c'; then $(CYGPATH_W) 'pth_yield.c'; else $(CYGPATH_W) '$(srcdir)/pth_yield.c'; fi`
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(new_test_CFLAGS) $(CFLAGS) -c -o new_test-new_test.obj `if test -f 'new_test.c'; then $(CYGPATH_W) 'new_test.c'; else $(CYGPATH_W) '$(srcdir)/new_test.c'; fi`
 
 .cc.o:
 @am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXXCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
@@ -3041,118 +2733,6 @@ myth_yield_2_cc-myth_yield_2_cc.obj: myth_yield_2_cc.cc
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_yield_2_cc_CXXFLAGS) $(CXXFLAGS) -c -o myth_yield_2_cc-myth_yield_2_cc.obj `if test -f 'myth_yield_2_cc.cc'; then $(CYGPATH_W) 'myth_yield_2_cc.cc'; else $(CYGPATH_W) '$(srcdir)/myth_yield_2_cc.cc'; fi`
 
-pth_barrier_cc-pth_barrier_cc.o: pth_barrier_cc.cc
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_barrier_cc_CXXFLAGS) $(CXXFLAGS) -MT pth_barrier_cc-pth_barrier_cc.o -MD -MP -MF $(DEPDIR)/pth_barrier_cc-pth_barrier_cc.Tpo -c -o pth_barrier_cc-pth_barrier_cc.o `test -f 'pth_barrier_cc.cc' || echo '$(srcdir)/'`pth_barrier_cc.cc
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pth_barrier_cc-pth_barrier_cc.Tpo $(DEPDIR)/pth_barrier_cc-pth_barrier_cc.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='pth_barrier_cc.cc' object='pth_barrier_cc-pth_barrier_cc.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_barrier_cc_CXXFLAGS) $(CXXFLAGS) -c -o pth_barrier_cc-pth_barrier_cc.o `test -f 'pth_barrier_cc.cc' || echo '$(srcdir)/'`pth_barrier_cc.cc
-
-pth_barrier_cc-pth_barrier_cc.obj: pth_barrier_cc.cc
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_barrier_cc_CXXFLAGS) $(CXXFLAGS) -MT pth_barrier_cc-pth_barrier_cc.obj -MD -MP -MF $(DEPDIR)/pth_barrier_cc-pth_barrier_cc.Tpo -c -o pth_barrier_cc-pth_barrier_cc.obj `if test -f 'pth_barrier_cc.cc'; then $(CYGPATH_W) 'pth_barrier_cc.cc'; else $(CYGPATH_W) '$(srcdir)/pth_barrier_cc.cc'; fi`
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pth_barrier_cc-pth_barrier_cc.Tpo $(DEPDIR)/pth_barrier_cc-pth_barrier_cc.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='pth_barrier_cc.cc' object='pth_barrier_cc-pth_barrier_cc.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_barrier_cc_CXXFLAGS) $(CXXFLAGS) -c -o pth_barrier_cc-pth_barrier_cc.obj `if test -f 'pth_barrier_cc.cc'; then $(CYGPATH_W) 'pth_barrier_cc.cc'; else $(CYGPATH_W) '$(srcdir)/pth_barrier_cc.cc'; fi`
-
-pth_create_0_cc-pth_create_0_cc.o: pth_create_0_cc.cc
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_create_0_cc_CXXFLAGS) $(CXXFLAGS) -MT pth_create_0_cc-pth_create_0_cc.o -MD -MP -MF $(DEPDIR)/pth_create_0_cc-pth_create_0_cc.Tpo -c -o pth_create_0_cc-pth_create_0_cc.o `test -f 'pth_create_0_cc.cc' || echo '$(srcdir)/'`pth_create_0_cc.cc
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pth_create_0_cc-pth_create_0_cc.Tpo $(DEPDIR)/pth_create_0_cc-pth_create_0_cc.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='pth_create_0_cc.cc' object='pth_create_0_cc-pth_create_0_cc.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_create_0_cc_CXXFLAGS) $(CXXFLAGS) -c -o pth_create_0_cc-pth_create_0_cc.o `test -f 'pth_create_0_cc.cc' || echo '$(srcdir)/'`pth_create_0_cc.cc
-
-pth_create_0_cc-pth_create_0_cc.obj: pth_create_0_cc.cc
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_create_0_cc_CXXFLAGS) $(CXXFLAGS) -MT pth_create_0_cc-pth_create_0_cc.obj -MD -MP -MF $(DEPDIR)/pth_create_0_cc-pth_create_0_cc.Tpo -c -o pth_create_0_cc-pth_create_0_cc.obj `if test -f 'pth_create_0_cc.cc'; then $(CYGPATH_W) 'pth_create_0_cc.cc'; else $(CYGPATH_W) '$(srcdir)/pth_create_0_cc.cc'; fi`
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pth_create_0_cc-pth_create_0_cc.Tpo $(DEPDIR)/pth_create_0_cc-pth_create_0_cc.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='pth_create_0_cc.cc' object='pth_create_0_cc-pth_create_0_cc.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_create_0_cc_CXXFLAGS) $(CXXFLAGS) -c -o pth_create_0_cc-pth_create_0_cc.obj `if test -f 'pth_create_0_cc.cc'; then $(CYGPATH_W) 'pth_create_0_cc.cc'; else $(CYGPATH_W) '$(srcdir)/pth_create_0_cc.cc'; fi`
-
-pth_create_1_cc-pth_create_1_cc.o: pth_create_1_cc.cc
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_create_1_cc_CXXFLAGS) $(CXXFLAGS) -MT pth_create_1_cc-pth_create_1_cc.o -MD -MP -MF $(DEPDIR)/pth_create_1_cc-pth_create_1_cc.Tpo -c -o pth_create_1_cc-pth_create_1_cc.o `test -f 'pth_create_1_cc.cc' || echo '$(srcdir)/'`pth_create_1_cc.cc
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pth_create_1_cc-pth_create_1_cc.Tpo $(DEPDIR)/pth_create_1_cc-pth_create_1_cc.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='pth_create_1_cc.cc' object='pth_create_1_cc-pth_create_1_cc.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_create_1_cc_CXXFLAGS) $(CXXFLAGS) -c -o pth_create_1_cc-pth_create_1_cc.o `test -f 'pth_create_1_cc.cc' || echo '$(srcdir)/'`pth_create_1_cc.cc
-
-pth_create_1_cc-pth_create_1_cc.obj: pth_create_1_cc.cc
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_create_1_cc_CXXFLAGS) $(CXXFLAGS) -MT pth_create_1_cc-pth_create_1_cc.obj -MD -MP -MF $(DEPDIR)/pth_create_1_cc-pth_create_1_cc.Tpo -c -o pth_create_1_cc-pth_create_1_cc.obj `if test -f 'pth_create_1_cc.cc'; then $(CYGPATH_W) 'pth_create_1_cc.cc'; else $(CYGPATH_W) '$(srcdir)/pth_create_1_cc.cc'; fi`
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pth_create_1_cc-pth_create_1_cc.Tpo $(DEPDIR)/pth_create_1_cc-pth_create_1_cc.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='pth_create_1_cc.cc' object='pth_create_1_cc-pth_create_1_cc.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_create_1_cc_CXXFLAGS) $(CXXFLAGS) -c -o pth_create_1_cc-pth_create_1_cc.obj `if test -f 'pth_create_1_cc.cc'; then $(CYGPATH_W) 'pth_create_1_cc.cc'; else $(CYGPATH_W) '$(srcdir)/pth_create_1_cc.cc'; fi`
-
-pth_create_2_cc-pth_create_2_cc.o: pth_create_2_cc.cc
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_create_2_cc_CXXFLAGS) $(CXXFLAGS) -MT pth_create_2_cc-pth_create_2_cc.o -MD -MP -MF $(DEPDIR)/pth_create_2_cc-pth_create_2_cc.Tpo -c -o pth_create_2_cc-pth_create_2_cc.o `test -f 'pth_create_2_cc.cc' || echo '$(srcdir)/'`pth_create_2_cc.cc
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pth_create_2_cc-pth_create_2_cc.Tpo $(DEPDIR)/pth_create_2_cc-pth_create_2_cc.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='pth_create_2_cc.cc' object='pth_create_2_cc-pth_create_2_cc.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_create_2_cc_CXXFLAGS) $(CXXFLAGS) -c -o pth_create_2_cc-pth_create_2_cc.o `test -f 'pth_create_2_cc.cc' || echo '$(srcdir)/'`pth_create_2_cc.cc
-
-pth_create_2_cc-pth_create_2_cc.obj: pth_create_2_cc.cc
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_create_2_cc_CXXFLAGS) $(CXXFLAGS) -MT pth_create_2_cc-pth_create_2_cc.obj -MD -MP -MF $(DEPDIR)/pth_create_2_cc-pth_create_2_cc.Tpo -c -o pth_create_2_cc-pth_create_2_cc.obj `if test -f 'pth_create_2_cc.cc'; then $(CYGPATH_W) 'pth_create_2_cc.cc'; else $(CYGPATH_W) '$(srcdir)/pth_create_2_cc.cc'; fi`
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pth_create_2_cc-pth_create_2_cc.Tpo $(DEPDIR)/pth_create_2_cc-pth_create_2_cc.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='pth_create_2_cc.cc' object='pth_create_2_cc-pth_create_2_cc.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_create_2_cc_CXXFLAGS) $(CXXFLAGS) -c -o pth_create_2_cc-pth_create_2_cc.obj `if test -f 'pth_create_2_cc.cc'; then $(CYGPATH_W) 'pth_create_2_cc.cc'; else $(CYGPATH_W) '$(srcdir)/pth_create_2_cc.cc'; fi`
-
-pth_lock_cc-pth_lock_cc.o: pth_lock_cc.cc
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_lock_cc_CXXFLAGS) $(CXXFLAGS) -MT pth_lock_cc-pth_lock_cc.o -MD -MP -MF $(DEPDIR)/pth_lock_cc-pth_lock_cc.Tpo -c -o pth_lock_cc-pth_lock_cc.o `test -f 'pth_lock_cc.cc' || echo '$(srcdir)/'`pth_lock_cc.cc
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pth_lock_cc-pth_lock_cc.Tpo $(DEPDIR)/pth_lock_cc-pth_lock_cc.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='pth_lock_cc.cc' object='pth_lock_cc-pth_lock_cc.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_lock_cc_CXXFLAGS) $(CXXFLAGS) -c -o pth_lock_cc-pth_lock_cc.o `test -f 'pth_lock_cc.cc' || echo '$(srcdir)/'`pth_lock_cc.cc
-
-pth_lock_cc-pth_lock_cc.obj: pth_lock_cc.cc
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_lock_cc_CXXFLAGS) $(CXXFLAGS) -MT pth_lock_cc-pth_lock_cc.obj -MD -MP -MF $(DEPDIR)/pth_lock_cc-pth_lock_cc.Tpo -c -o pth_lock_cc-pth_lock_cc.obj `if test -f 'pth_lock_cc.cc'; then $(CYGPATH_W) 'pth_lock_cc.cc'; else $(CYGPATH_W) '$(srcdir)/pth_lock_cc.cc'; fi`
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pth_lock_cc-pth_lock_cc.Tpo $(DEPDIR)/pth_lock_cc-pth_lock_cc.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='pth_lock_cc.cc' object='pth_lock_cc-pth_lock_cc.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_lock_cc_CXXFLAGS) $(CXXFLAGS) -c -o pth_lock_cc-pth_lock_cc.obj `if test -f 'pth_lock_cc.cc'; then $(CYGPATH_W) 'pth_lock_cc.cc'; else $(CYGPATH_W) '$(srcdir)/pth_lock_cc.cc'; fi`
-
-pth_mixlock_cc-pth_mixlock_cc.o: pth_mixlock_cc.cc
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_mixlock_cc_CXXFLAGS) $(CXXFLAGS) -MT pth_mixlock_cc-pth_mixlock_cc.o -MD -MP -MF $(DEPDIR)/pth_mixlock_cc-pth_mixlock_cc.Tpo -c -o pth_mixlock_cc-pth_mixlock_cc.o `test -f 'pth_mixlock_cc.cc' || echo '$(srcdir)/'`pth_mixlock_cc.cc
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pth_mixlock_cc-pth_mixlock_cc.Tpo $(DEPDIR)/pth_mixlock_cc-pth_mixlock_cc.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='pth_mixlock_cc.cc' object='pth_mixlock_cc-pth_mixlock_cc.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_mixlock_cc_CXXFLAGS) $(CXXFLAGS) -c -o pth_mixlock_cc-pth_mixlock_cc.o `test -f 'pth_mixlock_cc.cc' || echo '$(srcdir)/'`pth_mixlock_cc.cc
-
-pth_mixlock_cc-pth_mixlock_cc.obj: pth_mixlock_cc.cc
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_mixlock_cc_CXXFLAGS) $(CXXFLAGS) -MT pth_mixlock_cc-pth_mixlock_cc.obj -MD -MP -MF $(DEPDIR)/pth_mixlock_cc-pth_mixlock_cc.Tpo -c -o pth_mixlock_cc-pth_mixlock_cc.obj `if test -f 'pth_mixlock_cc.cc'; then $(CYGPATH_W) 'pth_mixlock_cc.cc'; else $(CYGPATH_W) '$(srcdir)/pth_mixlock_cc.cc'; fi`
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pth_mixlock_cc-pth_mixlock_cc.Tpo $(DEPDIR)/pth_mixlock_cc-pth_mixlock_cc.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='pth_mixlock_cc.cc' object='pth_mixlock_cc-pth_mixlock_cc.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_mixlock_cc_CXXFLAGS) $(CXXFLAGS) -c -o pth_mixlock_cc-pth_mixlock_cc.obj `if test -f 'pth_mixlock_cc.cc'; then $(CYGPATH_W) 'pth_mixlock_cc.cc'; else $(CYGPATH_W) '$(srcdir)/pth_mixlock_cc.cc'; fi`
-
-pth_trylock_cc-pth_trylock_cc.o: pth_trylock_cc.cc
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_trylock_cc_CXXFLAGS) $(CXXFLAGS) -MT pth_trylock_cc-pth_trylock_cc.o -MD -MP -MF $(DEPDIR)/pth_trylock_cc-pth_trylock_cc.Tpo -c -o pth_trylock_cc-pth_trylock_cc.o `test -f 'pth_trylock_cc.cc' || echo '$(srcdir)/'`pth_trylock_cc.cc
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pth_trylock_cc-pth_trylock_cc.Tpo $(DEPDIR)/pth_trylock_cc-pth_trylock_cc.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='pth_trylock_cc.cc' object='pth_trylock_cc-pth_trylock_cc.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_trylock_cc_CXXFLAGS) $(CXXFLAGS) -c -o pth_trylock_cc-pth_trylock_cc.o `test -f 'pth_trylock_cc.cc' || echo '$(srcdir)/'`pth_trylock_cc.cc
-
-pth_trylock_cc-pth_trylock_cc.obj: pth_trylock_cc.cc
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_trylock_cc_CXXFLAGS) $(CXXFLAGS) -MT pth_trylock_cc-pth_trylock_cc.obj -MD -MP -MF $(DEPDIR)/pth_trylock_cc-pth_trylock_cc.Tpo -c -o pth_trylock_cc-pth_trylock_cc.obj `if test -f 'pth_trylock_cc.cc'; then $(CYGPATH_W) 'pth_trylock_cc.cc'; else $(CYGPATH_W) '$(srcdir)/pth_trylock_cc.cc'; fi`
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pth_trylock_cc-pth_trylock_cc.Tpo $(DEPDIR)/pth_trylock_cc-pth_trylock_cc.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='pth_trylock_cc.cc' object='pth_trylock_cc-pth_trylock_cc.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_trylock_cc_CXXFLAGS) $(CXXFLAGS) -c -o pth_trylock_cc-pth_trylock_cc.obj `if test -f 'pth_trylock_cc.cc'; then $(CYGPATH_W) 'pth_trylock_cc.cc'; else $(CYGPATH_W) '$(srcdir)/pth_trylock_cc.cc'; fi`
-
-pth_yield_cc-pth_yield_cc.o: pth_yield_cc.cc
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_yield_cc_CXXFLAGS) $(CXXFLAGS) -MT pth_yield_cc-pth_yield_cc.o -MD -MP -MF $(DEPDIR)/pth_yield_cc-pth_yield_cc.Tpo -c -o pth_yield_cc-pth_yield_cc.o `test -f 'pth_yield_cc.cc' || echo '$(srcdir)/'`pth_yield_cc.cc
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pth_yield_cc-pth_yield_cc.Tpo $(DEPDIR)/pth_yield_cc-pth_yield_cc.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='pth_yield_cc.cc' object='pth_yield_cc-pth_yield_cc.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_yield_cc_CXXFLAGS) $(CXXFLAGS) -c -o pth_yield_cc-pth_yield_cc.o `test -f 'pth_yield_cc.cc' || echo '$(srcdir)/'`pth_yield_cc.cc
-
-pth_yield_cc-pth_yield_cc.obj: pth_yield_cc.cc
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_yield_cc_CXXFLAGS) $(CXXFLAGS) -MT pth_yield_cc-pth_yield_cc.obj -MD -MP -MF $(DEPDIR)/pth_yield_cc-pth_yield_cc.Tpo -c -o pth_yield_cc-pth_yield_cc.obj `if test -f 'pth_yield_cc.cc'; then $(CYGPATH_W) 'pth_yield_cc.cc'; else $(CYGPATH_W) '$(srcdir)/pth_yield_cc.cc'; fi`
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/pth_yield_cc-pth_yield_cc.Tpo $(DEPDIR)/pth_yield_cc-pth_yield_cc.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='pth_yield_cc.cc' object='pth_yield_cc-pth_yield_cc.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(pth_yield_cc_CXXFLAGS) $(CXXFLAGS) -c -o pth_yield_cc-pth_yield_cc.obj `if test -f 'pth_yield_cc.cc'; then $(CYGPATH_W) 'pth_yield_cc.cc'; else $(CYGPATH_W) '$(srcdir)/pth_yield_cc.cc'; fi`
-
 mostlyclean-libtool:
 	-rm -f *.lo
 
@@ -3387,6 +2967,13 @@ myth_memalign.log: myth_memalign$(EXEEXT)
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
 	"$$tst" $(AM_TESTS_FD_REDIRECT)
+myth_aligned_alloc.log: myth_aligned_alloc$(EXEEXT)
+	@p='myth_aligned_alloc$(EXEEXT)'; \
+	b='myth_aligned_alloc'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
 myth_pvalloc.log: myth_pvalloc$(EXEEXT)
 	@p='myth_pvalloc$(EXEEXT)'; \
 	b='myth_pvalloc'; \
@@ -3565,62 +3152,6 @@ myth_key_getspecific.log: myth_key_getspecific$(EXEEXT)
 myth_key_destructor.log: myth_key_destructor$(EXEEXT)
 	@p='myth_key_destructor$(EXEEXT)'; \
 	b='myth_key_destructor'; \
-	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
-	--log-file $$b.log --trs-file $$b.trs \
-	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
-	"$$tst" $(AM_TESTS_FD_REDIRECT)
-pth_create_0.log: pth_create_0$(EXEEXT)
-	@p='pth_create_0$(EXEEXT)'; \
-	b='pth_create_0'; \
-	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
-	--log-file $$b.log --trs-file $$b.trs \
-	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
-	"$$tst" $(AM_TESTS_FD_REDIRECT)
-pth_create_1.log: pth_create_1$(EXEEXT)
-	@p='pth_create_1$(EXEEXT)'; \
-	b='pth_create_1'; \
-	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
-	--log-file $$b.log --trs-file $$b.trs \
-	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
-	"$$tst" $(AM_TESTS_FD_REDIRECT)
-pth_create_2.log: pth_create_2$(EXEEXT)
-	@p='pth_create_2$(EXEEXT)'; \
-	b='pth_create_2'; \
-	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
-	--log-file $$b.log --trs-file $$b.trs \
-	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
-	"$$tst" $(AM_TESTS_FD_REDIRECT)
-pth_yield.log: pth_yield$(EXEEXT)
-	@p='pth_yield$(EXEEXT)'; \
-	b='pth_yield'; \
-	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
-	--log-file $$b.log --trs-file $$b.trs \
-	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
-	"$$tst" $(AM_TESTS_FD_REDIRECT)
-pth_lock.log: pth_lock$(EXEEXT)
-	@p='pth_lock$(EXEEXT)'; \
-	b='pth_lock'; \
-	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
-	--log-file $$b.log --trs-file $$b.trs \
-	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
-	"$$tst" $(AM_TESTS_FD_REDIRECT)
-pth_trylock.log: pth_trylock$(EXEEXT)
-	@p='pth_trylock$(EXEEXT)'; \
-	b='pth_trylock'; \
-	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
-	--log-file $$b.log --trs-file $$b.trs \
-	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
-	"$$tst" $(AM_TESTS_FD_REDIRECT)
-pth_mixlock.log: pth_mixlock$(EXEEXT)
-	@p='pth_mixlock$(EXEEXT)'; \
-	b='pth_mixlock'; \
-	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
-	--log-file $$b.log --trs-file $$b.trs \
-	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
-	"$$tst" $(AM_TESTS_FD_REDIRECT)
-pth_barrier.log: pth_barrier$(EXEEXT)
-	@p='pth_barrier$(EXEEXT)'; \
-	b='pth_barrier'; \
 	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
@@ -3814,62 +3345,6 @@ myth_key_destructor_cc.log: myth_key_destructor_cc$(EXEEXT)
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
 	"$$tst" $(AM_TESTS_FD_REDIRECT)
-pth_create_0_cc.log: pth_create_0_cc$(EXEEXT)
-	@p='pth_create_0_cc$(EXEEXT)'; \
-	b='pth_create_0_cc'; \
-	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
-	--log-file $$b.log --trs-file $$b.trs \
-	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
-	"$$tst" $(AM_TESTS_FD_REDIRECT)
-pth_create_1_cc.log: pth_create_1_cc$(EXEEXT)
-	@p='pth_create_1_cc$(EXEEXT)'; \
-	b='pth_create_1_cc'; \
-	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
-	--log-file $$b.log --trs-file $$b.trs \
-	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
-	"$$tst" $(AM_TESTS_FD_REDIRECT)
-pth_create_2_cc.log: pth_create_2_cc$(EXEEXT)
-	@p='pth_create_2_cc$(EXEEXT)'; \
-	b='pth_create_2_cc'; \
-	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
-	--log-file $$b.log --trs-file $$b.trs \
-	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
-	"$$tst" $(AM_TESTS_FD_REDIRECT)
-pth_yield_cc.log: pth_yield_cc$(EXEEXT)
-	@p='pth_yield_cc$(EXEEXT)'; \
-	b='pth_yield_cc'; \
-	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
-	--log-file $$b.log --trs-file $$b.trs \
-	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
-	"$$tst" $(AM_TESTS_FD_REDIRECT)
-pth_lock_cc.log: pth_lock_cc$(EXEEXT)
-	@p='pth_lock_cc$(EXEEXT)'; \
-	b='pth_lock_cc'; \
-	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
-	--log-file $$b.log --trs-file $$b.trs \
-	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
-	"$$tst" $(AM_TESTS_FD_REDIRECT)
-pth_trylock_cc.log: pth_trylock_cc$(EXEEXT)
-	@p='pth_trylock_cc$(EXEEXT)'; \
-	b='pth_trylock_cc'; \
-	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
-	--log-file $$b.log --trs-file $$b.trs \
-	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
-	"$$tst" $(AM_TESTS_FD_REDIRECT)
-pth_mixlock_cc.log: pth_mixlock_cc$(EXEEXT)
-	@p='pth_mixlock_cc$(EXEEXT)'; \
-	b='pth_mixlock_cc'; \
-	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
-	--log-file $$b.log --trs-file $$b.trs \
-	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
-	"$$tst" $(AM_TESTS_FD_REDIRECT)
-pth_barrier_cc.log: pth_barrier_cc$(EXEEXT)
-	@p='pth_barrier_cc$(EXEEXT)'; \
-	b='pth_barrier_cc'; \
-	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
-	--log-file $$b.log --trs-file $$b.trs \
-	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
-	"$$tst" $(AM_TESTS_FD_REDIRECT)
 measure_create_cc.log: measure_create_cc$(EXEEXT)
 	@p='measure_create_cc$(EXEEXT)'; \
 	b='measure_create_cc'; \
@@ -3891,9 +3366,9 @@ measure_wakeup_latency_cc.log: measure_wakeup_latency_cc$(EXEEXT)
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
 	"$$tst" $(AM_TESTS_FD_REDIRECT)
-myth_aligned_alloc.log: myth_aligned_alloc$(EXEEXT)
-	@p='myth_aligned_alloc$(EXEEXT)'; \
-	b='myth_aligned_alloc'; \
+new_test.log: new_test$(EXEEXT)
+	@p='new_test$(EXEEXT)'; \
+	b='new_test'; \
 	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \

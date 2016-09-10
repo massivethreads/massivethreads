@@ -5,88 +5,91 @@
 
 #
 
-check_PROGRAMS = \
-	myth_malloc \
-	myth_calloc \
-	myth_posix_memalign \
-	myth_valloc \
-	myth_memalign \
-	myth_pvalloc \
-	myth_free \
-	myth_realloc \
-	myth_create_0 \
-	myth_create_1 \
-	myth_create_2 \
-	myth_create_join_many \
-	myth_yield_0 \
-	myth_yield_1 \
-	myth_yield_2 \
-	myth_sleep_queue \
-	myth_lock \
-	myth_trylock \
-	myth_mixlock \
-	myth_cond_signal \
-	myth_cond_broadcast_0 \
-	myth_cond_broadcast_1 \
-	myth_barrier \
-	myth_join_counter \
-	myth_felock \
-	myth_dag_1d \
-	myth_dag_2d \
-	myth_dag_random \
-	myth_key_create \
-	myth_key_getspecific \
-	myth_key_destructor \
-	pth_create_0 \
-	pth_create_1 \
-	pth_create_2 \
-	pth_yield \
-	pth_lock \
-	pth_trylock \
-	pth_mixlock \
-	pth_barrier \
-	measure_create \
-	measure_latency \
-	measure_wakeup_latency \
-	measure_malloc \
-	myth_create_0_cc \
-	myth_create_1_cc \
-	myth_create_2_cc \
-	myth_create_join_many_cc \
-	myth_yield_0_cc \
-	myth_yield_1_cc \
-	myth_yield_2_cc \
-	myth_sleep_queue_cc \
-	myth_lock_cc \
-	myth_trylock_cc \
-	myth_mixlock_cc \
-	myth_cond_signal_cc \
-	myth_cond_broadcast_0_cc \
-	myth_cond_broadcast_1_cc \
-	myth_barrier_cc \
-	myth_join_counter_cc \
-	myth_felock_cc \
-	myth_dag_1d_cc \
-	myth_dag_2d_cc \
-	myth_dag_random_cc \
-	myth_key_create_cc \
-	myth_key_getspecific_cc \
-	myth_key_destructor_cc \
-	pth_create_0_cc \
-	pth_create_1_cc \
-	pth_create_2_cc \
-	pth_yield_cc \
-	pth_lock_cc \
-	pth_trylock_cc \
-	pth_mixlock_cc \
-	pth_barrier_cc \
-	measure_create_cc \
-	measure_latency_cc \
-	measure_wakeup_latency_cc
-
+check_PROGRAMS = 
+check_PROGRAMS += myth_malloc
+check_PROGRAMS += myth_calloc
+check_PROGRAMS += myth_posix_memalign
+check_PROGRAMS += myth_valloc
+check_PROGRAMS += myth_memalign
 if BUILD_TEST_ALIGNED_ALLOC
 check_PROGRAMS += myth_aligned_alloc
 endif
+check_PROGRAMS += myth_pvalloc
+check_PROGRAMS += myth_free
+check_PROGRAMS += myth_realloc
+check_PROGRAMS += myth_create_0
+check_PROGRAMS += myth_create_1
+check_PROGRAMS += myth_create_2
+check_PROGRAMS += myth_create_join_many
+check_PROGRAMS += myth_yield_0
+check_PROGRAMS += myth_yield_1
+check_PROGRAMS += myth_yield_2
+check_PROGRAMS += myth_sleep_queue
+check_PROGRAMS += myth_lock
+check_PROGRAMS += myth_trylock
+check_PROGRAMS += myth_mixlock
+check_PROGRAMS += myth_cond_signal
+check_PROGRAMS += myth_cond_broadcast_0
+check_PROGRAMS += myth_cond_broadcast_1
+check_PROGRAMS += myth_barrier
+check_PROGRAMS += myth_join_counter
+check_PROGRAMS += myth_felock
+check_PROGRAMS += myth_dag_1d
+check_PROGRAMS += myth_dag_2d
+check_PROGRAMS += myth_dag_random
+check_PROGRAMS += myth_key_create
+check_PROGRAMS += myth_key_getspecific
+check_PROGRAMS += myth_key_destructor
+check_PROGRAMS += measure_create
+check_PROGRAMS += measure_latency
+check_PROGRAMS += measure_wakeup_latency
+check_PROGRAMS += measure_malloc
+check_PROGRAMS += myth_create_0_cc
+check_PROGRAMS += myth_create_1_cc
+check_PROGRAMS += myth_create_2_cc
+check_PROGRAMS += myth_create_join_many_cc
+check_PROGRAMS += myth_yield_0_cc
+check_PROGRAMS += myth_yield_1_cc
+check_PROGRAMS += myth_yield_2_cc
+check_PROGRAMS += myth_sleep_queue_cc
+check_PROGRAMS += myth_lock_cc
+check_PROGRAMS += myth_trylock_cc
+check_PROGRAMS += myth_mixlock_cc
+check_PROGRAMS += myth_cond_signal_cc
+check_PROGRAMS += myth_cond_broadcast_0_cc
+check_PROGRAMS += myth_cond_broadcast_1_cc
+check_PROGRAMS += myth_barrier_cc
+check_PROGRAMS += myth_join_counter_cc
+check_PROGRAMS += myth_felock_cc
+check_PROGRAMS += myth_dag_1d_cc
+check_PROGRAMS += myth_dag_2d_cc
+check_PROGRAMS += myth_dag_random_cc
+check_PROGRAMS += myth_key_create_cc
+check_PROGRAMS += myth_key_getspecific_cc
+check_PROGRAMS += myth_key_destructor_cc
+check_PROGRAMS += measure_create_cc
+check_PROGRAMS += measure_latency_cc
+check_PROGRAMS += measure_wakeup_latency_cc
+
+# TODO they are added to test pthread-wrapping versions
+# check_PROGRAMS += pth_create_0
+# check_PROGRAMS += pth_create_1
+# check_PROGRAMS += pth_create_2
+# check_PROGRAMS += pth_yield
+# check_PROGRAMS += pth_lock
+# check_PROGRAMS += pth_trylock
+# check_PROGRAMS += pth_mixlock
+# check_PROGRAMS += pth_barrier
+# check_PROGRAMS += pth_create_0_cc
+# check_PROGRAMS += pth_create_1_cc
+# check_PROGRAMS += pth_create_2_cc
+# check_PROGRAMS += pth_yield_cc
+# check_PROGRAMS += pth_lock_cc
+# check_PROGRAMS += pth_trylock_cc
+# check_PROGRAMS += pth_mixlock_cc
+# check_PROGRAMS += pth_barrier_cc
+
+check_PROGRAMS += new_test
 
 #	new_test
 # three programs that fail for now
@@ -98,7 +101,6 @@ endif
 #	pth_cond_broadcast_0_cc
 #	pth_cond_broadcast_1_cc
 #
-
 
 common_cflags = -I$(abs_top_srcdir)/include
 common_cxxflags = $(common_cflags)
@@ -266,61 +268,6 @@ myth_key_destructor_CFLAGS = $(common_cflags)
 myth_key_destructor_LDADD  = $(common_ldadd)
 myth_key_destructor_LDFLAGS  = $(pth_ldflags)
 
-pth_create_0_SOURCES = pth_create_0.c
-pth_create_0_CFLAGS = $(common_cflags)
-pth_create_0_LDADD  = $(common_ldadd)
-pth_create_0_LDFLAGS  = $(pth_ldflags)
-
-pth_create_1_SOURCES = pth_create_1.c
-pth_create_1_CFLAGS = $(common_cflags)
-pth_create_1_LDADD  = $(common_ldadd)
-pth_create_1_LDFLAGS  = $(pth_ldflags)
-
-pth_create_2_SOURCES = pth_create_2.c
-pth_create_2_CFLAGS = $(common_cflags)
-pth_create_2_LDADD  = $(common_ldadd)
-pth_create_2_LDFLAGS  = $(pth_ldflags)
-
-pth_yield_SOURCES = pth_yield.c
-pth_yield_CFLAGS = $(common_cflags)
-pth_yield_LDADD  = $(common_ldadd)
-pth_yield_LDFLAGS  = $(pth_ldflags)
-
-pth_lock_SOURCES = pth_lock.c
-pth_lock_CFLAGS = $(common_cflags)
-pth_lock_LDADD  = $(common_ldadd)
-pth_lock_LDFLAGS  = $(pth_ldflags)
-
-pth_trylock_SOURCES = pth_trylock.c
-pth_trylock_CFLAGS = $(common_cflags)
-pth_trylock_LDADD  = $(common_ldadd)
-pth_trylock_LDFLAGS  = $(pth_ldflags)
-
-pth_mixlock_SOURCES = pth_mixlock.c
-pth_mixlock_CFLAGS = $(common_cflags)
-pth_mixlock_LDADD  = $(common_ldadd)
-pth_mixlock_LDFLAGS  = $(pth_ldflags)
-
-#pth_cond_signal_SOURCES = pth_cond_signal.c
-#pth_cond_signal_CFLAGS = $(common_cflags)
-#pth_cond_signal_LDADD  = $(common_ldadd)
-#pth_cond_signal_LDFLAGS  = $(pth_ldflags)
-
-#pth_cond_broadcast_0_SOURCES = pth_cond_broadcast_0.c
-#pth_cond_broadcast_0_CFLAGS = $(common_cflags)
-#pth_cond_broadcast_0_LDADD  = $(common_ldadd)
-#pth_cond_broadcast_0_LDFLAGS  = $(pth_ldflags)
-
-#pth_cond_broadcast_1_SOURCES = pth_cond_broadcast_1.c
-#pth_cond_broadcast_1_CFLAGS = $(common_cflags)
-#pth_cond_broadcast_1_LDADD  = $(common_ldadd)
-#pth_cond_broadcast_1_LDFLAGS  = $(pth_ldflags)
-
-pth_barrier_SOURCES = pth_barrier.c
-pth_barrier_CFLAGS = $(common_cflags)
-pth_barrier_LDADD  = $(common_ldadd)
-pth_barrier_LDFLAGS  = $(pth_ldflags)
-
 measure_create_SOURCES = measure_create.c
 measure_create_CFLAGS = $(common_cflags)
 measure_create_LDADD  = $(common_ldadd)
@@ -459,61 +406,6 @@ myth_key_destructor_cc_CXXFLAGS = $(common_cxxflags)
 myth_key_destructor_cc_LDADD  = $(common_ldadd)
 myth_key_destructor_cc_LDFLAGS  = $(pth_ldflags)
 
-pth_create_0_cc_SOURCES = pth_create_0_cc.cc
-pth_create_0_cc_CXXFLAGS = $(common_cxxflags)
-pth_create_0_cc_LDADD  = $(common_ldadd)
-pth_create_0_cc_LDFLAGS  = $(pth_ldflags)
-
-pth_create_1_cc_SOURCES = pth_create_1_cc.cc
-pth_create_1_cc_CXXFLAGS = $(common_cxxflags)
-pth_create_1_cc_LDADD  = $(common_ldadd)
-pth_create_1_cc_LDFLAGS  = $(pth_ldflags)
-
-pth_create_2_cc_SOURCES = pth_create_2_cc.cc
-pth_create_2_cc_CXXFLAGS = $(common_cxxflags)
-pth_create_2_cc_LDADD  = $(common_ldadd)
-pth_create_2_cc_LDFLAGS  = $(pth_ldflags)
-
-pth_yield_cc_SOURCES = pth_yield_cc.cc
-pth_yield_cc_CXXFLAGS = $(common_cxxflags)
-pth_yield_cc_LDADD  = $(common_ldadd)
-pth_yield_cc_LDFLAGS  = $(pth_ldflags)
-
-pth_lock_cc_SOURCES = pth_lock_cc.cc
-pth_lock_cc_CXXFLAGS = $(common_cxxflags)
-pth_lock_cc_LDADD  = $(common_ldadd)
-pth_lock_cc_LDFLAGS  = $(pth_ldflags)
-
-pth_trylock_cc_SOURCES = pth_trylock_cc.cc
-pth_trylock_cc_CXXFLAGS = $(common_cxxflags)
-pth_trylock_cc_LDADD  = $(common_ldadd)
-pth_trylock_cc_LDFLAGS  = $(pth_ldflags)
-
-pth_mixlock_cc_SOURCES = pth_mixlock_cc.cc
-pth_mixlock_cc_CXXFLAGS = $(common_cxxflags)
-pth_mixlock_cc_LDADD  = $(common_ldadd)
-pth_mixlock_cc_LDFLAGS  = $(pth_ldflags)
-
-# pth_cond_signal_cc_SOURCES = pth_cond_signal_cc.cc
-# pth_cond_signal_cc_CXXFLAGS = $(common_cxxflags)
-# pth_cond_signal_cc_LDADD  = $(common_ldadd)
-# pth_cond_signal_cc_LDFLAGS  = $(pth_ldflags)
-
-# pth_cond_broadcast_0_cc_SOURCES = pth_cond_broadcast_0_cc.cc
-# pth_cond_broadcast_0_cc_CXXFLAGS = $(common_cxxflags)
-# pth_cond_broadcast_0_cc_LDADD  = $(common_ldadd)
-# pth_cond_broadcast_0_cc_LDFLAGS  = $(pth_ldflags)
-
-# pth_cond_broadcast_1_cc_SOURCES = pth_cond_broadcast_1_cc.cc
-# pth_cond_broadcast_1_cc_CXXFLAGS = $(common_cxxflags)
-# pth_cond_broadcast_1_cc_LDADD  = $(common_ldadd)
-# pth_cond_broadcast_1_cc_LDFLAGS  = $(pth_ldflags)
-
-pth_barrier_cc_SOURCES = pth_barrier_cc.cc
-pth_barrier_cc_CXXFLAGS = $(common_cxxflags)
-pth_barrier_cc_LDADD  = $(common_ldadd)
-pth_barrier_cc_LDFLAGS  = $(pth_ldflags)
-
 measure_create_cc_SOURCES = measure_create_cc.cc
 measure_create_cc_CXXFLAGS = $(common_cxxflags)
 measure_create_cc_LDADD  = $(common_ldadd)
@@ -529,10 +421,126 @@ measure_wakeup_latency_cc_CXXFLAGS = $(common_cxxflags)
 measure_wakeup_latency_cc_LDADD  = $(common_ldadd)
 measure_wakeup_latency_cc_LDFLAGS  = $(pth_ldflags)
 
-# new_test_SOURCES = new_test.c
-# new_test_CXXFLAGS = $(common_cflags)
-# new_test_LDADD  = $(common_ldadd)
-# new_test_LDFLAGS  = $(pth_ldflags)
+# pth_create_0_SOURCES = pth_create_0.c
+# pth_create_0_CFLAGS = $(common_cflags)
+# pth_create_0_LDADD  = $(common_ldadd)
+# pth_create_0_LDFLAGS  = $(pth_ldflags)
+
+# pth_create_1_SOURCES = pth_create_1.c
+# pth_create_1_CFLAGS = $(common_cflags)
+# pth_create_1_LDADD  = $(common_ldadd)
+# pth_create_1_LDFLAGS  = $(pth_ldflags)
+
+# pth_create_2_SOURCES = pth_create_2.c
+# pth_create_2_CFLAGS = $(common_cflags)
+# pth_create_2_LDADD  = $(common_ldadd)
+# pth_create_2_LDFLAGS  = $(pth_ldflags)
+
+# pth_yield_SOURCES = pth_yield.c
+# pth_yield_CFLAGS = $(common_cflags)
+# pth_yield_LDADD  = $(common_ldadd)
+# pth_yield_LDFLAGS  = $(pth_ldflags)
+
+# pth_lock_SOURCES = pth_lock.c
+# pth_lock_CFLAGS = $(common_cflags)
+# pth_lock_LDADD  = $(common_ldadd)
+# pth_lock_LDFLAGS  = $(pth_ldflags)
+
+# pth_trylock_SOURCES = pth_trylock.c
+# pth_trylock_CFLAGS = $(common_cflags)
+# pth_trylock_LDADD  = $(common_ldadd)
+# pth_trylock_LDFLAGS  = $(pth_ldflags)
+
+# pth_mixlock_SOURCES = pth_mixlock.c
+# pth_mixlock_CFLAGS = $(common_cflags)
+# pth_mixlock_LDADD  = $(common_ldadd)
+# pth_mixlock_LDFLAGS  = $(pth_ldflags)
+
+## this fails and omitted for now
+## pth_cond_signal_SOURCES = pth_cond_signal.c
+## pth_cond_signal_CFLAGS = $(common_cflags)
+## pth_cond_signal_LDADD  = $(common_ldadd)
+## pth_cond_signal_LDFLAGS  = $(pth_ldflags)
+
+## this fails and omitted for now
+## pth_cond_broadcast_0_SOURCES = pth_cond_broadcast_0.c
+## pth_cond_broadcast_0_CFLAGS = $(common_cflags)
+## pth_cond_broadcast_0_LDADD  = $(common_ldadd)
+## pth_cond_broadcast_0_LDFLAGS  = $(pth_ldflags)
+
+# # this fails and omitted for now
+## pth_cond_broadcast_1_SOURCES = pth_cond_broadcast_1.c
+## pth_cond_broadcast_1_CFLAGS = $(common_cflags)
+## pth_cond_broadcast_1_LDADD  = $(common_ldadd)
+## pth_cond_broadcast_1_LDFLAGS  = $(pth_ldflags)
+
+# pth_barrier_SOURCES = pth_barrier.c
+# pth_barrier_CFLAGS = $(common_cflags)
+# pth_barrier_LDADD  = $(common_ldadd)
+# pth_barrier_LDFLAGS  = $(pth_ldflags)
+
+# pth_create_0_cc_SOURCES = pth_create_0_cc.cc
+# pth_create_0_cc_CXXFLAGS = $(common_cxxflags)
+# pth_create_0_cc_LDADD  = $(common_ldadd)
+# pth_create_0_cc_LDFLAGS  = $(pth_ldflags)
+
+# pth_create_1_cc_SOURCES = pth_create_1_cc.cc
+# pth_create_1_cc_CXXFLAGS = $(common_cxxflags)
+# pth_create_1_cc_LDADD  = $(common_ldadd)
+# pth_create_1_cc_LDFLAGS  = $(pth_ldflags)
+
+# pth_create_2_cc_SOURCES = pth_create_2_cc.cc
+# pth_create_2_cc_CXXFLAGS = $(common_cxxflags)
+# pth_create_2_cc_LDADD  = $(common_ldadd)
+# pth_create_2_cc_LDFLAGS  = $(pth_ldflags)
+
+# pth_yield_cc_SOURCES = pth_yield_cc.cc
+# pth_yield_cc_CXXFLAGS = $(common_cxxflags)
+# pth_yield_cc_LDADD  = $(common_ldadd)
+# pth_yield_cc_LDFLAGS  = $(pth_ldflags)
+
+# pth_lock_cc_SOURCES = pth_lock_cc.cc
+# pth_lock_cc_CXXFLAGS = $(common_cxxflags)
+# pth_lock_cc_LDADD  = $(common_ldadd)
+# pth_lock_cc_LDFLAGS  = $(pth_ldflags)
+
+# pth_trylock_cc_SOURCES = pth_trylock_cc.cc
+# pth_trylock_cc_CXXFLAGS = $(common_cxxflags)
+# pth_trylock_cc_LDADD  = $(common_ldadd)
+# pth_trylock_cc_LDFLAGS  = $(pth_ldflags)
+
+# pth_mixlock_cc_SOURCES = pth_mixlock_cc.cc
+# pth_mixlock_cc_CXXFLAGS = $(common_cxxflags)
+# pth_mixlock_cc_LDADD  = $(common_ldadd)
+# pth_mixlock_cc_LDFLAGS  = $(pth_ldflags)
+
+## this fails and omitted for now
+## pth_cond_signal_cc_SOURCES = pth_cond_signal_cc.cc
+## pth_cond_signal_cc_CXXFLAGS = $(common_cxxflags)
+## pth_cond_signal_cc_LDADD  = $(common_ldadd)
+## pth_cond_signal_cc_LDFLAGS  = $(pth_ldflags)
+
+## this fails and omitted for now
+## pth_cond_broadcast_0_cc_SOURCES = pth_cond_broadcast_0_cc.cc
+## pth_cond_broadcast_0_cc_CXXFLAGS = $(common_cxxflags)
+## pth_cond_broadcast_0_cc_LDADD  = $(common_ldadd)
+## pth_cond_broadcast_0_cc_LDFLAGS  = $(pth_ldflags)
+
+## this fails and omitted for now
+## pth_cond_broadcast_1_cc_SOURCES = pth_cond_broadcast_1_cc.cc
+## pth_cond_broadcast_1_cc_CXXFLAGS = $(common_cxxflags)
+## pth_cond_broadcast_1_cc_LDADD  = $(common_ldadd)
+## pth_cond_broadcast_1_cc_LDFLAGS  = $(pth_ldflags)
+
+# pth_barrier_cc_SOURCES = pth_barrier_cc.cc
+# pth_barrier_cc_CXXFLAGS = $(common_cxxflags)
+# pth_barrier_cc_LDADD  = $(common_ldadd)
+# pth_barrier_cc_LDFLAGS  = $(pth_ldflags)
+
+new_test_SOURCES = new_test.c
+new_test_CFLAGS = $(common_cflags)
+new_test_LDADD  = $(common_ldadd)
+new_test_LDFLAGS  = $(pth_ldflags)
 
 TESTS = $(check_PROGRAMS)
 

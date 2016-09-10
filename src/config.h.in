@@ -66,6 +66,9 @@
 /* if 1, enable eco-mode */
 #undef MYTH_ECO_TEIAN_STEAL
 
+/* use ucontext if set, otherwise assembly context */
+#undef MYTH_FORCE_UCONTEXT
+
 /* Scheduler stack size */
 #undef MYTH_SCHED_STACK_SIZE
 
