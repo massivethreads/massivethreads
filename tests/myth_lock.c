@@ -44,8 +44,8 @@ void * f(void * arg_) {
 myth_mutex_t m[1];
 
 int main(int argc, char ** argv) {
-  long nthreads        = (argc > 1 ? atol(argv[1]) : 100);
-  long ninc_per_thread = (argc > 2 ? atol(argv[2]) : 10000);
+  long nthreads        = (argc > 1 ? atol(argv[1]) : 50);
+  long ninc_per_thread = (argc > 2 ? atol(argv[2]) : 1000);
 
   myth_mutex_init(m, 0);
   long p[1] = { 0 };

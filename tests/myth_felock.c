@@ -36,7 +36,7 @@ void * incrementer(void * arg_) {
 }
 
 int main(int argc, char ** argv) {
-  long n_threads = (argc > 1 ? atol(argv[1]) : 1000);
+  long n_threads = (argc > 1 ? atol(argv[1]) : 100);
   long n = (argc > 2 ? atol(argv[2]) : 1000);
   long i;
   arg_t arg = { 0, n };
