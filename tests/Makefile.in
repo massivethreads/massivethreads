@@ -124,8 +124,7 @@ check_PROGRAMS = myth_malloc$(EXEEXT) myth_calloc$(EXEEXT) \
 	myth_dag_random_cc$(EXEEXT) myth_key_create_cc$(EXEEXT) \
 	myth_key_getspecific_cc$(EXEEXT) \
 	myth_key_destructor_cc$(EXEEXT) measure_create_cc$(EXEEXT) \
-	measure_latency_cc$(EXEEXT) measure_wakeup_latency_cc$(EXEEXT) \
-	new_test$(EXEEXT)
+	measure_latency_cc$(EXEEXT) measure_wakeup_latency_cc$(EXEEXT)
 @BUILD_TEST_ALIGNED_ALLOC_TRUE@am__append_1 = myth_aligned_alloc
 subdir = tests
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -602,12 +601,6 @@ myth_yield_2_cc_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CXXLD) \
 	$(myth_yield_2_cc_CXXFLAGS) $(CXXFLAGS) \
 	$(myth_yield_2_cc_LDFLAGS) $(LDFLAGS) -o $@
-am_new_test_OBJECTS = new_test-new_test.$(OBJEXT)
-new_test_OBJECTS = $(am_new_test_OBJECTS)
-new_test_DEPENDENCIES = $(am__DEPENDENCIES_1)
-new_test_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
-	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(new_test_CFLAGS) \
-	$(CFLAGS) $(new_test_LDFLAGS) $(LDFLAGS) -o $@
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
 am__v_P_0 = false
@@ -695,7 +688,7 @@ SOURCES = $(measure_create_SOURCES) $(measure_create_cc_SOURCES) \
 	$(myth_valloc_SOURCES) $(myth_yield_0_SOURCES) \
 	$(myth_yield_0_cc_SOURCES) $(myth_yield_1_SOURCES) \
 	$(myth_yield_1_cc_SOURCES) $(myth_yield_2_SOURCES) \
-	$(myth_yield_2_cc_SOURCES) $(new_test_SOURCES)
+	$(myth_yield_2_cc_SOURCES)
 DIST_SOURCES = $(measure_create_SOURCES) $(measure_create_cc_SOURCES) \
 	$(measure_latency_SOURCES) $(measure_latency_cc_SOURCES) \
 	$(measure_malloc_SOURCES) $(measure_wakeup_latency_SOURCES) \
@@ -731,7 +724,7 @@ DIST_SOURCES = $(measure_create_SOURCES) $(measure_create_cc_SOURCES) \
 	$(myth_valloc_SOURCES) $(myth_yield_0_SOURCES) \
 	$(myth_yield_0_cc_SOURCES) $(myth_yield_1_SOURCES) \
 	$(myth_yield_1_cc_SOURCES) $(myth_yield_2_SOURCES) \
-	$(myth_yield_2_cc_SOURCES) $(new_test_SOURCES)
+	$(myth_yield_2_cc_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -1090,7 +1083,26 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 
-#	new_test
+# TODO they are added to test pthread-wrapping versions
+# check_PROGRAMS += pth_create_0
+# check_PROGRAMS += pth_create_1
+# check_PROGRAMS += pth_create_2
+# check_PROGRAMS += pth_yield
+# check_PROGRAMS += pth_lock
+# check_PROGRAMS += pth_trylock
+# check_PROGRAMS += pth_mixlock
+# check_PROGRAMS += pth_barrier
+# check_PROGRAMS += pth_create_0_cc
+# check_PROGRAMS += pth_create_1_cc
+# check_PROGRAMS += pth_create_2_cc
+# check_PROGRAMS += pth_yield_cc
+# check_PROGRAMS += pth_lock_cc
+# check_PROGRAMS += pth_trylock_cc
+# check_PROGRAMS += pth_mixlock_cc
+# check_PROGRAMS += pth_barrier_cc
+
+# check_PROGRAMS += new_test
+
 # three programs that fail for now
 #	pth_cond_signal
 #	pth_cond_broadcast_0
@@ -1439,10 +1451,11 @@ measure_wakeup_latency_cc_LDFLAGS = $(pth_ldflags)
 # pth_barrier_cc_CXXFLAGS = $(common_cxxflags)
 # pth_barrier_cc_LDADD  = $(common_ldadd)
 # pth_barrier_cc_LDFLAGS  = $(pth_ldflags)
-new_test_SOURCES = new_test.c
-new_test_CFLAGS = $(common_cflags)
-new_test_LDADD = $(common_ldadd)
-new_test_LDFLAGS = $(pth_ldflags)
+
+# new_test_SOURCES = new_test.c
+# new_test_CFLAGS = $(common_cflags)
+# new_test_LDADD  = $(common_ldadd)
+# new_test_LDFLAGS  = $(pth_ldflags)
 TESTS = $(check_PROGRAMS)
 all: all-am
 
@@ -1735,10 +1748,6 @@ myth_yield_2_cc$(EXEEXT): $(myth_yield_2_cc_OBJECTS) $(myth_yield_2_cc_DEPENDENC
 	@rm -f myth_yield_2_cc$(EXEEXT)
 	$(AM_V_CXXLD)$(myth_yield_2_cc_LINK) $(myth_yield_2_cc_OBJECTS) $(myth_yield_2_cc_LDADD) $(LIBS)
 
-new_test$(EXEEXT): $(new_test_OBJECTS) $(new_test_DEPENDENCIES) $(EXTRA_new_test_DEPENDENCIES) 
-	@rm -f new_test$(EXEEXT)
-	$(AM_V_CCLD)$(new_test_LINK) $(new_test_OBJECTS) $(new_test_LDADD) $(LIBS)
-
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
 
@@ -1807,7 +1816,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/myth_yield_1_cc-myth_yield_1_cc.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/myth_yield_2-myth_yield_2.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/myth_yield_2_cc-myth_yield_2_cc.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/new_test-new_test.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
@@ -2333,20 +2341,6 @@ myth_yield_2-myth_yield_2.obj: myth_yield_2.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='myth_yield_2.c' object='myth_yield_2-myth_yield_2.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_yield_2_CFLAGS) $(CFLAGS) -c -o myth_yield_2-myth_yield_2.obj `if test -f 'myth_yield_2.c'; then $(CYGPATH_W) 'myth_yield_2.c'; else $(CYGPATH_W) '$(srcdir)/myth_yield_2.c'; fi`
-
-new_test-new_test.o: new_test.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(new_test_CFLAGS) $(CFLAGS) -MT new_test-new_test.o -MD -MP -MF $(DEPDIR)/new_test-new_test.Tpo -c -o new_test-new_test.o `test -f 'new_test.c' || echo '$(srcdir)/'`new_test.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/new_test-new_test.Tpo $(DEPDIR)/new_test-new_test.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='new_test.c' object='new_test-new_test.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(new_test_CFLAGS) $(CFLAGS) -c -o new_test-new_test.o `test -f 'new_test.c' || echo '$(srcdir)/'`new_test.c
-
-new_test-new_test.obj: new_test.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(new_test_CFLAGS) $(CFLAGS) -MT new_test-new_test.obj -MD -MP -MF $(DEPDIR)/new_test-new_test.Tpo -c -o new_test-new_test.obj `if test -f 'new_test.c'; then $(CYGPATH_W) 'new_test.c'; else $(CYGPATH_W) '$(srcdir)/new_test.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/new_test-new_test.Tpo $(DEPDIR)/new_test-new_test.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='new_test.c' object='new_test-new_test.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(new_test_CFLAGS) $(CFLAGS) -c -o new_test-new_test.obj `if test -f 'new_test.c'; then $(CYGPATH_W) 'new_test.c'; else $(CYGPATH_W) '$(srcdir)/new_test.c'; fi`
 
 .cc.o:
 @am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXXCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
@@ -3362,13 +3356,6 @@ measure_latency_cc.log: measure_latency_cc$(EXEEXT)
 measure_wakeup_latency_cc.log: measure_wakeup_latency_cc$(EXEEXT)
 	@p='measure_wakeup_latency_cc$(EXEEXT)'; \
 	b='measure_wakeup_latency_cc'; \
-	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
-	--log-file $$b.log --trs-file $$b.trs \
-	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
-	"$$tst" $(AM_TESTS_FD_REDIRECT)
-new_test.log: new_test$(EXEEXT)
-	@p='new_test$(EXEEXT)'; \
-	b='new_test'; \
 	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \

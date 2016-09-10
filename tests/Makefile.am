@@ -89,9 +89,8 @@ check_PROGRAMS += measure_wakeup_latency_cc
 # check_PROGRAMS += pth_mixlock_cc
 # check_PROGRAMS += pth_barrier_cc
 
-check_PROGRAMS += new_test
+# check_PROGRAMS += new_test
 
-#	new_test
 # three programs that fail for now
 #	pth_cond_signal
 #	pth_cond_broadcast_0
@@ -537,10 +536,10 @@ measure_wakeup_latency_cc_LDFLAGS  = $(pth_ldflags)
 # pth_barrier_cc_LDADD  = $(common_ldadd)
 # pth_barrier_cc_LDFLAGS  = $(pth_ldflags)
 
-new_test_SOURCES = new_test.c
-new_test_CFLAGS = $(common_cflags)
-new_test_LDADD  = $(common_ldadd)
-new_test_LDFLAGS  = $(pth_ldflags)
+# new_test_SOURCES = new_test.c
+# new_test_CFLAGS = $(common_cflags)
+# new_test_LDADD  = $(common_ldadd)
+# new_test_LDFLAGS  = $(pth_ldflags)
 
 TESTS = $(check_PROGRAMS)
 
