@@ -50,8 +50,6 @@ static inline myth_running_env_t myth_get_current_env(void) {
   return (myth_running_env_t)real_pthread_getspecific(g_env_key);
 }
 #elif WENV_IMPL == WENV_IMPL_ELF
-//TLS provided by ELF(Architecture dependent)
-extern __thread int g_worker_rank;
 //Initialize
 static void myth_env_init(void) { }
 //Cleanup
@@ -64,7 +62,8 @@ static void myth_set_current_env(myth_running_env_t e) {
 static inline myth_running_env_t myth_get_current_env(void) {
   /* if you hit this, it is likely that you create a native pthread,
      which calls into a MassiveThreads function that in turn calls this */
-  myth_assert(g_worker_rank >= 0);
+  myth_assert(0 <= g_worker_rank);
+  myth_assert(g_worker_rank < g_envs_sz);
   return &g_envs[g_worker_rank];
 }
 #elif WENV_IMPL == WENV_IMPL_NONE

@@ -222,11 +222,12 @@ myth_thread_t myth_eco_all_task_check(myth_running_env_t env)
 // wait
 void myth_sleep_1(void) {
   int s;
-  int *my_sem = &(g_envs[g_worker_rank].my_sem);
+  myth_running_env_t env = myth_get_current_env();
+  int *my_sem = &env->my_sem;
   s = *my_sem = 2;
-  if(myth_sleeper_push(my_sem,g_worker_rank,-1) == 0) {
+  if(myth_sleeper_push(my_sem, env->rank, -1) == 0) {
 #if MYTH_ECO_CIRCLE_STEAL || MYTH_ECO_TEIAN_STEAL
-    g_envs[g_worker_rank].c = SLEEPING;
+    env->c = SLEEPING;
 #endif
     while( s != 0 ) {
       futex_wait( my_sem, 2 );
@@ -236,7 +237,7 @@ void myth_sleep_1(void) {
     printf("wake up!\n");
 #endif
 #if MYTH_ECO_CIRCLE_STEAL || MYTH_ECO_TEIAN_STEAL
-    g_envs[g_worker_rank].c = STEALING;
+    env->c = STEALING;
 #endif
 
   }
@@ -245,11 +246,12 @@ void myth_sleep_1(void) {
 // wait
 void myth_sleep_2(int num) {
   int s;
-  int *my_sem = &(g_envs[g_worker_rank].my_sem);
+  myth_running_env_t env = myth_get_current_env();
+  int *my_sem = &env->my_sem;
   s = *my_sem = 2;
-  if(myth_sleeper_push(my_sem,g_worker_rank,num) == 0) {
+  if(myth_sleeper_push(my_sem, env->rank, num) == 0) {
 #if MYTH_ECO_CIRCLE_STEAL || MYTH_ECO_TEIAN_STEAL
-    g_envs[g_worker_rank].c = SLEEPING;
+     env->c = SLEEPING;
 #endif
     while( s != 0 ) {
       futex_wait( my_sem, 2 );
@@ -258,18 +260,19 @@ void myth_sleep_2(int num) {
 #if MYTH_ECO_DEBUG
     printf("wake up!\n");
 #endif
-    g_envs[g_worker_rank].c = STEALING;
+    env->c = STEALING;
   }
 }
 
 void myth_go_asleep(void) {
   int s;
-  int *my_sem = &(g_envs[g_worker_rank].my_sem);
+  myth_running_env_t env = myth_get_current_env();
+  int *my_sem = &env->my_sem;
   s = *my_sem = 2;
 #if MYTH_ECO_CIRCLE_STEAL || MYTH_ECO_TEIAN_STEAL
-  g_envs[g_worker_rank].c = SLEEPING;
+  env->c = SLEEPING;
 #endif
-  while(myth_sleeper_push(my_sem,g_worker_rank,-1) != 0) {;}
+  while(myth_sleeper_push(my_sem, env->rank, -1) != 0) {  }
   //  __sync_fetch_and_add(&sleeper,1); //atomic(sleeper++;)
   while( s != 0 ) {
     futex_wait( my_sem, 2 );
@@ -279,7 +282,7 @@ void myth_go_asleep(void) {
   printf("wake up!\n");
 #endif
 #if MYTH_ECO_CIRCLE_STEAL || MYTH_ECO_TEIAN_STEAL
-  g_envs[g_worker_rank].c = STEALING;
+  env->c = STEALING;
 #endif
 }
 
@@ -295,7 +298,7 @@ int myth_wakeup_one(void) {
   if(__sync_fetch_and_sub(my_sem,1) != 1) {
     *my_sem = 0;
     g_envs[rank].isSleepy = 1;
-    g_envs[rank].ws_target = g_worker_rank;
+    g_envs[rank].ws_target = myth_get_worker_num_body();
     if(futex_wakeup_one( (void *)my_sem ) != -1) {
       __sync_fetch_and_sub(&sleeper,1); // atomic(sleeper--;)
       //real_free(tmp);

@@ -153,8 +153,8 @@ typedef struct myth_running_env {
 extern myth_steal_func_t g_myth_steal_func;
 
 //Thread index
-extern int g_thread_index;
 extern myth_running_env_t g_envs;
+extern int g_envs_sz;
 //Number of worker threads
 //Barrier for worker threads
 extern pthread_barrier_t g_worker_barrier;

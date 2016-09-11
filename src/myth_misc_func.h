@@ -157,7 +157,7 @@ static inline void myth_flmalloc_fini_worker(int rank) {
 #endif
 }
 
-extern __thread int g_worker_rank;
+//extern __thread int g_worker_rank;
 
 static inline void * myth_mmap(void *addr, size_t length, int prot,
 			       int flags, int fd, off_t offset);

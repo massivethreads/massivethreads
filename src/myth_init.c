@@ -98,6 +98,7 @@ int myth_init_ex_body_really(const myth_globalattr_t * attr) {
   real_pthread_barrier_init(&g_worker_barrier, NULL, nw);
   //Allocate worker thread descriptors
   g_envs = myth_malloc(sizeof(myth_running_env) * nw);
+  g_envs_sz = nw;
   //Initialize TLS for worker thread descriptor
   myth_env_init();
 #if MYTH_ECO_MODE

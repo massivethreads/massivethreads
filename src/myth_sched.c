@@ -9,8 +9,8 @@
 
 //Global variable declarations
 //Global thread index
-int g_thread_index = 0;
 myth_running_env_t g_envs = NULL;
+int g_envs_sz = 0;
 //A barrier for worker thread to synchronize
 pthread_barrier_t g_worker_barrier;
 
