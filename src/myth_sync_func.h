@@ -429,7 +429,7 @@ myth_once_body(myth_once_t * once_control, void (*init_routine)(void)) {
 static inline int
 myth_mutexattr_init_body(myth_mutexattr_t *attr);
 
-  static inline int myth_mutex_init_body(myth_mutex_t * mutex, 
+static inline int myth_mutex_init_body(myth_mutex_t * mutex, 
 				       const myth_mutexattr_t * attr) {
   myth_sleep_queue_init(mutex->sleep_q);
   mutex->state = 0;
@@ -488,6 +488,14 @@ static inline int myth_mutex_trylock_body(myth_mutex_t * mutex) {
    lock it.  this approach may lead to
    spuriously waking up many threads only one
    of whom may be able to acquire a lock.
+ */
+
+
+/* 
+   0 : lock is free; no one in the queue
+   1 : lock is held; no one in the queue
+   2 : lock is free; some in the queue
+   3 : lock is held; some in the queue
  */
 static inline int myth_mutex_lock_body(myth_mutex_t * mutex) {
   /* TODO: spin block */
@@ -641,6 +649,7 @@ myth_rwlock_destroy_body(myth_rwlock_t *rwlock) {
   return 0;
 }
 
+/* read-lock a reader-writer lock */
 static inline int
 myth_rwlock_rdlock_body(myth_rwlock_t *rwlock) {
   (void)rwlock;
@@ -648,6 +657,7 @@ myth_rwlock_rdlock_body(myth_rwlock_t *rwlock) {
   return 0;
 }
 
+/* try to read-lock a reader-writer lock */
 static inline int
 myth_rwlock_tryrdlock_body(myth_rwlock_t *rwlock) {
   (void)rwlock;
@@ -655,6 +665,7 @@ myth_rwlock_tryrdlock_body(myth_rwlock_t *rwlock) {
   return 0;
 }
 
+/* try to read-lock a reader-writer lock with time out */
 static inline int
 myth_rwlock_timedrdlock_body(myth_rwlock_t *restrict rwlock,
 			     const struct timespec *restrict abstime) {
@@ -664,6 +675,7 @@ myth_rwlock_timedrdlock_body(myth_rwlock_t *restrict rwlock,
   return 0;
 }
 
+/* write-lock a reader-writer lock */
 static inline int
 myth_rwlock_wrlock_body(myth_rwlock_t *rwlock) {
   (void)rwlock;
@@ -671,6 +683,7 @@ myth_rwlock_wrlock_body(myth_rwlock_t *rwlock) {
   return 0;
 }
 
+/* try to write-lock a reader-writer lock */
 static inline int
 myth_rwlock_trywrlock_body(myth_rwlock_t *rwlock) {
   (void)rwlock;
@@ -678,6 +691,7 @@ myth_rwlock_trywrlock_body(myth_rwlock_t *rwlock) {
   return 0;
 }
 
+/* try to write-lock a reader-writer lock with timeout */
 static inline int
 myth_rwlock_timedwrlock_body(myth_rwlock_t *restrict rwlock,
 			     const struct timespec *restrict abstime) {

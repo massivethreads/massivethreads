@@ -89,7 +89,7 @@ check_PROGRAMS += measure_wakeup_latency_cc
 # check_PROGRAMS += pth_mixlock_cc
 # check_PROGRAMS += pth_barrier_cc
 
-# check_PROGRAMS += new_test
+check_PROGRAMS += new_test
 
 # three programs that fail for now
 #	pth_cond_signal
@@ -103,7 +103,7 @@ check_PROGRAMS += measure_wakeup_latency_cc
 
 common_cflags = -I$(abs_top_srcdir)/include
 common_cxxflags = $(common_cflags)
-common_ldadd = $(abs_top_srcdir)/src/libmyth.la -lrt
+common_ldadd = $(abs_top_srcdir)/src/libmyth.la
 #pth_ldflags = @wrap_pthread.link_opts 
 pth_ldflags = 
 

@@ -414,13 +414,16 @@ static inline void myth_queue_put(myth_thread_queue_t q,myth_thread_t th)
     }
     else{
       int offset,offset_x2;
-      offset_x2=q->size-(q->base+q->top);
-      offset=offset_x2/2;if (offset_x2%2)offset--;
-      myth_assert(offset<0);
-      if (q->top-q->base){
-	memmove(&q->ptr[q->base+offset],&q->ptr[q->base],sizeof(myth_thread_t)*(q->top-q->base));
+      offset_x2 = q->size - (q->base + q->top);
+      offset = offset_x2 / 2;
+      if (offset_x2 % 2) offset--;
+      myth_assert(offset < 0);
+      if (q->top - q->base){
+	memmove(&q->ptr[q->base + offset], &q->ptr[q->base],
+		sizeof(myth_thread_t) * (q->top - q->base));
       }
-      q->top+=offset;q->base+=offset;
+      q->top += offset;
+      q->base += offset;
     }
   }
   int b = q->base;
