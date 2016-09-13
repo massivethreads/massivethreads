@@ -7,6 +7,8 @@
 //Enable debug
 //#define MYTH_DEBUG
 
+#define MYTH_RECORD_JOIN 1
+
 /* TODO: get rid of them, move them in configure */
 #define MYTH_ECO_TEST 0
 #define MYTH_ECO_CIRCLE_STEAL 0

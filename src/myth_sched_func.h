@@ -410,6 +410,16 @@ static inline int myth_create_ex_body(myth_thread_t * id,
   myth_thread_t new_thread = get_new_myth_thread_struct_desc(env);
   (void)_;
   new_thread->next = 0;
+#ifndef MYTH_RECORD_JOIN
+#error "bomb"
+#endif
+#if MYTH_RECORD_JOIN
+  new_thread->join_called_at = 0;
+  new_thread->child_status_when_join_was_called = "";
+  new_thread->finished_at = 0;
+  new_thread->waiter = (struct myth_thread *)-1;
+  new_thread->when_I_finished = "";
+#endif
   myth_tls_tree_init(new_thread->tls);
 
 #if MYTH_SPLIT_STACK_DESC /* default */
@@ -556,6 +566,9 @@ static inline int myth_join_body(myth_thread_t th,void **result) {
   myth_dprintf("myth_join:join started\n");
 #endif
 #if QUICK_CHECK_ON_JOIN
+
+#error "I told you to turn this off"
+  
   //If target is finished, return immediately
   if (th->status == MYTH_STATUS_FREE_READY2){
 #if MYTH_JOIN_DEBUG
@@ -588,6 +601,11 @@ static inline int myth_join_body(myth_thread_t th,void **result) {
   myth_spin_lock_body(&th->lock);
   //If target is finished, return
   if (myth_desc_is_finished(th)){
+#if MYTH_RECORD_JOIN
+    th->join_called_at = myth_get_rdtsc();
+    th->child_status_when_join_was_called = "child has been finished";
+#endif
+
 #if MYTH_JOIN_DEBUG
     myth_dprintf("myth_join:join thread (%p) is already finished. Return immediately\n",th);
 #endif
@@ -625,12 +643,20 @@ static inline int myth_join_body(myth_thread_t th,void **result) {
   t1 = myth_get_rdtsc();
 #endif
   if (next){
+#if MYTH_RECORD_JOIN
+    th->join_called_at = myth_get_rdtsc();
+    th->child_status_when_join_was_called = "child not finished and go to next";
+#endif
     next->env=env;
     //Switch to next runnable thread
     myth_swap_context_withcall(&this_thread->context,&next->context,myth_join_2,
 			       (void*)env,(void*)th,(void*)next);
   }
   else{
+#if MYTH_RECORD_JOIN
+    th->join_called_at = myth_get_rdtsc();
+    th->child_status_when_join_was_called = "child not finished and go to sched";
+#endif
     //myth_log_add(this_thread->env,MYTH_LOG_WS);
     //Since there is no runnable thread, switch to scheduler and do work-steaing
     myth_swap_context_withcall(&this_thread->context,&env->sched.context,myth_join_3,
@@ -1218,6 +1244,11 @@ static inline void myth_entry_point_cleanup(myth_thread_t this_thread) {
   myth_thread_t wait_thread = this_thread_v->join_thread;
   //Execute a thread waiting for current thread
   if (wait_thread){
+#if MYTH_RECORD_JOIN
+    this_thread->finished_at = myth_get_rdtsc();
+    this_thread->when_I_finished = "there was a waiter";
+    this_thread->waiter = wait_thread;
+#endif
     //sanity check
     myth_assert(wait_thread->status == MYTH_STATUS_BLOCKED);
     wait_thread->env = env;
@@ -1260,12 +1291,22 @@ static inline void myth_entry_point_cleanup(myth_thread_t this_thread) {
 #if MYTH_EP_PROF_DETAIL
     env->prof_data.ep_d_tmp=myth_get_rdtsc();
 #endif
+#if MYTH_RECORD_JOIN
+    this_thread->finished_at = myth_get_rdtsc();
+    this_thread->when_I_finished = "no waiter and go to next";
+    this_thread->waiter = 0;
+#endif
     //Switch to the next thread
     myth_set_context_withcall(&next->context, myth_entry_point_1,
 			      (void*)env, this_thread, next);
   } else {
 #if MYTH_EP_PROF_DETAIL
     env->prof_data.ep_d_tmp = myth_get_rdtsc();
+#endif
+#if MYTH_RECORD_JOIN
+    this_thread->finished_at = myth_get_rdtsc();
+    this_thread->when_I_finished = "no waiter and go to sched";
+    this_thread->waiter = 0;
 #endif
     //Switch to the scheduler
     myth_set_context_withcall(&env->sched.context, myth_entry_point_2,

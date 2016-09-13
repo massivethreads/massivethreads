@@ -9,6 +9,7 @@ void * f(void * x) {
   return (void *)(i * i);
 }
 
+myth_thread_t parent_th;
 myth_thread_t th[1000];
 void * ret[1000];
 
@@ -16,6 +17,7 @@ void * ret[1000];
 int main(int argc, char ** argv) {
   int nthreads = (argc > 1 ? atoi(argv[1]) : 100);
   long i;
+  parent_th = myth_self();
   for (i = 0; i < nthreads; i++) {
     th[i] = myth_create(f, (void *)i);
     myth_join(th[i], &ret[i]);

@@ -63,6 +63,18 @@ struct myth_thread {
   myth_thread_attr_t attr;
 
   myth_tls_tree_t tls[1];
+
+#ifndef MYTH_RECORD_JOIN
+#error "bomb"
+#endif
+#if MYTH_RECORD_JOIN
+  uint64_t join_called_at;
+  char * child_status_when_join_was_called;
+  uint64_t finished_at;
+  struct myth_thread * waiter;
+  char * when_I_finished;
+#endif
+  
 } ;
 
 // __attribute__((aligned(CACHE_LINE_SIZE))) myth_thread, *myth_thread_t;
