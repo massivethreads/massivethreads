@@ -138,7 +138,7 @@
 #define MYTH_BARRIER_INTRINSIC 5
 #define MYTH_BARRIER_NONE      6
 
-#define MYTH_BARRIER MYTH_BARRIER_CILK_WEAK
+#define MYTH_BARRIER MYTH_BARRIER_CILK
 
 /* --------------------
    WENV implementation choices 
@@ -176,7 +176,7 @@
 #define QUICK_CHECK_ON_STEAL 1
 
 //Check whether the thread is sure to be ready for release before acquiring the lock
-#define QUICK_CHECK_ON_JOIN 1
+#define QUICK_CHECK_ON_JOIN 0
 
 //Do trylock before work stealing
 //#define TRY_LOCK_BEFORE_STEAL 1
