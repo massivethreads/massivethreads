@@ -47,7 +47,10 @@ static void myth_set_current_env(myth_running_env_t e) {
 
 //Return current worker thread descriptor
 static inline myth_running_env_t myth_get_current_env(void) {
-  return (myth_running_env_t)real_pthread_getspecific(g_env_key);
+  myth_running_env_t env
+    = (myth_running_env_t)real_pthread_getspecific(g_env_key);
+  myth_assert(env->tid == syscall(SYS_gettid));
+  return env;
 }
 #elif WENV_IMPL == WENV_IMPL_ELF
 //Initialize
@@ -64,7 +67,10 @@ static inline myth_running_env_t myth_get_current_env(void) {
      which calls into a MassiveThreads function that in turn calls this */
   myth_assert(0 <= g_worker_rank);
   myth_assert(g_worker_rank < g_envs_sz);
-  return &g_envs[g_worker_rank];
+  myth_running_env_t env = &g_envs[g_worker_rank];
+  myth_assert(env->rank == g_worker_rank);
+  myth_assert(env->tid == syscall(SYS_gettid));
+  return env;
 }
 #elif WENV_IMPL == WENV_IMPL_NONE
 //Just a global variable. It works one worker thread only.
