@@ -44,6 +44,7 @@ int __wrap(posix_memalign)(void ** memptr, size_t alignment, size_t size) {
   return x;
 }
 
+#if HAVE_ALIGNED_ALLOC
 void * __wrap(aligned_alloc)(size_t alignment, size_t size) {
   int _ = enter_wrapped_func("%lu, %lu", alignment, size);
   void * x = real_aligned_alloc(alignment, size);
@@ -51,6 +52,7 @@ void * __wrap(aligned_alloc)(size_t alignment, size_t size) {
   leave_wrapped_func("%p", x);
   return x;
 }
+#endif
 
 void * __wrap(valloc)(size_t size) {
   int _ = enter_wrapped_func("%lu", size);
