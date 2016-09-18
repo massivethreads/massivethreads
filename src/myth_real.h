@@ -20,7 +20,8 @@
 
 #include "myth_config.h"
 
-//#define restrict
+/* TODO: add condition HAVE_RESTRICT or something */
+#define restrict
 
 
 
