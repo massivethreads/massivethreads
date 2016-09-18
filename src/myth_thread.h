@@ -64,10 +64,7 @@ struct myth_thread {
 
   myth_tls_tree_t tls[1];
 
-#ifndef MYTH_RECORD_JOIN
-#error "bomb"
-#endif
-#if MYTH_RECORD_JOIN
+#if MYTH_DEBUG_JOIN_FCC
   uint64_t join_called_at;
   char * child_status_when_join_was_called;
   uint64_t finished_at;

@@ -20,7 +20,7 @@
 
 #include "myth_config.h"
 
-#define restrict
+//#define restrict
 
 
 

@@ -14,11 +14,9 @@
 #include "myth_misc.h"
 #include "myth_sched.h"
 #include "myth_io.h"
-//#include "myth_log.h"
 #include "myth_wsqueue.h"
 
 #if MYTH_ECO_MODE && MYTH_ECO_TEIAN_STEAL
-//#include "myth_eco.h"
 typedef enum {
   RUNNING = 31,
   STEALING,

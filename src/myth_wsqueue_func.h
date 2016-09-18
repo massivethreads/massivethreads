@@ -208,7 +208,7 @@ static inline void __attribute__((always_inline)) myth_queue_push(myth_thread_qu
   myth_queue_exit_operation(q);
 }
 
-#ifndef MYTH_QUEUE_FIFO
+#if MYTH_QUEUE_FIFO
 static inline myth_thread_t __attribute__((always_inline)) myth_queue_pop(myth_thread_queue_t q)
 {
   myth_queue_enter_operation(q);
@@ -279,12 +279,12 @@ static inline myth_thread_t __attribute__((always_inline)) myth_queue_pop(myth_t
   }
   myth_unreachable();
 }
-#else
+#else  /* MYTH_QUEUE_FIFO */
 static inline myth_thread_t myth_queue_take(myth_thread_queue_t q);
 static inline myth_thread_t myth_queue_pop(myth_thread_queue_t q){
   return myth_queue_take(q);
 }
-#endif
+#endif /* MYTH_QUEUE_FIFO */
 
 //take/pass:Non-owner functions
 static inline myth_thread_t myth_queue_take(myth_thread_queue_t q)

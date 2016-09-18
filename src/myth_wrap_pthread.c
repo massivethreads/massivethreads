@@ -402,6 +402,7 @@ int __wrap(pthread_attr_getaffinity_np)(const pthread_attr_t *attr,
   return ret;
 }
 
+#if defined(HAVE_PTHREAD_GETATTR_DEFAULT_NP)
 /* Get the default attributes used by pthread_create in this process.  */
 int __wrap(pthread_getattr_default_np)(pthread_attr_t *attr) {
   int _ = enter_wrapped_func("%p", attr);
@@ -410,7 +411,9 @@ int __wrap(pthread_getattr_default_np)(pthread_attr_t *attr) {
   leave_wrapped_func("%d", ret);
   return ret;
 }
+#endif	/* HAVE_PTHREAD_GETATTR_DEFAULT_NP */
 
+#if defined(HAVE_PTHREAD_SETATTR_DEFAULT_NP)
 /* Set the default attributes to be used by pthread_create in this
    process.  */
 int __wrap(pthread_setattr_default_np)(const pthread_attr_t *attr) {
@@ -420,6 +423,7 @@ int __wrap(pthread_setattr_default_np)(const pthread_attr_t *attr) {
   leave_wrapped_func("%d", ret);
   return ret;
 }
+#endif	/* HAVE_PTHREAD_SETATTR_DEFAULT_NP */
 
 /* pthread_getattr_np (3) - get attributes of created thread */
 int __wrap(pthread_getattr_np)(pthread_t thread, pthread_attr_t *attr) {
@@ -481,6 +485,7 @@ int __wrap(pthread_setschedprio)(pthread_t thread, int prio) {
   return ret;
 }
 
+#if defined(HAVE_PTHREAD_GETNAME_NP)
 #if _GNU_SOURCE
 /* pthread_getname_np (3) - set/get the name of a thread */
 int __wrap(pthread_getname_np)(pthread_t thread, char *name, size_t len) {
@@ -496,7 +501,9 @@ int __wrap(pthread_getname_np)(pthread_t thread, char *name, size_t len) {
   leave_wrapped_func("%d", ret);
   return ret;
 }
+#endif	/* HAVE_PTHREAD_GETNAME_NP */
 
+#if defined(HAVE_PTHREAD_SETNAME_NP)
 /* pthread_setname_np (3) - set/get the name of a thread */
 int __wrap(pthread_setname_np)(pthread_t thread, const char *name) {
   int _ = enter_wrapped_func("%x, %s", thread, name);
@@ -512,6 +519,7 @@ int __wrap(pthread_setname_np)(pthread_t thread, const char *name) {
   return ret;
 }
 #endif
+#endif /* HAVE_PTHREAD_SETNAME_NP */
 
 /* pthread_getconcurrency (3) - set/get the concurrency level */
 int __wrap(pthread_getconcurrency)(void) {
@@ -833,6 +841,7 @@ int __wrap(pthread_mutex_setprioceiling)
   return ret;
 }
 
+#if defined(HAVE_PTHREAD_MUTEX_CONSISTENT)
 /* pthread_mutex_consistent (3posix) - mark state protected by robust mutex as consistent */
 int __wrap(pthread_mutex_consistent)(pthread_mutex_t *mutex) {
   int _ = enter_wrapped_func("%p", mutex);
@@ -847,6 +856,7 @@ int __wrap(pthread_mutex_consistent)(pthread_mutex_t *mutex) {
   leave_wrapped_func("%d", ret);
   return ret;
 }
+#endif	/* HAVE_PTHREAD_MUTEX_CONSISTENT */
 
 /* pthread_mutexattr_init (3posix) - initialize the mutex attributes object */
 int __wrap(pthread_mutexattr_init)(pthread_mutexattr_t *attr) {
@@ -946,6 +956,7 @@ int __wrap(pthread_mutexattr_setprioceiling)
 }
 
 /* pthread_mutexattr_getrobust (3posix) - get and set the mutex robust attribute */
+#if defined(HAVE_PTHREAD_MUTEXATTR_GETROBUST)
 int __wrap(pthread_mutexattr_getrobust)
      (const pthread_mutexattr_t *restrict attr, int *restrict robust) {
   int _ = enter_wrapped_func("%p, %p", attr, robust);
@@ -954,8 +965,10 @@ int __wrap(pthread_mutexattr_getrobust)
   leave_wrapped_func("%d", ret);
   return ret;
 }
+#endif /* HAVE_PTHREAD_MUTEXATTR_GETROBUST */
 
 /* pthread_mutexattr_setrobust (3posix) - get and set the mutex robust attribute */
+#if defined(HAVE_PTHREAD_MUTEXATTR_SETROBUST)
 int __wrap(pthread_mutexattr_setrobust)
      (pthread_mutexattr_t *attr, int robust) {
   int _ = enter_wrapped_func("%p, %d", attr, robust);
@@ -964,6 +977,7 @@ int __wrap(pthread_mutexattr_setrobust)
   leave_wrapped_func("%d", ret);
   return ret;
 }
+#endif	/* HAVE_PTHREAD_MUTEXATTR_SETROBUST */
 
 /* ---------------------------
    --- reader-writer lock 
@@ -1649,6 +1663,7 @@ void __wrap(pthread_kill_other_threads_np)(void) {
 #endif
 
 /* pthread_sigqueue (3) - queue a signal and data to a thread */
+#if defined(HAVE_PTHREAD_SIGQUEUE)
 int __wrap(pthread_sigqueue)(pthread_t thread, int sig,
 			     const union sigval value) {
   int _ = enter_wrapped_func("%x, %d, ...", thread, sig);
@@ -1663,6 +1678,7 @@ int __wrap(pthread_sigqueue)(pthread_t thread, int sig,
   leave_wrapped_func("%d", ret);
   return ret;
 }
+#endif /* HAVE_PTHREAD_SIGQUEUE */
 
 /* pthread_sigmask (3)  - examine and change mask of blocked signals */
 /* pthread_sigmask (3posix) - examine and change blocked signals */

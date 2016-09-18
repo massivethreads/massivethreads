@@ -14,7 +14,7 @@
 #define THREAD_PTR_SCHED_TERM ((myth_thread_t)0xFFFFFFFE) //scheduler entering termination
 
 typedef enum {
-  MYTH_LOG_THREAD_ANNOTATION=0,//thread annotation
+  MYTH_LOG_THREAD_ANNOTATION = 0,//thread annotation
   MYTH_LOG_SWITCH,//context switch
 }myth_log_type_t;
 

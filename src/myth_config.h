@@ -5,9 +5,10 @@
 #include "config.h"
 
 //Enable debug
-//#define MYTH_DEBUG
+//#define MYTH_DEBUG 1
 
-#define MYTH_RECORD_JOIN 1
+/* debug join with fcc */
+//#define MYTH_DEBUG_JOIN_FCC 1
 
 /* TODO: get rid of them, move them in configure */
 #define MYTH_ECO_TEST 0
@@ -161,7 +162,7 @@
 
 //Scheduling policy of runqueue
 //FIFO
-//#define MYTH_QUEUE_FIFO 1
+//#define MYTH_QUEUE_FIFO 0
 
 //Confirm if a thread descriptor is used in two threads at the same time.
 #define MYTH_DESC_REUSE_CHECK 0

@@ -29,6 +29,7 @@ int __wrap(accept)(int sockfd, struct sockaddr *addr, socklen_t *addrlen) {
   return x;
 }
 
+#if defined(HAVE_ACCEPT4)
 #if _GNU_SOURCE
 int __wrap(accept4)(int sockfd, struct sockaddr *addr,
 		    socklen_t *addrlen, int flags) {
@@ -38,7 +39,9 @@ int __wrap(accept4)(int sockfd, struct sockaddr *addr,
   leave_wrapped_func("%p", x);
   return x;
 }
-#endif
+#endif	/* _GNU_SOURCE */
+#endif	/* HAVE_ACCEPT4 */
+
 
 int __wrap(bind)(int sockfd, const struct sockaddr *addr, socklen_t addrlen) {
   int _ = enter_wrapped_func("%d, %p, %lu", sockfd, addr, addrlen);

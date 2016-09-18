@@ -21,7 +21,6 @@
 #include "myth_misc.h"
 #include "myth_tls.h"
 
-/* #include "myth_init.h" */
 #if MYTH_ECO_MODE
 #include "myth_eco.h"
 #endif
@@ -31,10 +30,7 @@
 #include "myth_misc_func.h"
 #include "myth_spinlock_func.h"
 #include "myth_desc_func.h"
-/* #include "myth_init_func.h" */
 #include "myth_tls_func.h"
-/* #include "myth_worker_func.h" */
-/* #include "myth_log_func.h" */
 
 #ifndef PAGE_ALIGN
 #define PAGE_ALIGN(n) ((((n)+(PAGE_SIZE)-1)/(PAGE_SIZE))*PAGE_SIZE)
@@ -348,10 +344,10 @@ MYTH_CTX_CALLBACK void myth_create_1(void *arg1,void *arg2,void *arg3) {
   env->prof_data.create_switch += t1 - env->prof_data.create_d_tmp;
   t0 = myth_get_rdtsc();
 #endif
+
   //Push current thread to runqueue
-#ifndef MYTH_NO_QUEUEOP
-  myth_queue_push(&env->runnable_q,this_thread);
-#endif
+  myth_queue_push(&env->runnable_q, this_thread);
+
 #if MYTH_CREATE_PROF_DETAIL
   t1 = myth_get_rdtsc();
   env->prof_data.create_push += t1 - t0;
@@ -410,10 +406,7 @@ static inline int myth_create_ex_body(myth_thread_t * id,
   myth_thread_t new_thread = get_new_myth_thread_struct_desc(env);
   (void)_;
   new_thread->next = 0;
-#ifndef MYTH_RECORD_JOIN
-#error "bomb"
-#endif
-#if MYTH_RECORD_JOIN
+#if MYTH_DEBUG_JOIN_FCC
   new_thread->join_called_at = 0;
   new_thread->child_status_when_join_was_called = "";
   new_thread->finished_at = 0;
@@ -601,7 +594,7 @@ static inline int myth_join_body(myth_thread_t th,void **result) {
   myth_spin_lock_body(&th->lock);
   //If target is finished, return
   if (myth_desc_is_finished(th)){
-#if MYTH_RECORD_JOIN
+#if MYTH_DEBUG_JOIN_FCC
     th->join_called_at = myth_get_rdtsc();
     th->child_status_when_join_was_called = "child has been finished";
 #endif
@@ -643,7 +636,7 @@ static inline int myth_join_body(myth_thread_t th,void **result) {
   t1 = myth_get_rdtsc();
 #endif
   if (next){
-#if MYTH_RECORD_JOIN
+#if MYTH_DEBUG_JOIN_FCC
     th->join_called_at = myth_get_rdtsc();
     th->child_status_when_join_was_called = "child not finished and go to next";
 #endif
@@ -653,7 +646,7 @@ static inline int myth_join_body(myth_thread_t th,void **result) {
 			       (void*)env,(void*)th,(void*)next);
   }
   else{
-#if MYTH_RECORD_JOIN
+#if MYTH_DEBUG_JOIN_FCC
     th->join_called_at = myth_get_rdtsc();
     th->child_status_when_join_was_called = "child not finished and go to sched";
 #endif
@@ -1244,7 +1237,7 @@ static inline void myth_entry_point_cleanup(myth_thread_t this_thread) {
   myth_thread_t wait_thread = this_thread_v->join_thread;
   //Execute a thread waiting for current thread
   if (wait_thread){
-#if MYTH_RECORD_JOIN
+#if MYTH_DEBUG_JOIN_FCC
     this_thread->finished_at = myth_get_rdtsc();
     this_thread->when_I_finished = "there was a waiter";
     this_thread->waiter = wait_thread;
@@ -1276,13 +1269,10 @@ static inline void myth_entry_point_cleanup(myth_thread_t this_thread) {
   env->prof_data.ep_join += t1 - t0;
   t0 = myth_get_rdtsc();
 #endif
-  myth_thread_t next;
+  
   //Get next runnable thread
-#ifndef MYTH_NO_QUEUEOP
-  next = myth_queue_pop(&env->runnable_q);
-#else
-  next = NULL;
-#endif
+  myth_thread_t next = myth_queue_pop(&env->runnable_q);
+
 #if MYTH_EP_PROF_DETAIL
   t1 = myth_get_rdtsc();
   env->prof_data.ep_pop += t1 - t0;
@@ -1291,7 +1281,7 @@ static inline void myth_entry_point_cleanup(myth_thread_t this_thread) {
 #if MYTH_EP_PROF_DETAIL
     env->prof_data.ep_d_tmp=myth_get_rdtsc();
 #endif
-#if MYTH_RECORD_JOIN
+#if MYTH_DEBUG_JOIN_FCC
     this_thread->finished_at = myth_get_rdtsc();
     this_thread->when_I_finished = "no waiter and go to next";
     this_thread->waiter = 0;
@@ -1303,7 +1293,7 @@ static inline void myth_entry_point_cleanup(myth_thread_t this_thread) {
 #if MYTH_EP_PROF_DETAIL
     env->prof_data.ep_d_tmp = myth_get_rdtsc();
 #endif
-#if MYTH_RECORD_JOIN
+#if MYTH_DEBUG_JOIN_FCC
     this_thread->finished_at = myth_get_rdtsc();
     this_thread->when_I_finished = "no waiter and go to sched";
     this_thread->waiter = 0;

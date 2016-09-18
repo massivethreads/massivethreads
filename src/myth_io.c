@@ -7,8 +7,6 @@
 #include "myth_worker.h"
 #include "myth_io.h"
 
-//#include "myth_io_proto.h"
-
 #include "myth_desc_func.h"
 #include "myth_worker_func.h"
 #include "myth_io_func.h"

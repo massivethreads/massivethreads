@@ -1289,9 +1289,11 @@ int real_pthread_getname_np(pthread_t thread, char *name, size_t len) {
 #error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
+#endif  /* _GNU_SOURCE */
 #endif	/* HAVE_PTHREAD_GETNAME_NP */
 
 #if defined(HAVE_PTHREAD_SETNAME_NP)
+#if _GNU_SOURCE
 #if MYTH_WRAP == MYTH_WRAP_LD
 int __real_pthread_setname_np(pthread_t thread, const char *name);
 #endif
@@ -1308,9 +1310,8 @@ int real_pthread_setname_np(pthread_t thread, const char *name) {
 #error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
-#endif /* HAVE_PTHREAD_SETNAME_NP */
-
 #endif	/* _GNU_SOURCE */
+#endif /* HAVE_PTHREAD_SETNAME_NP */
 
 #if MYTH_WRAP == MYTH_WRAP_LD
 int __real_pthread_getconcurrency(void);
@@ -3136,9 +3137,8 @@ int real_accept4(int sockfd, struct sockaddr *addr, socklen_t *addrlen, int flag
 #error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
-#endif	/* HAVE_ACCEPT4 */
-
 #endif	/* _GNU_SOURCE */
+#endif	/* HAVE_ACCEPT4 */
 
 #if MYTH_WRAP == MYTH_WRAP_LD
 int __real_bind(int sockfd, const struct sockaddr *addr, socklen_t addrlen);

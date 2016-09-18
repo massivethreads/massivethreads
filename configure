@@ -674,8 +674,8 @@ CXXDEPMODE
 ac_ct_CXX
 CXXFLAGS
 CXX
-BUILD_TEST_ALIGNED_ALLOC_FALSE
-BUILD_TEST_ALIGNED_ALLOC_TRUE
+BUILD_TEST_MYTH_ALIGNED_ALLOC_FALSE
+BUILD_TEST_MYTH_ALIGNED_ALLOC_TRUE
 BUILD_MYTH_DL_FALSE
 BUILD_MYTH_DL_TRUE
 BUILD_MYTH_LD_FALSE
@@ -5698,11 +5698,11 @@ cat >>confdefs.h <<_ACEOF
 _ACEOF
 
  if test $have_aligned_alloc = 1; then
-  BUILD_TEST_ALIGNED_ALLOC_TRUE=
-  BUILD_TEST_ALIGNED_ALLOC_FALSE='#'
+  BUILD_TEST_MYTH_ALIGNED_ALLOC_TRUE=
+  BUILD_TEST_MYTH_ALIGNED_ALLOC_FALSE='#'
 else
-  BUILD_TEST_ALIGNED_ALLOC_TRUE='#'
-  BUILD_TEST_ALIGNED_ALLOC_FALSE=
+  BUILD_TEST_MYTH_ALIGNED_ALLOC_TRUE='#'
+  BUILD_TEST_MYTH_ALIGNED_ALLOC_FALSE=
 fi
 
 
@@ -17371,8 +17371,8 @@ if test -z "${BUILD_MYTH_DL_TRUE}" && test -z "${BUILD_MYTH_DL_FALSE}"; then
   as_fn_error $? "conditional \"BUILD_MYTH_DL\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
-if test -z "${BUILD_TEST_ALIGNED_ALLOC_TRUE}" && test -z "${BUILD_TEST_ALIGNED_ALLOC_FALSE}"; then
-  as_fn_error $? "conditional \"BUILD_TEST_ALIGNED_ALLOC\" was never defined.
+if test -z "${BUILD_TEST_MYTH_ALIGNED_ALLOC_TRUE}" && test -z "${BUILD_TEST_MYTH_ALIGNED_ALLOC_FALSE}"; then
+  as_fn_error $? "conditional \"BUILD_TEST_MYTH_ALIGNED_ALLOC\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${am__fastdepCXX_TRUE}" && test -z "${am__fastdepCXX_FALSE}"; then

@@ -24,7 +24,6 @@
 #include <sched.h>
 
 #include "myth_config.h"
-
 #include "myth_worker.h"
 #include "myth_io.h"
 #include "myth_init.h"
@@ -987,8 +986,6 @@ static inline int myth_fcntl_body (int fd, int cmd,va_list vl) {
   errno=EPERM;
   return -1;
 }
-
-/* #include "myth_io_poll.h" */
 
 
 // Workaround for FX10 glibc bug

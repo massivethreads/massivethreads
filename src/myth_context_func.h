@@ -11,14 +11,9 @@
 
 #include "myth_config.h"
 #include "myth_context.h"
-
 #include "myth_desc_func.h"
 
-//#include "myth_log.h"
-//#include "myth_log_func.h"
-
 typedef void (*void_func_t)(void);
-
 
 static inline void myth_make_context_empty(myth_context_t ctx, void *stack,
 					   size_t stacksize);

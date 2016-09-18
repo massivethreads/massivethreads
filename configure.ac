@@ -259,7 +259,7 @@ else
 fi
 AC_DEFINE_UNQUOTED([HAVE_ALIGNED_ALLOC],[$have_aligned_alloc],
    	[if set, aligned_alloc is declared in stdlib.h])
-AM_CONDITIONAL([BUILD_TEST_ALIGNED_ALLOC],[test $have_aligned_alloc = 1])
+AM_CONDITIONAL([BUILD_TEST_MYTH_ALIGNED_ALLOC],[test $have_aligned_alloc = 1])
 
 #
 # for C program tests that follow, we treat warnings as error,
