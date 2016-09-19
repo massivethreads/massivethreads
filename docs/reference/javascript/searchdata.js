@@ -29,7 +29,7 @@ var indexSectionsWithContent = {
       "Y": false,
       "Z": false
       },
-   "Functions": {
+   "Files": {
       "Symbols": false,
       "Numbers": false,
       "A": false,
@@ -89,7 +89,7 @@ var indexSectionsWithContent = {
       "Y": false,
       "Z": false
       },
-   "Files": {
+   "Functions": {
       "Symbols": false,
       "Numbers": false,
       "A": false,
