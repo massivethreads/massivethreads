@@ -208,7 +208,7 @@ static inline void __attribute__((always_inline)) myth_queue_push(myth_thread_qu
   myth_queue_exit_operation(q);
 }
 
-#if MYTH_QUEUE_FIFO
+#if MYTH_QUEUE_LIFO
 static inline myth_thread_t __attribute__((always_inline)) myth_queue_pop(myth_thread_queue_t q)
 {
   myth_queue_enter_operation(q);
