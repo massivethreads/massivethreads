@@ -709,10 +709,11 @@ extern "C" {
   int myth_getconcurrency(void);
 
   enum {
-    myth_yield_option_local_only = 0,
-    myth_yield_option_local_first = 1,
-    myth_yield_option_steal_only = 2,
-    myth_yield_option_steal_first = 3
+    myth_yield_option_half_half = 0,
+    myth_yield_option_local_only = 1,
+    myth_yield_option_local_first = 2,
+    myth_yield_option_steal_only = 3,
+    myth_yield_option_steal_first = 4
   };
 
   /*
@@ -724,6 +725,9 @@ extern "C" {
     yield_opt - take one of the following values and change
     the behavior. 
 
+      myth_yield_option_half_half : 
+        behave like myth_yield_option_local_first with probability 1/2
+	and like myth_yield_option_steal_first with probability 1/2
       myth_yield_option_local_only : 
         try to yield to another thread in the local run queue.
 	if none exist, the caller keeps running.
@@ -754,12 +758,10 @@ extern "C" {
   /*
     Function: myth_yield
 
-    it is equivalent to myth_yield_ex(myth_yield_option_local_first);
-    try to yield to another thread in the local run queue.
-    if none exist, an attempt is made to steal another thread 
-    in a remote run queue; if it succeeds, yields to it. otherwise
-    keep running.
-
+    it is equivalent to myth_yield_ex(myth_yield_option_half_half);
+    with probability 1/2, try to yield to a thread in the local 
+    queue and if none is found try to steal a thread from a remote
+    queue. do the opposite with probability 1/2.
 
     See Also:
     <myth_yield>
