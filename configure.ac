@@ -205,10 +205,12 @@ AC_CHECK_LIB(pthread, pthread_create,
 		      [],
 		      [AC_MSG_ERROR(libpthread not available.)])
 
-# todo: make clock_gettime optional
-AC_CHECK_LIB(rt, clock_gettime,
-		 [],
-		 [AC_MSG_ERROR(librt not available.)])
+if false ; then
+   # todo: make clock_gettime optional
+   AC_CHECK_LIB(rt, clock_gettime,
+   		 [],
+		 [AC_MSG_ERROR(librt not available.)]) ;
+fi		     
 
 # ---------------------
 # libraries affecting build targets depending on availability
