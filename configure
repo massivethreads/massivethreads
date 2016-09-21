@@ -5543,7 +5543,7 @@ _ACEOF
 else
   as_fn_error $? "librt not available." "$LINENO" 5
 fi
- ;
+
 fi
 
 # ---------------------

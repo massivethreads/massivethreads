@@ -209,7 +209,7 @@ if false ; then
    # todo: make clock_gettime optional
    AC_CHECK_LIB(rt, clock_gettime,
    		 [],
-		 [AC_MSG_ERROR(librt not available.)]) ;
+		 [AC_MSG_ERROR(librt not available.)])
 fi		     
 
 # ---------------------
