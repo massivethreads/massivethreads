@@ -6,7 +6,9 @@
 #define MYTH_REAL_H_
 
 #include <fcntl.h>
+#if HAVE_MALLOC_H
 #include <malloc.h>
+#endif
 #include <pthread.h>
 #include <sched.h>
 #include <signal.h>

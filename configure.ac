@@ -220,15 +220,12 @@ AM_CONDITIONAL([BUILD_MYTH_LD],
 	[test x"$enable_myth_ld" = "xyes" -a x"$linker_accepts_wrap" = "xyes"])
 
 
-#
-# check if dlopen is supported
-#
 # ---------------------
 # optional libraries
 # ---------------------
 
 # ------
-# dlopen
+# -ldl dlopen
 # ------
 AC_CHECK_LIB(dl, dlopen,
 		 [have_dlopen="yes"],
@@ -239,9 +236,16 @@ AM_CONDITIONAL([BUILD_MYTH_DL],
 
 
 # -------------
-# clock_gettime
+# -lrt clock_gettime
 # -------------
 AC_CHECK_LIB(rt, clock_gettime)
+
+# =============================
+# headers
+# =============================
+
+AC_CHECK_HEADERS([malloc.h])
+
 
 # -----------------------------
 # declarations
