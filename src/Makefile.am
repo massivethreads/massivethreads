@@ -2,7 +2,9 @@
 #SUBDIRS = . profiler
 SUBDIRS = .
 
-#	myth_eco.c \
+#	myth_eco.c 
+#	myth_context_switch.S 
+
 # sources (.c and .S) common across the three libraries
 COMMON_SRCS = \
 	myth_log.c \
@@ -16,7 +18,6 @@ COMMON_SRCS = \
 	myth_tls.c \
 	myth_thread.c \
 	myth_context.c \
-	myth_context_switch.S \
 	myth_if_native.c \
 	myth_real.c
 
