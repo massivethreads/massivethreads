@@ -205,11 +205,6 @@ AC_CHECK_LIB(pthread, pthread_create,
 		      [],
 		      [AC_MSG_ERROR(libpthread not available.)])
 
-# todo: make clock_gettime optional
-AC_CHECK_LIB(rt, clock_gettime,
-		 [],
-		 [AC_MSG_ERROR(librt not available.)])
-
 # ---------------------
 # libraries affecting build targets depending on availability
 # ---------------------
@@ -232,12 +227,21 @@ AM_CONDITIONAL([BUILD_MYTH_LD],
 # optional libraries
 # ---------------------
 
+# ------
+# dlopen
+# ------
 AC_CHECK_LIB(dl, dlopen,
 		 [have_dlopen="yes"],
 		 [have_dlopen="no"])
 
 AM_CONDITIONAL([BUILD_MYTH_DL],
 	[test x"$enable_myth_dl" = "xyes" -a x"$have_dlopen" = "xyes" ])
+
+
+# -------------
+# clock_gettime
+# -------------
+AC_CHECK_LIB(rt, clock_gettime)
 
 # -----------------------------
 # declarations
