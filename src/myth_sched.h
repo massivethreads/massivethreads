@@ -2,8 +2,8 @@
  * myth_sched.h
  */
 #pragma once
-#ifndef _MYTH_SCHED_H_
-#define _MYTH_SCHED_H_
+#ifndef MYTH_SCHED_H_
+#define MYTH_SCHED_H_
 #include <stdint.h>
 
 #include "myth/myth.h"
@@ -67,4 +67,4 @@ static inline void free_myth_thread_struct_stack(myth_running_env_t e,myth_threa
 
 
 
-#endif //_MYTH_H_
+#endif //MYTH_SCHED_H_

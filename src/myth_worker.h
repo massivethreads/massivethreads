@@ -11,6 +11,7 @@
 #include "myth/myth.h"
 
 #include "myth_config.h"
+#include "myth_internal_barrier.h"
 #include "myth_misc.h"
 #include "myth_sched.h"
 #include "myth_io.h"
@@ -155,7 +156,7 @@ extern myth_running_env_t g_envs;
 extern int g_envs_sz;
 //Number of worker threads
 //Barrier for worker threads
-extern pthread_barrier_t g_worker_barrier;
+extern myth_internal_barrier_t g_worker_barrier;
 
 
 #if WENV_IMPL == WENV_IMPL_PTHREAD

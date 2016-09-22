@@ -58,7 +58,7 @@ typedef struct {
 			void *(*start_routine) (void *), void *arg);
   void (*pthread_exit)(void *retval) __attribute__((noreturn)) ;
   int (*pthread_join)(pthread_t thread, void **retval);
-#if _GNU_SOURCE
+#if defined(HAVE_PTHREAD_JOIN_NP)
   int (*pthread_tryjoin_np)(pthread_t thread, void **retval);
   int (*pthread_timedjoin_np)(pthread_t thread, void **retval,
 			      const struct timespec *abstime);
@@ -94,11 +94,13 @@ typedef struct {
 			       void **stackaddr, size_t *stacksize);
   int (*pthread_attr_setstack)(pthread_attr_t *attr,
 			       void *stackaddr, size_t stacksize);
-#if _GNU_SOURCE
+#if defined(HAVE_PTHREAD_AFFINITY_NP)
   int (*pthread_attr_setaffinity_np)(pthread_attr_t *attr,
 				     size_t cpusetsize, const cpu_set_t *cpuset);
   int (*pthread_attr_getaffinity_np)(const pthread_attr_t *attr,
 				     size_t cpusetsize, cpu_set_t *cpuset);
+#endif
+#if defined(HAVE_PTHREAD_ATTR_NP)
   int (*pthread_getattr_default_np)(pthread_attr_t *attr);
   int (*pthread_setattr_default_np)(const pthread_attr_t *attr);
   int (*pthread_getattr_np)(pthread_t thread, pthread_attr_t *attr);
@@ -108,14 +110,20 @@ typedef struct {
   int (*pthread_getschedparam)(pthread_t thread, int *policy,
 			       struct sched_param *param);
   int (*pthread_setschedprio)(pthread_t thread, int prio);
-#if _GNU_SOURCE
+#if defined(HAVE_PTHREAD_NAME_NP)
   int (*pthread_getname_np)(pthread_t thread, char *name, size_t len);
   int (*pthread_setname_np)(pthread_t thread, const char *name);
 #endif
+#if defined(HAVE_PTHREAD_CONCURRENCY)
   int (*pthread_getconcurrency)(void);
+#endif
+#if defined(HAVE_PTHREAD_CONCURRENCY)
   int (*pthread_setconcurrency)(int new_level);
-#if _GNU_SOURCE
+#endif
+#if defined(HAVE_PTHREAD_YIELD)
   int (*pthread_yield)(void);
+#endif
+#if defined(HAVE_PTHREAD_AFFINITY_NP)
   int (*pthread_setaffinity_np)(pthread_t thread, size_t cpusetsize,
 				const cpu_set_t *cpuset);
   int (*pthread_getaffinity_np)(pthread_t thread, size_t cpusetsize,
@@ -139,7 +147,9 @@ typedef struct {
 				      int *restrict prioceiling);
   int (*pthread_mutex_setprioceiling)(pthread_mutex_t *restrict mutex,
 				      int prioceiling, int *restrict old_ceiling);
+#if defined(HAVE_PTHREAD_MUTEX_CONSISTENT)
   int (*pthread_mutex_consistent)(pthread_mutex_t *mutex);
+#endif
   int (*pthread_mutexattr_init)(pthread_mutexattr_t *attr);
   int (*pthread_mutexattr_destroy)(pthread_mutexattr_t *attr);
   int (*pthread_mutexattr_getpshared)(const pthread_mutexattr_t *restrict attr,
@@ -156,9 +166,13 @@ typedef struct {
 					  int *restrict prioceiling);
   int (*pthread_mutexattr_setprioceiling)(pthread_mutexattr_t *attr,
 					  int prioceiling);
+#if defined(HAVE_PTHREAD_MUTEXATTR_GETROBUST)
   int (*pthread_mutexattr_getrobust)(const pthread_mutexattr_t *restrict attr,
 				     int *restrict robust);
+#endif
+#if defined(HAVE_PTHREAD_MUTEXATTR_SETROBUST)
   int (*pthread_mutexattr_setrobust)(pthread_mutexattr_t *attr, int robust);
+#endif
   int (*pthread_rwlock_init)(pthread_rwlock_t *restrict rwlock,
 			     const pthread_rwlockattr_t *restrict attr);
   int (*pthread_rwlock_destroy)(pthread_rwlock_t *rwlock);
@@ -206,6 +220,7 @@ typedef struct {
   int (*pthread_spin_lock)(pthread_spinlock_t *lock);
   int (*pthread_spin_trylock)(pthread_spinlock_t *lock);
   int (*pthread_spin_unlock)(pthread_spinlock_t *lock);
+#if defined(HAVE_PTHREAD_BARRIER)
   int (*pthread_barrier_init)(pthread_barrier_t *restrict barrier,
 			      const pthread_barrierattr_t *restrict attr,
 			      unsigned count);
@@ -217,6 +232,7 @@ typedef struct {
 					int *restrict pshared);
   int (*pthread_barrierattr_setpshared)(pthread_barrierattr_t *attr,
 					int pshared);
+#endif	/* HAVE_PTHREAD_BARRIER */
   int (*pthread_key_create)(pthread_key_t *key, void (*destructor)(void*));
   int (*pthread_key_delete)(pthread_key_t key);
   void * (*pthread_getspecific)(pthread_key_t key);
@@ -230,8 +246,10 @@ typedef struct {
 #if 0				/* could not find where it is */
   void (*pthread_kill_other_threads_np)(void);
 #endif
+#if defined(HAVE_PTHREAD_SIGQUEUE)
   int (*pthread_sigqueue)(pthread_t thread, int sig,
 			  const union sigval value);
+#endif
   int (*pthread_sigmask)(int how, const sigset_t *set, sigset_t *oldset);
 
   int (*sched_yield)(void);
@@ -254,7 +272,7 @@ typedef struct {
   int (*socket)(int domain, int type, int protocol);
   int (*socketpair)(int domain, int type, int protocol, int sv[2]);
   int (*accept)(int sockfd, struct sockaddr *addr, socklen_t *addrlen);
-#if _GNU_SOURCE
+#if defined(HAVE_ACCEPT4)
   int (*accept4)(int sockfd, struct sockaddr *addr, socklen_t *addrlen, int flags);
 #endif
   int (*bind)(int sockfd, const struct sockaddr *addr, socklen_t addrlen);
@@ -310,7 +328,7 @@ static shared_object_symbol s_so_syms[n_real_functions + 1] = {
   so_symbol_entry(pthread_create, libpthread),
   so_symbol_entry(pthread_exit, libpthread),
   so_symbol_entry(pthread_join, libpthread),
-#if _GNU_SOURCE
+#if defined(HAVE_PTHREAD_JOIN_NP)
   so_symbol_entry(pthread_tryjoin_np, libpthread),
   so_symbol_entry(pthread_timedjoin_np, libpthread),
 #endif
@@ -339,9 +357,11 @@ static shared_object_symbol s_so_syms[n_real_functions + 1] = {
   so_symbol_entry(pthread_attr_setstacksize, libpthread),
   so_symbol_entry(pthread_attr_getstack, libpthread),
   so_symbol_entry(pthread_attr_setstack, libpthread),
-#if _GNU_SOURCE
+#if defined(HAVE_PTHREAD_AFFINITY_NP)
   so_symbol_entry(pthread_attr_setaffinity_np, libpthread),
   so_symbol_entry(pthread_attr_getaffinity_np, libpthread),
+#endif
+#if defined(HAVE_PTHREAD_ATTR_NP)
   so_symbol_entry(pthread_getattr_default_np, libpthread),
   so_symbol_entry(pthread_setattr_default_np, libpthread),
   so_symbol_entry(pthread_getattr_np, libpthread),
@@ -349,14 +369,20 @@ static shared_object_symbol s_so_syms[n_real_functions + 1] = {
   so_symbol_entry(pthread_setschedparam, libpthread),
   so_symbol_entry(pthread_getschedparam, libpthread),
   so_symbol_entry(pthread_setschedprio, libpthread),
-#if _GNU_SOURCE
+#if defined(HAVE_PTHREAD_NAME_NP)
   so_symbol_entry(pthread_getname_np, libpthread),
   so_symbol_entry(pthread_setname_np, libpthread),
 #endif
+#if defined(HAVE_PTHREAD_CONCURRENCY)
   so_symbol_entry(pthread_getconcurrency, libpthread),
+#endif
+#if defined(HAVE_PTHREAD_CONCURRENCY)
   so_symbol_entry(pthread_setconcurrency, libpthread),
-#if _GNU_SOURCE
+#endif
+#if defined(HAVE_PTHREAD_YIELD)
   so_symbol_entry(pthread_yield, libpthread),
+#endif
+#if defined(HAVE_PTHREAD_AFFINITY_NP)
   so_symbol_entry(pthread_setaffinity_np, libpthread),
   so_symbol_entry(pthread_getaffinity_np, libpthread),
 #endif
@@ -373,7 +399,9 @@ static shared_object_symbol s_so_syms[n_real_functions + 1] = {
   so_symbol_entry(pthread_mutex_unlock, libpthread),
   so_symbol_entry(pthread_mutex_getprioceiling, libpthread),
   so_symbol_entry(pthread_mutex_setprioceiling, libpthread),
+#if defined(HAVE_PTHREAD_MUTEX_CONSISTENT)
   so_symbol_entry(pthread_mutex_consistent, libpthread),
+#endif
   so_symbol_entry(pthread_mutexattr_init, libpthread),
   so_symbol_entry(pthread_mutexattr_destroy, libpthread),
   so_symbol_entry(pthread_mutexattr_getpshared, libpthread),
@@ -384,8 +412,12 @@ static shared_object_symbol s_so_syms[n_real_functions + 1] = {
   so_symbol_entry(pthread_mutexattr_setprotocol, libpthread),
   so_symbol_entry(pthread_mutexattr_getprioceiling, libpthread),
   so_symbol_entry(pthread_mutexattr_setprioceiling, libpthread),
+#if defined(HAVE_PTHREAD_MUTEXATTR_GETROBUST)
   so_symbol_entry(pthread_mutexattr_getrobust, libpthread),
+#endif
+#if defined(HAVE_PTHREAD_MUTEXATTR_SETROBUST)
   so_symbol_entry(pthread_mutexattr_setrobust, libpthread),
+#endif
   so_symbol_entry(pthread_rwlock_init, libpthread),
   so_symbol_entry(pthread_rwlock_destroy, libpthread),
   so_symbol_entry(pthread_rwlock_rdlock, libpthread),
@@ -418,6 +450,7 @@ static shared_object_symbol s_so_syms[n_real_functions + 1] = {
   so_symbol_entry(pthread_spin_lock, libpthread),
   so_symbol_entry(pthread_spin_trylock, libpthread),
   so_symbol_entry(pthread_spin_unlock, libpthread),
+#if defined(HAVE_PTHREAD_BARRIER)
   so_symbol_entry(pthread_barrier_init, libpthread),
   so_symbol_entry(pthread_barrier_destroy, libpthread),
   so_symbol_entry(pthread_barrier_wait, libpthread),
@@ -425,6 +458,7 @@ static shared_object_symbol s_so_syms[n_real_functions + 1] = {
   so_symbol_entry(pthread_barrierattr_destroy, libpthread),
   so_symbol_entry(pthread_barrierattr_getpshared, libpthread),
   so_symbol_entry(pthread_barrierattr_setpshared, libpthread),
+#endif	/* HAVE_PTHREAD_BARRIER */
   so_symbol_entry(pthread_key_create, libpthread),
   so_symbol_entry(pthread_key_delete, libpthread),
   so_symbol_entry(pthread_getspecific, libpthread),
@@ -437,7 +471,9 @@ static shared_object_symbol s_so_syms[n_real_functions + 1] = {
 #if 0
   so_symbol_entry(pthread_kill_other_threads_np, libc),
 #endif
+#if defined(HAVE_PTHREAD_SIGQUEUE)
   so_symbol_entry(pthread_sigqueue, libpthread),
+#endif
   so_symbol_entry(pthread_sigmask, libpthread),
   so_symbol_entry(sched_yield, libpthread),
   so_symbol_entry(sleep, libpthread),
@@ -458,7 +494,7 @@ static shared_object_symbol s_so_syms[n_real_functions + 1] = {
   so_symbol_entry(socket, libc),
   so_symbol_entry(socketpair, libc),
   so_symbol_entry(accept, libc),
-#if _GNU_SOURCE
+#if defined(HAVE_ACCEPT4)
   so_symbol_entry(accept4, libc),
 #endif
   so_symbol_entry(bind, libc),
@@ -672,7 +708,7 @@ int real_pthread_join(pthread_t thread, void **retval) {
 #endif
 }
 
-#if _GNU_SOURCE
+#if defined(HAVE_PTHREAD_JOIN_NP)
 #if MYTH_WRAP == MYTH_WRAP_LD
 int __real_pthread_tryjoin_np(pthread_t thread, void **retval);
 #endif
@@ -707,7 +743,8 @@ int real_pthread_timedjoin_np(pthread_t thread, void **retval, const struct time
 #error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
-#endif	/* _GNU_SOURCE */
+#endif	/* HAVE_PTHREAD_JOIN_NP */
+
 
 #if MYTH_WRAP == MYTH_WRAP_LD
 int __real_pthread_detach(pthread_t thread);
@@ -1120,10 +1157,10 @@ int real_pthread_attr_setstack(pthread_attr_t *attr,
 #endif
 }
 
-#if _GNU_SOURCE
+#if defined(HAVE_PTHREAD_ATTR_SETAFFINITY_NP)
 #if MYTH_WRAP == MYTH_WRAP_LD
 int __real_pthread_attr_setaffinity_np(pthread_attr_t *attr,
-				     size_t cpusetsize, const cpu_set_t *cpuset);
+				       size_t cpusetsize, const cpu_set_t *cpuset);
 #endif
 int real_pthread_attr_setaffinity_np(pthread_attr_t *attr,
 				     size_t cpusetsize, const cpu_set_t *cpuset) {
@@ -1139,7 +1176,9 @@ int real_pthread_attr_setaffinity_np(pthread_attr_t *attr,
 #error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
+#endif	/* HAVE_PTHREAD_ATTR_SETAFFINITY_NP */
 
+#if defined(HAVE_PTHREAD_ATTR_GETAFFINITY_NP)
 #if MYTH_WRAP == MYTH_WRAP_LD
 int __real_pthread_attr_getaffinity_np(const pthread_attr_t *attr,
 				     size_t cpusetsize, cpu_set_t *cpuset);
@@ -1158,8 +1197,9 @@ int real_pthread_attr_getaffinity_np(const pthread_attr_t *attr,
 #error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
+#endif	/* HAVE_PTHREAD_ATTR_GETAFFINITY_NP */
 
-#if defined(HAVE_PTHREAD_GETATTR_DEFAULT_NP)
+#if defined(HAVE_PTHREAD_ATTR_NP)
 #if MYTH_WRAP == MYTH_WRAP_LD
 int __real_pthread_getattr_default_np(pthread_attr_t *attr);
 #endif
@@ -1176,9 +1216,7 @@ int real_pthread_getattr_default_np(pthread_attr_t *attr) {
 #error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
-#endif	/* HAVE_PTHREAD_GETATTR_DEFAULT_NP */
 
-#if defined(HAVE_PTHREAD_SETATTR_DEFAULT_NP)
 #if MYTH_WRAP == MYTH_WRAP_LD
 int __real_pthread_setattr_default_np(const pthread_attr_t *attr);
 #endif
@@ -1195,7 +1233,6 @@ int real_pthread_setattr_default_np(const pthread_attr_t *attr) {
 #error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
-#endif	/* HAVE_PTHREAD_SETATTR_DEFAULT_NP */
 
 #if MYTH_WRAP == MYTH_WRAP_LD
 int __real_pthread_getattr_np(pthread_t thread, pthread_attr_t *attr);
@@ -1213,12 +1250,11 @@ int real_pthread_getattr_np(pthread_t thread, pthread_attr_t *attr) {
 #error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
-#endif	/* _GNU_SOURCE */
-
+#endif	/* HAVE_PTHREAD_ATTR_NP */
 
 #if MYTH_WRAP == MYTH_WRAP_LD
 int __real_pthread_setschedparam(pthread_t thread, int policy,
-			       const struct sched_param *param);
+				 const struct sched_param *param);
 #endif
 int real_pthread_setschedparam(pthread_t thread, int policy,
 			       const struct sched_param *param) {
@@ -1271,8 +1307,7 @@ int real_pthread_setschedprio(pthread_t thread, int prio) {
 #endif
 }
 
-#if defined(HAVE_PTHREAD_GETNAME_NP)
-#if _GNU_SOURCE
+#if defined(HAVE_PTHREAD_NAME_NP)
 #if MYTH_WRAP == MYTH_WRAP_LD
 int __real_pthread_getname_np(pthread_t thread, char *name, size_t len);
 #endif
@@ -1289,11 +1324,7 @@ int real_pthread_getname_np(pthread_t thread, char *name, size_t len) {
 #error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
-#endif  /* _GNU_SOURCE */
-#endif	/* HAVE_PTHREAD_GETNAME_NP */
 
-#if defined(HAVE_PTHREAD_SETNAME_NP)
-#if _GNU_SOURCE
 #if MYTH_WRAP == MYTH_WRAP_LD
 int __real_pthread_setname_np(pthread_t thread, const char *name);
 #endif
@@ -1310,9 +1341,9 @@ int real_pthread_setname_np(pthread_t thread, const char *name) {
 #error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
-#endif	/* _GNU_SOURCE */
-#endif /* HAVE_PTHREAD_SETNAME_NP */
+#endif /* HAVE_PTHREAD_NAME_NP */
 
+#if defined(HAVE_PTHREAD_CONCURRENCY)
 #if MYTH_WRAP == MYTH_WRAP_LD
 int __real_pthread_getconcurrency(void);
 #endif
@@ -1346,8 +1377,9 @@ int real_pthread_setconcurrency(int new_level) {
 #error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
+#endif	/* HAVE_PTHREAD_CONCURRENCY */
 
-#if _GNU_SOURCE
+#if defined(HAVE_PTHREAD_YIELD)
 #if MYTH_WRAP == MYTH_WRAP_LD
 int __real_pthread_yield(void);
 #endif
@@ -1364,7 +1396,9 @@ int real_pthread_yield(void) {
 #error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
+#endif	/* HAVE_PTHREAD_YIELD */
 
+#if defined(HAVE_PTHREAD_SETAFFINITY_NP)
 #if MYTH_WRAP == MYTH_WRAP_LD
 int __real_pthread_setaffinity_np(pthread_t thread, size_t cpusetsize,
 				const cpu_set_t *cpuset);
@@ -1383,10 +1417,12 @@ int real_pthread_setaffinity_np(pthread_t thread, size_t cpusetsize,
 #error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
+#endif	/* HAVE_PTHREAD_SETAFFINITY_NP */
 
+#if defined(HAVE_PTHREAD_GETAFFINITY_NP)
 #if MYTH_WRAP == MYTH_WRAP_LD
 int __real_pthread_getaffinity_np(pthread_t thread, size_t cpusetsize,
-				cpu_set_t *cpuset);
+				  cpu_set_t *cpuset);
 #endif
 int real_pthread_getaffinity_np(pthread_t thread, size_t cpusetsize,
 				cpu_set_t *cpuset) {
@@ -1402,7 +1438,8 @@ int real_pthread_getaffinity_np(pthread_t thread, size_t cpusetsize,
 #error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
-#endif	/* _GNU_SOURCE */
+#endif	/* HAVE_PTHREAD_GETAFFINITY_NP */
+
 
 #if MYTH_WRAP == MYTH_WRAP_LD
 int __real_pthread_once(pthread_once_t *once_control,
@@ -2460,6 +2497,8 @@ int real_pthread_spin_unlock(pthread_spinlock_t *lock) {
 #endif
 }
 
+#if defined(HAVE_PTHREAD_BARRIER)
+
 #if MYTH_WRAP == MYTH_WRAP_LD
 int __real_pthread_barrier_init(pthread_barrier_t *restrict barrier,
 			      const pthread_barrierattr_t *restrict attr,
@@ -2586,6 +2625,8 @@ int real_pthread_barrierattr_setpshared(pthread_barrierattr_t *attr,
 #error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
+
+#endif	/* HAVE_PTHREAD_BARRIER */
 
 #if MYTH_WRAP == MYTH_WRAP_LD
 int __real_pthread_key_create(pthread_key_t *key, void destructor(void*));
@@ -3120,7 +3161,6 @@ int real_accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen) {
 }
 
 #if defined(HAVE_ACCEPT4)
-#if _GNU_SOURCE
 #if MYTH_WRAP == MYTH_WRAP_LD
 int __real_accept4(int sockfd, struct sockaddr *addr, socklen_t *addrlen, int flags);
 #endif
@@ -3137,7 +3177,6 @@ int real_accept4(int sockfd, struct sockaddr *addr, socklen_t *addrlen, int flag
 #error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
-#endif	/* _GNU_SOURCE */
 #endif	/* HAVE_ACCEPT4 */
 
 #if MYTH_WRAP == MYTH_WRAP_LD

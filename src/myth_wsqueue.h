@@ -96,4 +96,4 @@ static inline void myth_queue_pass(myth_thread_queue_t q,struct myth_thread* th)
 
 static inline int myth_queue_is_operating(myth_thread_queue_t q);
 
-#endif /* MYTH_QUEUE_H_ */
+#endif /* MYTH_WSQUEUE_H_ */

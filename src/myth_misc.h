@@ -72,8 +72,4 @@ static inline void *myth_mmap(void *addr,size_t length,int prot,
 			      int flags,int fd,off_t offset);
 static inline int myth_munmap(void *addr,size_t length);
 
-void myth_init_read_available_cpu_list(void);
-int myth_get_cpu_num(void);
-cpu_set_t myth_get_worker_cpuset(int rank);
-
 #endif /* MYTH_MISC_H_ */

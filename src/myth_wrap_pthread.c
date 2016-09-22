@@ -102,7 +102,7 @@ int __wrap(pthread_join)(pthread_t thread, void **retval) {
   return ret;
 }
 
-#if _GNU_SOURCE
+#if defined(HAVE_PTHREAD_JOIN_NP)
 /* pthread_tryjoin_np (3) - try to join with a terminated thread */
 int __wrap(pthread_tryjoin_np)(pthread_t thread, void **retval) {
   int _ = enter_wrapped_func("%x, %p", thread, retval);
@@ -131,7 +131,7 @@ int __wrap(pthread_timedjoin_np)(pthread_t thread, void **retval,
   leave_wrapped_func("%d", ret);
   return ret;
 }
-#endif
+#endif	/* HAVE_PTHREAD_JOIN_NP */
 
 /* pthread_detach (3)   - detach a thread */
 int __wrap(pthread_detach)(pthread_t thread) {
@@ -381,17 +381,20 @@ int __wrap(pthread_attr_setstack)(pthread_attr_t *attr,
   return ret;
 }
 
-#if _GNU_SOURCE
+#if defined(HAVE_PTHREAD_ATTR_SETAFFINITY_NP)
 /* pthread_attr_setaffinity_np (3) - set/get CPU affinity attribute in thread attributes object */
 int __wrap(pthread_attr_setaffinity_np)(pthread_attr_t *attr,
-					size_t cpusetsize, const cpu_set_t *cpuset) {
+					size_t cpusetsize,
+					const cpu_set_t *cpuset) {
   int _ = enter_wrapped_func("%p, %lu, %p", attr, cpusetsize, cpuset);
   int ret = real_pthread_attr_setaffinity_np(attr, cpusetsize, cpuset);
   (void)_;
   leave_wrapped_func("%d", ret);
   return ret;
 }
+#endif /* HAVE_PTHREAD_ATTR_SETAFFINITY_NP */
 
+#if defined(HAVE_PTHREAD_ATTR_GETAFFINITY_NP)
 /* pthread_attr_getaffinity_np (3) - set/get CPU affinity attribute in thread attributes object */
 int __wrap(pthread_attr_getaffinity_np)(const pthread_attr_t *attr,
 					size_t cpusetsize, cpu_set_t *cpuset) {
@@ -401,8 +404,9 @@ int __wrap(pthread_attr_getaffinity_np)(const pthread_attr_t *attr,
   leave_wrapped_func("%d", ret);
   return ret;
 }
+#endif /* HAVE_PTHREAD_ATTR_GETAFFINITY_NP */
 
-#if defined(HAVE_PTHREAD_GETATTR_DEFAULT_NP)
+#if defined(HAVE_PTHREAD_ATTR_NP)
 /* Get the default attributes used by pthread_create in this process.  */
 int __wrap(pthread_getattr_default_np)(pthread_attr_t *attr) {
   int _ = enter_wrapped_func("%p", attr);
@@ -411,9 +415,7 @@ int __wrap(pthread_getattr_default_np)(pthread_attr_t *attr) {
   leave_wrapped_func("%d", ret);
   return ret;
 }
-#endif	/* HAVE_PTHREAD_GETATTR_DEFAULT_NP */
 
-#if defined(HAVE_PTHREAD_SETATTR_DEFAULT_NP)
 /* Set the default attributes to be used by pthread_create in this
    process.  */
 int __wrap(pthread_setattr_default_np)(const pthread_attr_t *attr) {
@@ -423,7 +425,6 @@ int __wrap(pthread_setattr_default_np)(const pthread_attr_t *attr) {
   leave_wrapped_func("%d", ret);
   return ret;
 }
-#endif	/* HAVE_PTHREAD_SETATTR_DEFAULT_NP */
 
 /* pthread_getattr_np (3) - get attributes of created thread */
 int __wrap(pthread_getattr_np)(pthread_t thread, pthread_attr_t *attr) {
@@ -433,7 +434,7 @@ int __wrap(pthread_getattr_np)(pthread_t thread, pthread_attr_t *attr) {
   leave_wrapped_func("%d", ret);
   return ret;
 }
-#endif
+#endif	/* HAVE_PTHREAD_ATTR_NP */
 
 
 /* pthread_setschedparam (3) - set/get scheduling policy and parameters of a thread */
@@ -485,8 +486,7 @@ int __wrap(pthread_setschedprio)(pthread_t thread, int prio) {
   return ret;
 }
 
-#if defined(HAVE_PTHREAD_GETNAME_NP)
-#if _GNU_SOURCE
+#if defined(HAVE_PTHREAD_NAME_NP)
 /* pthread_getname_np (3) - set/get the name of a thread */
 int __wrap(pthread_getname_np)(pthread_t thread, char *name, size_t len) {
   int _ = enter_wrapped_func("%x, %s, %lu", thread, name, len);
@@ -501,9 +501,7 @@ int __wrap(pthread_getname_np)(pthread_t thread, char *name, size_t len) {
   leave_wrapped_func("%d", ret);
   return ret;
 }
-#endif	/* HAVE_PTHREAD_GETNAME_NP */
 
-#if defined(HAVE_PTHREAD_SETNAME_NP)
 /* pthread_setname_np (3) - set/get the name of a thread */
 int __wrap(pthread_setname_np)(pthread_t thread, const char *name) {
   int _ = enter_wrapped_func("%x, %s", thread, name);
@@ -518,9 +516,9 @@ int __wrap(pthread_setname_np)(pthread_t thread, const char *name) {
   leave_wrapped_func("%d", ret);
   return ret;
 }
-#endif
-#endif /* HAVE_PTHREAD_SETNAME_NP */
+#endif /* HAVE_PTHREAD_NAME_NP */
 
+#if defined(HAVE_PTHREAD_CONCURRENCY)
 /* pthread_getconcurrency (3) - set/get the concurrency level */
 int __wrap(pthread_getconcurrency)(void) {
   int _ = enter_wrapped_func(0);
@@ -550,8 +548,9 @@ int __wrap(pthread_setconcurrency)(int new_level) {
   leave_wrapped_func("%d", ret);
   return ret;
 }
+#endif	/* HAVE_PTHREAD_CONCURRENCY */
 
-#if _GNU_SOURCE
+#if defined(HAVE_PTHREAD_YIELD)
 /* pthread_yield (3)    - yield the processor */
 int __wrap(pthread_yield)(void) {
   int _ = enter_wrapped_func(0);
@@ -565,9 +564,9 @@ int __wrap(pthread_yield)(void) {
   leave_wrapped_func("%d", ret);
   return ret;
 }
-#endif
+#endif	/* HAVE_PTHREAD_YIELD */
 
-#if _GNU_SOURCE
+#if defined(HAVE_PTHREAD_SETAFFINITY_NP)
 /* pthread_setaffinity_np (3) - set/get CPU affinity of a thread */
 int __wrap(pthread_setaffinity_np)
      (pthread_t thread, size_t cpusetsize, const cpu_set_t *cpuset) {
@@ -583,7 +582,9 @@ int __wrap(pthread_setaffinity_np)
   leave_wrapped_func("%d", ret);
   return ret;
 }
+#endif	/* HAVE_PTHREAD_SETAFFINITY_NP */
 
+#if defined(HAVE_PTHREAD_GETAFFINITY_NP)
 /* pthread_getaffinity_np (3) - set/get CPU affinity of a thread */
 int __wrap(pthread_getaffinity_np)(pthread_t thread, size_t cpusetsize,
 				   cpu_set_t *cpuset) {
@@ -599,8 +600,8 @@ int __wrap(pthread_getaffinity_np)(pthread_t thread, size_t cpusetsize,
   leave_wrapped_func("%d", ret);
   return ret;
 }
+#endif	/* HAVE_PTHREAD_GETAFFINITY_NP */
 
-#endif
 
 /* ------------------------------
    --- cancel 
@@ -967,8 +968,8 @@ int __wrap(pthread_mutexattr_getrobust)
 }
 #endif /* HAVE_PTHREAD_MUTEXATTR_GETROBUST */
 
-/* pthread_mutexattr_setrobust (3posix) - get and set the mutex robust attribute */
 #if defined(HAVE_PTHREAD_MUTEXATTR_SETROBUST)
+/* pthread_mutexattr_setrobust (3posix) - get and set the mutex robust attribute */
 int __wrap(pthread_mutexattr_setrobust)
      (pthread_mutexattr_t *attr, int robust) {
   int _ = enter_wrapped_func("%p, %d", attr, robust);
@@ -1443,6 +1444,10 @@ int __wrap(pthread_spin_unlock)(pthread_spinlock_t *lock) {
   return ret;
 }
 
+
+
+#if defined(HAVE_PTHREAD_BARRIER)
+
 /* ----------------------------
    --- barrier 
    ---------------------------- */
@@ -1540,6 +1545,8 @@ int __wrap(pthread_barrierattr_setpshared)
   leave_wrapped_func("%d", ret);
   return ret;
 }
+
+#endif	/* HAVE_PTHREAD_BARRIER */
 
 /* --------------------------------
    --- thread local storage 
@@ -1662,8 +1669,8 @@ void __wrap(pthread_kill_other_threads_np)(void) {
 }
 #endif
 
-/* pthread_sigqueue (3) - queue a signal and data to a thread */
 #if defined(HAVE_PTHREAD_SIGQUEUE)
+/* pthread_sigqueue (3) - queue a signal and data to a thread */
 int __wrap(pthread_sigqueue)(pthread_t thread, int sig,
 			     const union sigval value) {
   int _ = enter_wrapped_func("%x, %d, ...", thread, sig);

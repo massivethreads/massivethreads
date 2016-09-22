@@ -1459,7 +1459,7 @@ Optional Features:
                           --wrap=function_name (default=yes)
   --enable-myth-dl=yes|no build libmyth-dl or not, a library that wraps some
                           system functions with dlopen/dlsym
-  --enable-bind-workers=yes/no
+  --enable-default-bind-workers=yes/no
                           Set default value for bind-workers. Default: yes.
                           You can change it at runtime by setting
                           MYTH_BIND_WORKERS.
@@ -4814,7 +4814,7 @@ fi
 if test "x$default_bind_workers" != "xno" ; then
 
 cat >>confdefs.h <<_ACEOF
-#define MYTH_BIND_WORKERS 1
+#define MYTH_DEFAULT_BIND_WORKERS 1
 _ACEOF
 
 else

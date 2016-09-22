@@ -54,6 +54,9 @@
 /* if 1, child first by default */
 #undef MYTH_CHILD_FIRST
 
+/* if 1, bind workers by default */
+#undef MYTH_DEFAULT_BIND_WORKERS
+
 /* Default guard size */
 #undef MYTH_DEF_GUARD_SIZE
 

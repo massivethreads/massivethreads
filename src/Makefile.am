@@ -6,6 +6,8 @@ SUBDIRS = .
 COMMON_SRCS = \
 	myth_log.c \
 	myth_sched.c \
+	myth_internal_barrier.c \
+	myth_bind_worker.c \
 	myth_worker.c \
 	myth_sync.c \
 	myth_init.c \

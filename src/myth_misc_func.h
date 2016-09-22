@@ -13,7 +13,6 @@
 #include <unistd.h>
 #include <time.h>
 #include <sys/mman.h>
-#include <sched.h>
 
 #include "myth_config.h"
 #include "myth_misc.h"
@@ -38,6 +37,22 @@ static inline uint64_t myth_get_rdtsc() {
 #else
 #warning "myth_get_rdtsc() not implemented" 
   return 0;
+#endif
+}
+
+static inline int hr_gettime(struct timespec * ts) {
+#if defined(HAVE_CLOCK_GETTIME)
+  return clock_gettime(CLOCK_REALTIME, ts);
+#else
+  struct timeval tv[1];
+  int r = gettimeofday(tv, 0);
+  if (r == 0) {
+    ts->tv_sec = tv->tv_sec;
+    ts->tv_nsec = tv->tv_usec * 1000;
+    return 0;
+  } else {
+    return r;
+  }
 #endif
 }
 

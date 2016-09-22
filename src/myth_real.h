@@ -29,7 +29,7 @@ int real_pthread_create(pthread_t *thread, const pthread_attr_t *attr,
 			void *(*start_routine) (void *), void *arg);
 void real_pthread_exit(void *retval) __attribute__((noreturn));
 int real_pthread_join(pthread_t thread, void **retval);
-#if _GNU_SOURCE
+#if defined(HAVE_PTHREAD_JOIN_NP)
 int real_pthread_tryjoin_np(pthread_t thread, void **retval);
 int real_pthread_timedjoin_np(pthread_t thread, void **retval,
 			      const struct timespec *abstime);
@@ -65,11 +65,15 @@ int real_pthread_attr_getstack(const pthread_attr_t *attr,
 			       void **stackaddr, size_t *stacksize);
 int real_pthread_attr_setstack(pthread_attr_t *attr,
 			       void *stackaddr, size_t stacksize);
-#if _GNU_SOURCE
+#if defined(HAVE_PTHREAD_AFFINITY_NP)
 int real_pthread_attr_setaffinity_np(pthread_attr_t *attr,
 				     size_t cpusetsize, const cpu_set_t *cpuset);
+#endif
+#if defined(HAVE_PTHREAD_AFFINITY_NP)
 int real_pthread_attr_getaffinity_np(const pthread_attr_t *attr,
 				     size_t cpusetsize, cpu_set_t *cpuset);
+#endif
+#if defined(HAVE_PTHREAD_ATTR_NP)
 int real_pthread_getattr_default_np(pthread_attr_t *attr);
 int real_pthread_setattr_default_np(const pthread_attr_t *attr);
 int real_pthread_getattr_np(pthread_t thread, pthread_attr_t *attr);
@@ -80,15 +84,20 @@ int real_pthread_setschedparam(pthread_t thread, int policy,
 int real_pthread_getschedparam(pthread_t thread, int *policy,
 			       struct sched_param *param);
 int real_pthread_setschedprio(pthread_t thread, int prio);
-#if _GNU_SOURCE
+#if defined(HAVE_PTHREAD_NAME_NP)
 int real_pthread_getname_np(pthread_t thread, char *name, size_t len);
 int real_pthread_setname_np(pthread_t thread, const char *name);
 #endif
 
+#if defined(HAVE_PTHREAD_CONCURRENCY)
 int real_pthread_getconcurrency(void);
 int real_pthread_setconcurrency(int new_level);
-#if _GNU_SOURCE
+#endif
+#if defined(HAVE_PTHREAD_YIELD)
 int real_pthread_yield(void);
+#endif
+
+#if defined(HAVE_PTHREAD_AFFINITY_NP)
 int real_pthread_setaffinity_np(pthread_t thread, size_t cpusetsize,
 				const cpu_set_t *cpuset);
 int real_pthread_getaffinity_np(pthread_t thread, size_t cpusetsize,
@@ -113,7 +122,9 @@ int real_pthread_mutex_getprioceiling(const pthread_mutex_t *restrict mutex,
 				      int *restrict prioceiling);
 int real_pthread_mutex_setprioceiling(pthread_mutex_t *restrict mutex,
 				      int prioceiling, int *restrict old_ceiling);
+#if defined(HAVE_PTHREAD_MUTEX_CONSISTENT)
 int real_pthread_mutex_consistent(pthread_mutex_t *mutex);
+#endif
 int real_pthread_mutexattr_init(pthread_mutexattr_t *attr);
 int real_pthread_mutexattr_destroy(pthread_mutexattr_t *attr);
 int real_pthread_mutexattr_getpshared(const pthread_mutexattr_t *restrict attr,
@@ -130,9 +141,13 @@ int real_pthread_mutexattr_getprioceiling(const pthread_mutexattr_t *restrict at
 					  int *restrict prioceiling);
 int real_pthread_mutexattr_setprioceiling(pthread_mutexattr_t *attr,
 					  int prioceiling);
+#if defined(HAVE_PTHREAD_MUTEXATTR_GETROBUST)
 int real_pthread_mutexattr_getrobust(const pthread_mutexattr_t *restrict attr,
 				     int *restrict robust);
+#endif
+#if defined(HAVE_PTHREAD_MUTEXATTR_SETROBUST)
 int real_pthread_mutexattr_setrobust(pthread_mutexattr_t *attr, int robust);
+#endif
 int real_pthread_rwlock_init(pthread_rwlock_t *restrict rwlock,
 			     const pthread_rwlockattr_t *restrict attr);
 int real_pthread_rwlock_destroy(pthread_rwlock_t *rwlock);
@@ -180,6 +195,7 @@ int real_pthread_spin_destroy(pthread_spinlock_t *lock);
 int real_pthread_spin_lock(pthread_spinlock_t *lock);
 int real_pthread_spin_trylock(pthread_spinlock_t *lock);
 int real_pthread_spin_unlock(pthread_spinlock_t *lock);
+#if defined(HAVE_PTHREAD_BARRIER)
 int real_pthread_barrier_init(pthread_barrier_t *restrict barrier,
 			      const pthread_barrierattr_t *restrict attr,
 			      unsigned count);
@@ -191,6 +207,7 @@ int real_pthread_barrierattr_getpshared(const pthread_barrierattr_t *restrict at
 					int *restrict pshared);
 int real_pthread_barrierattr_setpshared(pthread_barrierattr_t *attr,
 					int pshared);
+#endif	/* HAVE_PTHREAD_BARRIER */
 int real_pthread_key_create(pthread_key_t *key, void destructor(void*));
 int real_pthread_key_delete(pthread_key_t key);
 void * real_pthread_getspecific(pthread_key_t key);
@@ -199,8 +216,10 @@ int real_pthread_getcpuclockid(pthread_t thread, clockid_t *clock_id);
 int real_pthread_atfork(void prepare(void), void parent(void), void child(void));
 int real_pthread_kill(pthread_t thread, int sig);
 void real_pthread_kill_other_threads_np(void);
+#if defined(HAVE_PTHREAD_SIGQUEUE)
 int real_pthread_sigqueue(pthread_t thread, int sig,
 			  const union sigval value);
+#endif
 int real_pthread_sigmask(int how, const sigset_t *set, sigset_t *oldset);
 
 int real_sched_yield(void);
@@ -223,7 +242,7 @@ void * real_pvalloc(size_t size);
 int real_socket(int domain, int type, int protocol);
 int real_socketpair(int domain, int type, int protocol, int sv[2]);
 int real_accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen);
-#if _GNU_SOURCE
+#if defined(HAVE_ACCEPT4)
 int real_accept4(int sockfd, struct sockaddr *addr, socklen_t *addrlen, int flags);
 #endif
 int real_bind(int sockfd, const struct sockaddr *addr, socklen_t addrlen);

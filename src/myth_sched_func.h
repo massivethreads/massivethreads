@@ -1005,10 +1005,10 @@ static inline int myth_nanosleep_body(const struct timespec *req,
   if (req->tv_sec < 0) return EINVAL;
   if (req->tv_nsec < 0) return EINVAL;
   if (req->tv_nsec > 999999999) return EINVAL;
-  clock_gettime(CLOCK_REALTIME, cur);
+  hr_gettime(cur);
   myth_timespec_add(cur, req, unt);
   while (1) {
-    clock_gettime(CLOCK_REALTIME, cur);
+    hr_gettime(cur);
     if (myth_timespec_gt(cur, unt)) break;
     myth_yield_body();
   }
@@ -1384,4 +1384,4 @@ static inline myth_thread_t myth_ext_deserialize_body(myth_pickle_t p)
 
 #include "myth_io_func.h"
 
-#endif /* MYTH_FUNC_H_ */
+#endif /* MYTH_SCHED_FUNC_H_ */

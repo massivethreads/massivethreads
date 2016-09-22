@@ -2,12 +2,14 @@
  * myth_init_func.h
  */
 #pragma once
-#ifndef MYTH_INIT_FUNC_H
-#define MYTH_INIT_FUNC_H
+#ifndef MYTH_INIT_FUNC_H_
+#define MYTH_INIT_FUNC_H_
 
 #include "myth_config.h"
 #include "myth_init.h"
 #include "myth_misc.h"
+#include "myth_bind_worker.h"
+
 #include "myth_misc_func.h"
 
 static inline int myth_ensure_init_ex(myth_globalattr_t * attr) {
@@ -61,7 +63,7 @@ static inline int myth_globalattr_get_default(myth_globalattr_t * attr) {
   }
   {
     /* bind workers */
-    int bw = MYTH_BIND_WORKERS;
+    int bw = MYTH_DEFAULT_BIND_WORKERS;
     char * env = getenv(ENV_MYTH_BIND_WORKERS);
     if (env){
       bw = atoi(env);
@@ -179,4 +181,4 @@ myth_globalattr_set_child_first_body(myth_globalattr_t * attr,
   return 0;
 }
 
-#endif
+#endif	/* MYTH_INIT_FUNC_H_ */

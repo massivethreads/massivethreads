@@ -2,8 +2,8 @@
  * myth_eco.h
  */
 #pragma once
-#ifndef _MYTH_ECO_H_
-#define _MYTH_ECO_H_
+#ifndef MYTH_ECO_H_
+#define MYTH_ECO_H_
 
 #include <linux/futex.h>
 #include <limits.h>
@@ -54,4 +54,4 @@ int futex_wakeup_n( void *futex, int n );
 int futex_wakeup_all( void *futex );
 int fetch_and_store(volatile void *ptr, int addend);
 
-#endif /* _MYTH_ECO_H_ */
+#endif /* MYTH_ECO_H_ */

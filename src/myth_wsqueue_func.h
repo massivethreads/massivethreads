@@ -410,4 +410,4 @@ static inline void myth_queue_put(myth_thread_queue_t q, myth_thread_t th)
 }
 
 
-#endif /* MYTH_QUEUE_FUNC_H_ */
+#endif /* MYTH_WSQUEUE_FUNC_H_ */

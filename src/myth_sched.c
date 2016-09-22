@@ -4,6 +4,7 @@
 
 #include <signal.h>
 
+#include "myth_internal_barrier.h"
 #include "myth_sched.h"
 #include "myth_sched_func.h"
 
@@ -12,7 +13,7 @@
 myth_running_env_t g_envs = NULL;
 int g_envs_sz = 0;
 //A barrier for worker thread to synchronize
-pthread_barrier_t g_worker_barrier;
+myth_internal_barrier_t g_worker_barrier;
 
 FILE *g_log_fp;
 

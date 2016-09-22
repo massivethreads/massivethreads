@@ -1,3 +1,7 @@
+/* 
+ * myth_config.h
+ */
+
 #pragma once
 #ifndef MYTH_CONFIG_H_
 #define MYTH_CONFIG_H_
@@ -273,5 +277,60 @@
 #define MYTH_WRAP_VANILLA 2
 #define MYTH_WRAP_DL      3
 #define MYTH_WRAP_LD      4
+
+
+/* stuff that should be moved to config.h */
+
+#if 0
+#define HAVE_CLOCK_GETTIME 1
+
+#define HAVE_ACCEPT4 1
+
+#define HAVE_PTHREAD_CONCURRENCY 1
+#if 0
+# define HAVE_PTHREAD_GETCONCURRENCY 1
+# define HAVE_PTHREAD_SETCONCURRENCY 1
+#endif
+
+#define HAVE_SCHED_GETAFFINITY 1
+
+#define HAVE_PTHREAD_AFFINITY_NP 1
+#if 0
+# define HAVE_PTHREAD_ATTR_GETAFFINITY_NP 1
+# define HAVE_PTHREAD_ATTR_SETAFFINITY_NP 1
+# define HAVE_PTHREAD_GETAFFINITY_NP 1
+# define HAVE_PTHREAD_SETAFFINITY_NP 1
+#endif
+
+#define HAVE_PTHREAD_ATTR_NP 1
+#if 0
+# define HAVE_PTHREAD_GETATTR_DEFAULT_NP 1
+# define HAVE_PTHREAD_SETATTR_DEFAULT_NP 1
+# define HAVE_PTHREAD_GETATTR_NP 1
+#endif
+
+#define HAVE_PTHREAD_NAME_NP 1
+#if 0
+# define HAVE_PTHREAD_GETNAME_NP 1
+# define HAVE_PTHREAD_SETNAME_NP 1
+#endif
+
+#define HAVE_PTHREAD_JOIN_NP 1
+#if 0
+# define HAVE_PTHREAD_TIMEDJOIN_NP 1
+# define HAVE_PTHREAD_TRYJOIN_NP 1
+#endif
+
+#define HAVE_PTHREAD_SIGQUEUE 1
+
+#define HAVE_PTHREAD_YIELD 1
+
+#define HAVE_PTHREAD_BARRIER 1
+
+#define HAVE_PTHREAD_MUTEXATTR_GETROBUST 1
+#define HAVE_PTHREAD_MUTEXATTR_SETROBUST 1
+#define HAVE_PTHREAD_MUTEX_CONSISTENT 1
+
+#endif
 
 #endif /* MYTH_CONFIG_H_ */

@@ -169,4 +169,4 @@ static inline void myth_rwbarrier() {
 
 #endif
 
-#endif /* MYTH_BARRIER_H_ */
+#endif /* MYTH_MEM_BARRIER_FUNC_H_ */

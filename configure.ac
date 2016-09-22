@@ -65,7 +65,7 @@ AC_ARG_ENABLE([myth-dl],
 # -----------------------
 
 AC_ARG_ENABLE([bind-workers],
-            [AS_HELP_STRING([--enable-bind-workers=yes/no],
+            [AS_HELP_STRING([--enable-default-bind-workers=yes/no],
                             [Set default value for bind-workers.
                              Default: yes.  You can change it at runtime
 			     by setting MYTH_BIND_WORKERS.])],
@@ -73,7 +73,7 @@ AC_ARG_ENABLE([bind-workers],
             [default_bind_workers="yes"])
 
 if test "x$default_bind_workers" != "xno" ; then
-  AC_DEFINE_UNQUOTED([MYTH_BIND_WORKERS],[1],[if 1, bind workers by default])
+  AC_DEFINE_UNQUOTED([MYTH_DEFAULT_BIND_WORKERS],[1],[if 1, bind workers by default])
 else						 
   AC_DEFINE_UNQUOTED([MYTH_BIND_WORKERS],[0],[if 1, bind workers by default])
 fi
