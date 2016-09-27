@@ -194,10 +194,14 @@ static inline void * myth_flmalloc(int rank, size_t size) {
     //Freelist is empty, allocate
     size_t realsize = MYTH_MALLOC_INDEX_TO_RSIZE(idx);
     if (realsize < PAGE_SIZE) {
-#if 1
+      int map_flags = MAP_PRIVATE;
+#if defined(MAP_ANONYMOUS)
+      map_flags |= MAP_ANONYMOUS;
+#else
+      map_flags |= MAP_ANON;
+#endif
       assert(PAGE_SIZE % realsize == 0);
-      ptr = myth_mmap(NULL, PAGE_SIZE, PROT_READ|PROT_WRITE,
-		      MAP_PRIVATE|MAP_ANONYMOUS, -1, 0);
+      ptr = myth_mmap(NULL, PAGE_SIZE, PROT_READ|PROT_WRITE, map_flags, -1, 0);
       char * p = ptr;
       char * p2 = p + PAGE_SIZE;
       p += realsize;
@@ -209,17 +213,16 @@ static inline void * myth_flmalloc(int rank, size_t size) {
 #endif
 	p += realsize;
       }
-#else
-      ptr = myth_malloc(realsize);
-      if (!ptr){
-	perror("malloc");
-	assert(0);
-      }
-#endif
     } else {
       //Just allocate by mmap and return
+      int map_flags = MAP_PRIVATE;
+#if defined(MAP_ANONYMOUS)
+      map_flags |= MAP_ANONYMOUS;
+#else
+      map_flags |= MAP_ANON;
+#endif
       assert(realsize % 4096 == 0);
-      ptr = myth_mmap(NULL,realsize,PROT_READ|PROT_WRITE,MAP_PRIVATE|MAP_ANONYMOUS,-1,0);
+      ptr = myth_mmap(NULL,realsize,PROT_READ|PROT_WRITE,map_flags,-1,0);
     }
     //ptr=real_malloc(realsize);//fprintf(stderr,"M %lu %s:%d\n",(unsigned long)realsize,f,l);
     myth_assert(ptr);
@@ -338,8 +341,7 @@ static inline void *myth_realloc(void *ptr,size_t size) {
 
 static inline void *myth_mmap(void *addr,size_t length,int prot,int flags,int fd,off_t offset)
 {
-#if 1
-  void *ptr=mmap(addr,length,prot,flags,fd,offset);
+  void * ptr = mmap(addr,length,prot,flags,fd,offset);
   //__sync_fetch_and_add(&g_mmap_total,length);
   //__sync_fetch_and_add(&g_mmap_count,1);
   if (ptr==MAP_FAILED){
@@ -348,18 +350,6 @@ static inline void *myth_mmap(void *addr,size_t length,int prot,int flags,int fd
     perror("mmap");
     assert(0);
   }
-#else
-  //void *ptr=real_malloc(length);
-  void *ptr=memalign(4096,length);
-  __sync_fetch_and_add(&g_mmap_total,length);
-  __sync_fetch_and_add(&g_mmap_count,1);
-  if (ptr==NULL){
-    printf("size=%llu\n",(unsigned long long)g_mmap_total);
-    printf("count=%llu\n",(unsigned long long)g_mmap_count);
-    perror("malloc");
-    assert(0);
-  }
-#endif
   return ptr;
 }
 

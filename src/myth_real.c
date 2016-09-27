@@ -211,15 +211,21 @@ typedef struct {
 				     int *restrict pshared);
   int (*pthread_condattr_setpshared)(pthread_condattr_t *attr,
 				     int pshared);
+#if defined(HAVE_PTHREAD_CONDATTR_CLOCK)
   int (*pthread_condattr_getclock)(const pthread_condattr_t *restrict attr,
 				   clockid_t *restrict clock_id);
   int (*pthread_condattr_setclock)(pthread_condattr_t *attr,
 				   clockid_t clock_id);
+#endif
+
+#if defined(HAVE_PTHREAD_SPIN)
   int (*pthread_spin_init)(pthread_spinlock_t *lock, int pshared);
   int (*pthread_spin_destroy)(pthread_spinlock_t *lock);
   int (*pthread_spin_lock)(pthread_spinlock_t *lock);
   int (*pthread_spin_trylock)(pthread_spinlock_t *lock);
   int (*pthread_spin_unlock)(pthread_spinlock_t *lock);
+#endif	 /* defined(HAVE_PTHREAD_SPIN) */
+
 #if defined(HAVE_PTHREAD_BARRIER)
   int (*pthread_barrier_init)(pthread_barrier_t *restrict barrier,
 			      const pthread_barrierattr_t *restrict attr,
@@ -237,7 +243,9 @@ typedef struct {
   int (*pthread_key_delete)(pthread_key_t key);
   void * (*pthread_getspecific)(pthread_key_t key);
   int (*pthread_setspecific)(pthread_key_t key, const void *value);
+#if defined(HAVE_PTHREAD_GETCPUCLOCKID)
   int (*pthread_getcpuclockid)(pthread_t thread, clockid_t *clock_id);
+#endif
 #if 0				/* could not find where it is */
   int (*pthread_atfork)(void (*prepare)(void), void (*parent)(void),
 			void (*child)(void));
@@ -445,11 +453,13 @@ static shared_object_symbol s_so_syms[n_real_functions + 1] = {
   so_symbol_entry(pthread_condattr_setpshared, libpthread),
   so_symbol_entry(pthread_condattr_getclock, libpthread),
   so_symbol_entry(pthread_condattr_setclock, libpthread),
+#if defined(HAVE_PTHREAD_SPIN)
   so_symbol_entry(pthread_spin_init, libpthread),
   so_symbol_entry(pthread_spin_destroy, libpthread),
   so_symbol_entry(pthread_spin_lock, libpthread),
   so_symbol_entry(pthread_spin_trylock, libpthread),
   so_symbol_entry(pthread_spin_unlock, libpthread),
+#endif	 /* defined(HAVE_PTHREAD_SPIN) */
 #if defined(HAVE_PTHREAD_BARRIER)
   so_symbol_entry(pthread_barrier_init, libpthread),
   so_symbol_entry(pthread_barrier_destroy, libpthread),
@@ -2374,6 +2384,7 @@ int real_pthread_condattr_setpshared(pthread_condattr_t *attr,
 #endif
 }
 
+#if defined(HAVE_PTHREAD_CONDATTR_CLOCK)
 #if MYTH_WRAP == MYTH_WRAP_LD
 int __real_pthread_condattr_getclock(const pthread_condattr_t *restrict attr,
 				   clockid_t *restrict clock_id);
@@ -2411,7 +2422,9 @@ int real_pthread_condattr_setclock(pthread_condattr_t *attr,
 #error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
+#endif	/* HAVE_PTHREAD_CONDATTR_CLOCK */
 
+#if defined(HAVE_PTHREAD_SPIN)
 #if MYTH_WRAP == MYTH_WRAP_LD
 int __real_pthread_spin_init(pthread_spinlock_t *lock, int pshared);
 #endif
@@ -2496,9 +2509,9 @@ int real_pthread_spin_unlock(pthread_spinlock_t *lock) {
 #error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
+#endif	 /* defined(HAVE_PTHREAD_SPIN) */
 
 #if defined(HAVE_PTHREAD_BARRIER)
-
 #if MYTH_WRAP == MYTH_WRAP_LD
 int __real_pthread_barrier_init(pthread_barrier_t *restrict barrier,
 			      const pthread_barrierattr_t *restrict attr,
@@ -2696,6 +2709,7 @@ int real_pthread_setspecific(pthread_key_t key, const void *value) {
 #endif
 }
 
+#if defined(HAVE_PTHREAD_GETCPUCLOCKID)
 #if MYTH_WRAP == MYTH_WRAP_LD
 int __real_pthread_getcpuclockid(pthread_t thread, clockid_t *clock_id);
 #endif
@@ -2712,6 +2726,7 @@ int real_pthread_getcpuclockid(pthread_t thread, clockid_t *clock_id) {
 #error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
+#endif	/* defined(HAVE_PTHREAD_GETCPUCLOCKID) */
 
 #if 0
 #if MYTH_WRAP == MYTH_WRAP_LD
@@ -3243,8 +3258,12 @@ int real_fcntl(int fd, int cmd, ...) {
   case F_GETFD:
   case F_GETFL:
   case F_GETOWN:
+#if defined(F_GETSIG)
   case F_GETSIG:
+#endif
+#if defined(F_GETLEASE)
   case F_GETLEASE:
+#endif
 #if defined(F_GETPIPE_SZ)
   case F_GETPIPE_SZ:		/*  (void; since Linux 2.6.35) */
 #endif
@@ -3268,9 +3287,15 @@ int real_fcntl(int fd, int cmd, ...) {
   case F_SETFD:
   case F_SETFL:
   case F_SETOWN:
+#if defined(F_SETSIG)
   case F_SETSIG:
+#endif
+#if defined(F_SETLEASE)
   case F_SETLEASE:
+#endif
+#if defined(F_NOTIFY)
   case F_NOTIFY:
+#endif
 #if defined(F_SETPIPE_SZ)
   case F_SETPIPE_SZ:		/*  (int; since Linux 2.6.35) */
 #endif

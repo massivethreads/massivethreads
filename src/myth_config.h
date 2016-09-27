@@ -193,7 +193,7 @@
 #define MYTH_FLMALLOC_TLS 0
 
 //Inline context switching codes by inline assembler
-#define MYTH_INLINE_CONTEXT 0
+#define MYTH_INLINE_CONTEXT 1
 //At inlined codes, save callee-saved registers explicitly
 #define MYTH_INLINE_PUSH_CALLEE_SAVED 1
 
@@ -281,6 +281,9 @@
 
 /* stuff that should be moved to config.h */
 
+#define HAVE_SYSCONF 1
+
+
 #if 0
 #define HAVE_CLOCK_GETTIME 1
 
@@ -327,6 +330,11 @@
 
 #define HAVE_PTHREAD_BARRIER 1
 
+#define HAVE_PTHREAD_CONDATTR_CLOCK 0
+#define HAVE_PTHREAD_GETCPUCLOCKID 0
+#define HAVE_PTHREAD_SPIN 0
+
+/* don't know if they are necessary at all */
 #define HAVE_PTHREAD_MUTEXATTR_GETROBUST 1
 #define HAVE_PTHREAD_MUTEXATTR_SETROBUST 1
 #define HAVE_PTHREAD_MUTEX_CONSISTENT 1

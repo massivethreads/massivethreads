@@ -2,11 +2,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#if 0
 #include <malloc.h>
+#endif
 
 #include <myth/myth.h>
 
 int main(int argc, char ** argv) {
+#if 0
   size_t sz = (argc > 1 ? atol(argv[1]) : 35);
   size_t n  = (argc > 2 ? atol(argv[2]) : 3);
   size_t i;
@@ -23,6 +26,7 @@ int main(int argc, char ** argv) {
     for (j = 0; j < sz; j++) a[j] = 1;
   }
   printf("OK\n");
+#endif
   return 0;
 }
 

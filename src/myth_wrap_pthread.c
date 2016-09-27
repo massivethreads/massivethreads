@@ -1348,6 +1348,8 @@ int __wrap(pthread_condattr_setpshared)(pthread_condattr_t *attr,
   leave_wrapped_func("%d", ret);
   return ret;
 }
+
+#if defined(HAVE_PTHREAD_CONDATTR_CLOCK)
 /* pthread_condattr_getclock (3posix) - get and set the clock selection condition variable a... */
 int __wrap(pthread_condattr_getclock)
      (const pthread_condattr_t *restrict attr,
@@ -1368,11 +1370,13 @@ int __wrap(pthread_condattr_setclock)(pthread_condattr_t *attr,
   leave_wrapped_func("%d", ret);
   return ret;
 }
+#endif /* HAVE_PTHREAD_CONDATTR_CLOCK */
 
 /* ----------------------
    --- spin locks
    ---------------------- */
 
+#if defined(HAVE_PTHREAD_SPIN)
 int __wrap(pthread_spin_init)(pthread_spinlock_t *lock, int pshared) {
   int _ = enter_wrapped_func("%p %d", lock, pshared);
   int ret;
@@ -1444,6 +1448,9 @@ int __wrap(pthread_spin_unlock)(pthread_spinlock_t *lock) {
   return ret;
 }
 
+#endif	 /* defined(HAVE_PTHREAD_SPIN) */
+
+
 
 
 #if defined(HAVE_PTHREAD_BARRIER)
@@ -1502,6 +1509,11 @@ int __wrap(pthread_barrier_wait)(pthread_barrier_t *barrier) {
   (void)_;
   if (myth_should_wrap_pthread()) {
     ret = myth_barrier_wait_body((myth_barrier_t *)barrier);
+    if (ret == MYTH_BARRIER_SERIAL_THREAD) {
+      ret = PTHREAD_BARRIER_SERIAL_THREAD;
+    } else {
+      assert(ret == 0);
+    }
   } else {
     ret = real_pthread_barrier_wait(barrier);
   }
@@ -1611,6 +1623,7 @@ int __wrap(pthread_setspecific)(pthread_key_t key, const void *value) {
    --- functions querying and affecting threads
    ------------------------------------------- */
 
+#if defined(HAVE_PTHREAD_GETCPUCLOCKID)
 /* pthread_getcpuclockid (3) - retrieve ID of a threads CPU time clock */
 int __wrap(pthread_getcpuclockid)(pthread_t thread, clockid_t *clock_id) {
   int _ = enter_wrapped_func("%x, %p", thread, clock_id);
@@ -1625,6 +1638,7 @@ int __wrap(pthread_getcpuclockid)(pthread_t thread, clockid_t *clock_id) {
   leave_wrapped_func("%d", ret);
   return ret;
 }
+#endif /* defined(HAVE_PTHREAD_GETCPUCLOCKID) */
 
 #if 0
 /* pthread_atfork (3posix) - register fork handlers */

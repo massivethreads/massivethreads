@@ -8,7 +8,7 @@
 
 typedef unsigned long long ts_t;
 
-#define USE_RDTSC 0
+#define USE_RDTSC 1
 
 #if USE_RDTSC
 /* TODO : make it run on Sparc */
@@ -25,7 +25,7 @@ static inline ts_t cur_time() {
 ts_t cur_time() {
   struct timespec ts[1];
   clock_gettime(CLOCK_REALTIME, ts);
-  return ts->tv_sec * 1000000000 + ts->tv_nsec;
+  return ts->tv_sec * 1000000000L + ts->tv_nsec;
 }
 #endif
 
@@ -90,7 +90,7 @@ void bench(long n) {
 }
 
 int main(int argc, char ** argv) {
-  long n = (argc > 1 ? atol(argv[1]) : 100000);
+  long n = (argc > 1 ? atol(argv[1]) : 2000);
   long i;
   for (i = 0; i < 3; i++) {
     bench(n);

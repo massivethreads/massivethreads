@@ -5,6 +5,7 @@
 #ifndef MYTH_INTERNAL_BARRIER_H_
 #define MYTH_INTERNAL_BARRIER_H_
 
+#include <pthread.h>
 #include "myth_config.h"
 
 typedef struct {

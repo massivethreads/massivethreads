@@ -3,6 +3,7 @@
  *  data structure related to thread and
  *  must be included by the user
  */
+#pragma once
 #ifndef MYTH_THREAD_H_
 #define MYTH_THREAD_H_
 

@@ -191,57 +191,63 @@ static int myth_parse_cpu_list(const char * var, int * a, int n) {
   return il->i;
 }
 
-void myth_read_available_cpu_list(void) {
-  int i;
-  int n = myth_parse_cpu_list("MYTH_CPU_LIST", myth_cpu_list, CPU_SETSIZE);
-  if (n == -1) {
-    fprintf(stderr, "MYTH_CPU_LIST ignored\n");
-  }
-  /* initialize all cpusets to empty */
-  for (i = 0; i < N_MAX_CPUS; i++){
-    worker_cpu[i] = -1;
-  }
-  n_available_cpus = 0;
+//Return the number of CPU cores
+int myth_get_n_available_cpus(void) {
+#if defined(HAVE_SYSCONF)
+  return sysconf(_SC_NPROCESSORS_ONLN);
+#else
+  return -1;			/* don't know how many cpus */
+#endif	/* HAVE_SCHED_GETAFFINITY */
+}
 
+void myth_get_available_cpus(void) {
+  int i;
+  int n_specified_cpus 
+    = myth_parse_cpu_list("MYTH_CPU_LIST", myth_cpu_list, N_MAX_CPUS);
+  n_available_cpus = 0;
+  if (n_specified_cpus == -1) {
+    fprintf(stderr, "myth: malformed MYTH_CPU_LIST ignored\n");
+    n_specified_cpus = 0; /* as if it wasn't specified */
+  } 
+  if (n_specified_cpus == 0) {
+    /* MYTH_CPU_LIST not specified. treat as if it was 0,1,2,3,4,5,... */
+    n_specified_cpus = myth_get_n_available_cpus();
+    if (n_specified_cpus == -1) {
+      fprintf(stderr, "myth: the platform does not tell the number of CPUs. to bind workers to cores, consider using MYTH_CPU_LIST environment variable\n");
+      /* we still go ahead, but does not do anything except for 
+	 issuing a warning and return */
+    }
+    for (i = 0; i < n_specified_cpus; i++) {
+      myth_cpu_list[i] = i;
+    }
+  }
+  /* got user-specified list of cpus.
+     now, intersect with actually available cpus */
 #if defined(HAVE_SCHED_GETAFFINITY)
   {
     cpu_set_t cset;
     /* get cpu set we can use */
     sched_getaffinity(getpid(), sizeof(cpu_set_t), &cset);
-    if (n == 0) {
-      /* MYTH_CPU_LIST unspecified. simply bind ith 
-	 worker to ith available CPU */
-      for (i = 0; i < N_MAX_CPUS; i++){
-	if (CPU_ISSET(i, &cset)) {
-	  worker_cpu[n_available_cpus] = i;
-	  n_available_cpus++;
-	}
-      }
-    } else {
-      /* MYTH_CPU_LIST specified. bind ith 
-	 worker to ith specified & available CPU */
-      for (i = 0; i < n; i++){
-	if (CPU_ISSET(myth_cpu_list[i], &cset)) {
-	  worker_cpu[n_available_cpus] = myth_cpu_list[i];
-	  n_available_cpus++;
-	}
+    for (i = 0; i < n_specified_cpus; i++){
+      /* is myth_cpu_list[i] available? */
+      if (CPU_ISSET(myth_cpu_list[i], &cset)) {
+	/* yes, use it */
+	worker_cpu[n_available_cpus] = myth_cpu_list[i];
+	n_available_cpus++;
       }
     }
   }
-#else  /* HAVE_SCHED_GETAFFINITY */
-  if (n == 0) {
-    for (i = 0; i < N_MAX_CPUS; i++){
-      worker_cpu[n_available_cpus] = i;
-      n_available_cpus++;
-    }
-  } else {
-    for (i = 0; i < n; i++){
-      worker_cpu[n_available_cpus] = myth_cpu_list[i];
-      n_available_cpus++;
-    }
+#else  /* no HAVE_SCHED_GETAFFINITY */
+  for (i = 0; i < n_specified_cpus; i++){
+    worker_cpu[n_available_cpus] = myth_cpu_list[i];
+    n_available_cpus++;
   }
 #endif	/* HAVE_SCHED_GETAFFINITY */
   
+  if (n_available_cpus == 0) {
+    fprintf(stderr, "myth: could not get any available CPUs. won't bind worker to cores\n");
+  }
+
 #if 1				/* debug */
   printf("%d available CPUs:", n_available_cpus);
   for (i = 0; i < n_available_cpus; i++) {
@@ -253,29 +259,23 @@ void myth_read_available_cpu_list(void) {
 }
 
 static int myth_get_worker_cpu(int rank) {
-  if (n_available_cpus <= 0) {
-    myth_read_available_cpu_list();
-    assert(n_available_cpus > 0);
+  assert(n_available_cpus >= 0);
+  if (n_available_cpus == 0) {
+    return -1;			/* no bind */
+  } else {
+    return worker_cpu[rank % n_available_cpus];
   }
-  return worker_cpu[rank % n_available_cpus];
-}
-
-//Return the number of CPU cores
-int myth_get_cpu_num(void) {
-  if (n_available_cpus <= 0) {
-    myth_read_available_cpu_list();
-    assert(n_available_cpus > 0);
-  }
-  return n_available_cpus;
 }
 
 void myth_bind_worker(int rank) {
 #if HAVE_PTHREAD_AFFINITY_NP
   int cpu = myth_get_worker_cpu(rank);
-  cpu_set_t cs;
-  CPU_ZERO(&cs);
-  CPU_SET(cpu, &cs);
-  real_pthread_setaffinity_np(real_pthread_self(), sizeof(cpu_set_t), &cs);
+  if (cpu != -1) {
+    cpu_set_t cs;
+    CPU_ZERO(&cs);
+    CPU_SET(cpu, &cs);
+    real_pthread_setaffinity_np(real_pthread_self(), sizeof(cpu_set_t), &cs);
+  }
 #endif
 }
 

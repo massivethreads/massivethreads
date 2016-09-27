@@ -57,7 +57,7 @@ static inline int myth_globalattr_get_default(myth_globalattr_t * attr) {
       nw = atoi(env);
     }
     if (nw <= 0) {
-      nw = myth_get_cpu_num();
+      nw = myth_get_n_available_cpus();
     }
     a.n_workers = nw;
   }

@@ -72,8 +72,12 @@ int __wrap(fcntl)(int fd, int cmd, ... /* arg */ ) {
   case F_GETFD:
   case F_GETFL:
   case F_GETOWN:
+#if defined(F_GETSIG)
   case F_GETSIG:
+#endif
+#if defined(F_GETLEASE)
   case F_GETLEASE:
+#endif
 #if defined(F_GETPIPE_SZ)
   case F_GETPIPE_SZ:		/*  (void; since Linux 2.6.35) */
 #endif
@@ -89,9 +93,15 @@ int __wrap(fcntl)(int fd, int cmd, ... /* arg */ ) {
   case F_SETFD:
   case F_SETFL:
   case F_SETOWN:
+#if defined(F_SETSIG)
   case F_SETSIG:
+#endif
+#if defined(F_SETLEASE)
   case F_SETLEASE:
+#endif
+#if defined(F_NOTIFY)
   case F_NOTIFY:
+#endif
 #if defined(F_SETPIPE_SZ)
   case F_SETPIPE_SZ:		/*  (int; since Linux 2.6.35) */
 #endif

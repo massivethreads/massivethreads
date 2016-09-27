@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <sys/time.h>
 
 #include <myth/myth.h>
 
@@ -83,13 +84,19 @@ void * del_tree(void * arg_) {
 }
 
 double cur_time() {
+#if 0
   struct timespec ts[1];
   clock_gettime(CLOCK_REALTIME, ts);
   return ts->tv_sec + ts->tv_nsec * 1.0e-9;
+#else
+  struct timeval tv[1];
+  gettimeofday(tv, 0);
+  return tv->tv_sec + tv->tv_usec * 1.0e-6;
+#endif
 }
 
 int main(int argc, char ** argv) {
-  long nthreads = (argc > 1 ? atol(argv[1]) : 100000);
+  long nthreads = (argc > 1 ? atol(argv[1]) : 1000);
   long i;
   for (i = 0; i < 3; i++) {
     arg_t arg[1] = { { 0, nthreads, 0 } };

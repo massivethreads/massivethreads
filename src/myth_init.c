@@ -17,7 +17,7 @@
 myth_globalattr_t g_attr;
 
 int myth_init_ex_body_really(const myth_globalattr_t * attr) {
-  myth_read_available_cpu_list();
+  myth_get_available_cpus();
   myth_globalattr_set_default_body(attr);
   int nw = g_attr.n_workers;
   //Initialize logger

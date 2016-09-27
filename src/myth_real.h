@@ -188,15 +188,20 @@ int real_pthread_condattr_getpshared(const pthread_condattr_t *restrict attr,
 				     int *restrict pshared);
 int real_pthread_condattr_setpshared(pthread_condattr_t *attr,
 				     int pshared);
+#if defined(HAVE_PTHREAD_CONDATTR_CLOCK)
 int real_pthread_condattr_getclock(const pthread_condattr_t *restrict attr,
 				   clockid_t *restrict clock_id);
 int real_pthread_condattr_setclock(pthread_condattr_t *attr,
 				   clockid_t clock_id);
+#endif	/* HAVE_PTHREAD_CONDATTR_CLOCK */
+#if defined(HAVE_PTHREAD_SPIN)
 int real_pthread_spin_init(pthread_spinlock_t *lock, int pshared);
 int real_pthread_spin_destroy(pthread_spinlock_t *lock);
 int real_pthread_spin_lock(pthread_spinlock_t *lock);
 int real_pthread_spin_trylock(pthread_spinlock_t *lock);
 int real_pthread_spin_unlock(pthread_spinlock_t *lock);
+#endif	/* HAVE_PTHREAD_SPIN */
+
 #if defined(HAVE_PTHREAD_BARRIER)
 int real_pthread_barrier_init(pthread_barrier_t *restrict barrier,
 			      const pthread_barrierattr_t *restrict attr,
@@ -214,7 +219,9 @@ int real_pthread_key_create(pthread_key_t *key, void destructor(void*));
 int real_pthread_key_delete(pthread_key_t key);
 void * real_pthread_getspecific(pthread_key_t key);
 int real_pthread_setspecific(pthread_key_t key, const void *value);
+#if defined(HAVE_PTHREAD_GETCPUCLOCKID)
 int real_pthread_getcpuclockid(pthread_t thread, clockid_t *clock_id);
+#endif
 int real_pthread_atfork(void prepare(void), void parent(void), void child(void));
 int real_pthread_kill(pthread_t thread, int sig);
 void real_pthread_kill_other_threads_np(void);

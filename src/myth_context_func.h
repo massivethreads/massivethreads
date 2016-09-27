@@ -377,11 +377,16 @@ static inline void myth_make_context_empty(myth_context_t ctx, void *stack,
 
 //Suffix for PLT
 #if PIC
-#define FUNC_SUFFIX "@PLT"
+//Linux
+//#define FUNC_SUFFIX "@PLT"
+//Mac
+#define FUNC_PREFIX "_"
+#define FUNC_SUFFIX 
 #define GOTPCREL_SUFFIX "@GOTPCREL"
 #else
-#define FUNC_SUFFIX ""
-#define GOTPCREL_SUFFIX ""
+#define FUNC_PREFIX 
+#define FUNC_SUFFIX 
+#define GOTPCREL_SUFFIX 
 #endif
 
 #if PIC
@@ -392,10 +397,19 @@ static inline void myth_make_context_empty(myth_context_t ctx, void *stack,
 	"leaq "label"(%%rip),%%rbp\n"\
 	"push %%rbp\n"
 #else
-#define PUSH_LABEL(label) \
+#if 0
+#define PUSH_LABEL(label)			\
 	"pushq $" label "\n"
 #define PUSH_LABEL_USING_A(label) PUSH_LABEL(label)
 #define PUSH_LABEL_USING_BP(label) PUSH_LABEL(label)
+#else
+#define PUSH_LABEL_USING_A(label) \
+	"leaq "label"(%%rip),%%rax\n"\
+	"push %%rax\n"
+#define PUSH_LABEL_USING_BP(label) \
+	"leaq "label"(%%rip),%%rbp\n"\
+	"push %%rbp\n"
+#endif
 #endif
 
 #if MYTH_SAVE_FPCSR
@@ -512,7 +526,7 @@ static inline void myth_make_context_empty(myth_context_t ctx, void *stack,
 		PUSH_LABEL_USING_BP("1f") \
 		"mov %%rsp,("C0")\n"\
 		"mov ("C1"),%%rsp\n"\
-		"call " #f FUNC_SUFFIX "\n"\
+		"call " FUNC_PREFIX #f FUNC_SUFFIX "\n"\
 		MY_RET_A \
 		"1:\n"\
 		POP_CALLEE_SAVED() \
@@ -536,7 +550,7 @@ static inline void myth_make_context_empty(myth_context_t ctx, void *stack,
 	{DECLARE_DUMMY_VARIABLES\
 	asm volatile(\
 		"mov ("C0"),%%rsp\n"\
-		"call " #f FUNC_SUFFIX "\n"\
+		"call " FUNC_PREFIX #f FUNC_SUFFIX "\n"\
 		MY_RET_B \
 		:DUMMY_VARIABLE_CONSTRAINTS\
 		:R_A((void*)(switch_to)),R_DI(arg1),R_SI(arg2),R_D(arg3)\

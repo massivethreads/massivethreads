@@ -91,7 +91,7 @@ extern "C" {
     myth_barrierattr_t attr;
   } myth_barrier_t;
 
-#define MYTH_BARRIER_SERIAL_THREAD PTHREAD_BARRIER_SERIAL_THREAD
+#define MYTH_BARRIER_SERIAL_THREAD 1
 
   /* ---------------------------------------
      --- join counter ---
