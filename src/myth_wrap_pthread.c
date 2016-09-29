@@ -984,6 +984,8 @@ int __wrap(pthread_mutexattr_setrobust)
    --- reader-writer lock 
    --------------------------- */
 
+#if defined(HAVE_PTHREAD_RWLOCK)
+
 static inline int pthread_rwlock_kind_to_myth(int k) {
   switch (k) {
   case PTHREAD_RWLOCK_PREFER_READER_NP:
@@ -1204,6 +1206,7 @@ int __wrap(pthread_rwlockattr_setkind_np)(pthread_rwlockattr_t *attr,
   leave_wrapped_func("%d", ret);
   return ret;
 }
+#endif
 
 /* ------------------------------
    --- condition variables 

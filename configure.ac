@@ -75,7 +75,7 @@ AC_ARG_ENABLE([bind-workers],
 if test "x$default_bind_workers" != "xno" ; then
   AC_DEFINE_UNQUOTED([MYTH_DEFAULT_BIND_WORKERS],[1],[if 1, bind workers by default])
 else						 
-  AC_DEFINE_UNQUOTED([MYTH_BIND_WORKERS],[0],[if 1, bind workers by default])
+  AC_DEFINE_UNQUOTED([MYTH_DEFAULT_BIND_WORKERS],[0],[if 1, bind workers by default])
 fi
 
 # -----------------------

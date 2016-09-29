@@ -299,9 +299,15 @@
    stuff that should be moved to config.h 
    ------------------ */
 
-#define HAVE_DL_ITERATE_BY_PHDR 1
-
 #define HAVE_SYSCONF 1
+
+#if 0				/* mac */
+
+#define HAVE_PTHREAD_TIMEDLOCK 1
+#define HAVE_PTHREAD_SCHEDPRIO 1
+
+
+#define HAVE_DL_ITERATE_BY_PHDR 1
 
 #define HAVE_CLOCK_GETTIME 1
 
@@ -329,8 +335,11 @@
 #define HAVE_PTHREAD_GETCPUCLOCKID 1
 #define HAVE_PTHREAD_SPIN 1
 
+#define HAVE_PTHREAD_MUTEX_CONSISTENT 1
+
+#endif
+
 /* don't know if they are necessary at all */
 #define HAVE_PTHREAD_MUTEXATTR_ROBUST 1
-#define HAVE_PTHREAD_MUTEX_CONSISTENT 1
 
 #endif /* MYTH_CONFIG_H_ */

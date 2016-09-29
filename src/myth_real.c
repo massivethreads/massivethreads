@@ -50,6 +50,7 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <string.h>
+#include <dlfcn.h>
 #if HAVE_DL_ITERATE_BY_PHDR
 #include <link.h>
 #endif
@@ -110,7 +111,9 @@ typedef struct {
 			       const struct sched_param *param);
   int (*pthread_getschedparam)(pthread_t thread, int *policy,
 			       struct sched_param *param);
+#if defined(HAVE_PTHREAD_SCHEDPRIO)
   int (*pthread_setschedprio)(pthread_t thread, int prio);
+#endif
 #if defined(HAVE_PTHREAD_NAME_NP)
   int (*pthread_getname_np)(pthread_t thread, char *name, size_t len);
   int (*pthread_setname_np)(pthread_t thread, const char *name);
@@ -139,8 +142,10 @@ typedef struct {
   int (*pthread_mutex_destroy)(pthread_mutex_t *mutex);
   int (*pthread_mutex_trylock)(pthread_mutex_t *mutex);
   int (*pthread_mutex_lock)(pthread_mutex_t *mutex);
+#if defined(HAVE_PTHREAD_TIMEDLOCK)
   int (*pthread_mutex_timedlock)(pthread_mutex_t *restrict mutex,
 				 const struct timespec *restrict abstime);
+#endif
   int (*pthread_mutex_unlock)(pthread_mutex_t *mutex);
   int (*pthread_mutex_getprioceiling)(const pthread_mutex_t *restrict mutex,
 				      int *restrict prioceiling);
@@ -170,6 +175,7 @@ typedef struct {
 				     int *restrict robust);
   int (*pthread_mutexattr_setrobust)(pthread_mutexattr_t *attr, int robust);
 #endif
+#if defined(HAVE_PTHREAD_RWLOCK)
   int (*pthread_rwlock_init)(pthread_rwlock_t *restrict rwlock,
 			     const pthread_rwlockattr_t *restrict attr);
   int (*pthread_rwlock_destroy)(pthread_rwlock_t *rwlock);
@@ -192,6 +198,7 @@ typedef struct {
 				       int *pref);
   int (*pthread_rwlockattr_setkind_np)(pthread_rwlockattr_t *attr,
 				       int pref);
+#endif	/* defined(HAVE_PTHREAD_RWLOCK) */
   int (*pthread_cond_init)(pthread_cond_t *restrict cond,
 			   const pthread_condattr_t *restrict attr);
   int (*pthread_cond_destroy)(pthread_cond_t *cond);
@@ -387,7 +394,9 @@ static shared_object_symbol s_so_syms[] = {
 
   so_symbol_entry(pthread_getschedparam, libpthread),
 
+#if defined(HAVE_PTHREAD_SCHEDPRIO)
   so_symbol_entry(pthread_setschedprio, libpthread),
+#endif
 #if defined(HAVE_PTHREAD_NAME_NP)
   so_symbol_entry(pthread_getname_np, libpthread),
   so_symbol_entry(pthread_setname_np, libpthread),
@@ -416,7 +425,9 @@ static shared_object_symbol s_so_syms[] = {
   so_symbol_entry(pthread_mutex_destroy, libpthread),
   so_symbol_entry(pthread_mutex_trylock, libpthread),
   so_symbol_entry(pthread_mutex_lock, libpthread),
+#if defined(HAVE_PTHREAD_TIMEDLOCK)
   so_symbol_entry(pthread_mutex_timedlock, libpthread),
+#endif
 
   so_symbol_entry(pthread_mutex_unlock, libpthread),
   so_symbol_entry(pthread_mutex_getprioceiling, libpthread),
@@ -447,6 +458,7 @@ static shared_object_symbol s_so_syms[] = {
 
   so_symbol_entry(pthread_mutexattr_setrobust, libpthread),
 #endif
+#if defined(HAVE_PTHREAD_RWLOCK)
   so_symbol_entry(pthread_rwlock_init, libpthread),
 
   so_symbol_entry(pthread_rwlock_destroy, libpthread),
@@ -468,7 +480,7 @@ static shared_object_symbol s_so_syms[] = {
   so_symbol_entry(pthread_rwlockattr_getkind_np, libpthread),
 
   so_symbol_entry(pthread_rwlockattr_setkind_np, libpthread),
-
+#endif	/* defined(HAVE_PTHREAD_RWLOCK) */
   so_symbol_entry(pthread_cond_init, libpthread),
 
   so_symbol_entry(pthread_cond_destroy, libpthread),
@@ -1392,6 +1404,7 @@ int real_pthread_getschedparam(pthread_t thread, int *policy,
 #endif
 }
 
+#if defined(HAVE_PTHREAD_SCHEDPRIO)
 #if MYTH_WRAP == MYTH_WRAP_LD
 int __real_pthread_setschedprio(pthread_t thread, int prio);
 #endif
@@ -1408,6 +1421,7 @@ int real_pthread_setschedprio(pthread_t thread, int prio) {
 #error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
+#endif /* defined(HAVE_PTHREAD_SCHEDPRIO) */
 
 #if defined(HAVE_PTHREAD_NAME_NP)
 #if MYTH_WRAP == MYTH_WRAP_LD
@@ -1706,6 +1720,7 @@ int real_pthread_mutex_lock(pthread_mutex_t *mutex) {
 #endif
 }
 
+#if defined(HAVE_PTHREAD_TIMEDLOCK)
 #if MYTH_WRAP == MYTH_WRAP_LD
 int __real_pthread_mutex_timedlock(pthread_mutex_t *restrict mutex,
 				 const struct timespec *restrict abstime);
@@ -1724,6 +1739,7 @@ int real_pthread_mutex_timedlock(pthread_mutex_t *restrict mutex,
 #error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
+#endif /* HAVE_PTHREAD_TIMEDLOCK */
 
 #if MYTH_WRAP == MYTH_WRAP_LD
 int __real_pthread_mutex_unlock(pthread_mutex_t *mutex);
@@ -2023,6 +2039,7 @@ int real_pthread_mutexattr_setrobust(pthread_mutexattr_t *attr, int robust) {
 }
 #endif	/* HAVE_PTHREAD_MUTEXATTR_SETROBUST */
 
+#if defined(HAVE_PTHREAD_RWLOCK)
 #if MYTH_WRAP == MYTH_WRAP_LD
 int __real_pthread_rwlock_init(pthread_rwlock_t *restrict rwlock,
 			     const pthread_rwlockattr_t *restrict attr);
@@ -2291,6 +2308,7 @@ int real_pthread_rwlockattr_setkind_np(pthread_rwlockattr_t *attr,
 #error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
+#endif /* defined(HAVE_PTHREAD_RWLOCK) */
 
 #if MYTH_WRAP == MYTH_WRAP_LD
 int __real_pthread_cond_init(pthread_cond_t *restrict cond,
@@ -3179,6 +3197,7 @@ void * real_valloc(size_t size) {
 #endif
 }
 
+#if HAVE_MEMALIGN
 #if MYTH_WRAP == MYTH_WRAP_LD
 void * __real_memalign(size_t alignment, size_t size);
 #endif
@@ -3195,7 +3214,9 @@ void * real_memalign(size_t alignment, size_t size) {
 #error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
+#endif /* HAVE_MEMALIGN */
 
+#if defined(HAVE_PVALLOC)
 #if MYTH_WRAP == MYTH_WRAP_LD
 void * __real_pvalloc(size_t size);
 #endif
@@ -3212,6 +3233,7 @@ void * real_pvalloc(size_t size) {
 #error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
+#endif	/* HAVE_PVALLOC */
 
 /* socket */
 #if MYTH_WRAP == MYTH_WRAP_LD
