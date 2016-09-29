@@ -276,13 +276,12 @@ AC_LINK_IFELSE([AC_LANG_PROGRAM([[
 	[have_aligned_alloc="no"])
 AC_MSG_RESULT([$have_aligned_alloc])
 if test x"$have_aligned_alloc" = "xyes" ; then
-   have_aligned_alloc=1
+   AC_DEFINE_UNQUOTED([HAVE_ALIGNED_ALLOC],[1],
+		[if set, aligned_alloc is declared in stdlib.h])
+   AM_CONDITIONAL([BUILD_TEST_MYTH_ALIGNED_ALLOC],[1])
 else
-   have_aligned_alloc=0
+   AM_CONDITIONAL([BUILD_TEST_MYTH_ALIGNED_ALLOC],[0])
 fi
-AC_DEFINE_UNQUOTED([HAVE_ALIGNED_ALLOC],[$have_aligned_alloc],
-   	[if set, aligned_alloc is declared in stdlib.h])
-AM_CONDITIONAL([BUILD_TEST_MYTH_ALIGNED_ALLOC],[test $have_aligned_alloc = 1])
 
 # 
 # memalign
@@ -298,13 +297,12 @@ AC_LINK_IFELSE([AC_LANG_PROGRAM([[
 	[have_memalign="no"])
 AC_MSG_RESULT([$have_memalign])
 if test x"$have_memalign" = "xyes" ; then
-   have_memalign=1
+   AC_DEFINE_UNQUOTED([HAVE_MEMALIGN],[1],
+		[if set, memalign is declared in stdlib.h])
+   AM_CONDITIONAL([BUILD_TEST_MYTH_MEMALIGN],[1])
 else
-   have_memalign=0
+   AM_CONDITIONAL([BUILD_TEST_MYTH_MEMALIGN],[0])
 fi
-AC_DEFINE_UNQUOTED([HAVE_MEMALIGN],[$have_memalign],
-   	[if set, memalign is declared in stdlib.h])
-AM_CONDITIONAL([BUILD_TEST_MYTH_MEMALIGN],[test $have_memalign = 1])
 
 # 
 # pvalloc
@@ -320,13 +318,12 @@ AC_LINK_IFELSE([AC_LANG_PROGRAM([[
 	[have_pvalloc="no"])
 AC_MSG_RESULT([$have_pvalloc])
 if test x"$have_pvalloc" = "xyes" ; then
-   have_pvalloc=1
+   AC_DEFINE_UNQUOTED([HAVE_PVALLOC],[1],
+		[if set, pvalloc is declared in stdlib.h])
+   AM_CONDITIONAL([BUILD_TEST_MYTH_PVALLOC],[1])
 else
-   have_pvalloc=0
+   AM_CONDITIONAL([BUILD_TEST_MYTH_PVALLOC],[0])
 fi
-AC_DEFINE_UNQUOTED([HAVE_PVALLOC],[$have_pvalloc],
-   	[if set, pvalloc is declared in stdlib.h])
-AM_CONDITIONAL([BUILD_TEST_MYTH_PVALLOC],[test $have_pvalloc = 1])
 
 #
 # for C program tests that follow, we treat warnings as error,

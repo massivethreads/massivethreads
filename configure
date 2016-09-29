@@ -5786,16 +5786,12 @@ rm -f core conftest.err conftest.$ac_objext \
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $have_aligned_alloc" >&5
 $as_echo "$have_aligned_alloc" >&6; }
 if test x"$have_aligned_alloc" = "xyes" ; then
-   have_aligned_alloc=1
-else
-   have_aligned_alloc=0
-fi
 
 cat >>confdefs.h <<_ACEOF
-#define HAVE_ALIGNED_ALLOC $have_aligned_alloc
+#define HAVE_ALIGNED_ALLOC 1
 _ACEOF
 
- if test $have_aligned_alloc = 1; then
+    if 1; then
   BUILD_TEST_MYTH_ALIGNED_ALLOC_TRUE=
   BUILD_TEST_MYTH_ALIGNED_ALLOC_FALSE='#'
 else
@@ -5803,6 +5799,16 @@ else
   BUILD_TEST_MYTH_ALIGNED_ALLOC_FALSE=
 fi
 
+else
+    if 0; then
+  BUILD_TEST_MYTH_ALIGNED_ALLOC_TRUE=
+  BUILD_TEST_MYTH_ALIGNED_ALLOC_FALSE='#'
+else
+  BUILD_TEST_MYTH_ALIGNED_ALLOC_TRUE='#'
+  BUILD_TEST_MYTH_ALIGNED_ALLOC_FALSE=
+fi
+
+fi
 
 #
 # memalign
@@ -5834,16 +5840,12 @@ rm -f core conftest.err conftest.$ac_objext \
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $have_memalign" >&5
 $as_echo "$have_memalign" >&6; }
 if test x"$have_memalign" = "xyes" ; then
-   have_memalign=1
-else
-   have_memalign=0
-fi
 
 cat >>confdefs.h <<_ACEOF
-#define HAVE_MEMALIGN $have_memalign
+#define HAVE_MEMALIGN 1
 _ACEOF
 
- if test $have_memalign = 1; then
+    if 1; then
   BUILD_TEST_MYTH_MEMALIGN_TRUE=
   BUILD_TEST_MYTH_MEMALIGN_FALSE='#'
 else
@@ -5851,6 +5853,16 @@ else
   BUILD_TEST_MYTH_MEMALIGN_FALSE=
 fi
 
+else
+    if 0; then
+  BUILD_TEST_MYTH_MEMALIGN_TRUE=
+  BUILD_TEST_MYTH_MEMALIGN_FALSE='#'
+else
+  BUILD_TEST_MYTH_MEMALIGN_TRUE='#'
+  BUILD_TEST_MYTH_MEMALIGN_FALSE=
+fi
+
+fi
 
 #
 # pvalloc
@@ -5882,16 +5894,12 @@ rm -f core conftest.err conftest.$ac_objext \
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $have_pvalloc" >&5
 $as_echo "$have_pvalloc" >&6; }
 if test x"$have_pvalloc" = "xyes" ; then
-   have_pvalloc=1
-else
-   have_pvalloc=0
-fi
 
 cat >>confdefs.h <<_ACEOF
-#define HAVE_PVALLOC $have_pvalloc
+#define HAVE_PVALLOC 1
 _ACEOF
 
- if test $have_pvalloc = 1; then
+    if 1; then
   BUILD_TEST_MYTH_PVALLOC_TRUE=
   BUILD_TEST_MYTH_PVALLOC_FALSE='#'
 else
@@ -5899,6 +5907,16 @@ else
   BUILD_TEST_MYTH_PVALLOC_FALSE=
 fi
 
+else
+    if 0; then
+  BUILD_TEST_MYTH_PVALLOC_TRUE=
+  BUILD_TEST_MYTH_PVALLOC_FALSE='#'
+else
+  BUILD_TEST_MYTH_PVALLOC_TRUE='#'
+  BUILD_TEST_MYTH_PVALLOC_FALSE=
+fi
+
+fi
 
 #
 # for C program tests that follow, we treat warnings as error,
@@ -17680,8 +17698,20 @@ if test -z "${BUILD_TEST_MYTH_ALIGNED_ALLOC_TRUE}" && test -z "${BUILD_TEST_MYTH
   as_fn_error $? "conditional \"BUILD_TEST_MYTH_ALIGNED_ALLOC\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
+if test -z "${BUILD_TEST_MYTH_ALIGNED_ALLOC_TRUE}" && test -z "${BUILD_TEST_MYTH_ALIGNED_ALLOC_FALSE}"; then
+  as_fn_error $? "conditional \"BUILD_TEST_MYTH_ALIGNED_ALLOC\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
 if test -z "${BUILD_TEST_MYTH_MEMALIGN_TRUE}" && test -z "${BUILD_TEST_MYTH_MEMALIGN_FALSE}"; then
   as_fn_error $? "conditional \"BUILD_TEST_MYTH_MEMALIGN\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
+if test -z "${BUILD_TEST_MYTH_MEMALIGN_TRUE}" && test -z "${BUILD_TEST_MYTH_MEMALIGN_FALSE}"; then
+  as_fn_error $? "conditional \"BUILD_TEST_MYTH_MEMALIGN\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
+if test -z "${BUILD_TEST_MYTH_PVALLOC_TRUE}" && test -z "${BUILD_TEST_MYTH_PVALLOC_FALSE}"; then
+  as_fn_error $? "conditional \"BUILD_TEST_MYTH_PVALLOC\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${BUILD_TEST_MYTH_PVALLOC_TRUE}" && test -z "${BUILD_TEST_MYTH_PVALLOC_FALSE}"; then
