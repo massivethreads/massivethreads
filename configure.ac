@@ -362,7 +362,7 @@ if test x"$have_pthread_yield = "xyes" ; then
    AC_DEFINE_UNQUOTED([HAVE_PTHREAD_YIELD],[1],
 		[if set, pthread_yield is declared in pthread.h])
 fi
-AM_CONDITIONAL([BUILD_TEST_PTH_BARRIER],
+AM_CONDITIONAL([BUILD_TEST_PTH_YIELD],
 	[test x"$have_pthread_yield = "xyes" ])
 
 

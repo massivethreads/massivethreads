@@ -674,6 +674,8 @@ CXXDEPMODE
 ac_ct_CXX
 CXXFLAGS
 CXX
+BUILD_TEST_PTH_YIELD_FALSE
+BUILD_TEST_PTH_YIELD_TRUE
 BUILD_TEST_PTH_BARRIER_FALSE
 BUILD_TEST_PTH_BARRIER_TRUE
 BUILD_TEST_MYTH_PVALLOC_FALSE
@@ -5978,11 +5980,11 @@ _ACEOF
 
 fi
  if test x"$have_pthread_yield = "xyes" ; then
-  BUILD_TEST_PTH_BARRIER_TRUE=
-  BUILD_TEST_PTH_BARRIER_FALSE='#'
+  BUILD_TEST_PTH_YIELD_TRUE=
+  BUILD_TEST_PTH_YIELD_FALSE='#'
 else
-  BUILD_TEST_PTH_BARRIER_TRUE='#'
-  BUILD_TEST_PTH_BARRIER_FALSE=
+  BUILD_TEST_PTH_YIELD_TRUE='#'
+  BUILD_TEST_PTH_YIELD_FALSE=
 fi
 
 
@@ -17779,8 +17781,8 @@ if test -z "${BUILD_TEST_PTH_BARRIER_TRUE}" && test -z "${BUILD_TEST_PTH_BARRIER
   as_fn_error $? "conditional \"BUILD_TEST_PTH_BARRIER\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
-if test -z "${BUILD_TEST_PTH_BARRIER_TRUE}" && test -z "${BUILD_TEST_PTH_BARRIER_FALSE}"; then
-  as_fn_error $? "conditional \"BUILD_TEST_PTH_BARRIER\" was never defined.
+if test -z "${BUILD_TEST_PTH_YIELD_TRUE}" && test -z "${BUILD_TEST_PTH_YIELD_FALSE}"; then
+  as_fn_error $? "conditional \"BUILD_TEST_PTH_YIELD\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${am__fastdepCXX_TRUE}" && test -z "${am__fastdepCXX_FALSE}"; then
