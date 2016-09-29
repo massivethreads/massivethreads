@@ -205,6 +205,23 @@
 //#define MYTH_FORCE_UCONTEXT 1
 
 /* ------------------
+   Global symbol modifier choices
+   ------------------ */
+
+#define GLOBAL_SYM_MODIFIER_WITH_UNDERSCORE_WITH_PLT 2
+#define GLOBAL_SYM_MODIFIER_NO_UNDERSCORE_WITH_PLT   3
+#define GLOBAL_SYM_MODIFIER_WITH_UNDERSCORE_NO_PLT   4
+#define GLOBAL_SYM_MODIFIER_NO_UNDERSCORE_NO_PLT     5
+
+/* ------------------
+   find symbols method choices
+   ------------------ */
+
+#define FIND_SYMBOLS_BY_RTLD_NEXT 2
+#define FIND_SYMBOLS_BY_DL_ITERATE_PHDR 3
+#define FIND_SYMBOLS_BY FIND_SYMBOLS_BY_RTLD_NEXT
+
+/* ------------------
    MYTH_ARCH choices
    ------------------ */
 
@@ -278,51 +295,29 @@
 #define MYTH_WRAP_DL      3
 #define MYTH_WRAP_LD      4
 
+/* ------------------
+   stuff that should be moved to config.h 
+   ------------------ */
 
-/* stuff that should be moved to config.h */
+#define HAVE_DL_ITERATE_BY_PHDR 1
 
 #define HAVE_SYSCONF 1
 
-
-#if 0
 #define HAVE_CLOCK_GETTIME 1
 
 #define HAVE_ACCEPT4 1
 
 #define HAVE_PTHREAD_CONCURRENCY 1
-#if 0
-# define HAVE_PTHREAD_GETCONCURRENCY 1
-# define HAVE_PTHREAD_SETCONCURRENCY 1
-#endif
 
 #define HAVE_SCHED_GETAFFINITY 1
 
 #define HAVE_PTHREAD_AFFINITY_NP 1
-#if 0
-# define HAVE_PTHREAD_ATTR_GETAFFINITY_NP 1
-# define HAVE_PTHREAD_ATTR_SETAFFINITY_NP 1
-# define HAVE_PTHREAD_GETAFFINITY_NP 1
-# define HAVE_PTHREAD_SETAFFINITY_NP 1
-#endif
 
 #define HAVE_PTHREAD_ATTR_NP 1
-#if 0
-# define HAVE_PTHREAD_GETATTR_DEFAULT_NP 1
-# define HAVE_PTHREAD_SETATTR_DEFAULT_NP 1
-# define HAVE_PTHREAD_GETATTR_NP 1
-#endif
 
 #define HAVE_PTHREAD_NAME_NP 1
-#if 0
-# define HAVE_PTHREAD_GETNAME_NP 1
-# define HAVE_PTHREAD_SETNAME_NP 1
-#endif
 
 #define HAVE_PTHREAD_JOIN_NP 1
-#if 0
-# define HAVE_PTHREAD_TIMEDJOIN_NP 1
-# define HAVE_PTHREAD_TRYJOIN_NP 1
-#endif
 
 #define HAVE_PTHREAD_SIGQUEUE 1
 
@@ -330,15 +325,12 @@
 
 #define HAVE_PTHREAD_BARRIER 1
 
-#define HAVE_PTHREAD_CONDATTR_CLOCK 0
-#define HAVE_PTHREAD_GETCPUCLOCKID 0
-#define HAVE_PTHREAD_SPIN 0
+#define HAVE_PTHREAD_CONDATTR_CLOCK  1
+#define HAVE_PTHREAD_GETCPUCLOCKID 1
+#define HAVE_PTHREAD_SPIN 1
 
 /* don't know if they are necessary at all */
-#define HAVE_PTHREAD_MUTEXATTR_GETROBUST 1
-#define HAVE_PTHREAD_MUTEXATTR_SETROBUST 1
+#define HAVE_PTHREAD_MUTEXATTR_ROBUST 1
 #define HAVE_PTHREAD_MUTEX_CONSISTENT 1
-
-#endif
 
 #endif /* MYTH_CONFIG_H_ */

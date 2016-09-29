@@ -174,6 +174,21 @@ static inline void myth_flmalloc_fini_worker(int rank) {
 
 //extern __thread int g_worker_rank;
 
+#if defined(MAP_ANONYMOUS)
+#define MYTH_MAP_ANON MAP_ANONYMOUS
+#elif defined(MAP_ANON)
+#define MYTH_MAP_ANON MAP_ANON
+#else
+#error "neither MAP_ANONYMOUS nor MAP_ANON defined"
+#endif
+
+#if defined(MAP_STACK)
+#define MYTH_MAP_STACK MAP_STACK
+#else
+#define MYTH_MAP_STACK 0
+#endif
+
+
 static inline void * myth_mmap(void *addr, size_t length, int prot,
 			       int flags, int fd, off_t offset);
 
@@ -194,14 +209,9 @@ static inline void * myth_flmalloc(int rank, size_t size) {
     //Freelist is empty, allocate
     size_t realsize = MYTH_MALLOC_INDEX_TO_RSIZE(idx);
     if (realsize < PAGE_SIZE) {
-      int map_flags = MAP_PRIVATE;
-#if defined(MAP_ANONYMOUS)
-      map_flags |= MAP_ANONYMOUS;
-#else
-      map_flags |= MAP_ANON;
-#endif
       assert(PAGE_SIZE % realsize == 0);
-      ptr = myth_mmap(NULL, PAGE_SIZE, PROT_READ|PROT_WRITE, map_flags, -1, 0);
+      ptr = myth_mmap(NULL, PAGE_SIZE, PROT_READ|PROT_WRITE,
+		      MAP_PRIVATE|MYTH_MAP_ANON, -1, 0);
       char * p = ptr;
       char * p2 = p + PAGE_SIZE;
       p += realsize;
@@ -215,14 +225,9 @@ static inline void * myth_flmalloc(int rank, size_t size) {
       }
     } else {
       //Just allocate by mmap and return
-      int map_flags = MAP_PRIVATE;
-#if defined(MAP_ANONYMOUS)
-      map_flags |= MAP_ANONYMOUS;
-#else
-      map_flags |= MAP_ANON;
-#endif
       assert(realsize % 4096 == 0);
-      ptr = myth_mmap(NULL,realsize,PROT_READ|PROT_WRITE,map_flags,-1,0);
+      ptr = myth_mmap(NULL, realsize, PROT_READ|PROT_WRITE,
+		      MAP_PRIVATE|MYTH_MAP_ANON, -1, 0);
     }
     //ptr=real_malloc(realsize);//fprintf(stderr,"M %lu %s:%d\n",(unsigned long)realsize,f,l);
     myth_assert(ptr);

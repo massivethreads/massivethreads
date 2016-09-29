@@ -65,19 +65,11 @@ static inline myth_thread_t get_new_myth_thread_struct_desc(myth_running_env_t e
 #if ALLOCATE_STACK_BY_MALLOC
     void * th_ptr = myth_flmalloc(env->rank, alloc_size);
 #else
-    int map_flags = MAP_PRIVATE;
-#if defined(MAP_ANONYMOUS)
-    map_flags |= MAP_ANONYMOUS;
-#else
-    map_flags |= MAP_ANON;
-#endif
-#if defined(MAP_STACK)
-    map_flags |= MAP_STACK);
-#endif
     alloc_size += 0xFFF;
     alloc_size &= ~0xFFF;
     char * th_ptr 
-      = myth_mmap(NULL,alloc_size,PROT_READ|PROT_WRITE,map_flags,-1,0);
+      = myth_mmap(NULL, alloc_size, PROT_READ|PROT_WRITE,
+		  MAP_PRIVATE|MYTH_MAP_ANON|MYTH_MAP_STACK, -1, 0);
 #endif
 #if MYTH_ALLOC_PROF
     uint64_t t1 = myth_get_rdtsc();
@@ -124,19 +116,11 @@ static inline myth_thread_t get_new_myth_thread_struct_desc(myth_running_env_t e
 #if ALLOCATE_STACK_BY_MALLOC
     void * th_ptr = myth_flmalloc(env->rank, alloc_size);
 #else
-    int map_flags = MAP_PRIVATE;
-#if defined(MAP_ANONYMOUS)
-    map_flags |= MAP_ANONYMOUS;
-#else
-    map_flags |= MAP_ANON;
-#endif
-#if defined(MAP_STACK)
-    map_flags |= MAP_STACK);
-#endif
     alloc_size += 0xFFF;
     alloc_size &= ~0xFFF;
     void * th_ptr 
-    = myth_mmap(NULL,alloc_size,PROT_READ|PROT_WRITE,map_flags,-1,0);
+      = myth_mmap(NULL, alloc_size, PROT_READ|PROT_WRITE,
+		  MAP_PRIVATE|MYTH_MAP_ANON|MYTH_MAP_STACK,-1,0);
 #endif
 #if MYTH_ALLOC_PROF
     uint64_t t1 = myth_get_rdtsc();
@@ -212,19 +196,10 @@ th_ptr -> 4080-4087:
 #if ALLOCATE_STACK_BY_MALLOC
     void * th_ptr = myth_flmalloc(env->rank, alloc_size);
 #else
-    int map_flags = MAP_PRIVATE;
-#if defined(MAP_ANONYMOUS)
-    map_flags |= MAP_ANONYMOUS;
-#else
-    map_flags |= MAP_ANON;
-#endif
-#if defined(MAP_STACK)
-    map_flags |= MAP_STACK);
-#endif
     alloc_size += 0xFFF;
     alloc_size &= ~0xFFF;
     char * th_ptr = myth_mmap(NULL, alloc_size, PROT_READ|PROT_WRITE, 
-			      map_flags, -1, 0);
+			      MAP_PRIVATE|MYTH_MAP_ANON|MYTH_MAP_STACK, -1, 0);
 #endif /* ALLOCATE_STACK_BY_MALLOC */
 
 #if MYTH_ALLOC_PROF
@@ -381,7 +356,7 @@ MYTH_CTX_CALLBACK void myth_create_1(void *arg1,void *arg2,void *arg3) {
 #endif
 #if MYTH_ECO_MODE
   if (g_eco_mode_enabled){
-    if (sleeper > 0) {
+    if (g_sleeping_workers.n_sleepers > 0) {
       myth_wakeup_one();
     }
   }
@@ -1355,18 +1330,8 @@ static inline myth_thread_t myth_deserialize_body(myth_pickle_t p)
   //Try to mmap with fixed address
   void *stack_start_addr;
   stack_start_addr=(void*)( ((char*)p->desc.stack)-(PAGE_ALIGNED_STACK_SIZE-sizeof(void*)) );
-
-  int map_flags = MAP_FIXED | MAP_PRIVATE;
-#if defined(MAP_ANONYMOUS)
-  map_flags |= MAP_ANONYMOUS;
-#else
-  map_flags |= MAP_ANON;
-#endif
-#if defined(MAP_STACK)
-  map_flags |= MAP_STACK);
-#endif
-  stack_ptr = myth_mmap(stack_start_addr,PAGE_ALIGNED_STACK_SIZE,
-			PROT_READ|PROT_WRITE,map_flags,-1,0);
+  stack_ptr = myth_mmap(stack_start_addr, PAGE_ALIGNED_STACK_SIZE, PROT_READ|PROT_WRITE,
+			MAP_PRIVATE|MAP_FIXED|MYTH_MAP_ANON|MYTH_MAP_STACK, -1, 0);
 
   //Error if allocation fails
   if (stack_ptr==MAP_FAILED)return NULL;
@@ -1389,18 +1354,8 @@ static inline myth_thread_t myth_ext_deserialize_body(myth_pickle_t p)
   void *stack_start_addr;
   stack_start_addr=(void*)( ((char*)p->desc.stack)-(PAGE_ALIGNED_STACK_SIZE-sizeof(void*)) );
 
-  int map_flags = MAP_FIXED | MAP_PRIVATE;
-#if defined(MAP_ANONYMOUS)
-  map_flags |= MAP_ANONYMOUS;
-#else
-  map_flags |= MAP_ANON;
-#endif
-#if defined(MAP_STACK)
-  map_flags |= MAP_STACK);
-#endif
-
-  stack_ptr = myth_mmap(stack_start_addr,PAGE_ALIGNED_STACK_SIZE,
-			PROT_READ|PROT_WRITE, map_flags,-1,0);
+  stack_ptr = myth_mmap(stack_start_addr, PAGE_ALIGNED_STACK_SIZE, PROT_READ|PROT_WRITE,
+			MAP_PRIVATE|MAP_FIXED|MYTH_MAP_ANON|MYTH_MAP_STACK,-1,0);
   //Error if allocation fails
   if (stack_ptr==MAP_FAILED)return NULL;
   myth_assert(stack_ptr!=p->desc.stack);

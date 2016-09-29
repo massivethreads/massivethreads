@@ -11,7 +11,10 @@
 #include "myth_config.h"
 
 //Environment value of worker threads
+/* backward compatibility */
 #define ENV_MYTH_WORKER_NUM    "MYTH_WORKER_NUM"
+/* more OpenMP-like */
+#define ENV_MYTH_NUM_THREADS   "MYTH_NUM_THREADS"
 #define ENV_MYTH_DEF_STKSIZE   "MYTH_DEF_STKSIZE"
 #define ENV_MYTH_DEF_GUARDSIZE "MYTH_DEF_GUARDSIZE"
 #define ENV_MYTH_BIND_WORKERS  "MYTH_BIND_WORKERS"

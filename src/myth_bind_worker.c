@@ -248,7 +248,7 @@ void myth_get_available_cpus(void) {
     fprintf(stderr, "myth: could not get any available CPUs. won't bind worker to cores\n");
   }
 
-#if 1				/* debug */
+#if 0				/* debug */
   printf("%d available CPUs:", n_available_cpus);
   for (i = 0; i < n_available_cpus; i++) {
     printf(" ");

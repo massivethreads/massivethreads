@@ -674,6 +674,10 @@ CXXDEPMODE
 ac_ct_CXX
 CXXFLAGS
 CXX
+BUILD_TEST_MYTH_PVALLOC_FALSE
+BUILD_TEST_MYTH_PVALLOC_TRUE
+BUILD_TEST_MYTH_MEMALIGN_FALSE
+BUILD_TEST_MYTH_MEMALIGN_TRUE
 BUILD_TEST_MYTH_ALIGNED_ALLOC_FALSE
 BUILD_TEST_MYTH_ALIGNED_ALLOC_TRUE
 BUILD_MYTH_DL_FALSE
@@ -1469,8 +1473,8 @@ Optional Features:
                           MassiveThreads. "yes" enables it, but it is not
                           activated by default. To use it you have to activate
                           by setting environment variable MYTH_ECO_MODE=1.
-                          Default is "yes". When eco-mode scheduler is
-                          enabled, thread creation overhead might be slightly
+                          Default is "no". When eco-mode scheduler is enabled,
+                          thread creation overhead might be slightly
                           increased, whichever it is activated or not
   --enable-native-context=yes|no
                           use optimized assembly language context switch
@@ -4834,11 +4838,11 @@ fi
 if test "${enable_eco_mode+set}" = set; then :
   enableval=$enable_eco_mode;
 else
-  enable_eco_mode="yes"
+  enable_eco_mode="no"
 fi
 
 
-if test "x$enable_eco_mode" != "xno" ; then
+if test "x$enable_eco_mode" = "xyes" ; then
 
 cat >>confdefs.h <<_ACEOF
 #define MYTH_ECO_MODE 1
@@ -5680,6 +5684,10 @@ done
 # declarations
 # -----------------------------
 
+#
+# aligned_alloc
+#
+
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking aligned_alloc" >&5
 $as_echo_n "checking aligned_alloc... " >&6; }
 cat confdefs.h - <<_ACEOF >conftest.$ac_ext
@@ -5725,6 +5733,102 @@ fi
 
 
 #
+# memalign
+#
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking memalign" >&5
+$as_echo_n "checking memalign... " >&6; }
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+#define _ISOC11_SOURCE 1
+#include <stdlib.h>
+
+int
+main ()
+{
+ return (memalign(1, 1) ? 0 : 1);
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  have_memalign="yes"
+else
+  have_memalign="no"
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $have_memalign" >&5
+$as_echo "$have_memalign" >&6; }
+if test x"$have_memalign" = "xyes" ; then
+   have_memalign=1
+else
+   have_memalign=0
+fi
+
+cat >>confdefs.h <<_ACEOF
+#define HAVE_MEMALIGN $have_memalign
+_ACEOF
+
+ if test $have_memalign = 1; then
+  BUILD_TEST_MYTH_MEMALIGN_TRUE=
+  BUILD_TEST_MYTH_MEMALIGN_FALSE='#'
+else
+  BUILD_TEST_MYTH_MEMALIGN_TRUE='#'
+  BUILD_TEST_MYTH_MEMALIGN_FALSE=
+fi
+
+
+#
+# pvalloc
+#
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking pvalloc" >&5
+$as_echo_n "checking pvalloc... " >&6; }
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+#define _ISOC11_SOURCE 1
+#include <stdlib.h>
+
+int
+main ()
+{
+ return (pvalloc(1, 1) ? 0 : 1);
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  have_pvalloc="yes"
+else
+  have_pvalloc="no"
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $have_pvalloc" >&5
+$as_echo "$have_pvalloc" >&6; }
+if test x"$have_pvalloc" = "xyes" ; then
+   have_pvalloc=1
+else
+   have_pvalloc=0
+fi
+
+cat >>confdefs.h <<_ACEOF
+#define HAVE_PVALLOC $have_pvalloc
+_ACEOF
+
+ if test $have_pvalloc = 1; then
+  BUILD_TEST_MYTH_PVALLOC_TRUE=
+  BUILD_TEST_MYTH_PVALLOC_FALSE='#'
+else
+  BUILD_TEST_MYTH_PVALLOC_TRUE='#'
+  BUILD_TEST_MYTH_PVALLOC_FALSE=
+fi
+
+
+#
 # for C program tests that follow, we treat warnings as error,
 # as some tests work by checking if the compiler issues a
 # warning
@@ -5755,6 +5859,117 @@ $as_echo "#define HAVE_ATTR_SYSV_ABI 0" >>confdefs.h
 
 fi
 rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+
+#
+# check if what kind of symbols are defined for functions in
+# shared libraries. from foo, foo? _foo? foo@PLT? _foo@PLT?
+#
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking global symbol modifier" >&5
+$as_echo_n "checking global symbol modifier... " >&6; }
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+ void fun() { asm volatile("call _malloc@PLT"); }
+int
+main ()
+{
+ fun();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  with_underscore_with_PLT=yes
+else
+  with_underscore_with_PLT=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+ void fun() { asm volatile("call malloc@PLT"); }
+int
+main ()
+{
+ fun();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  no_underscore_with_PLT=yes
+else
+  no_underscore_with_PLT=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+ void fun() { asm volatile("call _malloc"); }
+int
+main ()
+{
+ fun();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  with_underscore_no_PLT=yes
+else
+  with_underscore_no_PLT=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+ void fun() { asm volatile("call malloc"); }
+int
+main ()
+{
+ fun();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  no_underscore_no_PLT=yes
+else
+  no_underscore_no_PLT=yes
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+
+if test "x$with_underscore_with_PLT" = "xyes" ; then
+   { $as_echo "$as_me:${as_lineno-$LINENO}: result: with underscore, with PLT" >&5
+$as_echo "with underscore, with PLT" >&6; }
+
+$as_echo "#define GLOBAL_SYM_MODIFIER GLOBAL_SYM_MODIFIER_WITH_UNDERSCORE_WITH_PLT" >>confdefs.h
+
+elif test "x$no_underscore_with_PLT" = "xyes" ; then
+   { $as_echo "$as_me:${as_lineno-$LINENO}: result: no underscore, with PLT" >&5
+$as_echo "no underscore, with PLT" >&6; }
+
+$as_echo "#define GLOBAL_SYM_MODIFIER GLOBAL_SYM_MODIFIER_NO_UNDERSCORE_WITH_PLT" >>confdefs.h
+
+elif test "x$with_underscore_no_PLT" = "xyes" ; then
+   { $as_echo "$as_me:${as_lineno-$LINENO}: result: with underscore, no PLT" >&5
+$as_echo "with underscore, no PLT" >&6; }
+
+$as_echo "#define GLOBAL_SYM_MODIFIER GLOBAL_SYM_MODIFIER_WITH_UNDERSCORE_NO_PLT" >>confdefs.h
+
+elif test "x$no_underscore_no_PLT" = "xyes"  ; then
+   { $as_echo "$as_me:${as_lineno-$LINENO}: result: no underscore, no PLT" >&5
+$as_echo "no underscore, no PLT" >&6; }
+
+$as_echo "#define GLOBAL_SYM_MODIFIER GLOBAL_SYM_MODIFIER_NO_UNDERSCORE_NO_PLT" >>confdefs.h
+
+else
+   as_fn_error $? "could not get how to call functions in a shared library from assembly" "$LINENO" 5
+fi
 
 #
 # conditionally build test programs
@@ -17391,6 +17606,14 @@ Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${BUILD_TEST_MYTH_ALIGNED_ALLOC_TRUE}" && test -z "${BUILD_TEST_MYTH_ALIGNED_ALLOC_FALSE}"; then
   as_fn_error $? "conditional \"BUILD_TEST_MYTH_ALIGNED_ALLOC\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
+if test -z "${BUILD_TEST_MYTH_MEMALIGN_TRUE}" && test -z "${BUILD_TEST_MYTH_MEMALIGN_FALSE}"; then
+  as_fn_error $? "conditional \"BUILD_TEST_MYTH_MEMALIGN\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
+if test -z "${BUILD_TEST_MYTH_PVALLOC_TRUE}" && test -z "${BUILD_TEST_MYTH_PVALLOC_FALSE}"; then
+  as_fn_error $? "conditional \"BUILD_TEST_MYTH_PVALLOC\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${am__fastdepCXX_TRUE}" && test -z "${am__fastdepCXX_FALSE}"; then

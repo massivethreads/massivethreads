@@ -95,13 +95,13 @@ build_triplet = @build@
 host_triplet = @host@
 check_PROGRAMS = myth_malloc$(EXEEXT) myth_free$(EXEEXT) \
 	myth_calloc$(EXEEXT) myth_posix_memalign$(EXEEXT) \
-	myth_valloc$(EXEEXT) myth_memalign$(EXEEXT) $(am__EXEEXT_1) \
-	myth_pvalloc$(EXEEXT) myth_realloc$(EXEEXT) \
-	myth_create_0$(EXEEXT) myth_create_1$(EXEEXT) \
-	myth_create_2$(EXEEXT) myth_create_join_many$(EXEEXT) \
-	myth_yield_0$(EXEEXT) myth_yield_1$(EXEEXT) \
-	myth_yield_2$(EXEEXT) myth_sleep_queue$(EXEEXT) \
-	myth_lock$(EXEEXT) myth_trylock$(EXEEXT) myth_mixlock$(EXEEXT) \
+	myth_valloc$(EXEEXT) $(am__EXEEXT_1) $(am__EXEEXT_2) \
+	$(am__EXEEXT_3) myth_realloc$(EXEEXT) myth_create_0$(EXEEXT) \
+	myth_create_1$(EXEEXT) myth_create_2$(EXEEXT) \
+	myth_create_join_many$(EXEEXT) myth_yield_0$(EXEEXT) \
+	myth_yield_1$(EXEEXT) myth_yield_2$(EXEEXT) \
+	myth_sleep_queue$(EXEEXT) myth_lock$(EXEEXT) \
+	myth_trylock$(EXEEXT) myth_mixlock$(EXEEXT) \
 	myth_cond_signal$(EXEEXT) myth_cond_broadcast_0$(EXEEXT) \
 	myth_cond_broadcast_1$(EXEEXT) myth_barrier$(EXEEXT) \
 	myth_join_counter$(EXEEXT) myth_felock$(EXEEXT) \
@@ -124,14 +124,16 @@ check_PROGRAMS = myth_malloc$(EXEEXT) myth_free$(EXEEXT) \
 	myth_key_getspecific_cc$(EXEEXT) \
 	myth_key_destructor_cc$(EXEEXT) measure_create_cc$(EXEEXT) \
 	measure_latency_cc$(EXEEXT) measure_wakeup_latency_cc$(EXEEXT) \
-	$(am__EXEEXT_2) $(am__EXEEXT_3) $(am__EXEEXT_4) \
-	$(am__EXEEXT_5) $(am__EXEEXT_6) $(am__EXEEXT_7)
-@BUILD_TEST_MYTH_ALIGNED_ALLOC_TRUE@am__append_1 = myth_aligned_alloc
-@BUILD_MYTH_LD_TRUE@am__append_2 = myth_malloc_ld myth_free_ld \
+	$(am__EXEEXT_4) $(am__EXEEXT_5) $(am__EXEEXT_6) \
+	$(am__EXEEXT_7) $(am__EXEEXT_8) $(am__EXEEXT_9)
+@BUILD_TEST_MYTH_MEMALIGN_TRUE@am__append_1 = myth_memalign
+@BUILD_TEST_MYTH_ALIGNED_ALLOC_TRUE@am__append_2 = myth_aligned_alloc
+@BUILD_TEST_MYTH_PVALLOC_TRUE@am__append_3 = myth_pvalloc
+@BUILD_MYTH_LD_TRUE@am__append_4 = myth_malloc_ld myth_free_ld \
 @BUILD_MYTH_LD_TRUE@	myth_calloc_ld myth_posix_memalign_ld \
 @BUILD_MYTH_LD_TRUE@	myth_valloc_ld myth_memalign_ld
-@BUILD_MYTH_LD_TRUE@@BUILD_TEST_MYTH_ALIGNED_ALLOC_TRUE@am__append_3 = myth_aligned_alloc_ld
-@BUILD_MYTH_LD_TRUE@am__append_4 = myth_pvalloc_ld myth_realloc_ld \
+@BUILD_MYTH_LD_TRUE@@BUILD_TEST_MYTH_ALIGNED_ALLOC_TRUE@am__append_5 = myth_aligned_alloc_ld
+@BUILD_MYTH_LD_TRUE@am__append_6 = myth_pvalloc_ld myth_realloc_ld \
 @BUILD_MYTH_LD_TRUE@	myth_create_0_ld myth_create_1_ld \
 @BUILD_MYTH_LD_TRUE@	myth_create_2_ld myth_create_join_many_ld \
 @BUILD_MYTH_LD_TRUE@	myth_yield_0_ld myth_yield_1_ld \
@@ -179,11 +181,11 @@ check_PROGRAMS = myth_malloc$(EXEEXT) myth_free$(EXEEXT) \
 @BUILD_MYTH_LD_TRUE@	pth_lock_cc_ld pth_mixlock_cc_ld \
 @BUILD_MYTH_LD_TRUE@	pth_mutex_initializer_cc_ld \
 @BUILD_MYTH_LD_TRUE@	pth_trylock_cc_ld pth_yield_cc_ld
-@BUILD_MYTH_DL_TRUE@am__append_5 = myth_malloc_dl myth_free_dl \
+@BUILD_MYTH_DL_TRUE@am__append_7 = myth_malloc_dl myth_free_dl \
 @BUILD_MYTH_DL_TRUE@	myth_calloc_dl myth_posix_memalign_dl \
 @BUILD_MYTH_DL_TRUE@	myth_valloc_dl myth_memalign_dl
-@BUILD_MYTH_DL_TRUE@@BUILD_TEST_MYTH_ALIGNED_ALLOC_TRUE@am__append_6 = myth_aligned_alloc_dl
-@BUILD_MYTH_DL_TRUE@am__append_7 = myth_pvalloc_dl myth_realloc_dl \
+@BUILD_MYTH_DL_TRUE@@BUILD_TEST_MYTH_ALIGNED_ALLOC_TRUE@am__append_8 = myth_aligned_alloc_dl
+@BUILD_MYTH_DL_TRUE@am__append_9 = myth_pvalloc_dl myth_realloc_dl \
 @BUILD_MYTH_DL_TRUE@	myth_create_0_dl myth_create_1_dl \
 @BUILD_MYTH_DL_TRUE@	myth_create_2_dl myth_create_join_many_dl \
 @BUILD_MYTH_DL_TRUE@	myth_yield_0_dl myth_yield_1_dl \
@@ -245,15 +247,17 @@ mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/src/config.h
 CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
-@BUILD_TEST_MYTH_ALIGNED_ALLOC_TRUE@am__EXEEXT_1 = myth_aligned_alloc$(EXEEXT)
-@BUILD_MYTH_LD_TRUE@am__EXEEXT_2 = myth_malloc_ld$(EXEEXT) \
+@BUILD_TEST_MYTH_MEMALIGN_TRUE@am__EXEEXT_1 = myth_memalign$(EXEEXT)
+@BUILD_TEST_MYTH_ALIGNED_ALLOC_TRUE@am__EXEEXT_2 = myth_aligned_alloc$(EXEEXT)
+@BUILD_TEST_MYTH_PVALLOC_TRUE@am__EXEEXT_3 = myth_pvalloc$(EXEEXT)
+@BUILD_MYTH_LD_TRUE@am__EXEEXT_4 = myth_malloc_ld$(EXEEXT) \
 @BUILD_MYTH_LD_TRUE@	myth_free_ld$(EXEEXT) \
 @BUILD_MYTH_LD_TRUE@	myth_calloc_ld$(EXEEXT) \
 @BUILD_MYTH_LD_TRUE@	myth_posix_memalign_ld$(EXEEXT) \
 @BUILD_MYTH_LD_TRUE@	myth_valloc_ld$(EXEEXT) \
 @BUILD_MYTH_LD_TRUE@	myth_memalign_ld$(EXEEXT)
-@BUILD_MYTH_LD_TRUE@@BUILD_TEST_MYTH_ALIGNED_ALLOC_TRUE@am__EXEEXT_3 = myth_aligned_alloc_ld$(EXEEXT)
-@BUILD_MYTH_LD_TRUE@am__EXEEXT_4 = myth_pvalloc_ld$(EXEEXT) \
+@BUILD_MYTH_LD_TRUE@@BUILD_TEST_MYTH_ALIGNED_ALLOC_TRUE@am__EXEEXT_5 = myth_aligned_alloc_ld$(EXEEXT)
+@BUILD_MYTH_LD_TRUE@am__EXEEXT_6 = myth_pvalloc_ld$(EXEEXT) \
 @BUILD_MYTH_LD_TRUE@	myth_realloc_ld$(EXEEXT) \
 @BUILD_MYTH_LD_TRUE@	myth_create_0_ld$(EXEEXT) \
 @BUILD_MYTH_LD_TRUE@	myth_create_1_ld$(EXEEXT) \
@@ -332,14 +336,14 @@ CONFIG_CLEAN_VPATH_FILES =
 @BUILD_MYTH_LD_TRUE@	pth_mutex_initializer_cc_ld$(EXEEXT) \
 @BUILD_MYTH_LD_TRUE@	pth_trylock_cc_ld$(EXEEXT) \
 @BUILD_MYTH_LD_TRUE@	pth_yield_cc_ld$(EXEEXT)
-@BUILD_MYTH_DL_TRUE@am__EXEEXT_5 = myth_malloc_dl$(EXEEXT) \
+@BUILD_MYTH_DL_TRUE@am__EXEEXT_7 = myth_malloc_dl$(EXEEXT) \
 @BUILD_MYTH_DL_TRUE@	myth_free_dl$(EXEEXT) \
 @BUILD_MYTH_DL_TRUE@	myth_calloc_dl$(EXEEXT) \
 @BUILD_MYTH_DL_TRUE@	myth_posix_memalign_dl$(EXEEXT) \
 @BUILD_MYTH_DL_TRUE@	myth_valloc_dl$(EXEEXT) \
 @BUILD_MYTH_DL_TRUE@	myth_memalign_dl$(EXEEXT)
-@BUILD_MYTH_DL_TRUE@@BUILD_TEST_MYTH_ALIGNED_ALLOC_TRUE@am__EXEEXT_6 = myth_aligned_alloc_dl$(EXEEXT)
-@BUILD_MYTH_DL_TRUE@am__EXEEXT_7 = myth_pvalloc_dl$(EXEEXT) \
+@BUILD_MYTH_DL_TRUE@@BUILD_TEST_MYTH_ALIGNED_ALLOC_TRUE@am__EXEEXT_8 = myth_aligned_alloc_dl$(EXEEXT)
+@BUILD_MYTH_DL_TRUE@am__EXEEXT_9 = myth_pvalloc_dl$(EXEEXT) \
 @BUILD_MYTH_DL_TRUE@	myth_realloc_dl$(EXEEXT) \
 @BUILD_MYTH_DL_TRUE@	myth_create_0_dl$(EXEEXT) \
 @BUILD_MYTH_DL_TRUE@	myth_create_1_dl$(EXEEXT) \

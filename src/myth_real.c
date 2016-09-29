@@ -48,10 +48,11 @@
 /* used for ensure_real_functions */
 #include <stdio.h>
 #include <stdlib.h>
-#include <link.h>
 #include <assert.h>
 #include <string.h>
+#if HAVE_DL_ITERATE_BY_PHDR
 #include <link.h>
+#endif
 
 typedef struct {
   int (*pthread_create)(pthread_t *thread, const pthread_attr_t *attr,
@@ -116,8 +117,6 @@ typedef struct {
 #endif
 #if defined(HAVE_PTHREAD_CONCURRENCY)
   int (*pthread_getconcurrency)(void);
-#endif
-#if defined(HAVE_PTHREAD_CONCURRENCY)
   int (*pthread_setconcurrency)(int new_level);
 #endif
 #if defined(HAVE_PTHREAD_YIELD)
@@ -166,11 +165,9 @@ typedef struct {
 					  int *restrict prioceiling);
   int (*pthread_mutexattr_setprioceiling)(pthread_mutexattr_t *attr,
 					  int prioceiling);
-#if defined(HAVE_PTHREAD_MUTEXATTR_GETROBUST)
+#if defined(HAVE_PTHREAD_MUTEXATTR_ROBUST)
   int (*pthread_mutexattr_getrobust)(const pthread_mutexattr_t *restrict attr,
 				     int *restrict robust);
-#endif
-#if defined(HAVE_PTHREAD_MUTEXATTR_SETROBUST)
   int (*pthread_mutexattr_setrobust)(pthread_mutexattr_t *attr, int robust);
 #endif
   int (*pthread_rwlock_init)(pthread_rwlock_t *restrict rwlock,
@@ -203,7 +200,7 @@ typedef struct {
   int (*pthread_cond_wait)(pthread_cond_t *restrict cond,
 			   pthread_mutex_t *restrict mutex);
   int (*pthread_cond_timedwait)(pthread_cond_t *restrict cond,
-			   pthread_mutex_t *restrict mutex,
+				pthread_mutex_t *restrict mutex,
 				const struct timespec *restrict abstime);
   int (*pthread_condattr_init)(pthread_condattr_t *attr);
   int (*pthread_condattr_destroy)(pthread_condattr_t *attr);
@@ -217,7 +214,6 @@ typedef struct {
   int (*pthread_condattr_setclock)(pthread_condattr_t *attr,
 				   clockid_t clock_id);
 #endif
-
 #if defined(HAVE_PTHREAD_SPIN)
   int (*pthread_spin_init)(pthread_spinlock_t *lock, int pshared);
   int (*pthread_spin_destroy)(pthread_spinlock_t *lock);
@@ -225,7 +221,6 @@ typedef struct {
   int (*pthread_spin_trylock)(pthread_spinlock_t *lock);
   int (*pthread_spin_unlock)(pthread_spinlock_t *lock);
 #endif	 /* defined(HAVE_PTHREAD_SPIN) */
-
 #if defined(HAVE_PTHREAD_BARRIER)
   int (*pthread_barrier_init)(pthread_barrier_t *restrict barrier,
 			      const pthread_barrierattr_t *restrict attr,
@@ -264,18 +259,22 @@ typedef struct {
   unsigned int (*sleep)(useconds_t seconds);
   int (*usleep)(useconds_t usec);
   int (*nanosleep)(const struct timespec *req, struct timespec *rem);
-
   /* alloc */
   void * (*malloc)(size_t size);
   void (*free)(void * ptr);
   void * (*calloc)(size_t nmemb, size_t size);
   void * (*realloc)(void *ptr, size_t size);
   int (*posix_memalign)(void **memptr, size_t alignment, size_t size);
+#if defined(HAVE_ALIGNED_ALLOC)
   void * (*aligned_alloc)(size_t alignment, size_t size);
+#endif
   void * (*valloc)(size_t size);
+#if defined(HAVE_MEMALIGN)
   void * (*memalign)(size_t alignment, size_t size);
+#endif
+#if defined(HAVE_PVALLOC)
   void * (*pvalloc)(size_t size);
-
+#endif
   /* socket */
   int (*socket)(int domain, int type, int protocol);
   int (*socketpair)(int domain, int type, int protocol, int sv[2]);
@@ -332,13 +331,15 @@ static real_function_table_t real_function_table;
 #define so_symbol_entry(fun, file)					\
   { .name = #fun, .file_pat = #file, .dest = (void **)&real_function_table.fun }
 
-static shared_object_symbol s_so_syms[n_real_functions + 1] = {
+static shared_object_symbol s_so_syms[] = {
   so_symbol_entry(pthread_create, libpthread),
+
   so_symbol_entry(pthread_exit, libpthread),
   so_symbol_entry(pthread_join, libpthread),
 #if defined(HAVE_PTHREAD_JOIN_NP)
   so_symbol_entry(pthread_tryjoin_np, libpthread),
   so_symbol_entry(pthread_timedjoin_np, libpthread),
+
 #endif
   so_symbol_entry(pthread_detach, libpthread),
   so_symbol_entry(pthread_self, libpthread),
@@ -350,11 +351,15 @@ static shared_object_symbol s_so_syms[n_real_functions + 1] = {
   so_symbol_entry(pthread_attr_getguardsize, libpthread),
   so_symbol_entry(pthread_attr_setguardsize, libpthread),
   so_symbol_entry(pthread_attr_getschedparam, libpthread),
+
   so_symbol_entry(pthread_attr_setschedparam, libpthread),
+
   so_symbol_entry(pthread_attr_getschedpolicy, libpthread),
   so_symbol_entry(pthread_attr_setschedpolicy, libpthread),
   so_symbol_entry(pthread_attr_getinheritsched, libpthread),
+
   so_symbol_entry(pthread_attr_setinheritsched, libpthread),
+
   so_symbol_entry(pthread_attr_getscope, libpthread),
   so_symbol_entry(pthread_attr_setscope, libpthread),
 #if 0				/* deprecated */
@@ -364,10 +369,14 @@ static shared_object_symbol s_so_syms[n_real_functions + 1] = {
   so_symbol_entry(pthread_attr_getstacksize, libpthread),
   so_symbol_entry(pthread_attr_setstacksize, libpthread),
   so_symbol_entry(pthread_attr_getstack, libpthread),
+
   so_symbol_entry(pthread_attr_setstack, libpthread),
+
 #if defined(HAVE_PTHREAD_AFFINITY_NP)
   so_symbol_entry(pthread_attr_setaffinity_np, libpthread),
+
   so_symbol_entry(pthread_attr_getaffinity_np, libpthread),
+
 #endif
 #if defined(HAVE_PTHREAD_ATTR_NP)
   so_symbol_entry(pthread_getattr_default_np, libpthread),
@@ -375,7 +384,9 @@ static shared_object_symbol s_so_syms[n_real_functions + 1] = {
   so_symbol_entry(pthread_getattr_np, libpthread),
 #endif
   so_symbol_entry(pthread_setschedparam, libpthread),
+
   so_symbol_entry(pthread_getschedparam, libpthread),
+
   so_symbol_entry(pthread_setschedprio, libpthread),
 #if defined(HAVE_PTHREAD_NAME_NP)
   so_symbol_entry(pthread_getname_np, libpthread),
@@ -383,8 +394,6 @@ static shared_object_symbol s_so_syms[n_real_functions + 1] = {
 #endif
 #if defined(HAVE_PTHREAD_CONCURRENCY)
   so_symbol_entry(pthread_getconcurrency, libpthread),
-#endif
-#if defined(HAVE_PTHREAD_CONCURRENCY)
   so_symbol_entry(pthread_setconcurrency, libpthread),
 #endif
 #if defined(HAVE_PTHREAD_YIELD)
@@ -392,67 +401,96 @@ static shared_object_symbol s_so_syms[n_real_functions + 1] = {
 #endif
 #if defined(HAVE_PTHREAD_AFFINITY_NP)
   so_symbol_entry(pthread_setaffinity_np, libpthread),
+
   so_symbol_entry(pthread_getaffinity_np, libpthread),
+
 #endif
   so_symbol_entry(pthread_once, libpthread),
+
   so_symbol_entry(pthread_setcancelstate, libpthread),
   so_symbol_entry(pthread_setcanceltype, libpthread),
   so_symbol_entry(pthread_cancel, libpthread),
   so_symbol_entry(pthread_testcancel, libpthread),
   so_symbol_entry(pthread_mutex_init, libpthread),
+
   so_symbol_entry(pthread_mutex_destroy, libpthread),
   so_symbol_entry(pthread_mutex_trylock, libpthread),
   so_symbol_entry(pthread_mutex_lock, libpthread),
   so_symbol_entry(pthread_mutex_timedlock, libpthread),
+
   so_symbol_entry(pthread_mutex_unlock, libpthread),
   so_symbol_entry(pthread_mutex_getprioceiling, libpthread),
+
   so_symbol_entry(pthread_mutex_setprioceiling, libpthread),
+
 #if defined(HAVE_PTHREAD_MUTEX_CONSISTENT)
   so_symbol_entry(pthread_mutex_consistent, libpthread),
 #endif
   so_symbol_entry(pthread_mutexattr_init, libpthread),
   so_symbol_entry(pthread_mutexattr_destroy, libpthread),
   so_symbol_entry(pthread_mutexattr_getpshared, libpthread),
+
   so_symbol_entry(pthread_mutexattr_setpshared, libpthread),
+
   so_symbol_entry(pthread_mutexattr_gettype, libpthread),
+
   so_symbol_entry(pthread_mutexattr_settype, libpthread),
   so_symbol_entry(pthread_mutexattr_getprotocol, libpthread),
+
   so_symbol_entry(pthread_mutexattr_setprotocol, libpthread),
   so_symbol_entry(pthread_mutexattr_getprioceiling, libpthread),
+
   so_symbol_entry(pthread_mutexattr_setprioceiling, libpthread),
-#if defined(HAVE_PTHREAD_MUTEXATTR_GETROBUST)
+
+#if defined(HAVE_PTHREAD_MUTEXATTR_ROBUST)
   so_symbol_entry(pthread_mutexattr_getrobust, libpthread),
-#endif
-#if defined(HAVE_PTHREAD_MUTEXATTR_SETROBUST)
+
   so_symbol_entry(pthread_mutexattr_setrobust, libpthread),
 #endif
   so_symbol_entry(pthread_rwlock_init, libpthread),
+
   so_symbol_entry(pthread_rwlock_destroy, libpthread),
   so_symbol_entry(pthread_rwlock_rdlock, libpthread),
   so_symbol_entry(pthread_rwlock_tryrdlock, libpthread),
   so_symbol_entry(pthread_rwlock_timedrdlock, libpthread),
+
   so_symbol_entry(pthread_rwlock_wrlock, libpthread),
   so_symbol_entry(pthread_rwlock_trywrlock, libpthread),
   so_symbol_entry(pthread_rwlock_timedwrlock, libpthread),
+
   so_symbol_entry(pthread_rwlock_unlock, libpthread),
   so_symbol_entry(pthread_rwlockattr_init, libpthread),
   so_symbol_entry(pthread_rwlockattr_destroy, libpthread),
   so_symbol_entry(pthread_rwlockattr_getpshared, libpthread),
+
   so_symbol_entry(pthread_rwlockattr_setpshared, libpthread),
+
   so_symbol_entry(pthread_rwlockattr_getkind_np, libpthread),
+
   so_symbol_entry(pthread_rwlockattr_setkind_np, libpthread),
+
   so_symbol_entry(pthread_cond_init, libpthread),
+
   so_symbol_entry(pthread_cond_destroy, libpthread),
   so_symbol_entry(pthread_cond_signal, libpthread),
   so_symbol_entry(pthread_cond_broadcast, libpthread),
   so_symbol_entry(pthread_cond_wait, libpthread),
+
   so_symbol_entry(pthread_cond_timedwait, libpthread),
+
+
   so_symbol_entry(pthread_condattr_init, libpthread),
   so_symbol_entry(pthread_condattr_destroy, libpthread),
   so_symbol_entry(pthread_condattr_getpshared, libpthread),
+
   so_symbol_entry(pthread_condattr_setpshared, libpthread),
+
+#if defined(HAVE_PTHREAD_CONDATTR_CLOCK)
   so_symbol_entry(pthread_condattr_getclock, libpthread),
+
   so_symbol_entry(pthread_condattr_setclock, libpthread),
+
+#endif
 #if defined(HAVE_PTHREAD_SPIN)
   so_symbol_entry(pthread_spin_init, libpthread),
   so_symbol_entry(pthread_spin_destroy, libpthread),
@@ -462,20 +500,27 @@ static shared_object_symbol s_so_syms[n_real_functions + 1] = {
 #endif	 /* defined(HAVE_PTHREAD_SPIN) */
 #if defined(HAVE_PTHREAD_BARRIER)
   so_symbol_entry(pthread_barrier_init, libpthread),
+
+
   so_symbol_entry(pthread_barrier_destroy, libpthread),
   so_symbol_entry(pthread_barrier_wait, libpthread),
   so_symbol_entry(pthread_barrierattr_init, libpthread),
   so_symbol_entry(pthread_barrierattr_destroy, libpthread),
   so_symbol_entry(pthread_barrierattr_getpshared, libpthread),
+
   so_symbol_entry(pthread_barrierattr_setpshared, libpthread),
+
 #endif	/* HAVE_PTHREAD_BARRIER */
   so_symbol_entry(pthread_key_create, libpthread),
   so_symbol_entry(pthread_key_delete, libpthread),
   so_symbol_entry(pthread_getspecific, libpthread),
   so_symbol_entry(pthread_setspecific, libpthread),
+#if defined(HAVE_PTHREAD_GETCPUCLOCKID)
   so_symbol_entry(pthread_getcpuclockid, libpthread),
+#endif
 #if 0
   so_symbol_entry(pthread_atfork, libc),
+
 #endif
   so_symbol_entry(pthread_kill, libpthread),
 #if 0
@@ -483,24 +528,31 @@ static shared_object_symbol s_so_syms[n_real_functions + 1] = {
 #endif
 #if defined(HAVE_PTHREAD_SIGQUEUE)
   so_symbol_entry(pthread_sigqueue, libpthread),
+
 #endif
   so_symbol_entry(pthread_sigmask, libpthread),
+
   so_symbol_entry(sched_yield, libpthread),
   so_symbol_entry(sleep, libpthread),
   so_symbol_entry(usleep, libpthread),
   so_symbol_entry(nanosleep, libpthread),
-
   /* alloc */
   so_symbol_entry(malloc, libc),
   so_symbol_entry(free, libc),
   so_symbol_entry(calloc, libc),
   so_symbol_entry(realloc, libc),
   so_symbol_entry(posix_memalign, libc),
+#if defined(HAVE_ALIGNED_ALLOC)
   so_symbol_entry(aligned_alloc, libc),
+#endif
   so_symbol_entry(valloc, libc),
+#if defined(HAVE_MEMALIGN)
   so_symbol_entry(memalign, libc),
+#endif
+#if defined(HAVE_PVALLOC)
   so_symbol_entry(pvalloc, libc),
-
+#endif
+  /* socket */
   so_symbol_entry(socket, libc),
   so_symbol_entry(socketpair, libc),
   so_symbol_entry(accept, libc),
@@ -514,17 +566,46 @@ static shared_object_symbol s_so_syms[n_real_functions + 1] = {
   so_symbol_entry(listen, libc),
   so_symbol_entry(recv, libc),
   so_symbol_entry(recvfrom, libc),
+
   so_symbol_entry(recvmsg, libc),
   so_symbol_entry(read, libc),
   so_symbol_entry(select, libc),
+
   so_symbol_entry(send, libc),
   so_symbol_entry(sendto, libc),
+
   so_symbol_entry(sendmsg, libc),
   so_symbol_entry(write, libc),
-  
-  { .name = 0 }
 };
 
+enum {
+  n_so_syms = sizeof(s_so_syms) / sizeof(shared_object_symbol)
+};
+
+static void find_all_symbols_by_rtld_next(void) {
+  int i;
+  for (i = 0; i < n_real_functions; i++) {
+    shared_object_symbol * s = &s_so_syms[i];
+    void * a;
+    assert(s->dest);
+    if (*s->dest) continue;
+    assert(s->n == 0);
+    dlerror();
+    a = dlsym(RTLD_NEXT, s->name);
+    if (a) {
+      *s->dest = a;
+      s->n = 1;
+    } else {
+      char * e = dlerror();
+      fprintf(stderr,
+	      "fatal: %s not found by dlsym(RTLD_NEXT, %s) [%s]\n",
+	      s->name, s->name, e);
+      exit(1);
+    }
+  }
+}
+
+#if FIND_SYMBOLS_BY == FIND_SYMBOLS_BY_DL_ITERATE_PHDR
 /* find SYMBOL from a file represented by HANDLE */
 static void * find_symbol_in_handle(void * handle, const char * symbol) {
   char * e = dlerror();
@@ -548,6 +629,7 @@ static int find_symbols_in_phdr(struct dl_phdr_info *info,
   /* check each symbol */
   for (i = 0; i < n_real_functions; i++) {
     shared_object_symbol * s = &s_so_syms[i];
+    assert(s->dest);
     if (*s->dest) continue;
     /* when this assertion error happens, it means s_so_syms table
        does not have as many elements as the number of fields in 
@@ -590,6 +672,7 @@ static int find_symbols_in_phdr(struct dl_phdr_info *info,
   if (handle) dlclose(handle);
   return 0;
 }
+#endif	/* FIND_SYMBOLS_BY == FIND_SYMBOLS_BY_DL_ITERATE_PHDR */
 
 /* check if S was found in one and only one shared object. 
    if it is found in two or more shared objects, it prints
@@ -634,9 +717,18 @@ static int ensure_real_functions_(const char * caller_fun) {
 	    caller_fun);
     abort();
   }
-
+  
+  assert((int)n_real_functions == (int)n_so_syms);
+  
   real_function_table_init_state = real_function_table_init_state_initializing;
+
+#if FIND_SYMBOLS_BY == FIND_SYMBOLS_BY_RTLD_NEXT
+  find_all_symbols_by_rtld_next();
+#elif FIND_SYMBOLS_BY == FIND_SYMBOLS_BY_DL_ITERATE_PHDR
   dl_iterate_phdr(find_symbols_in_phdr, (void *)s_so_syms);
+#else
+#error "invalid value for FIND_SYMBOLS_BY"
+#endif
   /* check uniqueness of each symbol */
   for (i = 0; i < n_real_functions; i++) {
     shared_object_symbol * s = &s_so_syms[i];
@@ -650,7 +742,7 @@ static int ensure_real_functions_(const char * caller_fun) {
   /* if any function is not found, abort */
   if (n_not_found > 0) {
     fprintf(stderr,
-	    "could not find original definition of some"
+	    "fatal: could not find original definition of some"
 	    " wrapped functions, bail out\n");
     abort();
   }
@@ -1408,7 +1500,7 @@ int real_pthread_yield(void) {
 }
 #endif	/* HAVE_PTHREAD_YIELD */
 
-#if defined(HAVE_PTHREAD_SETAFFINITY_NP)
+#if defined(HAVE_PTHREAD_AFFINITY_NP)
 #if MYTH_WRAP == MYTH_WRAP_LD
 int __real_pthread_setaffinity_np(pthread_t thread, size_t cpusetsize,
 				const cpu_set_t *cpuset);
@@ -1427,9 +1519,7 @@ int real_pthread_setaffinity_np(pthread_t thread, size_t cpusetsize,
 #error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
-#endif	/* HAVE_PTHREAD_SETAFFINITY_NP */
 
-#if defined(HAVE_PTHREAD_GETAFFINITY_NP)
 #if MYTH_WRAP == MYTH_WRAP_LD
 int __real_pthread_getaffinity_np(pthread_t thread, size_t cpusetsize,
 				  cpu_set_t *cpuset);
@@ -1448,7 +1538,7 @@ int real_pthread_getaffinity_np(pthread_t thread, size_t cpusetsize,
 #error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
-#endif	/* HAVE_PTHREAD_GETAFFINITY_NP */
+#endif	/* HAVE_PTHREAD_AFFINITY_NP */
 
 
 #if MYTH_WRAP == MYTH_WRAP_LD

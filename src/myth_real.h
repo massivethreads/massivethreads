@@ -143,11 +143,9 @@ int real_pthread_mutexattr_getprioceiling(const pthread_mutexattr_t *restrict at
 					  int *restrict prioceiling);
 int real_pthread_mutexattr_setprioceiling(pthread_mutexattr_t *attr,
 					  int prioceiling);
-#if defined(HAVE_PTHREAD_MUTEXATTR_GETROBUST)
+#if defined(HAVE_PTHREAD_MUTEXATTR_ROBUST)
 int real_pthread_mutexattr_getrobust(const pthread_mutexattr_t *restrict attr,
 				     int *restrict robust);
-#endif
-#if defined(HAVE_PTHREAD_MUTEXATTR_SETROBUST)
 int real_pthread_mutexattr_setrobust(pthread_mutexattr_t *attr, int robust);
 #endif
 int real_pthread_rwlock_init(pthread_rwlock_t *restrict rwlock,

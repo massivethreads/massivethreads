@@ -22,11 +22,15 @@ check_PROGRAMS += myth_free
 check_PROGRAMS += myth_calloc
 check_PROGRAMS += myth_posix_memalign
 check_PROGRAMS += myth_valloc
+if BUILD_TEST_MYTH_MEMALIGN
 check_PROGRAMS += myth_memalign
+endif
 if BUILD_TEST_MYTH_ALIGNED_ALLOC
 check_PROGRAMS += myth_aligned_alloc
 endif
+if BUILD_TEST_MYTH_PVALLOC
 check_PROGRAMS += myth_pvalloc
+endif
 check_PROGRAMS += myth_realloc
 check_PROGRAMS += myth_create_0
 check_PROGRAMS += myth_create_1

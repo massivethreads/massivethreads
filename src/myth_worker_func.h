@@ -160,17 +160,8 @@ static void myth_setup_worker(int rank) {
     alloc_size += 4095;
     alloc_size &= ~(0xFFF);
 
-    int map_flags = MAP_FIXED | MAP_PRIVATE;
-#if defined(MAP_ANONYMOUS)
-    map_flags |= MAP_ANONYMOUS;
-#else
-    map_flags |= MAP_ANON;
-#endif
-#if defined(MAP_STACK)
-    map_flags |= MAP_STACK);
-#endif
-    th_ptr = myth_mmap(NULL,alloc_size,PROT_READ|PROT_WRITE,
-		       map_flags,-1,0);
+    th_ptr = myth_mmap(NULL, alloc_size, PROT_READ|PROT_WRITE,
+		       MAP_PRIVATE|MAP_FIXED|MYTH_MAP_ANON|MYTH_MAP_STACK, -1, 0);
 #endif
     for (i = 0; i < INITIAL_STACK_ALLOC_UNIT; i++){
       myth_thread_t ret = (myth_thread_t)th_ptr;
@@ -191,18 +182,8 @@ static void myth_setup_worker(int rank) {
 #else
     alloc_size += 4095;
     alloc_size &= ~(0xFFF);
-
-    int map_flags = MAP_PRIVATE;
-#if defined(MAP_ANONYMOUS)
-    map_flags |= MAP_ANONYMOUS;
-#else
-    map_flags |= MAP_ANON;
-#endif
-#if defined(MAP_STACK)
-    map_flags |= MAP_STACK);
-#endif
-    th_ptr = mmap(NULL,alloc_size, PROT_READ|PROT_WRITE,
-		  map_flags,-1,0);
+    th_ptr = mmap(NULL, alloc_size, PROT_READ|PROT_WRITE,
+		  MAP_PRIVATE|MYTH_MAP_ANON|MYTH_MAP_STACK, -1, 0);
 
 #endif
     /*th_ptr+=th_size-sizeof(void*);

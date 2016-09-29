@@ -16,18 +16,23 @@
 #define MYTH_ECO_DEBUG 0
 #define MYTH_ECO_MODE_DEBUG 0
 
-typedef struct sleep_queue {
-  struct sleep_queue *next;
-  struct sleep_queue *tail;
+typedef struct myth_sleeping_workers_queue_item {
+  struct myth_sleeping_workers_queue_item * next;
   int *head_sem;
   int head_rank;
-}sleep_queue,*sleep_queue_t;
+} myth_sleeping_workers_queue_item;
 
+typedef struct {
+  pthread_mutex_t lock;
+  int n_sleepers;
+  myth_sleeping_workers_queue_item * head;
+  myth_sleeping_workers_queue_item * tail;
+} myth_sleeping_workers_queue;
 
-extern sleep_queue_t g_sleep_queue;
-extern pthread_mutex_t *queue_lock;
-extern int sleeper;
+extern myth_sleeping_workers_queue g_sleeping_workers;
+#ifdef TASK_NUM
 extern int task_num;
+#endif
 extern struct myth_running_env *g_envs;
 extern int g_eco_mode_enabled;
 
@@ -47,7 +52,7 @@ void myth_eco_init(void);
 void myth_eco_des(void);
 
 int myth_sleeper_push(int *sem, int rank, int num);
-sleep_queue_t myth_sleeper_pop(void);
+myth_sleeping_workers_queue_item * myth_sleeper_pop(void);
 int futex_wait( void *futex, int comparand );
 int futex_wakeup_one( void *futex );
 int futex_wakeup_n( void *futex, int n );

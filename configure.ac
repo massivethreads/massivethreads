@@ -89,13 +89,13 @@ AC_ARG_ENABLE([eco-mode],
 			      disables it when compiling MassiveThreads. "yes" 
 			      enables it, but it is not activated by default.
 			      To use it you have to activate by setting environment
-			      variable MYTH_ECO_MODE=1. Default is "yes".
+			      variable MYTH_ECO_MODE=1. Default is "no".
 			      When eco-mode scheduler is enabled, thread creation
 			      overhead might be slightly increased, whichever it is activated or not])],
 			      ,
-			     [enable_eco_mode="yes"])
+			     [enable_eco_mode="no"])
 
-if test "x$enable_eco_mode" != "xno" ; then
+if test "x$enable_eco_mode" = "xyes" ; then
   AC_DEFINE_UNQUOTED([MYTH_ECO_MODE],[1],[if 1, enable eco-mode])
   AC_DEFINE_UNQUOTED([MYTH_ECO_TEIAN_STEAL],[1],[if 1, enable eco-mode])
 else
@@ -251,6 +251,10 @@ AC_CHECK_HEADERS([malloc.h])
 # declarations
 # -----------------------------
 
+# 
+# aligned_alloc
+# 
+
 AC_MSG_CHECKING([aligned_alloc])
 AC_LINK_IFELSE([AC_LANG_PROGRAM([[
 #define _ISOC11_SOURCE 1
@@ -269,6 +273,50 @@ AC_DEFINE_UNQUOTED([HAVE_ALIGNED_ALLOC],[$have_aligned_alloc],
    	[if set, aligned_alloc is declared in stdlib.h])
 AM_CONDITIONAL([BUILD_TEST_MYTH_ALIGNED_ALLOC],[test $have_aligned_alloc = 1])
 
+# 
+# memalign
+# 
+
+AC_MSG_CHECKING([memalign])
+AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+#define _ISOC11_SOURCE 1
+#include <stdlib.h>
+]],
+	[[ return (memalign(1, 1) ? 0 : 1); ]])],
+	[have_memalign="yes"],
+	[have_memalign="no"])
+AC_MSG_RESULT([$have_memalign])
+if test x"$have_memalign" = "xyes" ; then
+   have_memalign=1
+else
+   have_memalign=0
+fi
+AC_DEFINE_UNQUOTED([HAVE_MEMALIGN],[$have_memalign],
+   	[if set, memalign is declared in stdlib.h])
+AM_CONDITIONAL([BUILD_TEST_MYTH_MEMALIGN],[test $have_memalign = 1])
+
+# 
+# pvalloc
+# 
+
+AC_MSG_CHECKING([pvalloc])
+AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+#define _ISOC11_SOURCE 1
+#include <stdlib.h>
+]],
+	[[ return (pvalloc(1, 1) ? 0 : 1); ]])],
+	[have_pvalloc="yes"],
+	[have_pvalloc="no"])
+AC_MSG_RESULT([$have_pvalloc])
+if test x"$have_pvalloc" = "xyes" ; then
+   have_pvalloc=1
+else
+   have_pvalloc=0
+fi
+AC_DEFINE_UNQUOTED([HAVE_PVALLOC],[$have_pvalloc],
+   	[if set, pvalloc is declared in stdlib.h])
+AM_CONDITIONAL([BUILD_TEST_MYTH_PVALLOC],[test $have_pvalloc = 1])
+
 #
 # for C program tests that follow, we treat warnings as error,
 # as some tests work by checking if the compiler issues a
@@ -285,6 +333,56 @@ AC_MSG_CHECKING([sysv_abi attribute])
 AC_COMPILE_IFELSE([AC_LANG_SOURCE([[ __attribute__((sysv_abi)) void fun() { } ]])], 
                   [AC_MSG_RESULT([yes]); AC_DEFINE([HAVE_ATTR_SYSV_ABI], [1], [if set, sysv_abi attribute is available])],
 		  [AC_MSG_RESULT([no]);  AC_DEFINE([HAVE_ATTR_SYSV_ABI], [0], [if set, sysv_abi attribute is available])])
+
+#
+# check if what kind of symbols are defined for functions in 
+# shared libraries. from foo, foo? _foo? foo@PLT? _foo@PLT? 
+#
+
+AC_MSG_CHECKING([global symbol modifier])
+AC_LINK_IFELSE(
+[AC_LANG_PROGRAM(
+[[ void fun() { asm volatile("call _malloc@PLT"); } ]],
+[[ fun(); ]])],
+[with_underscore_with_PLT=yes],
+[with_underscore_with_PLT=no])
+
+AC_LINK_IFELSE(
+[AC_LANG_PROGRAM(
+[[ void fun() { asm volatile("call malloc@PLT"); } ]],
+[[ fun(); ]])],
+[no_underscore_with_PLT=yes],
+[no_underscore_with_PLT=no])
+
+AC_LINK_IFELSE(
+[AC_LANG_PROGRAM(
+[[ void fun() { asm volatile("call _malloc"); } ]],
+[[ fun(); ]])],
+[with_underscore_no_PLT=yes],
+[with_underscore_no_PLT=no])
+
+AC_LINK_IFELSE(
+[AC_LANG_PROGRAM(
+[[ void fun() { asm volatile("call malloc"); } ]],
+[[ fun(); ]])],
+[no_underscore_no_PLT=yes],
+[no_underscore_no_PLT=yes])
+
+if test "x$with_underscore_with_PLT" = "xyes" ; then
+   AC_MSG_RESULT([with underscore, with PLT])
+   AC_DEFINE([GLOBAL_SYM_MODIFIER], [GLOBAL_SYM_MODIFIER_WITH_UNDERSCORE_WITH_PLT], [global symbol modifier (_foo@PLT)])
+elif test "x$no_underscore_with_PLT" = "xyes" ; then
+   AC_MSG_RESULT([no underscore, with PLT])
+   AC_DEFINE([GLOBAL_SYM_MODIFIER], [GLOBAL_SYM_MODIFIER_NO_UNDERSCORE_WITH_PLT], [global symbol modifier (foo@PLT)])
+elif test "x$with_underscore_no_PLT" = "xyes" ; then
+   AC_MSG_RESULT([with underscore, no PLT])
+   AC_DEFINE([GLOBAL_SYM_MODIFIER], [GLOBAL_SYM_MODIFIER_WITH_UNDERSCORE_NO_PLT], [global symbol modifier (_foo)])
+elif test "x$no_underscore_no_PLT" = "xyes"  ; then
+   AC_MSG_RESULT([no underscore, no PLT])
+   AC_DEFINE([GLOBAL_SYM_MODIFIER], [GLOBAL_SYM_MODIFIER_NO_UNDERSCORE_NO_PLT], [global symbol modifier (foo)])
+else
+   AC_MSG_ERROR([could not get how to call functions in a shared library from assembly])
+fi
 
 #
 # conditionally build test programs

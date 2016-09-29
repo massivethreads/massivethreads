@@ -1,9 +1,6 @@
 # build this directory first and then tests
-#SUBDIRS = . profiler
-SUBDIRS = .
-
-#	myth_eco.c 
-#	myth_context_switch.S 
+SUBDIRS = . profiler
+# SUBDIRS = .
 
 # sources (.c and .S) common across the three libraries
 COMMON_SRCS = \
@@ -19,7 +16,9 @@ COMMON_SRCS = \
 	myth_thread.c \
 	myth_context.c \
 	myth_if_native.c \
-	myth_real.c
+	myth_real.c \
+	myth_eco.c \
+	myth_context_switch.S 
 
 # sources for wrapping system functions (used only for -dl and -ld versions)
 WRAP_SRCS = \

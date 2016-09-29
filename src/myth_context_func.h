@@ -278,8 +278,31 @@ static inline void myth_make_context_empty(myth_context_t ctx, void *stack,
 #endif
 }
 
+#if PIC
+#if GLOBAL_SYM_MODIFIER == GLOBAL_SYM_MODIFIER_WITH_UNDERSCORE_WITH_PLT
+#define FUNC_PREFIX "_"
+#define FUNC_SUFFIX "@PLT"
+#elif GLOBAL_SYM_MODIFIER == GLOBAL_SYM_MODIFIER_NO_UNDERSCORE_WITH_PLT
+#define FUNC_PREFIX ""
+#define FUNC_SUFFIX "@PLT"
+#elif GLOBAL_SYM_MODIFIER == GLOBAL_SYM_MODIFIER_WITH_UNDERSCORE_NO_PLT
+#define FUNC_PREFIX "_"
+#define FUNC_SUFFIX ""
+#elif GLOBAL_SYM_MODIFIER == GLOBAL_SYM_MODIFIER_NO_UNDERSCORE_NO_PLT
+#define FUNC_PREFIX ""
+#define FUNC_SUFFIX ""
+#else
+#error "none of HAVE_NO_UNDERSCORE_PLT, HAVE_UNDERSCORE_PLT, HAVE_NO_UNDERSCORE, HAVE_UNDERSCORE defined"
+#endif
+
+#else  /* PIC */
+#define FUNC_PREFIX ""
+#define FUNC_SUFFIX ""
+#endif
+
 #if MYTH_CONTEXT == MYTH_CONTEXT_i386
 
+#if 0
 //Suffix for PLT
 #if PIC
 #define FUNC_SUFFIX "@PLT"
@@ -288,6 +311,7 @@ static inline void myth_make_context_empty(myth_context_t ctx, void *stack,
 #define FUNC_SUFFIX ""
 #define GOTPCREL_SUFFIX ""
 #endif
+#endif	/* 0 */
 
 #if MYTH_INLINE_PUSH_CALLEE_SAVED
 #define PUSH_CALLEE_SAVED() \
@@ -375,6 +399,7 @@ static inline void myth_make_context_empty(myth_context_t ctx, void *stack,
 
 #elif MYTH_CONTEXT == MYTH_CONTEXT_amd64 || MYTH_CONTEXT == MYTH_CONTEXT_amd64_knc
 
+#if 0
 //Suffix for PLT
 #if PIC
 //Linux
@@ -388,6 +413,7 @@ static inline void myth_make_context_empty(myth_context_t ctx, void *stack,
 #define FUNC_SUFFIX 
 #define GOTPCREL_SUFFIX 
 #endif
+#endif	/* 0 */
 
 #if PIC
 #define PUSH_LABEL_USING_A(label) \

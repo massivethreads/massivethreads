@@ -1,5 +1,8 @@
 /* src/config.h.in.  Generated from configure.ac by autoheader.  */
 
+/* global symbol modifier (foo) */
+#undef GLOBAL_SYM_MODIFIER
+
 /* if set, aligned_alloc is declared in stdlib.h */
 #undef HAVE_ALIGNED_ALLOC
 
@@ -21,8 +24,14 @@
 /* Define to 1 if you have the <malloc.h> header file. */
 #undef HAVE_MALLOC_H
 
+/* if set, memalign is declared in stdlib.h */
+#undef HAVE_MEMALIGN
+
 /* Define to 1 if you have the <memory.h> header file. */
 #undef HAVE_MEMORY_H
+
+/* if set, pvalloc is declared in stdlib.h */
+#undef HAVE_PVALLOC
 
 /* Define to 1 if you have the <sqlite3.h> header file. */
 #undef HAVE_SQLITE3_H
