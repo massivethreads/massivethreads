@@ -93,11 +93,15 @@ check_PROGRAMS += myth_free_ld
 check_PROGRAMS += myth_calloc_ld
 check_PROGRAMS += myth_posix_memalign_ld
 check_PROGRAMS += myth_valloc_ld
+if BUILD_TEST_MYTH_MEMALIGN
 check_PROGRAMS += myth_memalign_ld
+endif
 if BUILD_TEST_MYTH_ALIGNED_ALLOC
 check_PROGRAMS += myth_aligned_alloc_ld
 endif
+if BUILD_TEST_MYTH_PVALLOC
 check_PROGRAMS += myth_pvalloc_ld
+endif
 check_PROGRAMS += myth_realloc_ld
 check_PROGRAMS += myth_create_0_ld
 check_PROGRAMS += myth_create_1_ld
@@ -185,11 +189,15 @@ check_PROGRAMS += myth_free_dl
 check_PROGRAMS += myth_calloc_dl
 check_PROGRAMS += myth_posix_memalign_dl
 check_PROGRAMS += myth_valloc_dl
+if BUILD_TEST_MYTH_MEMALIGN
 check_PROGRAMS += myth_memalign_dl
+endif
 if BUILD_TEST_MYTH_ALIGNED_ALLOC
 check_PROGRAMS += myth_aligned_alloc_dl
 endif
+if BUILD_TEST_MYTH_PVALLOC
 check_PROGRAMS += myth_pvalloc_dl
+endif
 check_PROGRAMS += myth_realloc_dl
 check_PROGRAMS += myth_create_0_dl
 check_PROGRAMS += myth_create_1_dl
