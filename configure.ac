@@ -227,12 +227,23 @@ AM_CONDITIONAL([BUILD_MYTH_LD],
 # ------
 # -ldl dlopen
 # ------
-AC_CHECK_LIB(dl, dlopen,
-		 [have_dlopen="yes"],
-		 [have_dlopen="no"])
+AC_CHECK_LIB(dl, dlsym,
+		 [have_dlsym="yes"],
+		 [have_dlsym="no"])
+
+AC_CHECK_HEADERS([dlfcn.h])
+
+AC_CHECK_DECL(RTLD_NEXT,
+	[have_rtld_next="yes"],
+	[have_rtld_next="no"],
+[#define _GNU_SOURCE
+#ifdef HAVE_DLFCN_H
+# include <dlfcn.h>
+#endif
+])
 
 AM_CONDITIONAL([BUILD_MYTH_DL],
-	[test x"$enable_myth_dl" = "xyes" -a x"$have_dlopen" = "xyes" ])
+	[test x"$enable_myth_dl" = "xyes" -a x"$have_rtld_next" = "xyes" ])
 
 
 # -------------
