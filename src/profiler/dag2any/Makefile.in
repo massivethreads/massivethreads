@@ -308,7 +308,8 @@ top_srcdir = @top_srcdir@
 ACLOCAL_AMFLAGS = -I m4
 dag2any_SOURCES = dag2any.c
 dag2any_CFLAGS = -I$(abs_top_srcdir)/src/profiler -DDAG_RECORDER=2
-dag2any_LDFLAGS = -L$(abs_top_builddir)/src/profiler -Wl,-R$(abs_top_builddir)/src/profiler -ldr @LIBSQLITE3@
+#dag2any_LDFLAGS = -L$(abs_top_builddir)/src/profiler -Wl,-R$(abs_top_builddir)/src/profiler -ldr @LIBSQLITE3@
+dag2any_LDFLAGS = -L$(abs_top_builddir)/src/profiler -ldr @LIBSQLITE3@
 all: all-am
 
 .SUFFIXES:
