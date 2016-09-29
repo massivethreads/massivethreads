@@ -300,7 +300,9 @@ if test x"$have_memalign" = "xyes" ; then
 		[if set, memalign is declared in stdlib.h])
 fi
 AM_CONDITIONAL([BUILD_TEST_MYTH_MEMALIGN],
-	[test x"$have_memalign" = "xyes" ])
+	[ test x = y ])
+
+# [ test x"$have_memalign" = "xyes" ]
 
 # 
 # pvalloc
