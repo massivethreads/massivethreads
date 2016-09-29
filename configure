@@ -5837,7 +5837,7 @@ cat >>confdefs.h <<_ACEOF
 _ACEOF
 
 fi
- if test x"$have_memalign" = "xyes" ; then
+ if  test x = y ; then
   BUILD_TEST_MYTH_MEMALIGN_TRUE=
   BUILD_TEST_MYTH_MEMALIGN_FALSE='#'
 else
@@ -5845,6 +5845,8 @@ else
   BUILD_TEST_MYTH_MEMALIGN_FALSE=
 fi
 
+
+# [ test x"$have_memalign" = "xyes" ]
 
 #
 # pvalloc
