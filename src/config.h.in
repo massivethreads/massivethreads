@@ -30,6 +30,12 @@
 /* Define to 1 if you have the <memory.h> header file. */
 #undef HAVE_MEMORY_H
 
+/* if set, pthread_barrier is declared in pthread.h */
+#undef HAVE_PTHREAD_BARRIER
+
+/* if set, pthread_yield is declared in pthread.h */
+#undef HAVE_PTHREAD_YIELD
+
 /* if set, pvalloc is declared in stdlib.h */
 #undef HAVE_PVALLOC
 

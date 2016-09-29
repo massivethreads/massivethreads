@@ -324,6 +324,48 @@ fi
 AM_CONDITIONAL([BUILD_TEST_MYTH_PVALLOC],
 	[test x"$have_pvalloc" = "xyes" ])
 
+
+# 
+# pthread_barrier
+# 
+
+AC_MSG_CHECKING([pthread_barrier_init])
+AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+#include <pthread.h>
+]],
+	[[ pthread_barrier_init(0, 0, 0); ]])],
+	[have_pthread_barrier_init="yes"],
+	[have_pthread_barrier_init="no"])
+AC_MSG_RESULT([$have_pthread_barrier_init])
+if test x"$have_pthread_barrier_init = "xyes" ; then
+   AC_DEFINE_UNQUOTED([HAVE_PTHREAD_BARRIER],[1],
+		[if set, pthread_barrier is declared in pthread.h])
+fi
+AM_CONDITIONAL([BUILD_TEST_PTH_BARRIER],
+	[test x"$have_pthread_barrier_init = "xyes" ])
+
+
+# 
+# pthread_yield
+# 
+
+AC_MSG_CHECKING([pthread_yield])
+AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+#define _GNU_SOURCE
+#include <pthread.h>
+]],
+	[[ pthread_yield(); ]])],
+	[have_pthread_yield="yes"],
+	[have_pthread_yield="no"])
+AC_MSG_RESULT([$have_pthread_yield])
+if test x"$have_pthread_yield = "xyes" ; then
+   AC_DEFINE_UNQUOTED([HAVE_PTHREAD_YIELD],[1],
+		[if set, pthread_yield is declared in pthread.h])
+fi
+AM_CONDITIONAL([BUILD_TEST_PTH_BARRIER],
+	[test x"$have_pthread_yield = "xyes" ])
+
+
 #
 # for C program tests that follow, we treat warnings as error,
 # as some tests work by checking if the compiler issues a

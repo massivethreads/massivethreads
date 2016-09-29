@@ -674,6 +674,8 @@ CXXDEPMODE
 ac_ct_CXX
 CXXFLAGS
 CXX
+BUILD_TEST_PTH_BARRIER_FALSE
+BUILD_TEST_PTH_BARRIER_TRUE
 BUILD_TEST_MYTH_PVALLOC_FALSE
 BUILD_TEST_MYTH_PVALLOC_TRUE
 BUILD_TEST_MYTH_MEMALIGN_FALSE
@@ -5891,6 +5893,98 @@ else
   BUILD_TEST_MYTH_PVALLOC_TRUE='#'
   BUILD_TEST_MYTH_PVALLOC_FALSE=
 fi
+
+
+
+#
+# pthread_barrier
+#
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking pthread_barrier_init" >&5
+$as_echo_n "checking pthread_barrier_init... " >&6; }
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+#include <pthread.h>
+
+int
+main ()
+{
+ pthread_barrier_init(0, 0, 0);
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  have_pthread_barrier_init="yes"
+else
+  have_pthread_barrier_init="no"
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $have_pthread_barrier_init" >&5
+$as_echo "$have_pthread_barrier_init" >&6; }
+if test x"$have_pthread_barrier_init = "xyes" ; then
+
+cat >>confdefs.h <<_ACEOF
+#define HAVE_PTHREAD_BARRIER 1
+_ACEOF
+
+fi
+ if test x"$have_pthread_barrier_init = "xyes" ; then
+  BUILD_TEST_PTH_BARRIER_TRUE=
+  BUILD_TEST_PTH_BARRIER_FALSE='#'
+else
+  BUILD_TEST_PTH_BARRIER_TRUE='#'
+  BUILD_TEST_PTH_BARRIER_FALSE=
+fi
+
+
+
+#
+# pthread_yield
+#
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking pthread_yield" >&5
+$as_echo_n "checking pthread_yield... " >&6; }
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+#define _GNU_SOURCE
+#include <pthread.h>
+
+int
+main ()
+{
+ pthread_yield();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  have_pthread_yield="yes"
+else
+  have_pthread_yield="no"
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $have_pthread_yield" >&5
+$as_echo "$have_pthread_yield" >&6; }
+if test x"$have_pthread_yield = "xyes" ; then
+
+cat >>confdefs.h <<_ACEOF
+#define HAVE_PTHREAD_YIELD 1
+_ACEOF
+
+fi
+ if test x"$have_pthread_yield = "xyes" ; then
+  BUILD_TEST_PTH_BARRIER_TRUE=
+  BUILD_TEST_PTH_BARRIER_FALSE='#'
+else
+  BUILD_TEST_PTH_BARRIER_TRUE='#'
+  BUILD_TEST_PTH_BARRIER_FALSE=
+fi
+
 
 
 #
@@ -17679,6 +17773,14 @@ Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${BUILD_TEST_MYTH_PVALLOC_TRUE}" && test -z "${BUILD_TEST_MYTH_PVALLOC_FALSE}"; then
   as_fn_error $? "conditional \"BUILD_TEST_MYTH_PVALLOC\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
+if test -z "${BUILD_TEST_PTH_BARRIER_TRUE}" && test -z "${BUILD_TEST_PTH_BARRIER_FALSE}"; then
+  as_fn_error $? "conditional \"BUILD_TEST_PTH_BARRIER\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
+if test -z "${BUILD_TEST_PTH_BARRIER_TRUE}" && test -z "${BUILD_TEST_PTH_BARRIER_FALSE}"; then
+  as_fn_error $? "conditional \"BUILD_TEST_PTH_BARRIER\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${am__fastdepCXX_TRUE}" && test -z "${am__fastdepCXX_FALSE}"; then
