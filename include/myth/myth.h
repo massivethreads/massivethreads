@@ -21,24 +21,28 @@ extern "C" {
      --------------------------------------- */
 
   enum { 
-    MYTH_MUTEX_NORMAL,
-    MYTH_MUTEX_ERRORCHECK,
-    MYTH_MUTEX_RECURSIVE,
-    MYTH_MUTEX_INVALID,
+    MYTH_MUTEX_NORMAL = 0,
+    MYTH_MUTEX_ERRORCHECK = 1,
+    MYTH_MUTEX_RECURSIVE = 2,
+    MYTH_MUTEX_INVALID = 3,
     MYTH_MUTEX_DEFAULT = MYTH_MUTEX_NORMAL
   };
   
   typedef struct myth_mutexattr {
-    int type;
+    int type;			/* one of the above constants */
   } myth_mutexattr_t;
 
   typedef struct myth_mutex {
+    int magic;
+    myth_mutexattr_t attr;
     myth_sleep_queue_t sleep_q[1];
     volatile long state;		/* n_waiters|locked */
-    myth_mutexattr_t attr;
   } myth_mutex_t;
 
-#define MYTH_MUTEX_INITIALIZER { { MYTH_SLEEP_QUEUE_INITIALIZER }, 0, { MYTH_MUTEX_DEFAULT }  }
+  enum { myth_mutex_magic_no = 123456789, 
+	 myth_mutex_magic_no_initializing = 987654321 };
+	 
+#define MYTH_MUTEX_INITIALIZER { myth_mutex_magic_no, { MYTH_MUTEX_DEFAULT }, { MYTH_SLEEP_QUEUE_INITIALIZER }, 0 }
 
   /* ---------------------------------------
      --- reader-writer lock  ---

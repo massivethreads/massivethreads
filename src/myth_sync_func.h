@@ -438,6 +438,7 @@ static inline int myth_mutex_init_body(myth_mutex_t * mutex,
   } else {
     myth_mutexattr_init_body(&mutex->attr);
   }
+  mutex->magic = myth_mutex_magic_no;
   return 0;
 }
 

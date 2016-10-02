@@ -23,12 +23,12 @@ extern "C" {
   } myth_sleep_queue_item, * myth_sleep_queue_item_t;
 
   typedef struct {
+    myth_spinlock_t ilock[1];
     volatile myth_sleep_queue_item_t head;
     volatile myth_sleep_queue_item_t tail;
-    myth_spinlock_t ilock[1];
   } myth_sleep_queue_t;
   
-#define MYTH_SLEEP_QUEUE_INITIALIZER { 0, 0, MYTH_INTERNAL_LOCK_INITIALIZER }
+#define MYTH_SLEEP_QUEUE_INITIALIZER { { MYTH_SPINLOCK_INITIALIZER }, 0, 0 }
 
   typedef struct {
     volatile myth_sleep_queue_item_t top;

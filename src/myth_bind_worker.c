@@ -258,6 +258,7 @@ void myth_get_available_cpus(void) {
 #endif	/* debug */
 }
 
+#if HAVE_PTHREAD_AFFINITY_NP
 static int myth_get_worker_cpu(int rank) {
   assert(n_available_cpus >= 0);
   if (n_available_cpus == 0) {
@@ -266,6 +267,7 @@ static int myth_get_worker_cpu(int rank) {
     return worker_cpu[rank % n_available_cpus];
   }
 }
+#endif
 
 void myth_bind_worker(int rank) {
 #if HAVE_PTHREAD_AFFINITY_NP
@@ -276,6 +278,8 @@ void myth_bind_worker(int rank) {
     CPU_SET(cpu, &cs);
     real_pthread_setaffinity_np(real_pthread_self(), sizeof(cpu_set_t), &cs);
   }
+#else
+  (void)rank;
 #endif
 }
 

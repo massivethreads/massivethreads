@@ -57,11 +57,11 @@ static inline myth_running_env_t myth_get_current_env(void) {
 }
 #elif WENV_IMPL == WENV_IMPL_ELF
 //Initialize
-static void myth_env_init(void) { }
+static inline void myth_env_init(void) { }
 //Cleanup
-static void myth_env_fini(void) { }
+static inline void myth_env_fini(void) { }
 //Set worker thread descriptor
-static void myth_set_current_env(myth_running_env_t e) {
+static inline void myth_set_current_env(myth_running_env_t e) {
   g_worker_rank = e->rank;
 }
 //Return current worker thread descriptor

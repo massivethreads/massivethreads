@@ -333,10 +333,10 @@
 #define HAVE_PTHREAD_SPIN 1
 
 #define HAVE_PTHREAD_MUTEX_CONSISTENT 1
+#define HAVE_PTHREAD_MUTEXATTR_ROBUST 1
 
 #endif
 
 /* don't know if they are necessary at all */
-#define HAVE_PTHREAD_MUTEXATTR_ROBUST 1
 
 #endif /* MYTH_CONFIG_H_ */

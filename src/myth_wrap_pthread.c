@@ -752,12 +752,39 @@ int __wrap(pthread_mutex_destroy)(pthread_mutex_t *mutex) {
   return ret;
 }
 
+/* do our best to handle mutex initialized by
+   pthread_t m = PTHREAD_MUTEX_INITIALIZER;
+   if such a mutex is passed, we reinitialize it,
+   as if myth_muex_init is called.
+ */
+
+static int myth_handle_PTHREAD_MUTEX_INITIALIZER(pthread_mutex_t * pm) {
+  myth_mutex_t * m = (myth_mutex_t *)pm;
+  volatile int * magic_p = (volatile int *)&m->magic;
+  int magic = * magic_p;
+  if (magic != myth_mutex_magic_no) {
+    if (magic != myth_mutex_magic_no_initializing
+	&& __sync_bool_compare_and_swap(magic_p, magic, myth_mutex_magic_no_initializing)) {
+      myth_mutex_t mi = MYTH_MUTEX_INITIALIZER;
+      mi.magic = myth_mutex_magic_no_initializing;
+      *m = mi;
+      myth_rwbarrier();
+      *magic_p = myth_mutex_magic_no;
+    } else {
+      while (*magic_p == myth_mutex_magic_no_initializing) { }
+      myth_assert(*magic_p == myth_mutex_magic_no);
+    }
+  }
+  return 0;
+}
+
 /* pthread_mutex_trylock (3posix) - lock and unlock a mutex */
 int __wrap(pthread_mutex_trylock)(pthread_mutex_t *mutex) {
   int _ = enter_wrapped_func("%p", mutex);
   int ret;
   (void)_;
   if (myth_should_wrap_pthread()) {
+    myth_handle_PTHREAD_MUTEX_INITIALIZER(mutex);
     ret = myth_mutex_trylock_body((myth_mutex_t *)mutex);
   } else {
     ret = real_pthread_mutex_trylock(mutex);
@@ -772,6 +799,7 @@ int __wrap(pthread_mutex_lock)(pthread_mutex_t *mutex) {
   int ret;
   (void)_;
   if (myth_should_wrap_pthread()) {
+    myth_handle_PTHREAD_MUTEX_INITIALIZER(mutex);
     ret = myth_mutex_lock_body((myth_mutex_t *)mutex);
   } else {
     ret = real_pthread_mutex_lock(mutex);
@@ -787,6 +815,7 @@ int __wrap(pthread_mutex_timedlock)(pthread_mutex_t *restrict mutex,
   int ret;
   (void)_;
   if (myth_should_wrap_pthread()) {
+    myth_handle_PTHREAD_MUTEX_INITIALIZER(mutex);
     ret = myth_mutex_timedlock_body((myth_mutex_t *)mutex, abstime);
   } else {
     ret = real_pthread_mutex_timedlock(mutex, abstime);
@@ -801,6 +830,7 @@ int __wrap(pthread_mutex_unlock)(pthread_mutex_t *mutex) {
   int ret;
   (void)_;
   if (myth_should_wrap_pthread()) {
+    myth_handle_PTHREAD_MUTEX_INITIALIZER(mutex);
     ret = myth_mutex_unlock_body((myth_mutex_t *)mutex);
   } else {
     ret = real_pthread_mutex_unlock(mutex);
@@ -816,6 +846,7 @@ int __wrap(pthread_mutex_getprioceiling)(const pthread_mutex_t *restrict mutex,
   int ret;
   (void)_;
   if (myth_should_wrap_pthread()) {
+    //myth_handle_PTHREAD_MUTEX_INITIALIZER(mutex); contradicts const
     myth_wrap_pthread_warn_non_conforming();
     ret = ENOSYS;
   } else {
@@ -833,6 +864,7 @@ int __wrap(pthread_mutex_setprioceiling)
   int ret;
   (void)_;
   if (myth_should_wrap_pthread()) {
+    myth_handle_PTHREAD_MUTEX_INITIALIZER(mutex);
     myth_wrap_pthread_warn_non_conforming();
     ret = ENOSYS;
   } else {
@@ -849,6 +881,7 @@ int __wrap(pthread_mutex_consistent)(pthread_mutex_t *mutex) {
   int ret;
   (void)_;
   if (myth_should_wrap_pthread()) {
+    myth_handle_PTHREAD_MUTEX_INITIALIZER(mutex);
     myth_wrap_pthread_warn_non_conforming();
     ret = ENOSYS;
   } else {
