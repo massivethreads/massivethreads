@@ -142,7 +142,7 @@ typedef struct {
   int (*pthread_mutex_destroy)(pthread_mutex_t *mutex);
   int (*pthread_mutex_trylock)(pthread_mutex_t *mutex);
   int (*pthread_mutex_lock)(pthread_mutex_t *mutex);
-#if defined(HAVE_PTHREAD_TIMEDLOCK)
+#if defined(HAVE_PTHREAD_MUTEX_TIMEDLOCK)
   int (*pthread_mutex_timedlock)(pthread_mutex_t *restrict mutex,
 				 const struct timespec *restrict abstime);
 #endif
@@ -425,7 +425,7 @@ static shared_object_symbol s_so_syms[] = {
   so_symbol_entry(pthread_mutex_destroy, libpthread),
   so_symbol_entry(pthread_mutex_trylock, libpthread),
   so_symbol_entry(pthread_mutex_lock, libpthread),
-#if defined(HAVE_PTHREAD_TIMEDLOCK)
+#if defined(HAVE_PTHREAD_MUTEX_TIMEDLOCK)
   so_symbol_entry(pthread_mutex_timedlock, libpthread),
 #endif
 
@@ -499,7 +499,6 @@ static shared_object_symbol s_so_syms[] = {
 
 #if defined(HAVE_PTHREAD_CONDATTR_CLOCK)
   so_symbol_entry(pthread_condattr_getclock, libpthread),
-
   so_symbol_entry(pthread_condattr_setclock, libpthread),
 
 #endif
@@ -1720,7 +1719,7 @@ int real_pthread_mutex_lock(pthread_mutex_t *mutex) {
 #endif
 }
 
-#if defined(HAVE_PTHREAD_TIMEDLOCK)
+#if defined(HAVE_PTHREAD_MUTEX_TIMEDLOCK)
 #if MYTH_WRAP == MYTH_WRAP_LD
 int __real_pthread_mutex_timedlock(pthread_mutex_t *restrict mutex,
 				 const struct timespec *restrict abstime);
@@ -1739,7 +1738,7 @@ int real_pthread_mutex_timedlock(pthread_mutex_t *restrict mutex,
 #error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
 }
-#endif /* HAVE_PTHREAD_TIMEDLOCK */
+#endif /* HAVE_PTHREAD_MUTEX_TIMEDLOCK */
 
 #if MYTH_WRAP == MYTH_WRAP_LD
 int __real_pthread_mutex_unlock(pthread_mutex_t *mutex);

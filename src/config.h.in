@@ -3,6 +3,9 @@
 /* global symbol modifier (foo) */
 #undef GLOBAL_SYM_MODIFIER
 
+/* Define to 1 if you have the `accept4' function. */
+#undef HAVE_ACCEPT4
+
 /* if set, aligned_alloc is declared in stdlib.h */
 #undef HAVE_ALIGNED_ALLOC
 
@@ -21,6 +24,9 @@
 /* Define to 1 if you have the `rt' library (-lrt). */
 #undef HAVE_LIBRT
 
+/* Define to 1 if you have the <link.h> header file. */
+#undef HAVE_LINK_H
+
 /* Define to 1 if you have the <malloc.h> header file. */
 #undef HAVE_MALLOC_H
 
@@ -30,14 +36,80 @@
 /* Define to 1 if you have the <memory.h> header file. */
 #undef HAVE_MEMORY_H
 
+/* pthread_attr_setaffinity_np etc. */
+#undef HAVE_PTHREAD_AFFINITY_NP
+
+/* pthread_getattr_default_np etc. */
+#undef HAVE_PTHREAD_ATTR_NP
+
+/* Define to 1 if you have the `pthread_attr_setaffinity_np' function. */
+#undef HAVE_PTHREAD_ATTR_SETAFFINITY_NP
+
 /* if set, pthread_barrier is declared in pthread.h */
 #undef HAVE_PTHREAD_BARRIER
+
+/* pthread_getconcurrency etc. */
+#undef HAVE_PTHREAD_CONCURRENCY
+
+/* pthread_condattr_getclock etc. */
+#undef HAVE_PTHREAD_CONDATTR_CLOCK
+
+/* Define to 1 if you have the `pthread_condattr_getclock' function. */
+#undef HAVE_PTHREAD_CONDATTR_GETCLOCK
+
+/* Define to 1 if you have the `pthread_getattr_default_np' function. */
+#undef HAVE_PTHREAD_GETATTR_DEFAULT_NP
+
+/* Define to 1 if you have the `pthread_getconcurrency' function. */
+#undef HAVE_PTHREAD_GETCONCURRENCY
+
+/* Define to 1 if you have the `pthread_getcpuclockid' function. */
+#undef HAVE_PTHREAD_GETCPUCLOCKID
+
+/* Define to 1 if you have the `pthread_getname_np' function. */
+#undef HAVE_PTHREAD_GETNAME_NP
+
+/* pthread_tryjoin_np etc. */
+#undef HAVE_PTHREAD_JOIN_NP
+
+/* Define to 1 if you have the `pthread_mutexattr_getrobust' function. */
+#undef HAVE_PTHREAD_MUTEXATTR_GETROBUST
+
+/* pthread_mutexattr_getrobust etc. */
+#undef HAVE_PTHREAD_MUTEXATTR_ROBUST
+
+/* Define to 1 if you have the `pthread_mutex_consistent' function. */
+#undef HAVE_PTHREAD_MUTEX_CONSISTENT
+
+/* Define to 1 if you have the `pthread_mutex_timedlock' function. */
+#undef HAVE_PTHREAD_MUTEX_TIMEDLOCK
+
+/* pthread_getname_np etc. */
+#undef HAVE_PTHREAD_NAME_NP
+
+/* Define to 1 if you have the `pthread_setschedprio' function. */
+#undef HAVE_PTHREAD_SETSCHEDPRIO
+
+/* Define to 1 if you have the `pthread_sigqueue' function. */
+#undef HAVE_PTHREAD_SIGQUEUE
+
+/* pthread_spin_init etc. */
+#undef HAVE_PTHREAD_SPIN
+
+/* Define to 1 if you have the `pthread_spin_init' function. */
+#undef HAVE_PTHREAD_SPIN_INIT
+
+/* Define to 1 if you have the `pthread_tryjoin_np' function. */
+#undef HAVE_PTHREAD_TRYJOIN_NP
 
 /* if set, pthread_yield is declared in pthread.h */
 #undef HAVE_PTHREAD_YIELD
 
 /* if set, pvalloc is declared in stdlib.h */
 #undef HAVE_PVALLOC
+
+/* Define to 1 if you have the `sched_getaffinity' function. */
+#undef HAVE_SCHED_GETAFFINITY
 
 /* Define to 1 if you have the <sqlite3.h> header file. */
 #undef HAVE_SQLITE3_H
@@ -54,6 +126,9 @@
 /* Define to 1 if you have the <string.h> header file. */
 #undef HAVE_STRING_H
 
+/* Define to 1 if you have the `sysconf' function. */
+#undef HAVE_SYSCONF
+
 /* Define to 1 if you have the <sys/stat.h> header file. */
 #undef HAVE_SYS_STAT_H
 
@@ -65,9 +140,6 @@
 
 /* Define to the sub-directory where libtool stores uninstalled libraries. */
 #undef LT_OBJDIR
-
-/* if 1, bind workers by default */
-#undef MYTH_BIND_WORKERS
 
 /* if 1, child first by default */
 #undef MYTH_CHILD_FIRST

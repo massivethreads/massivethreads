@@ -295,48 +295,4 @@
 #define MYTH_WRAP_DL      3
 #define MYTH_WRAP_LD      4
 
-/* ------------------
-   stuff that should be moved to config.h 
-   ------------------ */
-
-#define HAVE_SYSCONF 1
-
-#if 0				/* mac */
-
-#define HAVE_PTHREAD_TIMEDLOCK 1
-#define HAVE_PTHREAD_SCHEDPRIO 1
-
-
-#define HAVE_DL_ITERATE_BY_PHDR 1
-
-#define HAVE_CLOCK_GETTIME 1
-
-#define HAVE_ACCEPT4 1
-
-#define HAVE_PTHREAD_CONCURRENCY 1
-
-#define HAVE_SCHED_GETAFFINITY 1
-
-#define HAVE_PTHREAD_AFFINITY_NP 1
-
-#define HAVE_PTHREAD_ATTR_NP 1
-
-#define HAVE_PTHREAD_NAME_NP 1
-
-#define HAVE_PTHREAD_JOIN_NP 1
-
-#define HAVE_PTHREAD_SIGQUEUE 1
-
-
-#define HAVE_PTHREAD_CONDATTR_CLOCK  1
-#define HAVE_PTHREAD_GETCPUCLOCKID 1
-#define HAVE_PTHREAD_SPIN 1
-
-#define HAVE_PTHREAD_MUTEX_CONSISTENT 1
-#define HAVE_PTHREAD_MUTEXATTR_ROBUST 1
-
-#endif
-
-/* don't know if they are necessary at all */
-
 #endif /* MYTH_CONFIG_H_ */

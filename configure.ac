@@ -250,12 +250,78 @@ AM_CONDITIONAL([BUILD_MYTH_DL],
 # -lrt clock_gettime
 # -------------
 AC_CHECK_LIB(rt, clock_gettime)
+# define HAVE_CLOCK_GETTIME 1
 
 # =============================
 # headers
 # =============================
 
 AC_CHECK_HEADERS([malloc.h])
+AC_CHECK_HEADERS([link.h])
+# define HAVE_DL_ITERATE_BY_PHDR 1
+
+
+
+
+# =============================
+# functions
+# =============================
+
+AC_CHECK_FUNCS([sysconf])
+# define HAVE_SYSCONF 1
+
+AC_CHECK_FUNCS([accept4])
+#define HAVE_ACCEPT4 1
+
+AC_CHECK_FUNCS([sched_getaffinity])
+# define HAVE_SCHED_GETAFFINITY 1
+
+AC_CHECK_FUNCS([pthread_mutex_timedlock])
+# define HAVE_PTHREAD_TIMEDLOCK 1
+
+AC_CHECK_FUNCS([pthread_setschedprio])
+# define HAVE_PTHREAD_SCHEDPRIO 1
+
+AC_CHECK_FUNCS([pthread_getconcurrency],
+	   [AC_DEFINE_UNQUOTED([HAVE_PTHREAD_CONCURRENCY],[],[pthread_getconcurrency etc.])])
+# define HAVE_PTHREAD_CONCURRENCY 1
+
+AC_CHECK_FUNCS([pthread_attr_setaffinity_np],
+	   [AC_DEFINE_UNQUOTED([HAVE_PTHREAD_AFFINITY_NP],[],[pthread_attr_setaffinity_np etc.])])
+# define HAVE_PTHREAD_AFFINITY_NP 1
+
+AC_CHECK_FUNCS([pthread_getattr_default_np],
+	   [AC_DEFINE_UNQUOTED([HAVE_PTHREAD_ATTR_NP],[],[pthread_getattr_default_np etc.])])
+# define HAVE_PTHREAD_ATTR_NP 1
+
+AC_CHECK_FUNCS([pthread_getname_np],
+	   [AC_DEFINE_UNQUOTED([HAVE_PTHREAD_NAME_NP],[],[pthread_getname_np etc.])])
+# define HAVE_PTHREAD_NAME_NP 1
+
+AC_CHECK_FUNCS([pthread_tryjoin_np],
+	   [AC_DEFINE_UNQUOTED([HAVE_PTHREAD_JOIN_NP],[],[pthread_tryjoin_np etc.])])
+# define HAVE_PTHREAD_JOIN_NP 1
+
+AC_CHECK_FUNCS([pthread_sigqueue])
+# define HAVE_PTHREAD_SIGQUEUE 1
+
+AC_CHECK_FUNCS([pthread_condattr_getclock],
+	   [AC_DEFINE_UNQUOTED([HAVE_PTHREAD_CONDATTR_CLOCK],[],[pthread_condattr_getclock etc.])])
+# define HAVE_PTHREAD_CONDATTR_CLOCK  1
+
+AC_CHECK_FUNCS([pthread_getcpuclockid])
+# define HAVE_PTHREAD_GETCPUCLOCKID 1
+
+AC_CHECK_FUNCS([pthread_spin_init],
+	   [AC_DEFINE_UNQUOTED([HAVE_PTHREAD_SPIN],[],[pthread_spin_init etc.])])
+# define HAVE_PTHREAD_SPIN 1
+
+AC_CHECK_FUNCS([pthread_mutex_consistent])
+# define HAVE_PTHREAD_MUTEX_CONSISTENT 1
+
+AC_CHECK_FUNCS([pthread_mutexattr_getrobust],
+	   [AC_DEFINE_UNQUOTED([HAVE_PTHREAD_MUTEXATTR_ROBUST],[],[pthread_mutexattr_getrobust etc.])])
+# define HAVE_PTHREAD_MUTEXATTR_ROBUST 1
 
 
 # -----------------------------

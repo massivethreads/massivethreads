@@ -197,7 +197,7 @@ int myth_get_n_available_cpus(void) {
   return sysconf(_SC_NPROCESSORS_ONLN);
 #else
   return -1;			/* don't know how many cpus */
-#endif	/* HAVE_SCHED_GETAFFINITY */
+#endif	/* HAVE_SYSCONF */
 }
 
 void myth_get_available_cpus(void) {
@@ -258,7 +258,7 @@ void myth_get_available_cpus(void) {
 #endif	/* debug */
 }
 
-#if HAVE_PTHREAD_AFFINITY_NP
+#if defined(HAVE_PTHREAD_AFFINITY_NP)
 static int myth_get_worker_cpu(int rank) {
   assert(n_available_cpus >= 0);
   if (n_available_cpus == 0) {
@@ -270,7 +270,7 @@ static int myth_get_worker_cpu(int rank) {
 #endif
 
 void myth_bind_worker(int rank) {
-#if HAVE_PTHREAD_AFFINITY_NP
+#if defined(HAVE_PTHREAD_AFFINITY_NP)
   int cpu = myth_get_worker_cpu(rank);
   if (cpu != -1) {
     cpu_set_t cs;

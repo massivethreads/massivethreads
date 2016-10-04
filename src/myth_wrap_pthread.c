@@ -470,6 +470,7 @@ int __wrap(pthread_getschedparam)(pthread_t thread, int *policy,
   return ret;
 }
 
+#if defined(HAVE_PTHREAD_SCHEDPRIO)
 /* pthread_setschedprio (3) - set scheduling priority of a thread */
 /* pthread_setschedprio (3posix) - dynamic thread scheduling parameters access (REALTIME THR... */
 int __wrap(pthread_setschedprio)(pthread_t thread, int prio) {
@@ -485,6 +486,7 @@ int __wrap(pthread_setschedprio)(pthread_t thread, int prio) {
   leave_wrapped_func("%d", ret);
   return ret;
 }
+#endif
 
 #if defined(HAVE_PTHREAD_NAME_NP)
 /* pthread_getname_np (3) - set/get the name of a thread */
@@ -808,6 +810,7 @@ int __wrap(pthread_mutex_lock)(pthread_mutex_t *mutex) {
   return ret;
 }
 
+#if defined(HAVE_PTHREAD_MUTEX_TIMEDLOCK)
 /* pthread_mutex_timedlock (3posix) - lock a mutex */
 int __wrap(pthread_mutex_timedlock)(pthread_mutex_t *restrict mutex,
 				    const struct timespec *restrict abstime) {
@@ -823,6 +826,7 @@ int __wrap(pthread_mutex_timedlock)(pthread_mutex_t *restrict mutex,
   leave_wrapped_func("%d", ret);
   return ret;
 }
+#endif
 
 /* pthread_mutex_unlock (3posix) - lock and unlock a mutex */
 int __wrap(pthread_mutex_unlock)(pthread_mutex_t *mutex) {
