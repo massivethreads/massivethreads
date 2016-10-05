@@ -73,6 +73,7 @@ extern "C" {
      --------------------------------------- */
 
   typedef struct myth_condattr {
+    void * unused;		/* just to suppress warning against empty struct */
   } myth_condattr_t;
 
   //Conditional variable data structure
@@ -87,7 +88,9 @@ extern "C" {
      --- barrier ---
      --------------------------------------- */
 
-  typedef struct myth_barrierattr { } myth_barrierattr_t;
+  typedef struct myth_barrierattr {
+    void * unused;		/* just to suppress warning against empty struct */
+  } myth_barrierattr_t;
   typedef struct myth_barrier {
     long n_threads;
     volatile long state;
@@ -103,7 +106,9 @@ extern "C" {
      --------------------------------------- */
 
   //Join counter data structure
-  typedef struct myth_join_counterattr { } myth_join_counterattr_t;
+  typedef struct myth_join_counterattr {
+    void * unused;		/* just to suppress warning against empty struct */
+  } myth_join_counterattr_t;
   typedef struct myth_join_counter {
     /* TODO: conserve space? */
     long n_threads;		/* const : number of decrements to see */
@@ -119,7 +124,9 @@ extern "C" {
      --------------------------------------- */
 
   //Full/empty lock data structure
-  typedef struct myth_felockattr { } myth_felockattr_t;
+  typedef struct myth_felockattr {
+    void * unused;		/* just to suppress warning against empty struct */
+  } myth_felockattr_t;
 
   typedef struct myth_felock {
     myth_mutex_t mutex[1];
