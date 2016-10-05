@@ -14,21 +14,21 @@ Supported Systems
 
 Massivethreads is mainly developed and tested on the following environment:
 
- | CPU        | OS     | OS ver. | compiler | compiler ver. |
- |------------|--------|---------|----------|---------------|
- |x86_64      |  Linux |  4.4    | GCC      | 5.4.0         |
- |KNC         |  Linux |         | GCC      |               |
- |KNL         |  Linux |         | GCC      |               |
- |x86_64      |  Darwin| 12.6    | Clang    | 503.0.40      |
- |Sparc64IXfx |  Linux |         | GCC      |               |
+| CPU        | OS     | OS ver. | compiler | compiler ver. |
+|------------|--------|---------|----------|---------------|
+|x86_64      |  Linux |  4.4    | GCC      | 5.4.0         |
+|KNC         |  Linux |         | GCC      |               |
+|KNL         |  Linux |         | GCC      |               |
+|x86_64      |  Darwin| 12.6    | Clang    | 503.0.40      |
+|Sparc64IXfx |  Linux |         | GCC      |               |
 
 Other versions are likely to work.
 
 Combinations that are known NOT to work include
 
- | CPU        | OS     | OS ver. | compiler | compiler ver. |
- |------------|--------|---------|----------|---------------|
- |Sparc64IXfx |  Linux |         | FCC      |               |
+| CPU        | OS     | OS ver. | compiler | compiler ver. |
+|------------|--------|---------|----------|---------------|
+|Sparc64IXfx |  Linux |         | FCC      |               |
  
 Quick test
 ============================================================================
@@ -118,13 +118,13 @@ $ LD_PRELOAD=${PREFIX}/lib/libmyth-dl.so ./a.out
 
 In the table below, "define system functions" mean the library wrap some of pthread functions (e.g., pthread_create), memory allocating functions (e.g., malloc, calloc, etc.) and IO functions (e.g., recv, send, etc.) and replace them with user-level implementations.
 
- | name              | 0.97 and forward             | prior to 0.97  |
- |-------------------|------------------------------|----------------|
- | libmyth-native.so | N/A                          | define only native functions |
- | libmyth-compat.so | N/A                          | define only system functions |
- | libmyth.so        | define only native functions | define both native and system functions|
- | libmyth-ld.so     | define some system functions with --wrap=... option of gnu linker | N/A |
- | libmyth-dl.so     | define some system functions with dlopen/dlsym | N/A |
+| name              | 0.97 and forward             | prior to 0.97  |
+|-------------------|------------------------------|----------------|
+| libmyth-native.so | N/A                          | define only native functions |
+| libmyth-compat.so | N/A                          | define only system functions |
+| libmyth.so        | define only native functions | define both native and system functions|
+| libmyth-ld.so     | define some system functions with --wrap=... option of gnu linker | N/A |
+| libmyth-dl.so     | define some system functions with dlopen/dlsym | N/A |
 
 
 ## TBB-like interface
