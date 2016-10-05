@@ -117,11 +117,11 @@ int myth_join(myth_thread_t th,void **result) {
   return myth_join_body(th,result);
 }
 
-int myth_tryjoin_body(myth_thread_t th,void **result) {
+int myth_tryjoin(myth_thread_t th,void **result) {
   return myth_tryjoin_body(th, result);
 }
 
-int myth_timedjoin_body(myth_thread_t th, void **result,
+int myth_timedjoin(myth_thread_t th, void **result,
 			const struct timespec *abstime) {
   return myth_timedjoin_body(th, result, abstime);
 }
