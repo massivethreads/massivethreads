@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <time.h>
+#include <pthread.h>
 
 #include "myth/myth_spinlock.h"
 #include "myth/myth_sleep_queue.h"
