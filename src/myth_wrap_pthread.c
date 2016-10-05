@@ -510,7 +510,11 @@ int __wrap(pthread_setname_np)(
 			       pthread_t thread,
 #endif
 			       const char *name) {
+#if PTHREAD_SETNAME_ARITY == 2
   int _ = enter_wrapped_func("%x, %s", thread, name);
+#else
+  int _ = enter_wrapped_func("%s", name);
+#endif
   int ret;
   (void)_;
   if (myth_should_wrap_pthread()) {
