@@ -41,7 +41,7 @@ static inline uint64_t myth_get_rdtsc() {
 }
 
 static inline int hr_gettime(struct timespec * ts) {
-#if defined(HAVE_CLOCK_GETTIME)
+#if defined(HAVE_LIBRT)
   return clock_gettime(CLOCK_REALTIME, ts);
 #else
   struct timeval tv[1];
@@ -51,6 +51,8 @@ static inline int hr_gettime(struct timespec * ts) {
     ts->tv_nsec = tv->tv_usec * 1000;
     return 0;
   } else {
+    ts->tv_sec = 0;
+    ts->tv_nsec = 0;
     return r;
   }
 #endif
