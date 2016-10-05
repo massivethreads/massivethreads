@@ -5909,6 +5909,37 @@ done
 
 # define HAVE_PTHREAD_NAME_NP 1
 
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking pthread_setname_np arity" >&5
+$as_echo_n "checking pthread_setname_np arity... " >&6; }
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+#define _GNU_SOURCE
+#include <pthread.h>
+
+int
+main ()
+{
+ return (pthread_setname_np("") ? 1 : 0);
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  pthread_setname_arity=1
+else
+  pthread_setname_arity=2
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $pthread_setname_arity" >&5
+$as_echo "$pthread_setname_arity" >&6; }
+
+cat >>confdefs.h <<_ACEOF
+#define PTHREAD_SETNAME_ARITY $pthread_setname_arity
+_ACEOF
+
+
 for ac_func in pthread_tryjoin_np
 do :
   ac_fn_c_check_func "$LINENO" "pthread_tryjoin_np" "ac_cv_func_pthread_tryjoin_np"
@@ -17874,6 +17905,7 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
 ac_config_files="$ac_config_files Makefile include/Makefile src/Makefile src/profiler/Makefile src/profiler/dag2any/Makefile src/profiler/drview/Makefile tests/Makefile"
+
 
 ac_config_headers="$ac_config_headers src/config.h"
 

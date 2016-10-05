@@ -283,44 +283,64 @@ AC_CHECK_FUNCS([pthread_setschedprio])
 # define HAVE_PTHREAD_SCHEDPRIO 1
 
 AC_CHECK_FUNCS([pthread_getconcurrency],
-	   [AC_DEFINE_UNQUOTED([HAVE_PTHREAD_CONCURRENCY],[],[pthread_getconcurrency etc.])])
+[AC_DEFINE_UNQUOTED([HAVE_PTHREAD_CONCURRENCY],
+[],[pthread_getconcurrency etc.])])
 # define HAVE_PTHREAD_CONCURRENCY 1
 
 AC_CHECK_FUNCS([pthread_attr_setaffinity_np],
-	   [AC_DEFINE_UNQUOTED([HAVE_PTHREAD_AFFINITY_NP],[],[pthread_attr_setaffinity_np etc.])])
+[AC_DEFINE_UNQUOTED([HAVE_PTHREAD_AFFINITY_NP],
+[],[pthread_attr_setaffinity_np etc.])])
 # define HAVE_PTHREAD_AFFINITY_NP 1
 
 AC_CHECK_FUNCS([pthread_getattr_default_np],
-	   [AC_DEFINE_UNQUOTED([HAVE_PTHREAD_ATTR_NP],[],[pthread_getattr_default_np etc.])])
+[AC_DEFINE_UNQUOTED([HAVE_PTHREAD_ATTR_NP],
+[],[pthread_getattr_default_np etc.])])
 # define HAVE_PTHREAD_ATTR_NP 1
 
 AC_CHECK_FUNCS([pthread_getname_np],
-	   [AC_DEFINE_UNQUOTED([HAVE_PTHREAD_NAME_NP],[],[pthread_getname_np etc.])])
+[AC_DEFINE_UNQUOTED([HAVE_PTHREAD_NAME_NP],
+[],[pthread_getname_np etc.])])
 # define HAVE_PTHREAD_NAME_NP 1
 
+AC_MSG_CHECKING([pthread_setname_np arity])
+AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+#define _GNU_SOURCE
+#include <pthread.h>
+]],
+	[[ return (pthread_setname_np("") ? 1 : 0); ]])],
+	[pthread_setname_arity=1],
+	[pthread_setname_arity=2])
+AC_MSG_RESULT([$pthread_setname_arity])
+AC_DEFINE_UNQUOTED([PTHREAD_SETNAME_ARITY],[$pthread_setname_arity],
+	[the number of args pthread_setname_arity takes; it takes thread id and name on Linux but only name on Macintosh (older pthreads?)])
+
 AC_CHECK_FUNCS([pthread_tryjoin_np],
-	   [AC_DEFINE_UNQUOTED([HAVE_PTHREAD_JOIN_NP],[],[pthread_tryjoin_np etc.])])
+[AC_DEFINE_UNQUOTED([HAVE_PTHREAD_JOIN_NP],
+[],[pthread_tryjoin_np etc.])])
 # define HAVE_PTHREAD_JOIN_NP 1
 
 AC_CHECK_FUNCS([pthread_sigqueue])
 # define HAVE_PTHREAD_SIGQUEUE 1
 
 AC_CHECK_FUNCS([pthread_condattr_getclock],
-	   [AC_DEFINE_UNQUOTED([HAVE_PTHREAD_CONDATTR_CLOCK],[],[pthread_condattr_getclock etc.])])
+[AC_DEFINE_UNQUOTED([HAVE_PTHREAD_CONDATTR_CLOCK],
+[],[pthread_condattr_getclock etc.])])
 # define HAVE_PTHREAD_CONDATTR_CLOCK  1
 
 AC_CHECK_FUNCS([pthread_getcpuclockid])
 # define HAVE_PTHREAD_GETCPUCLOCKID 1
 
 AC_CHECK_FUNCS([pthread_spin_init],
-	   [AC_DEFINE_UNQUOTED([HAVE_PTHREAD_SPIN],[],[pthread_spin_init etc.])])
+[AC_DEFINE_UNQUOTED([HAVE_PTHREAD_SPIN],
+[],[pthread_spin_init etc.])])
 # define HAVE_PTHREAD_SPIN 1
 
 AC_CHECK_FUNCS([pthread_mutex_consistent])
 # define HAVE_PTHREAD_MUTEX_CONSISTENT 1
 
 AC_CHECK_FUNCS([pthread_mutexattr_getrobust],
-	   [AC_DEFINE_UNQUOTED([HAVE_PTHREAD_MUTEXATTR_ROBUST],[],[pthread_mutexattr_getrobust etc.])])
+[AC_DEFINE_UNQUOTED([HAVE_PTHREAD_MUTEXATTR_ROBUST],
+[],[pthread_mutexattr_getrobust etc.])])
 # define HAVE_PTHREAD_MUTEXATTR_ROBUST 1
 
 
@@ -530,18 +550,6 @@ AC_CONFIG_FILES([
 	src/profiler/drview/Makefile
 	tests/Makefile 
 ])
-dnl tests/native/Makefile 
-dnl tests/c/Makefile 
-dnl tests/c/fib/Makefile 
-dnl tests/c/profiler/Makefile 
-dnl tests/c/profiler/minimum/Makefile 
-dnl tests/cxx/Makefile 
-dnl tests/cxx/mtbb/Makefile 
-dnl tests/cxx/mtbb/callable/Makefile
-dnl tests/cxx/mtbb/callable/bin/Makefile
-dnl tests/cxx/mtbb/callable/profiler/Makefile
-dnl tests/cxx/mtbb/lambda/Makefile
-dnl tests/cxx/mtbb/lambda/bin/Makefile
-dnl tests/cxx/mtbb/lambda/profiler/Makefile
+
 AC_CONFIG_HEADERS([src/config.h])
 AC_OUTPUT

@@ -87,8 +87,15 @@ int real_pthread_getschedparam(pthread_t thread, int *policy,
 			       struct sched_param *param);
 int real_pthread_setschedprio(pthread_t thread, int prio);
 #if defined(HAVE_PTHREAD_NAME_NP)
+#if PTHREAD_SETNAME_ARITY == 2
 int real_pthread_getname_np(pthread_t thread, char *name, size_t len);
 int real_pthread_setname_np(pthread_t thread, const char *name);
+#elif PTHREAD_SETNAME_ARITY == 1
+int real_pthread_getname_np(char *name, size_t len);
+int real_pthread_setname_np(const char *name);
+#else
+#error "PTHREAD_SETNAME_ARITY should be 1 or 2"
+#endif
 #endif
 
 #if defined(HAVE_PTHREAD_CONCURRENCY)

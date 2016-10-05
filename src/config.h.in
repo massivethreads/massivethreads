@@ -189,6 +189,10 @@
 /* Define to the version of this package. */
 #undef PACKAGE_VERSION
 
+/* the number of args pthread_setname_arity takes; it takes thread id and name
+   on Linux but only name on Macintosh (older pthreads?) */
+#undef PTHREAD_SETNAME_ARITY
+
 /* The size of `int', as computed by sizeof. */
 #undef SIZEOF_INT
 

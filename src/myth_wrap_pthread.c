@@ -490,7 +490,11 @@ int __wrap(pthread_setschedprio)(pthread_t thread, int prio) {
 
 #if defined(HAVE_PTHREAD_NAME_NP)
 /* pthread_getname_np (3) - set/get the name of a thread */
-int __wrap(pthread_getname_np)(pthread_t thread, char *name, size_t len) {
+int __wrap(pthread_getname_np)(
+#if PTHREAD_SETNAME_ARITY == 2
+			       pthread_t thread,
+#endif
+			       char *name, size_t len) {
   int _ = enter_wrapped_func("%x, %s, %lu", thread, name, len);
   int ret;
   (void)_;
@@ -498,14 +502,22 @@ int __wrap(pthread_getname_np)(pthread_t thread, char *name, size_t len) {
     myth_wrap_pthread_warn_non_conforming();
     ret = ENOSYS;
   } else {
-    ret = real_pthread_getname_np(thread, name, len);
+    ret = real_pthread_getname_np(
+#if PTHREAD_SETNAME_ARITY == 2
+				  thread,
+#endif
+				  name, len);
   }
   leave_wrapped_func("%d", ret);
   return ret;
 }
 
 /* pthread_setname_np (3) - set/get the name of a thread */
-int __wrap(pthread_setname_np)(pthread_t thread, const char *name) {
+int __wrap(pthread_setname_np)(
+#if PTHREAD_SETNAME_ARITY == 2
+			       pthread_t thread,
+#endif
+			       const char *name) {
   int _ = enter_wrapped_func("%x, %s", thread, name);
   int ret;
   (void)_;
@@ -513,7 +525,11 @@ int __wrap(pthread_setname_np)(pthread_t thread, const char *name) {
     myth_wrap_pthread_warn_non_conforming();
     ret = ENOSYS;
   } else {
-    ret = real_pthread_setname_np(thread, name);
+    ret = real_pthread_setname_np(
+#if PTHREAD_SETNAME_ARITY == 2
+				  thread,
+#endif
+				  name);
   }
   leave_wrapped_func("%d", ret);
   return ret;
