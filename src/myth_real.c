@@ -115,11 +115,10 @@ typedef struct {
   int (*pthread_setschedprio)(pthread_t thread, int prio);
 #endif
 #if defined(HAVE_PTHREAD_NAME_NP)
-#if PTHREAD_SETNAME_ARITY == 2
   int (*pthread_getname_np)(pthread_t thread, char *name, size_t len);
+#if PTHREAD_SETNAME_ARITY == 2
   int (*pthread_setname_np)(pthread_t thread, const char *name);
 #elif PTHREAD_SETNAME_ARITY == 1
-  int (*pthread_getname_np)(char *name, size_t len);
   int (*pthread_setname_np)(const char *name);
 #else
 #error "PTHREAD_SETNAME_ARITY should be 1 or 2"
@@ -1431,40 +1430,17 @@ int real_pthread_setschedprio(pthread_t thread, int prio) {
 
 #if defined(HAVE_PTHREAD_NAME_NP)
 #if MYTH_WRAP == MYTH_WRAP_LD
-#if PTHREAD_SETNAME_ARITY == 2
 int __real_pthread_getname_np(pthread_t thread, char *name, size_t len);
-#elif PTHREAD_SETNAME_ARITY == 1
-int __real_pthread_getname_np(char *name, size_t len);
-#error "PTHREAD_SETNAME_ARITY should be 1 or 2"
-#error
 #endif
-
-#endif
-int real_pthread_getname_np(
-#if PTHREAD_SETNAME_ARITY == 2
-			    pthread_t thread,
-#endif
-			    char *name, size_t len) {
+int real_pthread_getname_np(pthread_t thread, char *name, size_t len) {
 #if MYTH_WRAP == MYTH_WRAP_VANILLA
-  return pthread_getname_np(
-#if PTHREAD_SETNAME_ARITY == 2
-			    thread,
-#endif
-			    name, len);
+  return pthread_getname_np(thread, name, len);
 #elif MYTH_WRAP == MYTH_WRAP_LD
-  return __real_pthread_getname_np(
-#if PTHREAD_SETNAME_ARITY == 2
-				   thread,
-#endif
-				   name, len);
+  return __real_pthread_getname_np(thread, name, len);
 #elif MYTH_WRAP == MYTH_WRAP_DL
   if (!real_function_table.pthread_getname_np) ensure_real_functions();
   assert(real_function_table.pthread_getname_np);
-  return real_function_table.pthread_getname_np(
-#if PTHREAD_SETNAME_ARITY == 2
-						thread,
-#endif
-						name, len);
+  return real_function_table.pthread_getname_np(thread, name, len);
 #else
 #error "MYTH_WRAP must be MYTH_WRAP_VANILLA, MYTH_WRAP_LD, or MYTH_WRAP_DL"
 #endif
