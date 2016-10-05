@@ -13,6 +13,7 @@
 #include "myth_sched_func.h"
 /* TODO: wsapi should be factored out in a separate file */
 #include "myth_wsqueue_func.h"
+#include "myth_wls_func.h"
 
 /* --------------------------------
    --- global initialization functions 
@@ -540,6 +541,26 @@ void *myth_getspecific(myth_key_t key) {
 
 int myth_setspecific(myth_key_t key, const void * pointer) {
   return myth_setspecific_body(key, pointer);
+}
+
+/* --------------------------------
+   --- worker local storage 
+   -------------------------------- */
+
+int myth_wls_key_create(myth_wls_key_t *key, void (*destructor)(void *)) {
+  return myth_wls_key_create_body(key, destructor);
+}
+
+int myth_wls_key_delete(myth_wls_key_t key) {
+  return myth_wls_key_delete_body(key);
+}
+
+void *myth_wls_getspecific(myth_wls_key_t key) {
+  return myth_wls_getspecific_body(key);
+}
+
+int myth_wls_setspecific(myth_wls_key_t key, const void * pointer) {
+  return myth_wls_setspecific_body(key, pointer);
 }
 
 /* --------------------------------------------------

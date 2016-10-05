@@ -1309,6 +1309,7 @@ extern "C" {
   */
   int myth_key_create(myth_key_t *key, void (*destr_function)(void *));
 
+
   /*
     Function: myth_key_delete
 
@@ -1370,12 +1371,11 @@ extern "C" {
   */
   void *myth_getspecific(myth_key_t key);
 
-
   /*
     Function: myth_get_worker_num
 
     Returns:
-    The index of the calling worker, an 
+    The index of the calling thread, an 
     integer x satisfying
     0 <= x < myth_get_num_workers().
 
@@ -1394,6 +1394,96 @@ extern "C" {
     <myth_get_worker_num>
   */
   int myth_get_num_workers(void);
+
+  typedef pthread_key_t myth_wls_key_t;
+
+  /*
+    Function: myth_wls_key_create
+
+    Create a key for worker-specific data.
+
+    Parameters:
+
+    key - a pointer to which the created key will be stored.
+    destr_function - a pointer to a destructor function.
+
+    wls_key is used to create data specific to each underlying
+    worker. you can think of it as a simple wrapper to pthread_key_create.
+
+    Returns:
+
+    Zero if succeed, or an errno when an error occurred.
+
+    Bug:
+
+    destr_function is ignored in the current implementation.
+
+    See Also:
+
+    <myth_wls_key_delete>, <myth_wls_setspecific>, <myth_wls_getspecific>
+  */
+  int myth_wls_key_create(myth_wls_key_t *key, void (*destr_function)(void *));
+
+  /*
+    Function: myth_wls_key_delete
+
+    Delete a key for worker-specific data.
+
+    Parameters:
+
+    key - key to delete
+
+    Returns:
+
+    Zero if succeed, or an errno when an error occurred.
+
+    See Also:
+
+    <myth_wls_key_create>, <myth_wls_setspecific>, <myth_wls_getspecific>
+  */
+  int myth_wls_key_delete(myth_wls_key_t key);
+
+  /*
+    Function: myth_wls_setspecific
+
+    Associate a worker-specific data with a key.
+
+    Parameters:
+
+    key - a key created by myth_key_create
+    data - a data to be associated with key
+
+    Returns:
+
+    Zero if succeed, or an errno when an error occurred.
+
+    See Also:
+
+    <myth_wls_key_create>, <myth_wls_key_delete>, <myth_wls_getspecific>
+  */
+  int myth_wls_setspecific(myth_wls_key_t key, const void *data);
+
+  /*
+    Function: myth_wls_getspecific
+
+    Obtain a worker-specific data
+    associated with a key.
+
+    Parameters:
+
+    key - a key to retrieve data.
+
+    Returns:
+
+    a data previously associated with key via
+    myth_wls_setspecific, or NULL if no data has
+    been associated with it.
+
+    See Also:
+
+    <myth_wls_key_create>, <myth_wls_key_delete>, <myth_wls_setspecific>
+  */
+  void *myth_wls_getspecific(myth_wls_key_t key);
 
   /* 
      Function: myth_sched_yield

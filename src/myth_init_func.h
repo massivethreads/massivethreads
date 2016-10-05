@@ -52,16 +52,16 @@ static inline int myth_globalattr_get_default(myth_globalattr_t * attr) {
   {
     /* number of workers */
     /* we used to use MYTH_WORKER_NUM, but 
-       now MYTH_NUM_THREADS supercedes */
+       now MYTH_NUM_WORKERS supercedes */
     int nw = 0;
-    char * env = getenv(ENV_MYTH_NUM_THREADS);
+    char * env = getenv(ENV_MYTH_NUM_WORKERS);
     if (env) {
       nw = atoi(env);
     } else {
       env = getenv(ENV_MYTH_WORKER_NUM);
       if (env) {
 	fprintf(stderr,
-		"myth: environment variable MYTH_WORKER_NUM will be superceded by MYTH_NUM_THREADS; consider switching to it");
+		"myth: environment variable MYTH_WORKER_NUM will be superceded by MYTH_NUM_WORKERS; consider switching to it");
 	nw = atoi(env);
       }
     }

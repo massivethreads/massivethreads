@@ -139,7 +139,7 @@ Setting the number of worker threads
 ----------------------------------------------------------------------------
 
 MassiveThreads creates worker thraeds based on the process affinity. Thus you can control the number of worker threads and CPU cores used by 'taskset' command.
-Environmental variable MYTH_NUM_THREADS (or MYTH_WORKER_NUM for backward compatibility) can also be used to change the number of worker threads (= # of CPU cores used).
+Environmental variable MYTH_NUM_WORKERS (or MYTH_WORKER_NUM for backward compatibility) can also be used to change the number of worker threads (= # of CPU cores used).
 By default, MassiveThreads uses all the CPU cores found in the machine.
 
 Setting the default stack size
