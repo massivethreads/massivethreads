@@ -412,12 +412,17 @@ static inline void myth_startpoint_exit_ex_body(int rank)
   myth_cleanup_worker(rank);
 }
 
-//Initialize each worker thread
+int myth_scheduler_worker_init(int rank, int nw);
+
+  //Initialize each worker thread
 static inline void *myth_worker_thread_fn(void *args) {
   intptr_t rank = (intptr_t)args;
   if (g_attr.bind_workers > 0){
     myth_bind_worker(rank);
   }
+#if EXPERIMENTAL_SCHEDULER
+  myth_scheduler_worker_init(rank, g_attr.n_workers);
+#endif
   if (rank == 0) {
     //setup as a main thread
     myth_startpoint_init_ex_body(rank);

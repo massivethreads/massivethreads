@@ -676,9 +676,67 @@ static inline int myth_join_body(myth_thread_t th,void **result) {
    tryjoin
    -------- */
 
+//Wait until the finish of a thread
+static inline int myth_tryjoin_body(myth_thread_t th,void **result) {
+  //TODO:Fix th->status is blocked after join
+  myth_running_env_t env;
+  myth_thread_t this_thread;
+  env = myth_get_current_env();
+  this_thread = env->this_thread;
+  //Obtain lock and check again
+  myth_spin_lock_body(&th->lock);
+  //If target is finished, return
+  if (myth_desc_is_finished(th)){
+    myth_spin_unlock_body(&th->lock);
+    while (th->status != MYTH_STATUS_FREE_READY2) { }
+    myth_join_1(env,th,result);
+    //myth_log_add(env,MYTH_LOG_USER);
+    return 0;
+  } else {
+    myth_spin_unlock_body(&th->lock);
+    return EBUSY;
+  }
+}
+
 /* --------
    timedjoin
    -------- */
+
+static inline void myth_timespec_add(const struct timespec * a,
+				     const struct timespec * b,
+				     struct timespec * c) {
+  long ns = a->tv_nsec + b->tv_nsec;
+  c->tv_nsec = ns % 1000000000;
+  c->tv_sec = a->tv_sec + b->tv_sec + ns / 1000000000;
+}
+
+static inline int myth_timespec_gt(const struct timespec * a,
+				   const struct timespec * b) {
+  if (a->tv_sec > b->tv_sec) return 1;
+  if (a->tv_sec == b->tv_sec) return a->tv_nsec > b->tv_nsec;
+  return 0;
+}
+
+//Wait until the finish of a thread
+static inline int myth_timedjoin_body(myth_thread_t th,
+				      void **result,
+				      const struct timespec *abstime) {
+  if (myth_tryjoin_body(th, result) == 0) {
+    return 0;
+  } else {
+    struct timespec tp[1];
+    while (1) {
+      int err = hr_gettime(tp);
+      assert(err == 0);
+      if (myth_timespec_gt(tp, abstime)) return EBUSY;
+      if (myth_tryjoin_body(th, result) == 0) {
+	return 0;
+      } else {
+	myth_yield_ex_body(myth_yield_option_local_first);
+      }
+    }
+  }
+}
 
 /* --------
    create_join_various, create_join_many
@@ -972,21 +1030,6 @@ static inline int myth_yield_ex_body(int opt) {
 
 static inline int myth_yield_body(void) {
   return myth_yield_ex_body(myth_yield_option_half_half);
-}
-
-static inline void myth_timespec_add(const struct timespec * a,
-				     const struct timespec * b,
-				     struct timespec * c) {
-  long ns = a->tv_nsec + b->tv_nsec;
-  c->tv_nsec = ns % 1000000000;
-  c->tv_sec = a->tv_sec + b->tv_sec + ns / 1000000000;
-}
-
-static inline int myth_timespec_gt(const struct timespec * a,
-				   const struct timespec * b) {
-  if (a->tv_sec > b->tv_sec) return 1;
-  if (a->tv_sec == b->tv_sec) return a->tv_nsec > b->tv_nsec;
-  return 0;
 }
 
 static inline int myth_nanosleep_body(const struct timespec *req,

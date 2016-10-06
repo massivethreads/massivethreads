@@ -295,4 +295,9 @@
 #define MYTH_WRAP_DL      3
 #define MYTH_WRAP_LD      4
 
+/* ------------------
+   experimental locality-aware(?) scheduler
+   ------------------ */
+#define EXPERIMENTAL_SCHEDULER 0
+
 #endif /* MYTH_CONFIG_H_ */

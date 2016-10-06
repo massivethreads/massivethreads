@@ -41,6 +41,9 @@ int myth_init_ex_body_really(const myth_globalattr_t * attr) {
 #if MYTH_ECO_MODE
   myth_eco_init();
 #endif
+#if EXPERIMENTAL_SCHEDULER
+  myth_scheduler_global_init(nw);
+#endif
 
   //Create worker threads
   intptr_t i;

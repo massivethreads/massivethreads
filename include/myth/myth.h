@@ -458,10 +458,10 @@ extern "C" {
   */
   int myth_join(myth_thread_t th, void **result);
 
-  int myth_tryjoin_body(myth_thread_t th,void **result);
+  int myth_tryjoin(myth_thread_t th,void **result);
 
-  int myth_timedjoin_body(myth_thread_t th, void **result,
-			  const struct timespec *abstime);
+  int myth_timedjoin(myth_thread_t th, void **result,
+		     const struct timespec *abstime);
 
 
   /*
