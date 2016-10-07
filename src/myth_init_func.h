@@ -61,7 +61,7 @@ static inline int myth_globalattr_get_default(myth_globalattr_t * attr) {
       env = getenv(ENV_MYTH_WORKER_NUM);
       if (env) {
 	fprintf(stderr,
-		"myth: environment variable MYTH_WORKER_NUM will be superceded by MYTH_NUM_WORKERS; consider switching to it");
+		"myth: environment variable MYTH_WORKER_NUM will be superceded by MYTH_NUM_WORKERS in future; consider switching to it now\n");
 	nw = atoi(env);
       }
     }
