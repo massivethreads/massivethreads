@@ -331,7 +331,7 @@ int main() {
        { char s[100];
          sprintf(s, "I processed elements: ");
          int i;
-         /* FIRST_ and LAST_ are defined inside.
+         // FIRST_ and LAST_ are defined inside.
          for (i = FIRST_; i < LAST_; i += step)
            sprintf(s, "%s %d ", s, i);
          printf("%s\n", s);
