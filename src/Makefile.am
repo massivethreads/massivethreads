@@ -54,6 +54,7 @@ nobase_include_HEADERS = \
 	mtbb/task_group.h \
 	mtbb/parallel_for.h \
 	mtbb/parallel_reduce.h \
+	mtbb/task_scheduler_init.h \
 	tpswitch/omp_dr.h \
 	tpswitch/tbb_dr.h \
 	tpswitch/cilkplus_dr.h \
