@@ -13,13 +13,17 @@
 #include "myth_init_func.h"
 #include "myth_log_func.h"
 
-
 myth_globalattr_t g_attr;
 
-int myth_init_ex_body_really(const myth_globalattr_t * attr) {
+static int myth_init_ex_body_really(const myth_globalattr_t * attr) {
+  int nw;
   myth_get_available_cpus();
-  myth_globalattr_set_default_body(attr);
-  int nw = g_attr.n_workers;
+  if (attr) {
+    g_attr = *attr;
+  } else {
+    if (!g_attr.initialized) myth_globalattr_init_body(&g_attr);
+  }
+  nw = g_attr.n_workers;
   //Initialize logger
   myth_log_init();
   //Initialize memory allocators

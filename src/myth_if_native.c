@@ -39,10 +39,6 @@ int myth_globalattr_destroy(myth_globalattr_t * attr) {
   return myth_globalattr_destroy_body(attr);
 }
 
-int myth_globalattr_set_default(myth_globalattr_t * attr) {
-  return myth_globalattr_set_default_body(attr);
-}
-
 int myth_globalattr_get_stacksize(myth_globalattr_t * attr,
 				  size_t *stacksize) {
   return myth_globalattr_get_stacksize_body(attr, stacksize);

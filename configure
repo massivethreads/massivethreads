@@ -6218,14 +6218,14 @@ rm -f core conftest.err conftest.$ac_objext \
     conftest$ac_exeext conftest.$ac_ext
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $have_pthread_barrier_init" >&5
 $as_echo "$have_pthread_barrier_init" >&6; }
-if test x"$have_pthread_barrier_init = "xyes" ; then
+if test x"$have_pthread_barrier_init" = "xyes" ; then
 
 cat >>confdefs.h <<_ACEOF
 #define HAVE_PTHREAD_BARRIER 1
 _ACEOF
 
 fi
- if test x"$have_pthread_barrier_init = "xyes" ; then
+ if test x"$have_pthread_barrier_init" = "xyes" ; then
   BUILD_TEST_PTH_BARRIER_TRUE=
   BUILD_TEST_PTH_BARRIER_FALSE='#'
 else
@@ -6264,14 +6264,14 @@ rm -f core conftest.err conftest.$ac_objext \
     conftest$ac_exeext conftest.$ac_ext
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $have_pthread_yield" >&5
 $as_echo "$have_pthread_yield" >&6; }
-if test x"$have_pthread_yield = "xyes" ; then
+if test x"$have_pthread_yield" = "xyes" ; then
 
 cat >>confdefs.h <<_ACEOF
 #define HAVE_PTHREAD_YIELD 1
 _ACEOF
 
 fi
- if test x"$have_pthread_yield = "xyes" ; then
+ if test x"$have_pthread_yield" = "xyes" ; then
   BUILD_TEST_PTH_YIELD_TRUE=
   BUILD_TEST_PTH_YIELD_FALSE='#'
 else

@@ -146,6 +146,7 @@ extern "C" {
     int n_workers;
     int bind_workers;
     int child_first;
+    int initialized;
   } myth_globalattr_t;
 
   /*

@@ -423,12 +423,12 @@ AC_LINK_IFELSE([AC_LANG_PROGRAM([[
 	[have_pthread_barrier_init="yes"],
 	[have_pthread_barrier_init="no"])
 AC_MSG_RESULT([$have_pthread_barrier_init])
-if test x"$have_pthread_barrier_init = "xyes" ; then
+if test x"$have_pthread_barrier_init" = "xyes" ; then
    AC_DEFINE_UNQUOTED([HAVE_PTHREAD_BARRIER],[1],
 		[if set, pthread_barrier is declared in pthread.h])
 fi
 AM_CONDITIONAL([BUILD_TEST_PTH_BARRIER],
-	[test x"$have_pthread_barrier_init = "xyes" ])
+	[test x"$have_pthread_barrier_init" = "xyes" ])
 
 
 # 
@@ -444,12 +444,12 @@ AC_LINK_IFELSE([AC_LANG_PROGRAM([[
 	[have_pthread_yield="yes"],
 	[have_pthread_yield="no"])
 AC_MSG_RESULT([$have_pthread_yield])
-if test x"$have_pthread_yield = "xyes" ; then
+if test x"$have_pthread_yield" = "xyes" ; then
    AC_DEFINE_UNQUOTED([HAVE_PTHREAD_YIELD],[1],
 		[if set, pthread_yield is declared in pthread.h])
 fi
 AM_CONDITIONAL([BUILD_TEST_PTH_YIELD],
-	[test x"$have_pthread_yield = "xyes" ])
+	[test x"$have_pthread_yield" = "xyes" ])
 
 
 #

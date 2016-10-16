@@ -22,15 +22,11 @@ check_PROGRAMS += myth_free
 check_PROGRAMS += myth_calloc
 check_PROGRAMS += myth_posix_memalign
 check_PROGRAMS += myth_valloc
-if BUILD_TEST_MYTH_MEMALIGN
 check_PROGRAMS += myth_memalign
-endif
 if BUILD_TEST_MYTH_ALIGNED_ALLOC
 check_PROGRAMS += myth_aligned_alloc
 endif
-if BUILD_TEST_MYTH_PVALLOC
 check_PROGRAMS += myth_pvalloc
-endif
 check_PROGRAMS += myth_realloc
 check_PROGRAMS += myth_create_0
 check_PROGRAMS += myth_create_1
@@ -93,15 +89,11 @@ check_PROGRAMS += myth_free_ld
 check_PROGRAMS += myth_calloc_ld
 check_PROGRAMS += myth_posix_memalign_ld
 check_PROGRAMS += myth_valloc_ld
-if BUILD_TEST_MYTH_MEMALIGN
 check_PROGRAMS += myth_memalign_ld
-endif
 if BUILD_TEST_MYTH_ALIGNED_ALLOC
 check_PROGRAMS += myth_aligned_alloc_ld
 endif
-if BUILD_TEST_MYTH_PVALLOC
 check_PROGRAMS += myth_pvalloc_ld
-endif
 check_PROGRAMS += myth_realloc_ld
 check_PROGRAMS += myth_create_0_ld
 check_PROGRAMS += myth_create_1_ld
@@ -130,9 +122,7 @@ check_PROGRAMS += measure_create_ld
 check_PROGRAMS += measure_latency_ld
 check_PROGRAMS += measure_wakeup_latency_ld
 check_PROGRAMS += measure_malloc_ld
-if BUILD_TEST_PTH_BARRIER
 check_PROGRAMS += pth_barrier_ld
-endif
 check_PROGRAMS += pth_cond_broadcast_0_ld
 check_PROGRAMS += pth_cond_broadcast_1_ld
 check_PROGRAMS += pth_cond_signal_ld
@@ -143,9 +133,7 @@ check_PROGRAMS += pth_lock_ld
 check_PROGRAMS += pth_mixlock_ld
 check_PROGRAMS += pth_mutex_initializer_ld
 check_PROGRAMS += pth_trylock_ld
-if BUILD_TEST_PTH_YIELD
 check_PROGRAMS += pth_yield_ld
-endif
 check_PROGRAMS += new_test_ld
 check_PROGRAMS += myth_create_0_cc_ld
 check_PROGRAMS += myth_create_1_cc_ld
@@ -173,9 +161,7 @@ check_PROGRAMS += myth_key_destructor_cc_ld
 check_PROGRAMS += measure_create_cc_ld
 check_PROGRAMS += measure_latency_cc_ld
 check_PROGRAMS += measure_wakeup_latency_cc_ld
-if BUILD_TEST_PTH_BARRIER
 check_PROGRAMS += pth_barrier_cc_ld
-endif
 check_PROGRAMS += pth_cond_broadcast_0_cc_ld
 check_PROGRAMS += pth_cond_broadcast_1_cc_ld
 check_PROGRAMS += pth_cond_signal_cc_ld
@@ -186,9 +172,7 @@ check_PROGRAMS += pth_lock_cc_ld
 check_PROGRAMS += pth_mixlock_cc_ld
 check_PROGRAMS += pth_mutex_initializer_cc_ld
 check_PROGRAMS += pth_trylock_cc_ld
-if BUILD_TEST_PTH_YIELD
 check_PROGRAMS += pth_yield_cc_ld
-endif
 endif
 
 if BUILD_MYTH_DL
@@ -197,15 +181,11 @@ check_PROGRAMS += myth_free_dl
 check_PROGRAMS += myth_calloc_dl
 check_PROGRAMS += myth_posix_memalign_dl
 check_PROGRAMS += myth_valloc_dl
-if BUILD_TEST_MYTH_MEMALIGN
 check_PROGRAMS += myth_memalign_dl
-endif
 if BUILD_TEST_MYTH_ALIGNED_ALLOC
 check_PROGRAMS += myth_aligned_alloc_dl
 endif
-if BUILD_TEST_MYTH_PVALLOC
 check_PROGRAMS += myth_pvalloc_dl
-endif
 check_PROGRAMS += myth_realloc_dl
 check_PROGRAMS += myth_create_0_dl
 check_PROGRAMS += myth_create_1_dl
@@ -234,9 +214,7 @@ check_PROGRAMS += measure_create_dl
 check_PROGRAMS += measure_latency_dl
 check_PROGRAMS += measure_wakeup_latency_dl
 check_PROGRAMS += measure_malloc_dl
-if BUILD_TEST_PTH_BARRIER
 check_PROGRAMS += pth_barrier_dl
-endif
 check_PROGRAMS += pth_cond_broadcast_0_dl
 check_PROGRAMS += pth_cond_broadcast_1_dl
 check_PROGRAMS += pth_cond_signal_dl
@@ -247,9 +225,7 @@ check_PROGRAMS += pth_lock_dl
 check_PROGRAMS += pth_mixlock_dl
 check_PROGRAMS += pth_mutex_initializer_dl
 check_PROGRAMS += pth_trylock_dl
-if BUILD_TEST_PTH_YIELD
 check_PROGRAMS += pth_yield_dl
-endif
 check_PROGRAMS += new_test_dl
 check_PROGRAMS += myth_create_0_cc_dl
 check_PROGRAMS += myth_create_1_cc_dl
@@ -277,9 +253,7 @@ check_PROGRAMS += myth_key_destructor_cc_dl
 check_PROGRAMS += measure_create_cc_dl
 check_PROGRAMS += measure_latency_cc_dl
 check_PROGRAMS += measure_wakeup_latency_cc_dl
-if BUILD_TEST_PTH_BARRIER
 check_PROGRAMS += pth_barrier_cc_dl
-endif
 check_PROGRAMS += pth_cond_broadcast_0_cc_dl
 check_PROGRAMS += pth_cond_broadcast_1_cc_dl
 check_PROGRAMS += pth_cond_signal_cc_dl
@@ -290,9 +264,7 @@ check_PROGRAMS += pth_lock_cc_dl
 check_PROGRAMS += pth_mixlock_cc_dl
 check_PROGRAMS += pth_mutex_initializer_cc_dl
 check_PROGRAMS += pth_trylock_cc_dl
-if BUILD_TEST_PTH_YIELD
 check_PROGRAMS += pth_yield_cc_dl
-endif
 endif
 
 myth_malloc_SOURCES = myth_malloc.c

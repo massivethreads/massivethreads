@@ -680,9 +680,7 @@ static inline int myth_join_body(myth_thread_t th,void **result) {
 static inline int myth_tryjoin_body(myth_thread_t th,void **result) {
   //TODO:Fix th->status is blocked after join
   myth_running_env_t env;
-  myth_thread_t this_thread;
   env = myth_get_current_env();
-  this_thread = env->this_thread;
   //Obtain lock and check again
   myth_spin_lock_body(&th->lock);
   //If target is finished, return
