@@ -1,6 +1,6 @@
 # build this directory first and then tests
-#SUBDIRS = . profiler
-SUBDIRS = .
+SUBDIRS = . profiler
+#SUBDIRS = .
 
 # sources (.c and .S) common across the three libraries
 COMMON_SRCS = \

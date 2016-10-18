@@ -130,6 +130,15 @@ void dr_options_default_(dr_options * opts) {
 		     &opts->pre_alloc_per_worker)) {}
   if (getenv_long("DAG_RECORDER_PRE_ALLOC",   &opts->pre_alloc)
       || getenv_long("DR_PRE_ALLOC",          &opts->pre_alloc)) {}
+
+  if (getenv_bool("DAG_RECORDER_PAPI_ON",               &opts->papi_on)
+      || getenv_bool("DR_PAPI_ON",                      &opts->papi_on)) {}
+  if (getenv_str("DAG_RECORDER_PAPI_EVENTS",            &opts->papi_events)
+      || getenv_str("DR_PAPI_EV",                       &opts->papi_events)) {}
+  if (getenv_ull("DAG_RECORDER_PAPI_SAMPLING_INTERVAL", &opts->papi_sampling_interval)
+      || getenv_ull("DR_PAPI_SI",                       &opts->papi_sampling_interval)) {}
+  if (getenv_int("DAG_RECORDER_PAPI_MAX_EVENTS",        &opts->papi_max_events)
+      || getenv_int("DR_PAPI_MAX_EV",                   &opts->papi_max_events)) {}
 }
 
 /* print set optoins */
@@ -175,5 +184,13 @@ dr_opts_print(dr_options * opts) {
 	    opts->pre_alloc_per_worker);
     fprintf(wp, "pre_alloc (DAG_RECORDER_PRE_ALLOC,DR_PRE_ALLOC) : %ld\n", 
 	    opts->pre_alloc);
+    fprintf(wp, "papi_on (DAG_RECORDER_PAPI_ON,DR_PAPI_ON) : %d\n", 
+	    opts->papi_on);
+    fprintf(wp, "papi_events (DAG_RECORDER_PAPI_EVENTS,DR_PAPI_EV) : %s\n", 
+	    opts->papi_events);
+    fprintf(wp, "papi_sampling_interval (DAG_RECORDER_PAPI_SAMPLING_INTERVAL,DR_PAPI_SI) : %llu\n", 
+	    opts->papi_sampling_interval);
+    fprintf(wp, "papi_max_events (DAG_RECORDER_PAPI_MAX_EVENTS,DR_PAPI_MAX_EV) : %d\n", 
+	    opts->papi_max_events);
   }
 }

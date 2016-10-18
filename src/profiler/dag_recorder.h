@@ -7,6 +7,8 @@
 /* this file defines an API that is (or must be)
    visible from clients. */
 
+#include "papi_counters.h"
+
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -99,6 +101,13 @@ extern "C" {
     char chk_level;		/* level of checks during run */
     char record_cpu;		/* 1 if we record cpu */
     char shrink;		/* 1 if we shrink dag (effective only in dag2any) */
+
+    /* options for PAPI */
+    char papi_on;
+    const char * papi_events; /* comma-separated list of PAPI events, e.g., "PAPI_TOT_INS,PAPI_TOT_CYC,PAPI_L1_DCM" */
+    unsigned long long papi_sampling_interval; /* to interpolate if a new sample is requested within this interval since the last one */
+    int papi_max_events; /* impose limits on the number of events, there is a statically-imposed limit dr_static_max_papi_events too. */
+
   } dr_options;
 
   /* default values for runtime options. 
@@ -157,6 +166,11 @@ extern "C" {
     0,	       /* chk_level */
     0,	       /* record_cpu */
     0,	       /* shrink */
+
+    0,         /* papi_on */
+    (const char *)"PAPI_TOT_INS,PAPI_TOT_CYC,PAPI_L1_DCM", /* papi_events */
+    0,         /* papi_sampling_interval */
+    dr_static_max_papi_events, /* papi_max_events */
   };
   
   /* all instrumentation functions are defined as

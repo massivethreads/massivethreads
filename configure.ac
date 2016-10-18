@@ -185,6 +185,18 @@ else
    AC_DEFINE_UNQUOTED([MYTH_CHILD_FIRST],[0],[if 1, child first by default])
 fi
 
+# -----------------------
+# build the profiler with PAPI (used to get hardware counters)
+# -----------------------
+
+AC_ARG_WITH([papi],
+            [AS_HELP_STRING([--with-papi=yes/no],
+                            [Enable the profiler (DAG Recorder) to get hardware
+                            performance counters using PAPI library. PAPI must
+                            be present on the system. Default: no.])],
+            [with_papi="$withval"],
+            [with_papi=no])
+
 # -----------------------------
 # sizes
 # -----------------------------
@@ -238,6 +250,14 @@ AC_CHECK_LIB(dl, dlopen,
 
 AM_CONDITIONAL([BUILD_MYTH_DL],
 	[test x"$enable_myth_dl" = "xyes" -a x"$have_dlopen" = "xyes" ])
+
+AC_CHECK_LIB(papi, PAPI_library_init,
+		   [have_papi="yes"],
+		   [have_papi="no"])
+AS_IF([test x"$with_papi" = "xyes" -a x"$have_papi" = "xno"],
+      AC_MSG_ERROR([--with-papi was given, but test for PAPI failed.]))
+AM_CONDITIONAL([BUILD_DAG_RECORDER_WITH_PAPI],
+	[test x"$with_papi" = "xyes" -a x"$have_papi" = "xyes" ])
 
 # -----------------------------
 # declarations
