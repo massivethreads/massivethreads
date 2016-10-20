@@ -16,8 +16,8 @@ interpolate_sample(unsigned long long t0, long long x0,
 		   unsigned long long t1, long long x1,
 		   unsigned long long t) {
   (void)dr_check(t1 > t0);
-  double a = (double)(t - t0) / (double)(t1 - t0);
-  double b = (double)(t1 - t) / (double)(t1 - t0);
+  double a = ((double)t - (double)t0) / ((double)t1 - (double)t0);
+  double b = ((double)t1 - (double)t) / ((double)t1 - (double)t0);
   return (long long)(a * x1 + b * x0);
 }
 
