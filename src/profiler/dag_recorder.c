@@ -53,7 +53,8 @@ dr_global_state GS = {
     0,	 /* verbose_level */
     0,	 /* chk_level */
     0,	 /* record cpu */
-  }
+  },
+  0 /* PAPI global data structure */
 };
 
 /* --------------------- dr_get_worker ------------------- */
@@ -122,6 +123,11 @@ dr_init_worker_specific_state(dr_worker_specific_state * ts,
   ts->task = (dr_dag_node*)0;
   ts->parent = (dr_dag_node*)0;
   ts->worker = worker;
+  ts->papi_td = (dr_papi_tdata_t*)0;
+  if (GS.opts.papi_on) {
+    ts->papi_td = dr_papi_make_tdata(GS.papi_gd);
+    dr_papi_init_thread(GS.papi_gd, ts->papi_td);
+  }
   if (GS.thread_start_hook) {
     GS.thread_start_hook(worker);
   }
@@ -270,6 +276,10 @@ dr_init_(dr_options * opts, int num_workers) {
 		  " resort to linear list\n");
 	}
       }
+    }
+    if (GS.opts.papi_on) {
+      GS.papi_gd = dr_papi_make_gdata();
+      dr_papi_init(GS.papi_gd);
     }
   }
   return GS.opts.on;			/* already initialized. go ahead */

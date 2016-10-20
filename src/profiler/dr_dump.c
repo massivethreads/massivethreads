@@ -807,7 +807,7 @@ void dr_dump_() {
   if (GS.root) {
     dr_pi_dag G[1];
     dr_make_pi_dag(G, GS.root, GS.start_clock);
-    interpolate_counters(G);
+    //interpolate_counters(G); /* counter values are already extrapolated on-the-fly */
     dr_gen_pi_dag(G);
     dr_gen_basic_stat(G);
     dr_gen_gpl(G);

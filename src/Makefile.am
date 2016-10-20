@@ -1,9 +1,7 @@
 # build this directory first and then tests
 SUBDIRS = . profiler
-# SUBDIRS = .
 
 #	myth_context_switch.S 
-
 # sources (.c and .S) common across the three libraries
 COMMON_SRCS = \
 	myth_log.c \

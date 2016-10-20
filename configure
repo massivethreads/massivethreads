@@ -684,6 +684,8 @@ BUILD_TEST_MYTH_MEMALIGN_FALSE
 BUILD_TEST_MYTH_MEMALIGN_TRUE
 BUILD_TEST_MYTH_ALIGNED_ALLOC_FALSE
 BUILD_TEST_MYTH_ALIGNED_ALLOC_TRUE
+BUILD_DAG_RECORDER_WITH_PAPI_FALSE
+BUILD_DAG_RECORDER_WITH_PAPI_TRUE
 BUILD_MYTH_DL_FALSE
 BUILD_MYTH_DL_TRUE
 BUILD_MYTH_LD_FALSE
@@ -799,6 +801,7 @@ with_default_stack_size
 with_sched_stack_size
 with_default_guard_size
 with_child_first
+with_papi
 enable_shared
 enable_static
 with_pic
@@ -1507,6 +1510,9 @@ Optional Packages:
                           Set default value for child-first. Default: 1. You
                           can change it at runtime by setting
                           MYTH_CHILD_FIRST.
+  --with-papi=yes/no      Enable the profiler (DAG Recorder) to get hardware
+                          performance counters using PAPI library. PAPI must
+                          be present on the system. Default: no.
   --with-pic[=PKGS]       try to use only PIC/non-PIC objects [default=use
                           both]
   --with-aix-soname=aix|svr4|both
@@ -5024,6 +5030,19 @@ _ACEOF
 
 fi
 
+# -----------------------
+# build the profiler with PAPI (used to get hardware counters)
+# -----------------------
+
+
+# Check whether --with-papi was given.
+if test "${with_papi+set}" = set; then :
+  withval=$with_papi; with_papi="$withval"
+else
+  with_papi=no
+fi
+
+
 # -----------------------------
 # sizes
 # -----------------------------
@@ -6046,6 +6065,62 @@ fi
 done
 
 # define HAVE_PTHREAD_MUTEXATTR_ROBUST 1
+
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for PAPI_library_init in -lpapi" >&5
+$as_echo_n "checking for PAPI_library_init in -lpapi... " >&6; }
+if ${ac_cv_lib_papi_PAPI_library_init+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lpapi  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char PAPI_library_init ();
+int
+main ()
+{
+return PAPI_library_init ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  ac_cv_lib_papi_PAPI_library_init=yes
+else
+  ac_cv_lib_papi_PAPI_library_init=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_papi_PAPI_library_init" >&5
+$as_echo "$ac_cv_lib_papi_PAPI_library_init" >&6; }
+if test "x$ac_cv_lib_papi_PAPI_library_init" = xyes; then :
+  have_papi="yes"
+else
+  have_papi="no"
+fi
+
+if test x"$with_papi" = "xyes" -a x"$have_papi" = "xno"; then :
+  as_fn_error $? "--with-papi was given
+else
+  but test for PAPI failed." "$LINENO" 5
+fi
+ if test x"$with_papi" = "xyes" -a x"$have_papi" = "xyes" ; then
+  BUILD_DAG_RECORDER_WITH_PAPI_TRUE=
+  BUILD_DAG_RECORDER_WITH_PAPI_FALSE='#'
+else
+  BUILD_DAG_RECORDER_WITH_PAPI_TRUE='#'
+  BUILD_DAG_RECORDER_WITH_PAPI_FALSE=
+fi
 
 
 # -----------------------------
@@ -18056,6 +18131,10 @@ Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${BUILD_MYTH_DL_TRUE}" && test -z "${BUILD_MYTH_DL_FALSE}"; then
   as_fn_error $? "conditional \"BUILD_MYTH_DL\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
+if test -z "${BUILD_DAG_RECORDER_WITH_PAPI_TRUE}" && test -z "${BUILD_DAG_RECORDER_WITH_PAPI_FALSE}"; then
+  as_fn_error $? "conditional \"BUILD_DAG_RECORDER_WITH_PAPI\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${BUILD_TEST_MYTH_ALIGNED_ALLOC_TRUE}" && test -z "${BUILD_TEST_MYTH_ALIGNED_ALLOC_FALSE}"; then

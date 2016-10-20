@@ -89,6 +89,8 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
+@BUILD_DAG_RECORDER_WITH_PAPI_TRUE@am__append_1 = -DDAG_RECORDER_ENABLE_PAPI=1
+@BUILD_DAG_RECORDER_WITH_PAPI_TRUE@am__append_2 = -lpapi
 subdir = src/profiler
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/libtool.m4 \
@@ -138,7 +140,8 @@ am_libdr_la_OBJECTS = libdr_la-dag_recorder.lo \
 	libdr_la-dag_recorder_no_inl.lo libdr_la-chronological.lo \
 	libdr_la-dr_dump.lo libdr_la-gen_stat.lo libdr_la-gen_dot.lo \
 	libdr_la-gen_gpl.lo libdr_la-gen_text.lo libdr_la-read_dag.lo \
-	libdr_la-options.lo libdr_la-interpolate_counters.lo
+	libdr_la-options.lo libdr_la-interpolate_counters.lo \
+	libdr_la-papi_counters.lo
 libdr_la_OBJECTS = $(am_libdr_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
@@ -146,7 +149,7 @@ am__v_lt_0 = --silent
 am__v_lt_1 = 
 libdr_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(libdr_la_CFLAGS) \
-	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
+	$(CFLAGS) $(libdr_la_LDFLAGS) $(LDFLAGS) -o $@
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
 am__v_P_0 = false
@@ -383,9 +386,10 @@ SUBDIRS = . dag2any drview
 # required when you use libtool (for building shared libs)
 ACLOCAL_AMFLAGS = -I m4
 lib_LTLIBRARIES = libdr.la
-include_HEADERS = dag_recorder.h dag_recorder_inl.h dag_recorder_impl.h
-libdr_la_SOURCES = dag_recorder.c dag_recorder_no_inl.c chronological.c dr_dump.c gen_stat.c gen_dot.c gen_gpl.c gen_text.c read_dag.c options.c interpolate_counters.c
-libdr_la_CFLAGS = $(CFLAGS)
+include_HEADERS = dag_recorder.h dag_recorder_inl.h dag_recorder_impl.h papi_counters.h
+libdr_la_SOURCES = dag_recorder.c dag_recorder_no_inl.c chronological.c dr_dump.c gen_stat.c gen_dot.c gen_gpl.c gen_text.c read_dag.c options.c interpolate_counters.c papi_counters.c
+libdr_la_CFLAGS = $(CFLAGS) $(am__append_1)
+libdr_la_LDFLAGS = $(LDFLAGS) $(am__append_2)
 all: all-recursive
 
 .SUFFIXES:
@@ -474,6 +478,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libdr_la-gen_text.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libdr_la-interpolate_counters.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libdr_la-options.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libdr_la-papi_counters.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libdr_la-read_dag.Plo@am__quote@
 
 .c.o:
@@ -573,6 +578,13 @@ libdr_la-interpolate_counters.lo: interpolate_counters.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='interpolate_counters.c' object='libdr_la-interpolate_counters.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdr_la_CFLAGS) $(CFLAGS) -c -o libdr_la-interpolate_counters.lo `test -f 'interpolate_counters.c' || echo '$(srcdir)/'`interpolate_counters.c
+
+libdr_la-papi_counters.lo: papi_counters.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdr_la_CFLAGS) $(CFLAGS) -MT libdr_la-papi_counters.lo -MD -MP -MF $(DEPDIR)/libdr_la-papi_counters.Tpo -c -o libdr_la-papi_counters.lo `test -f 'papi_counters.c' || echo '$(srcdir)/'`papi_counters.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libdr_la-papi_counters.Tpo $(DEPDIR)/libdr_la-papi_counters.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='papi_counters.c' object='libdr_la-papi_counters.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdr_la_CFLAGS) $(CFLAGS) -c -o libdr_la-papi_counters.lo `test -f 'papi_counters.c' || echo '$(srcdir)/'`papi_counters.c
 
 mostlyclean-libtool:
 	-rm -f *.lo
