@@ -102,7 +102,7 @@ int __wrap(pthread_join)(pthread_t thread, void **retval) {
   return ret;
 }
 
-#if _GNU_SOURCE
+#if defined(HAVE_PTHREAD_JOIN_NP)
 /* pthread_tryjoin_np (3) - try to join with a terminated thread */
 int __wrap(pthread_tryjoin_np)(pthread_t thread, void **retval) {
   int _ = enter_wrapped_func("%x, %p", thread, retval);
@@ -131,7 +131,7 @@ int __wrap(pthread_timedjoin_np)(pthread_t thread, void **retval,
   leave_wrapped_func("%d", ret);
   return ret;
 }
-#endif
+#endif	/* HAVE_PTHREAD_JOIN_NP */
 
 /* pthread_detach (3)   - detach a thread */
 int __wrap(pthread_detach)(pthread_t thread) {
@@ -381,17 +381,20 @@ int __wrap(pthread_attr_setstack)(pthread_attr_t *attr,
   return ret;
 }
 
-#if _GNU_SOURCE
+#if defined(HAVE_PTHREAD_ATTR_SETAFFINITY_NP)
 /* pthread_attr_setaffinity_np (3) - set/get CPU affinity attribute in thread attributes object */
 int __wrap(pthread_attr_setaffinity_np)(pthread_attr_t *attr,
-					size_t cpusetsize, const cpu_set_t *cpuset) {
+					size_t cpusetsize,
+					const cpu_set_t *cpuset) {
   int _ = enter_wrapped_func("%p, %lu, %p", attr, cpusetsize, cpuset);
   int ret = real_pthread_attr_setaffinity_np(attr, cpusetsize, cpuset);
   (void)_;
   leave_wrapped_func("%d", ret);
   return ret;
 }
+#endif /* HAVE_PTHREAD_ATTR_SETAFFINITY_NP */
 
+#if defined(HAVE_PTHREAD_ATTR_GETAFFINITY_NP)
 /* pthread_attr_getaffinity_np (3) - set/get CPU affinity attribute in thread attributes object */
 int __wrap(pthread_attr_getaffinity_np)(const pthread_attr_t *attr,
 					size_t cpusetsize, cpu_set_t *cpuset) {
@@ -401,8 +404,9 @@ int __wrap(pthread_attr_getaffinity_np)(const pthread_attr_t *attr,
   leave_wrapped_func("%d", ret);
   return ret;
 }
+#endif /* HAVE_PTHREAD_ATTR_GETAFFINITY_NP */
 
-#if defined(HAVE_PTHREAD_GETATTR_DEFAULT_NP)
+#if defined(HAVE_PTHREAD_ATTR_NP)
 /* Get the default attributes used by pthread_create in this process.  */
 int __wrap(pthread_getattr_default_np)(pthread_attr_t *attr) {
   int _ = enter_wrapped_func("%p", attr);
@@ -411,9 +415,7 @@ int __wrap(pthread_getattr_default_np)(pthread_attr_t *attr) {
   leave_wrapped_func("%d", ret);
   return ret;
 }
-#endif	/* HAVE_PTHREAD_GETATTR_DEFAULT_NP */
 
-#if defined(HAVE_PTHREAD_SETATTR_DEFAULT_NP)
 /* Set the default attributes to be used by pthread_create in this
    process.  */
 int __wrap(pthread_setattr_default_np)(const pthread_attr_t *attr) {
@@ -423,7 +425,6 @@ int __wrap(pthread_setattr_default_np)(const pthread_attr_t *attr) {
   leave_wrapped_func("%d", ret);
   return ret;
 }
-#endif	/* HAVE_PTHREAD_SETATTR_DEFAULT_NP */
 
 /* pthread_getattr_np (3) - get attributes of created thread */
 int __wrap(pthread_getattr_np)(pthread_t thread, pthread_attr_t *attr) {
@@ -433,7 +434,7 @@ int __wrap(pthread_getattr_np)(pthread_t thread, pthread_attr_t *attr) {
   leave_wrapped_func("%d", ret);
   return ret;
 }
-#endif
+#endif	/* HAVE_PTHREAD_ATTR_NP */
 
 
 /* pthread_setschedparam (3) - set/get scheduling policy and parameters of a thread */
@@ -469,6 +470,7 @@ int __wrap(pthread_getschedparam)(pthread_t thread, int *policy,
   return ret;
 }
 
+#if defined(HAVE_PTHREAD_SCHEDPRIO)
 /* pthread_setschedprio (3) - set scheduling priority of a thread */
 /* pthread_setschedprio (3posix) - dynamic thread scheduling parameters access (REALTIME THR... */
 int __wrap(pthread_setschedprio)(pthread_t thread, int prio) {
@@ -484,9 +486,9 @@ int __wrap(pthread_setschedprio)(pthread_t thread, int prio) {
   leave_wrapped_func("%d", ret);
   return ret;
 }
+#endif
 
-#if defined(HAVE_PTHREAD_GETNAME_NP)
-#if _GNU_SOURCE
+#if defined(HAVE_PTHREAD_NAME_NP)
 /* pthread_getname_np (3) - set/get the name of a thread */
 int __wrap(pthread_getname_np)(pthread_t thread, char *name, size_t len) {
   int _ = enter_wrapped_func("%x, %s, %lu", thread, name, len);
@@ -501,26 +503,36 @@ int __wrap(pthread_getname_np)(pthread_t thread, char *name, size_t len) {
   leave_wrapped_func("%d", ret);
   return ret;
 }
-#endif	/* HAVE_PTHREAD_GETNAME_NP */
 
-#if defined(HAVE_PTHREAD_SETNAME_NP)
 /* pthread_setname_np (3) - set/get the name of a thread */
-int __wrap(pthread_setname_np)(pthread_t thread, const char *name) {
+int __wrap(pthread_setname_np)(
+#if PTHREAD_SETNAME_ARITY == 2
+			       pthread_t thread,
+#endif
+			       const char *name) {
+#if PTHREAD_SETNAME_ARITY == 2
   int _ = enter_wrapped_func("%x, %s", thread, name);
+#else
+  int _ = enter_wrapped_func("%s", name);
+#endif
   int ret;
   (void)_;
   if (myth_should_wrap_pthread()) {
     myth_wrap_pthread_warn_non_conforming();
     ret = ENOSYS;
   } else {
-    ret = real_pthread_setname_np(thread, name);
+    ret = real_pthread_setname_np(
+#if PTHREAD_SETNAME_ARITY == 2
+				  thread,
+#endif
+				  name);
   }
   leave_wrapped_func("%d", ret);
   return ret;
 }
-#endif
-#endif /* HAVE_PTHREAD_SETNAME_NP */
+#endif /* HAVE_PTHREAD_NAME_NP */
 
+#if defined(HAVE_PTHREAD_CONCURRENCY)
 /* pthread_getconcurrency (3) - set/get the concurrency level */
 int __wrap(pthread_getconcurrency)(void) {
   int _ = enter_wrapped_func(0);
@@ -550,8 +562,9 @@ int __wrap(pthread_setconcurrency)(int new_level) {
   leave_wrapped_func("%d", ret);
   return ret;
 }
+#endif	/* HAVE_PTHREAD_CONCURRENCY */
 
-#if _GNU_SOURCE
+#if defined(HAVE_PTHREAD_YIELD)
 /* pthread_yield (3)    - yield the processor */
 int __wrap(pthread_yield)(void) {
   int _ = enter_wrapped_func(0);
@@ -565,9 +578,9 @@ int __wrap(pthread_yield)(void) {
   leave_wrapped_func("%d", ret);
   return ret;
 }
-#endif
+#endif	/* HAVE_PTHREAD_YIELD */
 
-#if _GNU_SOURCE
+#if defined(HAVE_PTHREAD_SETAFFINITY_NP)
 /* pthread_setaffinity_np (3) - set/get CPU affinity of a thread */
 int __wrap(pthread_setaffinity_np)
      (pthread_t thread, size_t cpusetsize, const cpu_set_t *cpuset) {
@@ -583,7 +596,9 @@ int __wrap(pthread_setaffinity_np)
   leave_wrapped_func("%d", ret);
   return ret;
 }
+#endif	/* HAVE_PTHREAD_SETAFFINITY_NP */
 
+#if defined(HAVE_PTHREAD_GETAFFINITY_NP)
 /* pthread_getaffinity_np (3) - set/get CPU affinity of a thread */
 int __wrap(pthread_getaffinity_np)(pthread_t thread, size_t cpusetsize,
 				   cpu_set_t *cpuset) {
@@ -599,8 +614,8 @@ int __wrap(pthread_getaffinity_np)(pthread_t thread, size_t cpusetsize,
   leave_wrapped_func("%d", ret);
   return ret;
 }
+#endif	/* HAVE_PTHREAD_GETAFFINITY_NP */
 
-#endif
 
 /* ------------------------------
    --- cancel 
@@ -751,12 +766,39 @@ int __wrap(pthread_mutex_destroy)(pthread_mutex_t *mutex) {
   return ret;
 }
 
+/* do our best to handle mutex initialized by
+   pthread_t m = PTHREAD_MUTEX_INITIALIZER;
+   if such a mutex is passed, we reinitialize it,
+   as if myth_muex_init is called.
+ */
+
+static int myth_handle_PTHREAD_MUTEX_INITIALIZER(pthread_mutex_t * pm) {
+  myth_mutex_t * m = (myth_mutex_t *)pm;
+  volatile int * magic_p = (volatile int *)&m->magic;
+  int magic = * magic_p;
+  if (magic != myth_mutex_magic_no) {
+    if (magic != myth_mutex_magic_no_initializing
+	&& __sync_bool_compare_and_swap(magic_p, magic, myth_mutex_magic_no_initializing)) {
+      myth_mutex_t mi = MYTH_MUTEX_INITIALIZER;
+      mi.magic = myth_mutex_magic_no_initializing;
+      *m = mi;
+      myth_rwbarrier();
+      *magic_p = myth_mutex_magic_no;
+    } else {
+      while (*magic_p == myth_mutex_magic_no_initializing) { }
+      myth_assert(*magic_p == myth_mutex_magic_no);
+    }
+  }
+  return 0;
+}
+
 /* pthread_mutex_trylock (3posix) - lock and unlock a mutex */
 int __wrap(pthread_mutex_trylock)(pthread_mutex_t *mutex) {
   int _ = enter_wrapped_func("%p", mutex);
   int ret;
   (void)_;
   if (myth_should_wrap_pthread()) {
+    myth_handle_PTHREAD_MUTEX_INITIALIZER(mutex);
     ret = myth_mutex_trylock_body((myth_mutex_t *)mutex);
   } else {
     ret = real_pthread_mutex_trylock(mutex);
@@ -771,6 +813,7 @@ int __wrap(pthread_mutex_lock)(pthread_mutex_t *mutex) {
   int ret;
   (void)_;
   if (myth_should_wrap_pthread()) {
+    myth_handle_PTHREAD_MUTEX_INITIALIZER(mutex);
     ret = myth_mutex_lock_body((myth_mutex_t *)mutex);
   } else {
     ret = real_pthread_mutex_lock(mutex);
@@ -779,6 +822,7 @@ int __wrap(pthread_mutex_lock)(pthread_mutex_t *mutex) {
   return ret;
 }
 
+#if defined(HAVE_PTHREAD_MUTEX_TIMEDLOCK)
 /* pthread_mutex_timedlock (3posix) - lock a mutex */
 int __wrap(pthread_mutex_timedlock)(pthread_mutex_t *restrict mutex,
 				    const struct timespec *restrict abstime) {
@@ -786,6 +830,7 @@ int __wrap(pthread_mutex_timedlock)(pthread_mutex_t *restrict mutex,
   int ret;
   (void)_;
   if (myth_should_wrap_pthread()) {
+    myth_handle_PTHREAD_MUTEX_INITIALIZER(mutex);
     ret = myth_mutex_timedlock_body((myth_mutex_t *)mutex, abstime);
   } else {
     ret = real_pthread_mutex_timedlock(mutex, abstime);
@@ -793,6 +838,7 @@ int __wrap(pthread_mutex_timedlock)(pthread_mutex_t *restrict mutex,
   leave_wrapped_func("%d", ret);
   return ret;
 }
+#endif
 
 /* pthread_mutex_unlock (3posix) - lock and unlock a mutex */
 int __wrap(pthread_mutex_unlock)(pthread_mutex_t *mutex) {
@@ -800,6 +846,7 @@ int __wrap(pthread_mutex_unlock)(pthread_mutex_t *mutex) {
   int ret;
   (void)_;
   if (myth_should_wrap_pthread()) {
+    myth_handle_PTHREAD_MUTEX_INITIALIZER(mutex);
     ret = myth_mutex_unlock_body((myth_mutex_t *)mutex);
   } else {
     ret = real_pthread_mutex_unlock(mutex);
@@ -815,6 +862,7 @@ int __wrap(pthread_mutex_getprioceiling)(const pthread_mutex_t *restrict mutex,
   int ret;
   (void)_;
   if (myth_should_wrap_pthread()) {
+    //myth_handle_PTHREAD_MUTEX_INITIALIZER(mutex); contradicts const
     myth_wrap_pthread_warn_non_conforming();
     ret = ENOSYS;
   } else {
@@ -832,6 +880,7 @@ int __wrap(pthread_mutex_setprioceiling)
   int ret;
   (void)_;
   if (myth_should_wrap_pthread()) {
+    myth_handle_PTHREAD_MUTEX_INITIALIZER(mutex);
     myth_wrap_pthread_warn_non_conforming();
     ret = ENOSYS;
   } else {
@@ -848,6 +897,7 @@ int __wrap(pthread_mutex_consistent)(pthread_mutex_t *mutex) {
   int ret;
   (void)_;
   if (myth_should_wrap_pthread()) {
+    myth_handle_PTHREAD_MUTEX_INITIALIZER(mutex);
     myth_wrap_pthread_warn_non_conforming();
     ret = ENOSYS;
   } else {
@@ -967,8 +1017,8 @@ int __wrap(pthread_mutexattr_getrobust)
 }
 #endif /* HAVE_PTHREAD_MUTEXATTR_GETROBUST */
 
-/* pthread_mutexattr_setrobust (3posix) - get and set the mutex robust attribute */
 #if defined(HAVE_PTHREAD_MUTEXATTR_SETROBUST)
+/* pthread_mutexattr_setrobust (3posix) - get and set the mutex robust attribute */
 int __wrap(pthread_mutexattr_setrobust)
      (pthread_mutexattr_t *attr, int robust) {
   int _ = enter_wrapped_func("%p, %d", attr, robust);
@@ -982,6 +1032,8 @@ int __wrap(pthread_mutexattr_setrobust)
 /* ---------------------------
    --- reader-writer lock 
    --------------------------- */
+
+#if defined(HAVE_PTHREAD_RWLOCK)
 
 static inline int pthread_rwlock_kind_to_myth(int k) {
   switch (k) {
@@ -1203,6 +1255,7 @@ int __wrap(pthread_rwlockattr_setkind_np)(pthread_rwlockattr_t *attr,
   leave_wrapped_func("%d", ret);
   return ret;
 }
+#endif
 
 /* ------------------------------
    --- condition variables 
@@ -1347,6 +1400,8 @@ int __wrap(pthread_condattr_setpshared)(pthread_condattr_t *attr,
   leave_wrapped_func("%d", ret);
   return ret;
 }
+
+#if defined(HAVE_PTHREAD_CONDATTR_CLOCK)
 /* pthread_condattr_getclock (3posix) - get and set the clock selection condition variable a... */
 int __wrap(pthread_condattr_getclock)
      (const pthread_condattr_t *restrict attr,
@@ -1367,11 +1422,13 @@ int __wrap(pthread_condattr_setclock)(pthread_condattr_t *attr,
   leave_wrapped_func("%d", ret);
   return ret;
 }
+#endif /* HAVE_PTHREAD_CONDATTR_CLOCK */
 
 /* ----------------------
    --- spin locks
    ---------------------- */
 
+#if defined(HAVE_PTHREAD_SPIN)
 int __wrap(pthread_spin_init)(pthread_spinlock_t *lock, int pshared) {
   int _ = enter_wrapped_func("%p %d", lock, pshared);
   int ret;
@@ -1443,6 +1500,13 @@ int __wrap(pthread_spin_unlock)(pthread_spinlock_t *lock) {
   return ret;
 }
 
+#endif	 /* defined(HAVE_PTHREAD_SPIN) */
+
+
+
+
+#if defined(HAVE_PTHREAD_BARRIER)
+
 /* ----------------------------
    --- barrier 
    ---------------------------- */
@@ -1497,6 +1561,11 @@ int __wrap(pthread_barrier_wait)(pthread_barrier_t *barrier) {
   (void)_;
   if (myth_should_wrap_pthread()) {
     ret = myth_barrier_wait_body((myth_barrier_t *)barrier);
+    if (ret == MYTH_BARRIER_SERIAL_THREAD) {
+      ret = PTHREAD_BARRIER_SERIAL_THREAD;
+    } else {
+      assert(ret == 0);
+    }
   } else {
     ret = real_pthread_barrier_wait(barrier);
   }
@@ -1540,6 +1609,8 @@ int __wrap(pthread_barrierattr_setpshared)
   leave_wrapped_func("%d", ret);
   return ret;
 }
+
+#endif	/* HAVE_PTHREAD_BARRIER */
 
 /* --------------------------------
    --- thread local storage 
@@ -1604,6 +1675,7 @@ int __wrap(pthread_setspecific)(pthread_key_t key, const void *value) {
    --- functions querying and affecting threads
    ------------------------------------------- */
 
+#if defined(HAVE_PTHREAD_GETCPUCLOCKID)
 /* pthread_getcpuclockid (3) - retrieve ID of a threads CPU time clock */
 int __wrap(pthread_getcpuclockid)(pthread_t thread, clockid_t *clock_id) {
   int _ = enter_wrapped_func("%x, %p", thread, clock_id);
@@ -1618,6 +1690,7 @@ int __wrap(pthread_getcpuclockid)(pthread_t thread, clockid_t *clock_id) {
   leave_wrapped_func("%d", ret);
   return ret;
 }
+#endif /* defined(HAVE_PTHREAD_GETCPUCLOCKID) */
 
 #if 0
 /* pthread_atfork (3posix) - register fork handlers */
@@ -1662,8 +1735,8 @@ void __wrap(pthread_kill_other_threads_np)(void) {
 }
 #endif
 
-/* pthread_sigqueue (3) - queue a signal and data to a thread */
 #if defined(HAVE_PTHREAD_SIGQUEUE)
+/* pthread_sigqueue (3) - queue a signal and data to a thread */
 int __wrap(pthread_sigqueue)(pthread_t thread, int sig,
 			     const union sigval value) {
   int _ = enter_wrapped_func("%x, %d, ...", thread, sig);

@@ -278,8 +278,31 @@ static inline void myth_make_context_empty(myth_context_t ctx, void *stack,
 #endif
 }
 
+#if PIC
+#if GLOBAL_SYM_MODIFIER == GLOBAL_SYM_MODIFIER_WITH_UNDERSCORE_WITH_PLT
+#define FUNC_PREFIX "_"
+#define FUNC_SUFFIX "@PLT"
+#elif GLOBAL_SYM_MODIFIER == GLOBAL_SYM_MODIFIER_NO_UNDERSCORE_WITH_PLT
+#define FUNC_PREFIX ""
+#define FUNC_SUFFIX "@PLT"
+#elif GLOBAL_SYM_MODIFIER == GLOBAL_SYM_MODIFIER_WITH_UNDERSCORE_NO_PLT
+#define FUNC_PREFIX "_"
+#define FUNC_SUFFIX ""
+#elif GLOBAL_SYM_MODIFIER == GLOBAL_SYM_MODIFIER_NO_UNDERSCORE_NO_PLT
+#define FUNC_PREFIX ""
+#define FUNC_SUFFIX ""
+#else
+#error "none of HAVE_NO_UNDERSCORE_PLT, HAVE_UNDERSCORE_PLT, HAVE_NO_UNDERSCORE, HAVE_UNDERSCORE defined"
+#endif
+
+#else  /* PIC */
+#define FUNC_PREFIX ""
+#define FUNC_SUFFIX ""
+#endif
+
 #if MYTH_CONTEXT == MYTH_CONTEXT_i386
 
+#if 0
 //Suffix for PLT
 #if PIC
 #define FUNC_SUFFIX "@PLT"
@@ -288,6 +311,7 @@ static inline void myth_make_context_empty(myth_context_t ctx, void *stack,
 #define FUNC_SUFFIX ""
 #define GOTPCREL_SUFFIX ""
 #endif
+#endif	/* 0 */
 
 #if MYTH_INLINE_PUSH_CALLEE_SAVED
 #define PUSH_CALLEE_SAVED() \
@@ -375,14 +399,21 @@ static inline void myth_make_context_empty(myth_context_t ctx, void *stack,
 
 #elif MYTH_CONTEXT == MYTH_CONTEXT_amd64 || MYTH_CONTEXT == MYTH_CONTEXT_amd64_knc
 
+#if 0
 //Suffix for PLT
 #if PIC
-#define FUNC_SUFFIX "@PLT"
+//Linux
+//#define FUNC_SUFFIX "@PLT"
+//Mac
+#define FUNC_PREFIX "_"
+#define FUNC_SUFFIX 
 #define GOTPCREL_SUFFIX "@GOTPCREL"
 #else
-#define FUNC_SUFFIX ""
-#define GOTPCREL_SUFFIX ""
+#define FUNC_PREFIX 
+#define FUNC_SUFFIX 
+#define GOTPCREL_SUFFIX 
 #endif
+#endif	/* 0 */
 
 #if PIC
 #define PUSH_LABEL_USING_A(label) \
@@ -392,10 +423,19 @@ static inline void myth_make_context_empty(myth_context_t ctx, void *stack,
 	"leaq "label"(%%rip),%%rbp\n"\
 	"push %%rbp\n"
 #else
-#define PUSH_LABEL(label) \
+#if 0
+#define PUSH_LABEL(label)			\
 	"pushq $" label "\n"
 #define PUSH_LABEL_USING_A(label) PUSH_LABEL(label)
 #define PUSH_LABEL_USING_BP(label) PUSH_LABEL(label)
+#else
+#define PUSH_LABEL_USING_A(label) \
+	"leaq "label"(%%rip),%%rax\n"\
+	"push %%rax\n"
+#define PUSH_LABEL_USING_BP(label) \
+	"leaq "label"(%%rip),%%rbp\n"\
+	"push %%rbp\n"
+#endif
 #endif
 
 #if MYTH_SAVE_FPCSR
@@ -512,7 +552,7 @@ static inline void myth_make_context_empty(myth_context_t ctx, void *stack,
 		PUSH_LABEL_USING_BP("1f") \
 		"mov %%rsp,("C0")\n"\
 		"mov ("C1"),%%rsp\n"\
-		"call " #f FUNC_SUFFIX "\n"\
+		"call " FUNC_PREFIX #f FUNC_SUFFIX "\n"\
 		MY_RET_A \
 		"1:\n"\
 		POP_CALLEE_SAVED() \
@@ -536,7 +576,7 @@ static inline void myth_make_context_empty(myth_context_t ctx, void *stack,
 	{DECLARE_DUMMY_VARIABLES\
 	asm volatile(\
 		"mov ("C0"),%%rsp\n"\
-		"call " #f FUNC_SUFFIX "\n"\
+		"call " FUNC_PREFIX #f FUNC_SUFFIX "\n"\
 		MY_RET_B \
 		:DUMMY_VARIABLE_CONSTRAINTS\
 		:R_A((void*)(switch_to)),R_DI(arg1),R_SI(arg2),R_D(arg3)\

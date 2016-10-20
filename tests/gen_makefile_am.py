@@ -34,6 +34,7 @@ files_in_order = [
     (0, "myth_key_create"),
     (0, "myth_key_getspecific"),
     (0, "myth_key_destructor"),
+    (0, "myth_globalattr_set_n_workers"),
     (0, "measure_create"),
     (0, "measure_latency"),
     (0, "measure_wakeup_latency"),

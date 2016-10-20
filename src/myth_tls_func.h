@@ -207,13 +207,11 @@ static inline void myth_tls_key_allocator_fini(myth_tls_key_allocator_t * s) {
   (void)s;
 }
 
-myth_tls_key_allocator_t g_myth_tls_key_allocator[1];
 static inline void myth_tls_init(int n_workers) {
   (void)n_workers;
   myth_tls_key_allocator_init(g_myth_tls_key_allocator);
 }
 
-myth_tls_key_allocator_t g_myth_tls_key_allocator[1];
 static inline void myth_tls_fini() {
   myth_tls_key_allocator_fini(g_myth_tls_key_allocator);
 }

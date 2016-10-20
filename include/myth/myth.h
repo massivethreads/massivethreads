@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <time.h>
+#include <pthread.h>
 
 #include "myth/myth_spinlock.h"
 #include "myth/myth_sleep_queue.h"
@@ -21,24 +22,28 @@ extern "C" {
      --------------------------------------- */
 
   enum { 
-    MYTH_MUTEX_NORMAL,
-    MYTH_MUTEX_ERRORCHECK,
-    MYTH_MUTEX_RECURSIVE,
-    MYTH_MUTEX_INVALID,
+    MYTH_MUTEX_NORMAL = 0,
+    MYTH_MUTEX_ERRORCHECK = 1,
+    MYTH_MUTEX_RECURSIVE = 2,
+    MYTH_MUTEX_INVALID = 3,
     MYTH_MUTEX_DEFAULT = MYTH_MUTEX_NORMAL
   };
   
   typedef struct myth_mutexattr {
-    int type;
+    int type;			/* one of the above constants */
   } myth_mutexattr_t;
 
   typedef struct myth_mutex {
+    int magic;
+    myth_mutexattr_t attr;
     myth_sleep_queue_t sleep_q[1];
     volatile long state;		/* n_waiters|locked */
-    myth_mutexattr_t attr;
   } myth_mutex_t;
 
-#define MYTH_MUTEX_INITIALIZER { { MYTH_SLEEP_QUEUE_INITIALIZER }, 0, { MYTH_MUTEX_DEFAULT }  }
+  enum { myth_mutex_magic_no = 123456789, 
+	 myth_mutex_magic_no_initializing = 987654321 };
+	 
+#define MYTH_MUTEX_INITIALIZER { myth_mutex_magic_no, { MYTH_MUTEX_DEFAULT }, { MYTH_SLEEP_QUEUE_INITIALIZER }, 0 }
 
   /* ---------------------------------------
      --- reader-writer lock  ---
@@ -68,6 +73,7 @@ extern "C" {
      --------------------------------------- */
 
   typedef struct myth_condattr {
+    void * unused;		/* just to suppress warning against empty struct */
   } myth_condattr_t;
 
   //Conditional variable data structure
@@ -82,7 +88,9 @@ extern "C" {
      --- barrier ---
      --------------------------------------- */
 
-  typedef struct myth_barrierattr { } myth_barrierattr_t;
+  typedef struct myth_barrierattr {
+    void * unused;		/* just to suppress warning against empty struct */
+  } myth_barrierattr_t;
   typedef struct myth_barrier {
     long n_threads;
     volatile long state;
@@ -91,14 +99,16 @@ extern "C" {
     myth_barrierattr_t attr;
   } myth_barrier_t;
 
-#define MYTH_BARRIER_SERIAL_THREAD PTHREAD_BARRIER_SERIAL_THREAD
+#define MYTH_BARRIER_SERIAL_THREAD 1
 
   /* ---------------------------------------
      --- join counter ---
      --------------------------------------- */
 
   //Join counter data structure
-  typedef struct myth_join_counterattr { } myth_join_counterattr_t;
+  typedef struct myth_join_counterattr {
+    void * unused;		/* just to suppress warning against empty struct */
+  } myth_join_counterattr_t;
   typedef struct myth_join_counter {
     /* TODO: conserve space? */
     long n_threads;		/* const : number of decrements to see */
@@ -114,7 +124,9 @@ extern "C" {
      --------------------------------------- */
 
   //Full/empty lock data structure
-  typedef struct myth_felockattr { } myth_felockattr_t;
+  typedef struct myth_felockattr {
+    void * unused;		/* just to suppress warning against empty struct */
+  } myth_felockattr_t;
 
   typedef struct myth_felock {
     myth_mutex_t mutex[1];
@@ -134,6 +146,7 @@ extern "C" {
     int n_workers;
     int bind_workers;
     int child_first;
+    int initialized;
   } myth_globalattr_t;
 
   /*
@@ -446,10 +459,10 @@ extern "C" {
   */
   int myth_join(myth_thread_t th, void **result);
 
-  int myth_tryjoin_body(myth_thread_t th,void **result);
+  int myth_tryjoin(myth_thread_t th,void **result);
 
-  int myth_timedjoin_body(myth_thread_t th, void **result,
-			  const struct timespec *abstime);
+  int myth_timedjoin(myth_thread_t th, void **result,
+		     const struct timespec *abstime);
 
 
   /*
@@ -1305,6 +1318,7 @@ extern "C" {
   */
   int myth_key_create(myth_key_t *key, void (*destr_function)(void *));
 
+
   /*
     Function: myth_key_delete
 
@@ -1366,12 +1380,11 @@ extern "C" {
   */
   void *myth_getspecific(myth_key_t key);
 
-
   /*
     Function: myth_get_worker_num
 
     Returns:
-    The index of the calling worker, an 
+    The index of the calling thread, an 
     integer x satisfying
     0 <= x < myth_get_num_workers().
 
@@ -1390,6 +1403,96 @@ extern "C" {
     <myth_get_worker_num>
   */
   int myth_get_num_workers(void);
+
+  typedef pthread_key_t myth_wls_key_t;
+
+  /*
+    Function: myth_wls_key_create
+
+    Create a key for worker-specific data.
+
+    Parameters:
+
+    key - a pointer to which the created key will be stored.
+    destr_function - a pointer to a destructor function.
+
+    wls_key is used to create data specific to each underlying
+    worker. you can think of it as a simple wrapper to pthread_key_create.
+
+    Returns:
+
+    Zero if succeed, or an errno when an error occurred.
+
+    Bug:
+
+    destr_function is ignored in the current implementation.
+
+    See Also:
+
+    <myth_wls_key_delete>, <myth_wls_setspecific>, <myth_wls_getspecific>
+  */
+  int myth_wls_key_create(myth_wls_key_t *key, void (*destr_function)(void *));
+
+  /*
+    Function: myth_wls_key_delete
+
+    Delete a key for worker-specific data.
+
+    Parameters:
+
+    key - key to delete
+
+    Returns:
+
+    Zero if succeed, or an errno when an error occurred.
+
+    See Also:
+
+    <myth_wls_key_create>, <myth_wls_setspecific>, <myth_wls_getspecific>
+  */
+  int myth_wls_key_delete(myth_wls_key_t key);
+
+  /*
+    Function: myth_wls_setspecific
+
+    Associate a worker-specific data with a key.
+
+    Parameters:
+
+    key - a key created by myth_key_create
+    data - a data to be associated with key
+
+    Returns:
+
+    Zero if succeed, or an errno when an error occurred.
+
+    See Also:
+
+    <myth_wls_key_create>, <myth_wls_key_delete>, <myth_wls_getspecific>
+  */
+  int myth_wls_setspecific(myth_wls_key_t key, const void *data);
+
+  /*
+    Function: myth_wls_getspecific
+
+    Obtain a worker-specific data
+    associated with a key.
+
+    Parameters:
+
+    key - a key to retrieve data.
+
+    Returns:
+
+    a data previously associated with key via
+    myth_wls_setspecific, or NULL if no data has
+    been associated with it.
+
+    See Also:
+
+    <myth_wls_key_create>, <myth_wls_key_delete>, <myth_wls_setspecific>
+  */
+  void *myth_wls_getspecific(myth_wls_key_t key);
 
   /* 
      Function: myth_sched_yield

@@ -9,27 +9,52 @@ API reference
 
  * http://www.eidos.ic.i.u-tokyo.ac.jp/massivethreads/massivethreads/docs/reference/
 
-System Requirements
+Supported Systems
 ============================================================================
 
 Massivethreads is mainly developed and tested on the following environment:
 
-CPU              : x86_64
-Operating system : Linux (>=2.6)
-C compiler       : GCC (>=4.4.1)
+| CPU        | OS     | OS ver. | compiler | compiler ver. |
+|------------|--------|---------|----------|---------------|
+|x86_64      |  Linux |  4.4    | GCC      | 5.4.0         |
+|KNC         |  Linux |         | GCC      |               |
+|KNL         |  Linux |         | GCC      |               |
+|x86_64      |  Darwin| 12.6    | Clang    | 503.0.40      |
+|Sparc64IXfx |  Linux |         | GCC      |               |
 
-It can also work on x86, SPARC64IXfx, and XeonPhi, but not tested well.
+Other versions are likely to work.
+
+Combinations that are known NOT to work include
+
+| CPU        | OS     | OS ver. | compiler | compiler ver. |
+|------------|--------|---------|----------|---------------|
+|Sparc64IXfx |  Linux |         | FCC      |               |
+ 
+Quick test
+============================================================================
+```
+git clone git@github.com:massivethreads/massivethreads.git
+cd massivethreads
+./configure --prefix=PREFIX CFLAGS="-Wall -O3"
+make 
+make install
+cd tests
+make build
+make check
+```
 
 How to build MassiveThreads library
 ============================================================================
 
-MassiveThreads can be compiled and installed like many other UNIX programs using the following 3-steps:
+After you make install,
 
+```
 $ ./configure --prefix=PREFIX
 $ make
 $ make install
+```
 
-You will find ${PREFIX}/lib/libmyth.so and ${PREFIX}/include/myth/myth.h, among some other things, where ${PREFIX} needs to be replaced by what you specified to --prefix.
+you will find ${PREFIX}/lib/libmyth.so and ${PREFIX}/include/myth/myth.h, among some other things, where ${PREFIX} needs to be replaced by what you specified to --prefix.
 
 How to use MassiveThreads library from your program
 ============================================================================
@@ -55,7 +80,7 @@ IMPORTANT CHANGES from 0.97:
  * as of now, we recommend using popular scalable malloc libraries such as tcmalloc.
  * we are considering reviving our own malloc replacement and providing a variety of options in our future release.
 
-Pthread-compatible interface
+Pthread-compatible interfaces
 ----------------------------------------------------------------------------
 
 If the configure detects a linker supporting --wrap option, it builds a library libmyth-ld.so.
@@ -89,6 +114,19 @@ Using environmental variables such as LD_PRELOAD, existing binaries using pthrea
 $ LD_PRELOAD=${PREFIX}/lib/libmyth-dl.so ./a.out
 ```
 
+## Summary of libraries prior to 0.97 and onward
+
+In the table below, "define system functions" mean the library wrap some of pthread functions (e.g., pthread_create), memory allocating functions (e.g., malloc, calloc, etc.) and IO functions (e.g., recv, send, etc.) and replace them with user-level implementations.
+
+| name              | 0.97 and forward             | prior to 0.97  |
+|-------------------|------------------------------|----------------|
+| libmyth-native.so | N/A                          | define only native functions |
+| libmyth-compat.so | N/A                          | define only system functions |
+| libmyth.so        | define only native functions | define both native and system functions|
+| libmyth-ld.so     | define some system functions with --wrap=... option of gnu linker | N/A |
+| libmyth-dl.so     | define some system functions with dlopen/dlsym | N/A |
+
+
 ## TBB-like interface
 
  TBB-like interface provides an API compatible with task_group of Intel Threading Building Block.
@@ -101,8 +139,8 @@ Setting the number of worker threads
 ----------------------------------------------------------------------------
 
 MassiveThreads creates worker thraeds based on the process affinity. Thus you can control the number of worker threads and CPU cores used by 'taskset' command.
-Environmental variable MYTH_WORKER_NUM can also be used to change the number of worker threads (= # of CPU cores used).
-By default, MassiveThreads uses all the CPU cores in the machine.
+Environmental variable MYTH_NUM_WORKERS (or MYTH_WORKER_NUM for backward compatibility) can also be used to change the number of worker threads (= # of CPU cores used).
+By default, MassiveThreads uses all the CPU cores found in the machine.
 
 Setting the default stack size
 ----------------------------------------------------------------------------

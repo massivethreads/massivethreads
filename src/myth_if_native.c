@@ -13,6 +13,7 @@
 #include "myth_sched_func.h"
 /* TODO: wsapi should be factored out in a separate file */
 #include "myth_wsqueue_func.h"
+#include "myth_wls_func.h"
 
 /* --------------------------------
    --- global initialization functions 
@@ -36,10 +37,6 @@ int myth_globalattr_init(myth_globalattr_t * attr) {
 
 int myth_globalattr_destroy(myth_globalattr_t * attr) {
   return myth_globalattr_destroy_body(attr);
-}
-
-int myth_globalattr_set_default(myth_globalattr_t * attr) {
-  return myth_globalattr_set_default_body(attr);
 }
 
 int myth_globalattr_get_stacksize(myth_globalattr_t * attr,
@@ -116,11 +113,11 @@ int myth_join(myth_thread_t th,void **result) {
   return myth_join_body(th,result);
 }
 
-int myth_tryjoin_body(myth_thread_t th,void **result) {
+int myth_tryjoin(myth_thread_t th,void **result) {
   return myth_tryjoin_body(th, result);
 }
 
-int myth_timedjoin_body(myth_thread_t th, void **result,
+int myth_timedjoin(myth_thread_t th, void **result,
 			const struct timespec *abstime) {
   return myth_timedjoin_body(th, result, abstime);
 }
@@ -540,6 +537,26 @@ void *myth_getspecific(myth_key_t key) {
 
 int myth_setspecific(myth_key_t key, const void * pointer) {
   return myth_setspecific_body(key, pointer);
+}
+
+/* --------------------------------
+   --- worker local storage 
+   -------------------------------- */
+
+int myth_wls_key_create(myth_wls_key_t *key, void (*destructor)(void *)) {
+  return myth_wls_key_create_body(key, destructor);
+}
+
+int myth_wls_key_delete(myth_wls_key_t key) {
+  return myth_wls_key_delete_body(key);
+}
+
+void *myth_wls_getspecific(myth_wls_key_t key) {
+  return myth_wls_getspecific_body(key);
+}
+
+int myth_wls_setspecific(myth_wls_key_t key, const void * pointer) {
+  return myth_wls_setspecific_body(key, pointer);
 }
 
 /* --------------------------------------------------

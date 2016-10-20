@@ -2,8 +2,8 @@
  * myth_worker_func.h
  */
 #pragma once
-#ifndef MYTH_WORKER_FUNC_H
-#define MYTH_WORKER_FUNC_H
+#ifndef MYTH_WORKER_FUNC_H_
+#define MYTH_WORKER_FUNC_H_
 
 #include <signal.h>
 #include <sys/time.h>
@@ -11,6 +11,7 @@
 #include "myth_config.h"
 #include "myth_init.h"
 #include "myth_misc.h"
+#include "myth_bind_worker.h"
 #include "myth_worker.h"
 #include "myth_sched.h"
 #include "myth_log.h"
@@ -56,11 +57,11 @@ static inline myth_running_env_t myth_get_current_env(void) {
 }
 #elif WENV_IMPL == WENV_IMPL_ELF
 //Initialize
-static void myth_env_init(void) { }
+static inline void myth_env_init(void) { }
 //Cleanup
-static void myth_env_fini(void) { }
+static inline void myth_env_fini(void) { }
 //Set worker thread descriptor
-static void myth_set_current_env(myth_running_env_t e) {
+static inline void myth_set_current_env(myth_running_env_t e) {
   g_worker_rank = e->rank;
 }
 //Return current worker thread descriptor
@@ -158,11 +159,9 @@ static void myth_setup_worker(int rank) {
 #else
     alloc_size += 4095;
     alloc_size &= ~(0xFFF);
-#if defined(MAP_STACK)
-    th_ptr = mmap(NULL,alloc_size,PROT_READ|PROT_WRITE,MAP_PRIVATE|MAP_ANONYMOUS|MAP_STACK,-1,0);
-#else
-    th_ptr = mmap(NULL,alloc_size,PROT_READ|PROT_WRITE,MAP_PRIVATE|MAP_ANONYMOUS,-1,0);
-#endif
+
+    th_ptr = myth_mmap(NULL, alloc_size, PROT_READ|PROT_WRITE,
+		       MAP_PRIVATE|MAP_FIXED|MYTH_MAP_ANON|MYTH_MAP_STACK, -1, 0);
 #endif
     for (i = 0; i < INITIAL_STACK_ALLOC_UNIT; i++){
       myth_thread_t ret = (myth_thread_t)th_ptr;
@@ -183,11 +182,9 @@ static void myth_setup_worker(int rank) {
 #else
     alloc_size += 4095;
     alloc_size &= ~(0xFFF);
-#if defined(MAP_STACK)
-    th_ptr = mmap(NULL,alloc_size,PROT_READ|PROT_WRITE,MAP_PRIVATE|MAP_ANONYMOUS|MAP_STACK,-1,0);
-#else
-    th_ptr = mmap(NULL,alloc_size,PROT_READ|PROT_WRITE,MAP_PRIVATE|MAP_ANONYMOUS,-1,0);
-#endif
+    th_ptr = mmap(NULL, alloc_size, PROT_READ|PROT_WRITE,
+		  MAP_PRIVATE|MYTH_MAP_ANON|MYTH_MAP_STACK, -1, 0);
+
 #endif
     /*th_ptr+=th_size-sizeof(void*);
       for (i=0;i<INITIAL_STACK_ALLOC_UNIT;i++){
@@ -215,7 +212,7 @@ static void myth_setup_worker(int rank) {
 #endif //MYTH_WRAP_SOCKIO
   env->this_thread = NULL;
   //Wait for other worker threads
-  real_pthread_barrier_wait(&g_worker_barrier);
+  myth_internal_barrier_wait(&g_worker_barrier);
   //set signal mask
   if (env->rank != 0){
     sigset_t ss;
@@ -251,7 +248,7 @@ static inline void myth_cleanup_worker(int rank)
   }
 #endif
   //synchronize
-  real_pthread_barrier_wait(&g_worker_barrier);
+  myth_internal_barrier_wait(&g_worker_barrier);
   myth_running_env_t env;
   env=myth_get_current_env();
   //cleanup timer
@@ -415,29 +412,17 @@ static inline void myth_startpoint_exit_ex_body(int rank)
   myth_cleanup_worker(rank);
 }
 
-//Initialize each worker thread
+int myth_scheduler_worker_init(int rank, int nw);
+
+  //Initialize each worker thread
 static inline void *myth_worker_thread_fn(void *args) {
   intptr_t rank = (intptr_t)args;
-#if 0
-  char *env;
-  int bind_workers;
-#if MYTH_BIND_WORKERS
-  bind_workers=1;
-#else
-  bind_workers=0;
-#endif
-  env=getenv(ENV_MYTH_BIND_WORKERS);
-  if (env){
-    bind_workers = atoi(env);
-  }
-#endif
-
   if (g_attr.bind_workers > 0){
-    //Set affinity
-    cpu_set_t cs = myth_get_worker_cpuset(rank);
-    real_pthread_setaffinity_np(real_pthread_self(),
-				sizeof(cpu_set_t), &cs);
+    myth_bind_worker(rank);
   }
+#if EXPERIMENTAL_SCHEDULER
+  myth_scheduler_worker_init(rank, g_attr.n_workers);
+#endif
   if (rank == 0) {
     //setup as a main thread
     myth_startpoint_init_ex_body(rank);
@@ -595,7 +580,7 @@ static void myth_sched_loop(void)
 #endif
   //get the first thread
   myth_thread_t first_run=myth_queue_pop(&env->runnable_q);
-  real_pthread_barrier_wait(&g_worker_barrier);
+  myth_internal_barrier_wait(&g_worker_barrier);
   if (first_run){
     //sanity check
     myth_assert(first_run->status==MYTH_STATUS_READY);
@@ -672,4 +657,5 @@ static inline int myth_get_num_workers_body(void) {
   myth_ensure_init();
   return g_attr.n_workers;
 }
-#endif
+
+#endif	/* MYTH_WORKER_FUNC_H_ */

@@ -1980,8 +1980,7 @@ extern "C" {
     dr_dag_node_kind_to_str((dr_dag_node_kind_t)1);
     //dr_pi_dag_open_to_write("", "", NULL);
     dr_dag_node_list_size(0);
-    dr_dummy_call_static_functions();
-
+    if (t) dr_dummy_call_static_functions();
   }
 
 #ifdef __cplusplus

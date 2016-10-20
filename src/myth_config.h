@@ -1,3 +1,7 @@
+/* 
+ * myth_config.h
+ */
+
 #pragma once
 #ifndef MYTH_CONFIG_H_
 #define MYTH_CONFIG_H_
@@ -189,7 +193,7 @@
 #define MYTH_FLMALLOC_TLS 0
 
 //Inline context switching codes by inline assembler
-#define MYTH_INLINE_CONTEXT 0
+#define MYTH_INLINE_CONTEXT 1
 //At inlined codes, save callee-saved registers explicitly
 #define MYTH_INLINE_PUSH_CALLEE_SAVED 1
 
@@ -199,6 +203,23 @@
 
 // force to use ucontext
 //#define MYTH_FORCE_UCONTEXT 1
+
+/* ------------------
+   Global symbol modifier choices
+   ------------------ */
+
+#define GLOBAL_SYM_MODIFIER_WITH_UNDERSCORE_WITH_PLT 2
+#define GLOBAL_SYM_MODIFIER_NO_UNDERSCORE_WITH_PLT   3
+#define GLOBAL_SYM_MODIFIER_WITH_UNDERSCORE_NO_PLT   4
+#define GLOBAL_SYM_MODIFIER_NO_UNDERSCORE_NO_PLT     5
+
+/* ------------------
+   find symbols method choices
+   ------------------ */
+
+#define FIND_SYMBOLS_BY_RTLD_NEXT 2
+#define FIND_SYMBOLS_BY_DL_ITERATE_PHDR 3
+#define FIND_SYMBOLS_BY FIND_SYMBOLS_BY_RTLD_NEXT
 
 /* ------------------
    MYTH_ARCH choices
@@ -273,5 +294,10 @@
 #define MYTH_WRAP_VANILLA 2
 #define MYTH_WRAP_DL      3
 #define MYTH_WRAP_LD      4
+
+/* ------------------
+   experimental locality-aware(?) scheduler
+   ------------------ */
+#define EXPERIMENTAL_SCHEDULER 1
 
 #endif /* MYTH_CONFIG_H_ */

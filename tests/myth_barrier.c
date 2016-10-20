@@ -37,8 +37,8 @@ void * f(void * arg_) {
 }
 
 int main(int argc, char ** argv) {
-  long n_threads = (argc > 1 ? atol(argv[1]) : 1000);
-  long n         = (argc > 2 ? atol(argv[2]) : 1000);
+  long n_threads = (argc > 1 ? atol(argv[1]) : 200);
+  long n         = (argc > 2 ? atol(argv[2]) : 200);
   myth_thread_t tids[n_threads];
   long * a = (long *)calloc(sizeof(long), n_threads);
   arg_t * args = (arg_t *)calloc(sizeof(arg_t), n_threads);

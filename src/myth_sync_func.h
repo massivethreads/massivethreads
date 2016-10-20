@@ -12,11 +12,11 @@
 #include "myth_worker.h"
 #include "myth_thread.h"
 
+#include "myth_misc_func.h"
 #include "myth_context_func.h"
 #include "myth_desc_func.h"
 #include "myth_sleep_queue_func.h"
 #include "myth_sched_func.h"
-
 #include "myth_spinlock_func.h"
 
 //#define ALIGN_MUTEX
@@ -438,6 +438,7 @@ static inline int myth_mutex_init_body(myth_mutex_t * mutex,
   } else {
     myth_mutexattr_init_body(&mutex->attr);
   }
+  mutex->magic = myth_mutex_magic_no;
   return 0;
 }
 
@@ -537,7 +538,7 @@ myth_mutex_timedlock_body(myth_mutex_t * mutex,
   } else {
     struct timespec tp[1];
     while (1) {
-      int err = clock_gettime(CLOCK_REALTIME, tp);
+      int err = hr_gettime(tp);
       assert(err == 0);
       if (myth_timespec_gt(tp, abstime)) return ETIMEDOUT;
       if (myth_mutex_trylock_body(mutex) == 0) {

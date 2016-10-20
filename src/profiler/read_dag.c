@@ -38,8 +38,8 @@ dr_read_dag(const char * filename) {
       != sizeof(G->num_workers)) {
     const char * err = strerror(errno);
     fprintf(stderr, 
-	    "read: %s (%s) offset %ld\n", 
-	    err, filename, lseek(fd, 0, SEEK_CUR));
+	    "read: %s (%s) offset %lld\n", 
+	    err, filename, (long long)lseek(fd, 0, SEEK_CUR));
     close(fd);
     return 0;
   }

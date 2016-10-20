@@ -65,7 +65,7 @@ AC_ARG_ENABLE([myth-dl],
 # -----------------------
 
 AC_ARG_ENABLE([bind-workers],
-            [AS_HELP_STRING([--enable-bind-workers=yes/no],
+            [AS_HELP_STRING([--enable-default-bind-workers=yes/no],
                             [Set default value for bind-workers.
                              Default: yes.  You can change it at runtime
 			     by setting MYTH_BIND_WORKERS.])],
@@ -73,9 +73,9 @@ AC_ARG_ENABLE([bind-workers],
             [default_bind_workers="yes"])
 
 if test "x$default_bind_workers" != "xno" ; then
-  AC_DEFINE_UNQUOTED([MYTH_BIND_WORKERS],[1],[if 1, bind workers by default])
+  AC_DEFINE_UNQUOTED([MYTH_DEFAULT_BIND_WORKERS],[1],[if 1, bind workers by default])
 else						 
-  AC_DEFINE_UNQUOTED([MYTH_BIND_WORKERS],[0],[if 1, bind workers by default])
+  AC_DEFINE_UNQUOTED([MYTH_DEFAULT_BIND_WORKERS],[0],[if 1, bind workers by default])
 fi
 
 # -----------------------
@@ -89,13 +89,13 @@ AC_ARG_ENABLE([eco-mode],
 			      disables it when compiling MassiveThreads. "yes" 
 			      enables it, but it is not activated by default.
 			      To use it you have to activate by setting environment
-			      variable MYTH_ECO_MODE=1. Default is "yes".
+			      variable MYTH_ECO_MODE=1. Default is "no".
 			      When eco-mode scheduler is enabled, thread creation
 			      overhead might be slightly increased, whichever it is activated or not])],
 			      ,
-			     [enable_eco_mode="yes"])
+			     [enable_eco_mode="no"])
 
-if test "x$enable_eco_mode" != "xno" ; then
+if test "x$enable_eco_mode" = "xyes" ; then
   AC_DEFINE_UNQUOTED([MYTH_ECO_MODE],[1],[if 1, enable eco-mode])
   AC_DEFINE_UNQUOTED([MYTH_ECO_TEIAN_STEAL],[1],[if 1, enable eco-mode])
 else
@@ -217,11 +217,6 @@ AC_CHECK_LIB(pthread, pthread_create,
 		      [],
 		      [AC_MSG_ERROR(libpthread not available.)])
 
-# todo: make clock_gettime optional
-AC_CHECK_LIB(rt, clock_gettime,
-		 [],
-		 [AC_MSG_ERROR(librt not available.)])
-
 # ---------------------
 # libraries affecting build targets depending on availability
 # ---------------------
@@ -237,19 +232,129 @@ AM_CONDITIONAL([BUILD_MYTH_LD],
 	[test x"$enable_myth_ld" = "xyes" -a x"$linker_accepts_wrap" = "xyes"])
 
 
-#
-# check if dlopen is supported
-#
 # ---------------------
 # optional libraries
 # ---------------------
 
-AC_CHECK_LIB(dl, dlopen,
-		 [have_dlopen="yes"],
-		 [have_dlopen="no"])
+# ------
+# -ldl dlopen
+# ------
+AC_CHECK_LIB(dl, dlsym,
+		 [have_dlsym="yes"],
+		 [have_dlsym="no"])
+
+AC_CHECK_HEADERS([dlfcn.h])
+
+AC_CHECK_DECL(RTLD_NEXT,
+	[have_rtld_next="yes"],
+	[have_rtld_next="no"],
+[#define _GNU_SOURCE
+#ifdef HAVE_DLFCN_H
+# include <dlfcn.h>
+#endif
+])
 
 AM_CONDITIONAL([BUILD_MYTH_DL],
-	[test x"$enable_myth_dl" = "xyes" -a x"$have_dlopen" = "xyes" ])
+	[test x"$enable_myth_dl" = "xyes" -a x"$have_rtld_next" = "xyes" ])
+
+
+# -------------
+# -lrt clock_gettime
+# -------------
+AC_CHECK_LIB(rt, clock_gettime)
+# define HAVE_CLOCK_GETTIME 1
+
+# =============================
+# headers
+# =============================
+
+AC_CHECK_HEADERS([malloc.h])
+AC_CHECK_HEADERS([link.h])
+# define HAVE_DL_ITERATE_BY_PHDR 1
+
+
+
+
+# =============================
+# functions
+# =============================
+
+AC_CHECK_FUNCS([sysconf])
+# define HAVE_SYSCONF 1
+
+AC_CHECK_FUNCS([accept4])
+#define HAVE_ACCEPT4 1
+
+AC_CHECK_FUNCS([sched_getaffinity])
+# define HAVE_SCHED_GETAFFINITY 1
+
+AC_CHECK_FUNCS([pthread_mutex_timedlock])
+# define HAVE_PTHREAD_TIMEDLOCK 1
+
+AC_CHECK_FUNCS([pthread_setschedprio])
+# define HAVE_PTHREAD_SCHEDPRIO 1
+
+AC_CHECK_FUNCS([pthread_getconcurrency],
+[AC_DEFINE_UNQUOTED([HAVE_PTHREAD_CONCURRENCY],
+[],[pthread_getconcurrency etc.])])
+# define HAVE_PTHREAD_CONCURRENCY 1
+
+AC_CHECK_FUNCS([pthread_attr_setaffinity_np],
+[AC_DEFINE_UNQUOTED([HAVE_PTHREAD_AFFINITY_NP],
+[],[pthread_attr_setaffinity_np etc.])])
+# define HAVE_PTHREAD_AFFINITY_NP 1
+
+AC_CHECK_FUNCS([pthread_getattr_default_np],
+[AC_DEFINE_UNQUOTED([HAVE_PTHREAD_ATTR_NP],
+[],[pthread_getattr_default_np etc.])])
+# define HAVE_PTHREAD_ATTR_NP 1
+
+AC_CHECK_FUNCS([pthread_getname_np],
+[AC_DEFINE_UNQUOTED([HAVE_PTHREAD_NAME_NP],
+[],[pthread_getname_np etc.])])
+# define HAVE_PTHREAD_NAME_NP 1
+
+AC_MSG_CHECKING([pthread_setname_np arity])
+AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+#define _GNU_SOURCE
+#include <pthread.h>
+]],
+	[[ return (pthread_setname_np("") ? 1 : 0); ]])],
+	[pthread_setname_arity=1],
+	[pthread_setname_arity=2])
+AC_MSG_RESULT([$pthread_setname_arity])
+AC_DEFINE_UNQUOTED([PTHREAD_SETNAME_ARITY],[$pthread_setname_arity],
+	[the number of args pthread_setname_arity takes; it takes thread id and name on Linux but only name on Macintosh (older pthreads?)])
+
+AC_CHECK_FUNCS([pthread_tryjoin_np],
+[AC_DEFINE_UNQUOTED([HAVE_PTHREAD_JOIN_NP],
+[],[pthread_tryjoin_np etc.])])
+# define HAVE_PTHREAD_JOIN_NP 1
+
+AC_CHECK_FUNCS([pthread_sigqueue])
+# define HAVE_PTHREAD_SIGQUEUE 1
+
+AC_CHECK_FUNCS([pthread_condattr_getclock],
+[AC_DEFINE_UNQUOTED([HAVE_PTHREAD_CONDATTR_CLOCK],
+[],[pthread_condattr_getclock etc.])])
+# define HAVE_PTHREAD_CONDATTR_CLOCK  1
+
+AC_CHECK_FUNCS([pthread_getcpuclockid])
+# define HAVE_PTHREAD_GETCPUCLOCKID 1
+
+AC_CHECK_FUNCS([pthread_spin_init],
+[AC_DEFINE_UNQUOTED([HAVE_PTHREAD_SPIN],
+[],[pthread_spin_init etc.])])
+# define HAVE_PTHREAD_SPIN 1
+
+AC_CHECK_FUNCS([pthread_mutex_consistent])
+# define HAVE_PTHREAD_MUTEX_CONSISTENT 1
+
+AC_CHECK_FUNCS([pthread_mutexattr_getrobust],
+[AC_DEFINE_UNQUOTED([HAVE_PTHREAD_MUTEXATTR_ROBUST],
+[],[pthread_mutexattr_getrobust etc.])])
+# define HAVE_PTHREAD_MUTEXATTR_ROBUST 1
+
 
 AC_CHECK_LIB(papi, PAPI_library_init,
 		   [have_papi="yes"],
@@ -263,6 +368,10 @@ AM_CONDITIONAL([BUILD_DAG_RECORDER_WITH_PAPI],
 # declarations
 # -----------------------------
 
+# 
+# aligned_alloc
+# 
+
 AC_MSG_CHECKING([aligned_alloc])
 AC_LINK_IFELSE([AC_LANG_PROGRAM([[
 #define _ISOC11_SOURCE 1
@@ -273,13 +382,95 @@ AC_LINK_IFELSE([AC_LANG_PROGRAM([[
 	[have_aligned_alloc="no"])
 AC_MSG_RESULT([$have_aligned_alloc])
 if test x"$have_aligned_alloc" = "xyes" ; then
-   have_aligned_alloc=1
-else
-   have_aligned_alloc=0
+   AC_DEFINE_UNQUOTED([HAVE_ALIGNED_ALLOC],[1],
+		[if set, aligned_alloc is declared in stdlib.h])
 fi
-AC_DEFINE_UNQUOTED([HAVE_ALIGNED_ALLOC],[$have_aligned_alloc],
-   	[if set, aligned_alloc is declared in stdlib.h])
-AM_CONDITIONAL([BUILD_TEST_MYTH_ALIGNED_ALLOC],[test $have_aligned_alloc = 1])
+AM_CONDITIONAL([BUILD_TEST_MYTH_ALIGNED_ALLOC],
+	[test x"$have_aligned_alloc" = "xyes"])
+
+# 
+# memalign
+# 
+
+AC_MSG_CHECKING([memalign])
+AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+#define _ISOC11_SOURCE 1
+#include <stdlib.h>
+]],
+	[[ return (memalign(1, 1) ? 0 : 1); ]])],
+	[have_memalign="yes"],
+	[have_memalign="no"])
+AC_MSG_RESULT([$have_memalign])
+if test x"$have_memalign" = "xyes" ; then
+   AC_DEFINE_UNQUOTED([HAVE_MEMALIGN],[1],
+		[if set, memalign is declared in stdlib.h])
+fi
+AM_CONDITIONAL([BUILD_TEST_MYTH_MEMALIGN],
+	[ test x = y ])
+
+# [ test x"$have_memalign" = "xyes" ]
+
+# 
+# pvalloc
+# 
+
+AC_MSG_CHECKING([pvalloc])
+AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+#define _ISOC11_SOURCE 1
+#include <stdlib.h>
+]],
+	[[ return (pvalloc(1, 1) ? 0 : 1); ]])],
+	[have_pvalloc="yes"],
+	[have_pvalloc="no"])
+AC_MSG_RESULT([$have_pvalloc])
+if test x"$have_pvalloc" = "xyes" ; then
+   AC_DEFINE_UNQUOTED([HAVE_PVALLOC],[1],
+		[if set, pvalloc is declared in stdlib.h])
+fi
+AM_CONDITIONAL([BUILD_TEST_MYTH_PVALLOC],
+	[test x"$have_pvalloc" = "xyes" ])
+
+
+# 
+# pthread_barrier
+# 
+
+AC_MSG_CHECKING([pthread_barrier_init])
+AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+#include <pthread.h>
+]],
+	[[ pthread_barrier_init(0, 0, 0); ]])],
+	[have_pthread_barrier_init="yes"],
+	[have_pthread_barrier_init="no"])
+AC_MSG_RESULT([$have_pthread_barrier_init])
+if test x"$have_pthread_barrier_init" = "xyes" ; then
+   AC_DEFINE_UNQUOTED([HAVE_PTHREAD_BARRIER],[1],
+		[if set, pthread_barrier is declared in pthread.h])
+fi
+AM_CONDITIONAL([BUILD_TEST_PTH_BARRIER],
+	[test x"$have_pthread_barrier_init" = "xyes" ])
+
+
+# 
+# pthread_yield
+# 
+
+AC_MSG_CHECKING([pthread_yield])
+AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+#define _GNU_SOURCE
+#include <pthread.h>
+]],
+	[[ pthread_yield(); ]])],
+	[have_pthread_yield="yes"],
+	[have_pthread_yield="no"])
+AC_MSG_RESULT([$have_pthread_yield])
+if test x"$have_pthread_yield" = "xyes" ; then
+   AC_DEFINE_UNQUOTED([HAVE_PTHREAD_YIELD],[1],
+		[if set, pthread_yield is declared in pthread.h])
+fi
+AM_CONDITIONAL([BUILD_TEST_PTH_YIELD],
+	[test x"$have_pthread_yield" = "xyes" ])
+
 
 #
 # for C program tests that follow, we treat warnings as error,
@@ -297,6 +488,56 @@ AC_MSG_CHECKING([sysv_abi attribute])
 AC_COMPILE_IFELSE([AC_LANG_SOURCE([[ __attribute__((sysv_abi)) void fun() { } ]])], 
                   [AC_MSG_RESULT([yes]); AC_DEFINE([HAVE_ATTR_SYSV_ABI], [1], [if set, sysv_abi attribute is available])],
 		  [AC_MSG_RESULT([no]);  AC_DEFINE([HAVE_ATTR_SYSV_ABI], [0], [if set, sysv_abi attribute is available])])
+
+#
+# check if what kind of symbols are defined for functions in 
+# shared libraries. from foo, foo? _foo? foo@PLT? _foo@PLT? 
+#
+
+AC_MSG_CHECKING([global symbol modifier])
+AC_LINK_IFELSE(
+[AC_LANG_PROGRAM(
+[[ void fun() { asm volatile("call _malloc@PLT"); } ]],
+[[ fun(); ]])],
+[with_underscore_with_PLT=yes],
+[with_underscore_with_PLT=no])
+
+AC_LINK_IFELSE(
+[AC_LANG_PROGRAM(
+[[ void fun() { asm volatile("call malloc@PLT"); } ]],
+[[ fun(); ]])],
+[no_underscore_with_PLT=yes],
+[no_underscore_with_PLT=no])
+
+AC_LINK_IFELSE(
+[AC_LANG_PROGRAM(
+[[ void fun() { asm volatile("call _malloc"); } ]],
+[[ fun(); ]])],
+[with_underscore_no_PLT=yes],
+[with_underscore_no_PLT=no])
+
+AC_LINK_IFELSE(
+[AC_LANG_PROGRAM(
+[[ void fun() { asm volatile("call malloc"); } ]],
+[[ fun(); ]])],
+[no_underscore_no_PLT=yes],
+[no_underscore_no_PLT=yes])
+
+if test "x$with_underscore_with_PLT" = "xyes" ; then
+   AC_MSG_RESULT([with underscore, with PLT])
+   AC_DEFINE([GLOBAL_SYM_MODIFIER], [GLOBAL_SYM_MODIFIER_WITH_UNDERSCORE_WITH_PLT], [global symbol modifier (_foo@PLT)])
+elif test "x$no_underscore_with_PLT" = "xyes" ; then
+   AC_MSG_RESULT([no underscore, with PLT])
+   AC_DEFINE([GLOBAL_SYM_MODIFIER], [GLOBAL_SYM_MODIFIER_NO_UNDERSCORE_WITH_PLT], [global symbol modifier (foo@PLT)])
+elif test "x$with_underscore_no_PLT" = "xyes" ; then
+   AC_MSG_RESULT([with underscore, no PLT])
+   AC_DEFINE([GLOBAL_SYM_MODIFIER], [GLOBAL_SYM_MODIFIER_WITH_UNDERSCORE_NO_PLT], [global symbol modifier (_foo)])
+elif test "x$no_underscore_no_PLT" = "xyes"  ; then
+   AC_MSG_RESULT([no underscore, no PLT])
+   AC_DEFINE([GLOBAL_SYM_MODIFIER], [GLOBAL_SYM_MODIFIER_NO_UNDERSCORE_NO_PLT], [global symbol modifier (foo)])
+else
+   AC_MSG_ERROR([could not get how to call functions in a shared library from assembly])
+fi
 
 #
 # conditionally build test programs
@@ -329,18 +570,6 @@ AC_CONFIG_FILES([
 	src/profiler/drview/Makefile
 	tests/Makefile 
 ])
-dnl tests/native/Makefile 
-dnl tests/c/Makefile 
-dnl tests/c/fib/Makefile 
-dnl tests/c/profiler/Makefile 
-dnl tests/c/profiler/minimum/Makefile 
-dnl tests/cxx/Makefile 
-dnl tests/cxx/mtbb/Makefile 
-dnl tests/cxx/mtbb/callable/Makefile
-dnl tests/cxx/mtbb/callable/bin/Makefile
-dnl tests/cxx/mtbb/callable/profiler/Makefile
-dnl tests/cxx/mtbb/lambda/Makefile
-dnl tests/cxx/mtbb/lambda/bin/Makefile
-dnl tests/cxx/mtbb/lambda/profiler/Makefile
+
 AC_CONFIG_HEADERS([src/config.h])
 AC_OUTPUT

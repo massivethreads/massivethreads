@@ -16,10 +16,6 @@ volatile long x, y; /* x : consumed. y : produced */
    by the consumers (one by each) */
 void produce(long batch_id, long n_consumers) {
   pthread_mutex_lock(m);
-#if 0
-  printf("produce(batch_id=%ld, n_consumers=%ld) x = %ld, y = %ld\n",
-	 batch_id, n_consumers, x, y);
-#endif
   assert(y == batch_id * n_consumers);
   /* wait until all I have produced so far
      have been consumed */

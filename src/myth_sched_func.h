@@ -67,11 +67,9 @@ static inline myth_thread_t get_new_myth_thread_struct_desc(myth_running_env_t e
 #else
     alloc_size += 0xFFF;
     alloc_size &= ~0xFFF;
-#if defined(MAP_STACK)
-    char * th_ptr = myth_mmap(NULL,alloc_size,PROT_READ|PROT_WRITE,MAP_PRIVATE|MAP_ANONYMOUS|MAP_STACK,-1,0);
-#else
-    char * th_ptr = myth_mmap(NULL,alloc_size,PROT_READ|PROT_WRITE,MAP_PRIVATE|MAP_ANONYMOUS,-1,0);
-#endif
+    char * th_ptr 
+      = myth_mmap(NULL, alloc_size, PROT_READ|PROT_WRITE,
+		  MAP_PRIVATE|MYTH_MAP_ANON|MYTH_MAP_STACK, -1, 0);
 #endif
 #if MYTH_ALLOC_PROF
     uint64_t t1 = myth_get_rdtsc();
@@ -120,11 +118,9 @@ static inline myth_thread_t get_new_myth_thread_struct_desc(myth_running_env_t e
 #else
     alloc_size += 0xFFF;
     alloc_size &= ~0xFFF;
-#if defined(MAP_STACK)
-    void * th_ptr = mmap(NULL,alloc_size,PROT_READ|PROT_WRITE,MAP_PRIVATE|MAP_ANONYMOUS|MAP_STACK,-1,0);
-#else
-    void * th_ptr = mmap(NULL,alloc_size,PROT_READ|PROT_WRITE,MAP_PRIVATE|MAP_ANONYMOUS,-1,0);
-#endif
+    void * th_ptr 
+      = myth_mmap(NULL, alloc_size, PROT_READ|PROT_WRITE,
+		  MAP_PRIVATE|MYTH_MAP_ANON|MYTH_MAP_STACK,-1,0);
 #endif
 #if MYTH_ALLOC_PROF
     uint64_t t1 = myth_get_rdtsc();
@@ -202,13 +198,8 @@ th_ptr -> 4080-4087:
 #else
     alloc_size += 0xFFF;
     alloc_size &= ~0xFFF;
-#if defined(MAP_STACK)
     char * th_ptr = myth_mmap(NULL, alloc_size, PROT_READ|PROT_WRITE, 
-			      MAP_PRIVATE|MAP_ANONYMOUS|MAP_STACK, -1, 0);
-#else
-    char * th_ptr = myth_mmap(NULL, alloc_size, PROT_READ|PROT_WRITE,
-			      MAP_PRIVATE|MAP_ANONYMOUS, -1, 0);
-#endif /* MAP_STACK */
+			      MAP_PRIVATE|MYTH_MAP_ANON|MYTH_MAP_STACK, -1, 0);
 #endif /* ALLOCATE_STACK_BY_MALLOC */
 
 #if MYTH_ALLOC_PROF
@@ -365,7 +356,7 @@ MYTH_CTX_CALLBACK void myth_create_1(void *arg1,void *arg2,void *arg3) {
 #endif
 #if MYTH_ECO_MODE
   if (g_eco_mode_enabled){
-    if (sleeper > 0) {
+    if (g_sleeping_workers.n_sleepers > 0) {
       myth_wakeup_one();
     }
   }
@@ -685,9 +676,65 @@ static inline int myth_join_body(myth_thread_t th,void **result) {
    tryjoin
    -------- */
 
+//Wait until the finish of a thread
+static inline int myth_tryjoin_body(myth_thread_t th,void **result) {
+  //TODO:Fix th->status is blocked after join
+  myth_running_env_t env;
+  env = myth_get_current_env();
+  //Obtain lock and check again
+  myth_spin_lock_body(&th->lock);
+  //If target is finished, return
+  if (myth_desc_is_finished(th)){
+    myth_spin_unlock_body(&th->lock);
+    while (th->status != MYTH_STATUS_FREE_READY2) { }
+    myth_join_1(env,th,result);
+    //myth_log_add(env,MYTH_LOG_USER);
+    return 0;
+  } else {
+    myth_spin_unlock_body(&th->lock);
+    return EBUSY;
+  }
+}
+
 /* --------
    timedjoin
    -------- */
+
+static inline void myth_timespec_add(const struct timespec * a,
+				     const struct timespec * b,
+				     struct timespec * c) {
+  long ns = a->tv_nsec + b->tv_nsec;
+  c->tv_nsec = ns % 1000000000;
+  c->tv_sec = a->tv_sec + b->tv_sec + ns / 1000000000;
+}
+
+static inline int myth_timespec_gt(const struct timespec * a,
+				   const struct timespec * b) {
+  if (a->tv_sec > b->tv_sec) return 1;
+  if (a->tv_sec == b->tv_sec) return a->tv_nsec > b->tv_nsec;
+  return 0;
+}
+
+//Wait until the finish of a thread
+static inline int myth_timedjoin_body(myth_thread_t th,
+				      void **result,
+				      const struct timespec *abstime) {
+  if (myth_tryjoin_body(th, result) == 0) {
+    return 0;
+  } else {
+    struct timespec tp[1];
+    while (1) {
+      int err = hr_gettime(tp);
+      assert(err == 0);
+      if (myth_timespec_gt(tp, abstime)) return EBUSY;
+      if (myth_tryjoin_body(th, result) == 0) {
+	return 0;
+      } else {
+	myth_yield_ex_body(myth_yield_option_local_first);
+      }
+    }
+  }
+}
 
 /* --------
    create_join_various, create_join_many
@@ -983,21 +1030,6 @@ static inline int myth_yield_body(void) {
   return myth_yield_ex_body(myth_yield_option_half_half);
 }
 
-static inline void myth_timespec_add(const struct timespec * a,
-				     const struct timespec * b,
-				     struct timespec * c) {
-  long ns = a->tv_nsec + b->tv_nsec;
-  c->tv_nsec = ns % 1000000000;
-  c->tv_sec = a->tv_sec + b->tv_sec + ns / 1000000000;
-}
-
-static inline int myth_timespec_gt(const struct timespec * a,
-				   const struct timespec * b) {
-  if (a->tv_sec > b->tv_sec) return 1;
-  if (a->tv_sec == b->tv_sec) return a->tv_nsec > b->tv_nsec;
-  return 0;
-}
-
 static inline int myth_nanosleep_body(const struct timespec *req,
 				      struct timespec *rem) {
   struct timespec unt[1], cur[1];
@@ -1005,10 +1037,10 @@ static inline int myth_nanosleep_body(const struct timespec *req,
   if (req->tv_sec < 0) return EINVAL;
   if (req->tv_nsec < 0) return EINVAL;
   if (req->tv_nsec > 999999999) return EINVAL;
-  clock_gettime(CLOCK_REALTIME, cur);
+  hr_gettime(cur);
   myth_timespec_add(cur, req, unt);
   while (1) {
-    clock_gettime(CLOCK_REALTIME, cur);
+    hr_gettime(cur);
     if (myth_timespec_gt(cur, unt)) break;
     myth_yield_body();
   }
@@ -1339,11 +1371,9 @@ static inline myth_thread_t myth_deserialize_body(myth_pickle_t p)
   //Try to mmap with fixed address
   void *stack_start_addr;
   stack_start_addr=(void*)( ((char*)p->desc.stack)-(PAGE_ALIGNED_STACK_SIZE-sizeof(void*)) );
-#if defined(MAP_STACK)
-  stack_ptr=myth_mmap(stack_start_addr,PAGE_ALIGNED_STACK_SIZE,PROT_READ|PROT_WRITE,MAP_FIXED|MAP_PRIVATE|MAP_ANONYMOUS|MAP_STACK,-1,0);
-#else
-  stack_ptr=myth_mmap(stack_start_addr,PAGE_ALIGNED_STACK_SIZE,PROT_READ|PROT_WRITE,MAP_FIXED|MAP_PRIVATE|MAP_ANONYMOUS,-1,0);
-#endif
+  stack_ptr = myth_mmap(stack_start_addr, PAGE_ALIGNED_STACK_SIZE, PROT_READ|PROT_WRITE,
+			MAP_PRIVATE|MAP_FIXED|MYTH_MAP_ANON|MYTH_MAP_STACK, -1, 0);
+
   //Error if allocation fails
   if (stack_ptr==MAP_FAILED)return NULL;
   myth_assert(stack_ptr!=p->desc.stack);
@@ -1364,11 +1394,9 @@ static inline myth_thread_t myth_ext_deserialize_body(myth_pickle_t p)
   //Try to mmap with fixed address
   void *stack_start_addr;
   stack_start_addr=(void*)( ((char*)p->desc.stack)-(PAGE_ALIGNED_STACK_SIZE-sizeof(void*)) );
-#if defined(MAP_STACK)
-  stack_ptr=myth_mmap(stack_start_addr,PAGE_ALIGNED_STACK_SIZE,PROT_READ|PROT_WRITE,MAP_FIXED|MAP_PRIVATE|MAP_ANONYMOUS|MAP_STACK,-1,0);
-#else
-  stack_ptr=myth_mmap(stack_start_addr,PAGE_ALIGNED_STACK_SIZE,PROT_READ|PROT_WRITE,MAP_FIXED|MAP_PRIVATE|MAP_ANONYMOUS,-1,0);
-#endif
+
+  stack_ptr = myth_mmap(stack_start_addr, PAGE_ALIGNED_STACK_SIZE, PROT_READ|PROT_WRITE,
+			MAP_PRIVATE|MAP_FIXED|MYTH_MAP_ANON|MYTH_MAP_STACK,-1,0);
   //Error if allocation fails
   if (stack_ptr==MAP_FAILED)return NULL;
   myth_assert(stack_ptr!=p->desc.stack);
@@ -1384,4 +1412,4 @@ static inline myth_thread_t myth_ext_deserialize_body(myth_pickle_t p)
 
 #include "myth_io_func.h"
 
-#endif /* MYTH_FUNC_H_ */
+#endif /* MYTH_SCHED_FUNC_H_ */

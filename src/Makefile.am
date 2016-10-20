@@ -1,11 +1,13 @@
 # build this directory first and then tests
 SUBDIRS = . profiler
-#SUBDIRS = .
 
+#	myth_context_switch.S 
 # sources (.c and .S) common across the three libraries
 COMMON_SRCS = \
 	myth_log.c \
 	myth_sched.c \
+	myth_internal_barrier.c \
+	myth_bind_worker.c \
 	myth_worker.c \
 	myth_sync.c \
 	myth_init.c \
@@ -13,10 +15,9 @@ COMMON_SRCS = \
 	myth_tls.c \
 	myth_thread.c \
 	myth_context.c \
-	myth_context_switch.S \
-	myth_eco.c \
 	myth_if_native.c \
-	myth_real.c
+	myth_real.c \
+	myth_eco.c
 
 # sources for wrapping system functions (used only for -dl and -ld versions)
 WRAP_SRCS = \
@@ -51,6 +52,7 @@ nobase_include_HEADERS = \
 	mtbb/task_group.h \
 	mtbb/parallel_for.h \
 	mtbb/parallel_reduce.h \
+	mtbb/task_scheduler_init.h \
 	tpswitch/omp_dr.h \
 	tpswitch/tbb_dr.h \
 	tpswitch/cilkplus_dr.h \

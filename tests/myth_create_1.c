@@ -26,16 +26,6 @@ int main(int argc, char ** argv) {
       return 1;
     }
   }
-#if 0
-  for (i = 0; i < nthreads; i++) {
-    void * ret[1];
-    myth_join(th[i], ret);
-    if (ret[0] != (void *)(i * i)) {
-      printf("NG\n");
-      return 1;
-    }
-  }
-#endif
   printf("OK\n");
   return 0;
 }

@@ -11,6 +11,7 @@
 #include "myth/myth.h"
 
 #include "myth_config.h"
+#include "myth_internal_barrier.h"
 #include "myth_misc.h"
 #include "myth_sched.h"
 #include "myth_io.h"
@@ -143,7 +144,17 @@ typedef struct myth_running_env {
   //-1:Main thread, must not be terminated at the scheduling loop
   //0:Currently application is running
   //1:Application is terminated. Worker thread should exit scheduling loop and terminate itself
+
+#if EXPERIMENTAL_SCHEDULER
+  long * steal_prob;
+  unsigned short steal_rg[3];
+#endif
+  
 } __attribute__((aligned(CACHE_LINE_SIZE))) myth_running_env;
+
+#if EXPERIMENTAL_SCHEDULER
+int myth_scheduler_global_init(int nw);
+#endif
 
 // myth_running_env, * myth_running_env_t;
 
@@ -155,7 +166,7 @@ extern myth_running_env_t g_envs;
 extern int g_envs_sz;
 //Number of worker threads
 //Barrier for worker threads
-extern pthread_barrier_t g_worker_barrier;
+extern myth_internal_barrier_t g_worker_barrier;
 
 
 #if WENV_IMPL == WENV_IMPL_PTHREAD

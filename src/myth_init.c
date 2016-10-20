@@ -8,81 +8,22 @@
 
 #include "myth_init.h"
 #include "myth_log.h"
+#include "myth_bind_worker.h"
 
 #include "myth_init_func.h"
 #include "myth_log_func.h"
 
-
 myth_globalattr_t g_attr;
 
-#if 0
-
-/* fill attr with default values;
-   this gives the user a convenient way to customize
-   MassiveThreads.
-   myth_globalattr_t attr[1];
-   myth_get_global_attr_default(attr);
-   attr->n_workers = whatever;
-   myth_set_global_attr(attr);
-*/
-int myth_get_attr_default(myth_globalattr_t * attr) {
-  myth_globalattr_t a;
-  {
-    /* number of workers */
-    int nw = 0;
-    char * env = getenv(ENV_MYTH_WORKER_NUM);
-    if (env) {
-      nw = atoi(env);
-    }
-    if (nw <= 0) {
-      nw = myth_get_cpu_num();
-    }
-    a.n_workers = nw;
-  }
-  {
-    /* default stack size */
-    size_t sz = 0;
-    char * env = getenv(ENV_MYTH_DEF_STKSIZE);
-    if (env) {
-      sz = atoi(env);
-    }
-    if (sz <= 0) {
-      sz = MYTH_DEF_STACK_SIZE;
-    }
-    a.default_stack_size = sz;
-  }
-  {
-    /* bind workers */
-    int bw = MYTH_BIND_WORKERS;
-    char * env = getenv(ENV_MYTH_BIND_WORKERS);
-    if (env){
-      bw = atoi(env);
-    }
-    a.bind_workers = bw;
-  }
-  *attr = a;
-  return 0;
-}
-
-int myth_set_attr(const myth_globalattr_t * attr) {
-  if (g_myth_init_state == myth_init_state_initialized) {
-    fprintf(stderr,
-	    "myth_set_attr called after massivethreads has been initialized\n");
-    return 0;			/* NG */
-  }
+static int myth_init_ex_body_really(const myth_globalattr_t * attr) {
+  int nw;
+  myth_get_available_cpus();
   if (attr) {
     g_attr = *attr;
   } else {
-    myth_get_attr_default(&g_attr);
+    if (!g_attr.initialized) myth_globalattr_init_body(&g_attr);
   }
-  return 1;			/* OK */
-}
-#endif
-
-int myth_init_ex_body_really(const myth_globalattr_t * attr) {
-  myth_init_read_available_cpu_list();
-  myth_globalattr_set_default_body(attr);
-  int nw = g_attr.n_workers;
+  nw = g_attr.n_workers;
   //Initialize logger
   myth_log_init();
   //Initialize memory allocators
@@ -95,7 +36,7 @@ int myth_init_ex_body_really(const myth_globalattr_t * attr) {
   //Initialize TLS
   myth_tls_init(nw);
   //Create barrier
-  real_pthread_barrier_init(&g_worker_barrier, NULL, nw);
+  myth_internal_barrier_init(&g_worker_barrier, nw);
   //Allocate worker thread descriptors
   g_envs = myth_malloc(sizeof(myth_running_env) * nw);
   g_envs_sz = nw;
@@ -103,6 +44,9 @@ int myth_init_ex_body_really(const myth_globalattr_t * attr) {
   myth_env_init();
 #if MYTH_ECO_MODE
   myth_eco_init();
+#endif
+#if EXPERIMENTAL_SCHEDULER
+  myth_scheduler_global_init(nw);
 #endif
 
   //Create worker threads
@@ -127,7 +71,6 @@ void myth_init_once_ctl_wait(volatile int * var, int val) {
 }
 
 volatile int g_myth_init_state = myth_init_state_uninit;
-cpu_set_t g_proc_cpuset;
 
 //Initialize
 int myth_init_ex_body(const myth_globalattr_t * attr) {
@@ -412,7 +355,7 @@ static void myth_fini_body_really(void) {
   //Output Log
   myth_emit_log(stderr);
   //Destroy barrier
-  real_pthread_barrier_destroy(&g_worker_barrier);
+  myth_internal_barrier_destroy(&g_worker_barrier);
   //Unload DLL and functions
   //myth_free_original_funcs();
   myth_tls_fini();
@@ -449,8 +392,6 @@ int myth_fini_body() {
     real_pthread_join(g_envs[i].worker, NULL);
   }
   myth_fini_body_really();
-  // Restore affinity
-  sched_setaffinity(getpid(), sizeof(cpu_set_t), &g_proc_cpuset);
   g_myth_init_state = myth_init_state_uninit;
   return 0;
 }

@@ -34,7 +34,7 @@ static inline void myth_rwbarrier() {
 //Memory barriers used by Cilk
 //Guarantees successive reads to be executed after this
 static inline void myth_rbarrier() {
-  int x=0, y;
+  int x=0, y=0;
   asm volatile("xchgl %0,%1":"=r"(x):"m"(y),"0"(x):"memory");
 }
 //Guarantees former writes to be executed before this
@@ -169,4 +169,4 @@ static inline void myth_rwbarrier() {
 
 #endif
 
-#endif /* MYTH_BARRIER_H_ */
+#endif /* MYTH_MEM_BARRIER_FUNC_H_ */
