@@ -761,6 +761,19 @@ extern "C" {
     dn->info.worker = worker;
     /* OS may migrate workers */
     dn->info.cpu = dr_meet_ints(dn->info.start.cpu, dn->info.end.cpu);
+    /* Counters */
+    int c;
+    for (c = 0; c < dr_max_counters; c++) {
+      dn->info.counters_1[c] = dn->info.counters_inf[c] = dn->info.end.counters[c] - dn->info.start.counters[c];
+#if 0
+      if (dn->info.counters_1[c] < 0) {
+        printf("Warning: counter %d's value decreases from %lld (at worker=%d t=%llu) to %lld (at worker=%d t=%llu).\n",
+                c,
+                dn->info.start.counters[c], dn->info.start.worker, dn->info.start.t,
+                dn->info.end.counters[c], dn->info.end.worker, dn->info.end.t);
+      }
+#endif      
+    }
   }
 
   /* auxiliary functions that modify or query task and section */
@@ -846,9 +859,6 @@ extern "C" {
     p->cpu = dr_getcpu();
   }
 
-  int dr_papi_read_begin_interval(dr_papi_tdata_t *, dr_dag_node *);
-  int dr_papi_read_end_interval(dr_papi_tdata_t *, dr_dag_node *);
-
 
   /* 
      task    ::= section* end 
@@ -892,7 +902,7 @@ extern "C" {
       }
       /* record PAPI counters */
       if (GS.opts.papi_on) {
-        dr_papi_read_begin_interval(wss->papi_td, nt);
+        dr_papi_read(GS.papi_gd, wss->papi_td, nt->info.start.counters);
       }
       /* record info on the point of start */
       dr_set_start_info(&nt->info.start, wss->worker, file, line);
@@ -966,6 +976,12 @@ extern "C" {
 	printf("dr_enter_create_task() by %d task=%p, section=%p, new interval=%p\n", 
 	       wss->worker, t, s, ct);
       }
+      /* record PAPI counters
+         important to be called before dr_end_interval_ in order for
+         these end counters to be used in the stat accumulation */
+      if (GS.opts.papi_on) {
+        dr_papi_read(GS.papi_gd, wss->papi_td, ct->info.end.counters);
+      }
       /* put various info of ct */
       dr_end_interval_(ct, wss->worker, 
 		       dr_dag_node_kind_create_task,
@@ -973,12 +989,6 @@ extern "C" {
 		       end_t, t->info.est, 
 		       t->info.first_ready_t, 
 		       file, line, t->info.start);
-      /* record PAPI counters
-         important to be called after dr_end_interval_ in order for start counters to be
-         copied to the new node from current task node where it is temporarily stored */
-      if (GS.opts.papi_on) {
-        dr_papi_read_end_interval(wss->papi_td, ct);
-      }
       /* tell the caller the node just created */
       *c = ct;
       /* call hook */
@@ -1043,7 +1053,7 @@ extern "C" {
       }
       /* record PAPI counters */
       if (GS.opts.papi_on) {
-        dr_papi_read_begin_interval(wss->papi_td, t);
+        dr_papi_read(GS.papi_gd, wss->papi_td, t->info.start.counters);
       }
       /* record an interval just started */
       dr_set_start_info(&t->info.start, wss->worker, file, line);
@@ -1075,6 +1085,12 @@ extern "C" {
       }
       t->active_section = s->parent_section;
       (void)dr_check(dr_task_active_node(t) == t->active_section);
+      /* record PAPI counters
+         important to be called before dr_end_interval_ in order for
+         these end counters to be used in the stat accumulation */
+      if (GS.opts.papi_on) {
+        dr_papi_read(GS.papi_gd, wss->papi_td, i->info.end.counters);
+      }
       /* record an interval has ended */
       dr_end_interval_(i, wss->worker, 
 		       dr_dag_node_kind_wait_tasks,
@@ -1083,12 +1099,6 @@ extern "C" {
 		       t->info.first_ready_t, 
 		       file, line, 
 		       t->info.start);
-      /* record PAPI counters
-         important to be called after dr_end_interval_ in order for start counters to be
-         copied to the new node from current task node where it is temporarily stored */
-      if (GS.opts.papi_on) {
-        dr_papi_read_end_interval(wss->papi_td, i);
-      }
       /* call hook */
       if (GS.opts.hooks.enter_wait_tasks) {
 	GS.opts.hooks.enter_wait_tasks(i);
@@ -1816,7 +1826,7 @@ extern "C" {
       }
       /* record PAPI counters */
       if (GS.opts.papi_on) {
-        dr_papi_read_begin_interval(wss->papi_td, t);
+        dr_papi_read(GS.papi_gd, wss->papi_td, t->info.start.counters);
       }
       /* record start time etc. */
       dr_set_start_info(&t->info.start, wss->worker, file, line);
@@ -1844,18 +1854,18 @@ extern "C" {
 	       wss->worker, t, s, i);
       }
       //t->active_section = s->parent_section;
+      /* record PAPI counters
+         important to be called before dr_end_interval_ in order for
+         these end counters to be used in the stat accumulation */
+      if (GS.opts.papi_on) {
+        dr_papi_read(GS.papi_gd, wss->papi_td, i->info.end.counters);
+      }
       dr_end_interval_(i, wss->worker, 
 		       dr_dag_node_kind_other,
 		       t->info.in_edge_kind, 
 		       end_t, t->info.est, 
 		       t->info.first_ready_t, 
 		       file, line, t->info.start);
-      /* record PAPI counters
-         important to be called after dr_end_interval_ in order for start counters to be
-         copied to the new node from current task node where it is temporarily stored */
-      if (GS.opts.papi_on) {
-        dr_papi_read_end_interval(wss->papi_td, i);
-      }
       /* call hook */
       if (GS.opts.hooks.enter_other) {
 	GS.opts.hooks.enter_other(i);
@@ -1895,7 +1905,7 @@ extern "C" {
       }
       /* record PAPI counters */
       if (GS.opts.papi_on) {
-        dr_papi_read_begin_interval(wss->papi_td, t);
+        dr_papi_read(GS.papi_gd, wss->papi_td, t->info.start.counters);
       }
       /* record an interval just started */
       dr_set_start_info(&t->info.start, wss->worker, file, line);
@@ -1921,17 +1931,17 @@ extern "C" {
 	       "new interval=%p\n", 
 	       wss->worker, t, s, i);
       }
+      /* record PAPI counters
+         important to be called before dr_end_interval_ in order for
+         these end counters to be used in the stat accumulation */
+      if (GS.opts.papi_on) {
+        dr_papi_read(GS.papi_gd, wss->papi_td, i->info.end.counters);
+      }
       dr_end_interval_(i, wss->worker, 
 		       dr_dag_node_kind_end_task,
 		       t->info.in_edge_kind,
 		       end_t, t->info.est, t->info.first_ready_t, 
 		       file, line, t->info.start);
-      /* record PAPI counters
-         important to be called after dr_end_interval_ in order for start counters to be
-         copied to the new node from current task node where it is temporarily stored */
-      if (GS.opts.papi_on) {
-        dr_papi_read_end_interval(wss->papi_td, i);
-      }
       /* call hook (important to call it before summarize,
 	 to get counters updated) */
       if (GS.opts.hooks.end_task) {

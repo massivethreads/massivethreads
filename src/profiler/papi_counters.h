@@ -30,6 +30,9 @@ extern "C" {
         int eventset;
         unsigned long long sampling_interval;
         unsigned long long next_sampling_clock;
+        unsigned long long t0, t1;
+        long long values0[dr_static_max_papi_events];
+        long long values1[dr_static_max_papi_events];
       };
       char __pad__[64][2];
     };  

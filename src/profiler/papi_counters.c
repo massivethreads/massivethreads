@@ -308,6 +308,14 @@ dr_papi_init_thread(dr_papi_gdata_t * gd, dr_papi_tdata_t * td) {
 #endif /* DAG_RECORDER_ENABLE_PAPI */  
 };
 
+static long long
+dr_papi_interpolate(unsigned long long t0, long long v0, unsigned long long t1, long long v1, unsigned long long t) {
+  (void) dr_check(t0 < t1);
+  double a = ((double)t - (double)t0) / ((double)t1 - (double)t0);
+  double b = ((double)t1 - (double)t) / ((double)t1 - (double)t0);
+  return (long long)(a * v1 + b * v0);  
+}
+
 int
 dr_papi_read(dr_papi_gdata_t * gd, dr_papi_tdata_t * td, long long * values) {
 #if DAG_RECORDER_ENABLE_PAPI
@@ -326,7 +334,7 @@ dr_papi_read(dr_papi_gdata_t * gd, dr_papi_tdata_t * td, long long * values) {
 #endif
       int c;        
       for (c = 0; c < td->n_events; c++) {
-        values[c] = 0;
+        values[c] = dr_papi_interpolate(td->t0, td->values0[c], td->t1, td->values1[c], now);
       }
     } else {
       /* read from PAPI */
@@ -335,6 +343,14 @@ dr_papi_read(dr_papi_gdata_t * gd, dr_papi_tdata_t * td, long long * values) {
       if (pe != PAPI_OK) {
         dr_papi_show_error_(pe, __FILE__, __LINE__);
         return 0;
+      }
+      /* for interpolation */
+      td->t0 = td->t1;
+      td->t1 = now;
+      int c;
+      for (c = 0; c < td->n_events; c++) {
+        td->values0[c] = td->values1[c];
+        td->values1[c] = values[c];
       }
     }
   }
@@ -345,18 +361,3 @@ dr_papi_read(dr_papi_gdata_t * gd, dr_papi_tdata_t * td, long long * values) {
   return 1;
 #endif /* DAG_RECORDER_ENABLE_PAPI */  
 };
-
-int
-dr_papi_read_begin_interval(dr_papi_tdata_t * td, dr_dag_node * t) {
-  return dr_papi_read(GS.papi_gd, td, t->info.start.counters);
-}
-
-int
-dr_papi_read_end_interval(dr_papi_tdata_t * td, dr_dag_node * t) {
-  int ret = dr_papi_read(GS.papi_gd, td, t->info.end.counters);
-  int i;
-  for (i = 0; i < dr_max_counters; i++) {
-    t->info.counters_1[i] = t->info.counters_inf[i] = t->info.end.counters[i] - t->info.start.counters[i];
-  }
-  return ret;
-}
