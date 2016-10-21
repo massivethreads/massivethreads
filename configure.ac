@@ -264,6 +264,18 @@ AM_CONDITIONAL([BUILD_MYTH_DL],
 AC_CHECK_LIB(rt, clock_gettime)
 # define HAVE_CLOCK_GETTIME 1
 
+
+# -------------
+# -lpapi PAPI_library_init
+# -------------
+AC_CHECK_LIB(papi, PAPI_library_init,
+		   [have_papi="yes"],
+		   [have_papi="no"])
+AS_IF([test x"$with_papi" = "xyes" -a x"$have_papi" = "xno"],
+      AC_MSG_ERROR([--with-papi was given, but test for PAPI failed.]))
+AM_CONDITIONAL([BUILD_DAG_RECORDER_WITH_PAPI],
+	[test x"$with_papi" = "xyes" -a x"$have_papi" = "xyes" ])
+
 # =============================
 # headers
 # =============================
@@ -355,14 +367,6 @@ AC_CHECK_FUNCS([pthread_mutexattr_getrobust],
 [],[pthread_mutexattr_getrobust etc.])])
 # define HAVE_PTHREAD_MUTEXATTR_ROBUST 1
 
-
-AC_CHECK_LIB(papi, PAPI_library_init,
-		   [have_papi="yes"],
-		   [have_papi="no"])
-AS_IF([test x"$with_papi" = "xyes" -a x"$have_papi" = "xno"],
-      AC_MSG_ERROR([--with-papi was given, but test for PAPI failed.]))
-AM_CONDITIONAL([BUILD_DAG_RECORDER_WITH_PAPI],
-	[test x"$with_papi" = "xyes" -a x"$have_papi" = "xyes" ])
 
 # -----------------------------
 # declarations
