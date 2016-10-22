@@ -183,8 +183,8 @@ static long * myth_prob_to_int(double * p, int n_cpus, int n_workers) {
     double x = 0.0;
     for (j = 0; j < n_workers; j++) {
       assert(0 <= x);
-      assert(x <= 1.0);
       P[i * n_workers + j] = x * (1UL << 31);
+      assert(P[i * n_workers + j] <= (1UL << 31));
       x += q[i * n_workers + j];
     }
   }
