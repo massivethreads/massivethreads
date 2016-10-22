@@ -95,6 +95,18 @@ typedef struct myth_prof_data {
 #endif
 } myth_prof_data, *myth_prof_data_t;
 
+
+
+typedef struct {
+#if 0
+  size_t sz;
+  size_t idx;
+  char * hist;
+#endif
+  long n_con_success; /* number of consecutive successful attempts in a row */
+} steal_history;
+
+
 //A structure describing an environment for executing a thread
 //(scheduler, worker thread, runqueue, etc...)
 //Each worker thread have one of them
@@ -148,6 +160,8 @@ typedef struct myth_running_env {
 #if EXPERIMENTAL_SCHEDULER
   long * steal_prob;
   unsigned short steal_rg[3];
+  steal_history steal_hist;
+  int * min_success;
 #endif
   
 } __attribute__((aligned(CACHE_LINE_SIZE))) myth_running_env;
