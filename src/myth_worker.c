@@ -155,39 +155,55 @@ unsigned long * myth_read_prob_file(FILE * fp, int nw) {
 	if (i < nw && j < nw) {
 	  int x = fscanf(fp, "%lf", &p[i * nw + j]);
 	  assert(x == 1);
+	  assert(p[i * nw + j] >= 0.0);
 	} else {
 	  /* skip */
 	}
       } else {
-	p[i * nw + j] = (i == j ? 0.0 : 1.0);
+	p[i * nw + j] = 1.0;	/* uniform (diagonal line set to zero below) */
       }
     }
   }
   /* when n_workers_in_file < nw, we repeat */
   for (i = 0; i < nw; i++) {
     for (j = 0; j < nw; j++) {
-      if (i >= n_workers_in_file && j >= n_workers_in_file) {
+      if (i >= n_workers_in_file || j >= n_workers_in_file) {
 	int i_ = i % n_workers_in_file;
 	int j_ = j % n_workers_in_file;
 	p[i * nw + j] = p[i_ * nw + j_];
       }
     }
   }
-  /* set diagonal lines to zero */
+  /* set diagonal line to zero */
   for (i = 0; i < nw; i++) {
     p[i * nw + i] = 0.0;
   }
 
+  /* normalize */
   for (i = 0; i < nw; i++) {
     double t = 0;
     for (j = 0; j < nw; j++) {
       t += p[i * nw + j];
     }
-    for (j = 0; j < nw; j++) {
-      p[i * nw + j] /= t;
+    assert(nw == 1 || t > 0);
+    if (t > 0) {
+      for (j = 0; j < nw; j++) {
+	p[i * nw + j] /= t;
+      }
     }
   }
   
+  /* print */
+  if (0) {
+    for (i = 0; i < nw; i++) {
+      for (j = 0; j < nw; j++) {
+	if (j > 0) printf(" ");
+	printf("%f", p[i * nw + j]);
+      }
+      printf("\n");
+    }
+  }
+
   /* convert p into P, whose P[i][j] is 2^31 x the 
      probability that i chooses one of 0 ... j-1 as a victim.
      the probablity i steals from j is (P[i][j+1] - P[i][j]) / 2^31.
@@ -211,7 +227,8 @@ int myth_scheduler_global_init(int nw) {
   if (prob_file) {
     FILE * fp = fopen(prob_file, "rb");
     if (!fp) { perror("fopen"); exit(1); }
-    myth_steal_prob_table = myth_read_prob_file(fp, 0);
+    myth_steal_prob_table = myth_read_prob_file(fp, nw);
+    fclose(fp);
   } else {
     myth_steal_prob_table = myth_read_prob_file(0, nw);
   }
