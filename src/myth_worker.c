@@ -122,6 +122,103 @@ static myth_thread_t myth_steal_func_with_prob(int rank) {
   }
 }
 
+#if 1
+unsigned long * myth_read_prob_file(FILE * fp, int nw) {
+  /* read a file describing the (relative) probability a worker chooses
+     a victime
+     
+     N
+     P0,0 P0,1 P0,2 ... P0,N-1
+     P1,0 P1,1 P1,2 ... P1,N-1
+          ...
+     PN-1,0,        ... PN-1,N-1
+
+  */
+  /* nw is the number of workers used in this execution
+     of the program; n_workers_in_file is the number of workers
+     described in the file. they may be different. */
+  int n_workers_in_file;
+  if (fp) {
+    char buf[100] = { 0 };
+    char * s = fgets(buf, sizeof(buf), fp);
+    n_workers_in_file = (s ? atoi(s) : nw);
+  } else {
+    /* no file. default (uniform distribution) */
+    n_workers_in_file = nw;
+  }
+  /* p[i][j] is a relative probability that i chooses j as a victim */
+  double * p = myth_malloc(nw * nw * sizeof(double));
+  int i, j;
+  for (i = 0; i < n_workers_in_file; i++) {
+    for (j = 0; j < n_workers_in_file; j++) {
+      if (fp) {
+	if (i < nw && j < nw) {
+	  int x = fscanf(fp, "%lf", &p[i * nw + j]);
+	  assert(x == 1);
+	} else {
+	  /* skip */
+	}
+      } else {
+	p[i * nw + j] = (i == j ? 0.0 : 1.0);
+      }
+    }
+  }
+  /* when n_workers_in_file < nw, we repeat */
+  for (i = 0; i < nw; i++) {
+    for (j = 0; j < nw; j++) {
+      if (i >= n_workers_in_file && j >= n_workers_in_file) {
+	int i_ = i % n_workers_in_file;
+	int j_ = j % n_workers_in_file;
+	p[i * nw + j] = p[i_ * nw + j_];
+      }
+    }
+  }
+  /* set diagonal lines to zero */
+  for (i = 0; i < nw; i++) {
+    p[i * nw + i] = 0.0;
+  }
+
+  for (i = 0; i < nw; i++) {
+    double t = 0;
+    for (j = 0; j < nw; j++) {
+      t += p[i * nw + j];
+    }
+    for (j = 0; j < nw; j++) {
+      p[i * nw + j] /= t;
+    }
+  }
+  
+  /* convert p into P, whose P[i][j] is 2^31 x the 
+     probability that i chooses one of 0 ... j-1 as a victim.
+     the probablity i steals from j is (P[i][j+1] - P[i][j]) / 2^31.
+     the victim is chosen by drawing a random number x from [0,2^31],
+     and find j s.t. P[i][j] <= x < P[i][j+1] (binary search)
+  */
+  unsigned long * P = myth_malloc(nw * nw * sizeof(long));
+  for (i = 0; i < nw; i++) {
+    double x = 0.0;
+    for (j = 0; j < nw; j++) {
+      P[i * nw + j] = x * (1UL << 31);
+      x += p[i * nw + j];
+    }
+  }
+  myth_free(p);
+  return P;
+}
+
+int myth_scheduler_global_init(int nw) {
+  char * prob_file = getenv("MYTH_PROB_FILE");
+  if (prob_file) {
+    FILE * fp = fopen(prob_file, "rb");
+    if (!fp) { perror("fopen"); exit(1); }
+    myth_steal_prob_table = myth_read_prob_file(fp, 0);
+  } else {
+    myth_steal_prob_table = myth_read_prob_file(0, nw);
+  }
+  return 0;
+}
+
+#else
 int myth_scheduler_global_init(int nw) {
   long * P = myth_malloc(nw * nw * sizeof(long));
   double * q = myth_malloc(nw * sizeof(double));
@@ -140,10 +237,12 @@ int myth_scheduler_global_init(int nw) {
   myth_steal_prob_table = P;
   return 0;
 }
+#endif
 
 int myth_scheduler_worker_init(int rank, int nw) {
   myth_running_env_t env = &g_envs[rank];
   env->steal_prob = &myth_steal_prob_table[rank * nw];
+  /* random seed */
   env->steal_rg[0] = rank;
   env->steal_rg[1] = rank + 1;
   env->steal_rg[2] = rank + 2;
