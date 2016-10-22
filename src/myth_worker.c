@@ -10,7 +10,8 @@
 
 #if EXPERIMENTAL_SCHEDULER
 static myth_thread_t myth_steal_func_with_prob(int rank);
-myth_steal_func_t g_myth_steal_func = myth_steal_func_with_prob;
+static myth_thread_t myth_steal_func_with_prob_and_locality(int rank);
+myth_steal_func_t g_myth_steal_func = myth_steal_func_with_prob_and_locality;
 #else
 myth_thread_t myth_default_steal_func(int rank);
 myth_steal_func_t g_myth_steal_func = myth_default_steal_func;
@@ -72,6 +73,7 @@ myth_thread_t myth_default_steal_func(int rank) {
 #if EXPERIMENTAL_SCHEDULER
 
 static long * myth_steal_prob_table;
+static int * myth_min_success_table;
 
 static myth_running_env_t
 myth_env_choose_victim(myth_running_env_t e) {
@@ -122,13 +124,65 @@ static myth_thread_t myth_steal_func_with_prob(int rank) {
   }
 }
 
+void steal_history_init(steal_history * h, size_t sz) {
+#if 0
+  char * hist = (char *)myth_malloc(sz);
+  size_t i;
+  for (i = 0; i < sz; i++) {
+    hist[i] = 0;
+  }
+  h->sz = sz;
+  h->idx = 0;
+  h->hist = hist;
+#endif
+  h->n_con_success = 0;
+}
+
+long steal_history_put(steal_history * h, char x) {
+#if 0
+  size_t idx = h->idx;
+  char old = h->hist[idx];
+  h->hist[idx] = x;
+  h->n_success += x - old;
+  h->idx = idx + 1;
+  if (h->idx == h->sz) h->idx = 0;
+#else
+  if (x) {
+    h->n_con_success++;
+  } else {
+    h->n_con_success = 0;
+  }
+  return h->n_con_success;
+#endif
+}
+
+static myth_thread_t myth_steal_func_with_prob_and_locality(int rank) {
+  assert(g_attr.n_workers > 1);
+  myth_running_env_t env = &g_envs[rank];
+  while (1) {
+    myth_running_env_t victim_env = myth_env_choose_victim(env);
+    if (env->steal_hist.n_con_success + 1 >= env->min_success[victim_env->rank]) {
+      myth_thread_t next_run = myth_queue_take(&victim_env->runnable_q);
+      steal_history_put(&env->steal_hist, (next_run ? 1 : 0));
+      if (next_run) {
+	myth_assert(next_run->status == MYTH_STATUS_READY);
+      }
+      return next_run;
+    } else {
+      myth_thread_t next_run = myth_queue_peek(&victim_env->runnable_q);
+      steal_history_put(&env->steal_hist, (next_run ? 1 : 0));
+    }
+  }
+}
+
+
 /* probability base stealing works by first building an 
    array of n_cpus x n_cpus and then converting it to 
    n_workers x n_workers.
    p is an array having n_cpus x n_cpus elements.
  */
 
-static long * myth_prob_to_int(double * p, int n_cpus, int n_workers) {
+static long * myth_array_to_int_prob(int * p, int n_cpus, int n_workers) {
   int i, j;
   double * q = (double *)myth_malloc(sizeof(double) * n_workers * n_workers);
 
@@ -166,7 +220,7 @@ static long * myth_prob_to_int(double * p, int n_cpus, int n_workers) {
     for (i = 0; i < n_workers; i++) {
       for (j = 0; j < n_workers; j++) {
 	if (j > 0) printf(" ");
-	printf("%f", p[i * n_workers + j]);
+	printf("%d", p[i * n_workers + j]);
       }
       printf("\n");
     }
@@ -217,32 +271,32 @@ static long * myth_prob_to_int(double * p, int n_cpus, int n_workers) {
 */
 
 typedef struct {
-  double probability;
-  int n_partitions;
+  int n_children;		/* number of children of this level */
+  int val;			/* value associated with this level */
 } domain_level;
 
 typedef struct {
-  int depth;
+  int n_levels;
   domain_level * levels;
 } domain;
 
-/* convert domain hierarchy of the machine given by H,
-   fill p[a:b,a:b] by the steal probability. */
+/* convert domain hierarchy of the machine into 
+   2D array of values */
 
-static void myth_domain_to_prob_rec(double * p, int a, int b, int l,
-				    domain D, int n_cpus) {
-  if (l == D.depth) {
+static void myth_domain_to_array_rec(int * v, int a, int b, int l,
+				     domain D, int n_cpus) {
+  if (l == D.n_levels) {
     /* we are bottom of the hierarchy. we should have exactly one core.
        the steal probability is zero */
     assert(b - a == 1);
-    p[0] = 0.0;
+    v[0] = 0;
   } else {
     /* this level has np partitions */
-    int np = D.levels[l].n_partitions;
+    int np = D.levels[l].n_children;
     int workers_per_part = (b - a) / np;
     int i;
     assert((b - a) % np == 0);
-    /* split the subarray p[a:b,a:b] into np x np partitions */
+    /* split the subarray v[a:b,a:b] into np x np partitions */
     for (i = 0; i < np; i++) {
       int s = a + i * workers_per_part;
       int j;
@@ -250,15 +304,14 @@ static void myth_domain_to_prob_rec(double * p, int a, int b, int l,
 	int t = a + j * workers_per_part;
 	if (i == j) {
 	  /* a tile on diagonal line. recursively decompose it */
-	  myth_domain_to_prob_rec(p, s, s + workers_per_part, l + 1,
-				  D, n_cpus);
+	  myth_domain_to_array_rec(v, s, s + workers_per_part, l + 1, D, n_cpus);
 	} else {
 	  /* a tile not on diagonal line. the probability is
 	     what is specified in the machine description */
 	  int ii, jj;
 	  for (ii = s; ii < s + workers_per_part; ii++) {
 	    for (jj = t; jj < t + workers_per_part; jj++) {
-	      p[ii * n_cpus + jj] = D.levels[l].probability;
+	      v[ii * n_cpus + jj] = D.levels[l].val;
 	    }
 	  }
 	}
@@ -267,17 +320,16 @@ static void myth_domain_to_prob_rec(double * p, int a, int b, int l,
   }
 }
 
-static double * myth_domain_to_prob(domain D, int n_cpus) {
-  double * p = (double *)myth_malloc(sizeof(double) * n_cpus * n_cpus);
-  myth_domain_to_prob_rec(p, 0, n_cpus, 0, D, n_cpus);
+static int * myth_domain_to_array(domain D, int n_cpus) {
+  int * p = (int *)myth_malloc(sizeof(int) * n_cpus * n_cpus);
+  myth_domain_to_array_rec(p, 0, n_cpus, 0, D, n_cpus);
   return p;
 }
 
-/* parse a string like
-   a,b:c,d:e,f:...
+/* parse a string like 4,1x8,2 describing domain hierarchy
  */
-domain parse_cpu_hierarchy(char * s) {
-  char * buf = strdup(s);
+domain parse_domain_desc(char * s) {
+  char * buf = strdup(s);	/* free it! */
   char * p = buf;
   int level = 1;
   int l;
@@ -302,8 +354,8 @@ domain parse_cpu_hierarchy(char * s) {
     char * comma = strrchr(p, ',');
     if (comma) {
       *comma = 0;
-      H[l].n_partitions = atoi(p);
-      H[l].probability = atof(comma + 1);
+      H[l].n_children = atoi(p);
+      H[l].val = atoi(comma + 1);
     } else {
       fprintf(stderr,
 	      "could not parse domain string (%s)."
@@ -319,12 +371,12 @@ domain parse_cpu_hierarchy(char * s) {
 static long * myth_prob_from_domain(char * s, int n_workers) {
   int n_cpus = 1;
   int l; 
-  domain D = parse_cpu_hierarchy(s);
-  for (l = 0; l < D.depth; l++) {
-    n_cpus *= D.levels[l].n_partitions;
+  domain D = parse_domain_desc(s);
+  for (l = 0; l < D.n_levels; l++) {
+    n_cpus *= D.levels[l].n_children;
   }
-  double * p = myth_domain_to_prob(D, n_cpus);
-  long * P = myth_prob_to_int(p, n_cpus, n_workers);
+  int * p = myth_domain_to_array(D, n_cpus);
+  long * P = myth_array_to_int_prob(p, n_cpus, n_workers);
   myth_free(D.levels);
   myth_free(p);
   return P;
@@ -353,40 +405,61 @@ static long * myth_prob_from_file(FILE * fp, int nw) {
     n_cpus = nw;
   }
   /* p[i][j] is a relative probability that i chooses j as a victim */
-  double * p = myth_malloc(n_cpus * n_cpus * sizeof(double));
+  int * p = myth_malloc(n_cpus * n_cpus * sizeof(int));
   int i, j;
   for (i = 0; i < n_cpus; i++) {
     for (j = 0; j < n_cpus; j++) {
       if (fp) {
-	int x = fscanf(fp, "%lf", &p[i * n_cpus + j]);
+	int x = fscanf(fp, "%d", &p[i * n_cpus + j]);
 	assert(x == 1);
-	assert(p[i * n_cpus + j] >= 0.0);
+	assert(p[i * n_cpus + j] > 0);
       } else {
-	p[i * n_cpus + j] = 1.0; /* uniform (diagonal line set to zero below) */
+	p[i * n_cpus + j] = 1; /* uniform (diagonal line set to zero below) */
       }
     }
   }
-  long * P = myth_prob_to_int(p, n_cpus, nw);
+  long * P = myth_array_to_int_prob(p, n_cpus, nw);
   myth_free(p);
   return P;
 }
 
+static int * myth_min_success(char * s, int nw) {
+  int n_cpus = 1;
+  int l; 
+  domain D;
+  if (s) {
+    D = parse_domain_desc(s);
+  } else {
+    D.levels = (domain_level *)myth_malloc(sizeof(domain_level));
+    D.levels->n_children = nw;
+    D.levels->val = 1;
+    D.n_levels = 1;
+  }
+  for (l = 0; l < D.n_levels; l++) {
+    n_cpus *= D.levels[l].n_children;
+  }
+  int * S = myth_domain_to_array(D, n_cpus);
+  myth_free(D.levels);
+  return S;
+}
+
 int myth_scheduler_global_init(int nw) {
-  long * P = 0;
   char * hierarchy = getenv("MYTH_CPU_HIERARCHY");
   char * prob_file = getenv("MYTH_PROB_FILE");
   if (hierarchy) {
-    P = myth_prob_from_domain(hierarchy, nw);
+    myth_steal_prob_table = myth_prob_from_domain(hierarchy, nw);
   } else if (prob_file) {
     FILE * fp = fopen(prob_file, "rb");
     if (!fp) { perror("fopen"); exit(1); }
-    P = myth_prob_from_file(fp, nw);
+    myth_steal_prob_table = myth_prob_from_file(fp, nw);
     fclose(fp);
   } else {
     /* default. uniform */
-    P = myth_prob_from_file(0, nw);
+    myth_steal_prob_table = myth_prob_from_file(0, nw);
   }
-  myth_steal_prob_table = P;
+  /*  */
+  char * min_success = getenv("MYTH_MIN_SUCCESS");
+  myth_min_success_table = myth_min_success(min_success, nw);
   return 0;
 }
 
@@ -394,6 +467,7 @@ int myth_scheduler_global_init(int nw) {
 int myth_scheduler_worker_init(int rank, int nw) {
   myth_running_env_t env = &g_envs[rank];
   env->steal_prob = &myth_steal_prob_table[rank * nw];
+  env->min_success = &myth_min_success_table[rank * nw];
   /* random seed */
   env->steal_rg[0] = rank;
   env->steal_rg[1] = rank + 1;
