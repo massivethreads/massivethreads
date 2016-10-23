@@ -208,10 +208,13 @@ static void worker_status_init(worker_status * ws, int rank, int nw) {
   for (i = 0; i < nw; i++) {
     status[i] = 0;
   }
+  int rk = rank;
   for (i = 0; i < n_levels; i++) {
     int cpus_per_child = n_cpus_at_level(D, i + 1);
-    int idx = rank / cpus_per_child;
+    int idx = rk / cpus_per_child;
+    assert(idx < D.levels[i].n_children);
     my_index[i] = idx;
+    rk -= idx * cpus_per_child;
   }
   ws->nw = nw;
   ws->n_levels = n_levels;
@@ -273,7 +276,6 @@ static int find_level_to_steal(worker_status * ws, domain D) {
 
 myth_thread_t steal_from_level(myth_running_env_t env,
 			       worker_status * ws, int idx, int l, domain D) {
-  int sz = n_cpus_at_level(D, l + 1);
   int i;
   int n_candidates = 0;
   for (i = 0; i < D.levels[l].n_children; i++) {
@@ -287,22 +289,32 @@ myth_thread_t steal_from_level(myth_running_env_t env,
   }
   int x = nrand48(env->steal_rg) % n_candidates;
   int y = 0;
+  assert(idx < D.levels[l].n_children);
+
+  int a = 0;
+  for (i = 0; i < l; i++) {
+    a += ws->my_index[i] * n_cpus_at_level(D, i + 1);
+  }
+  int sz = n_cpus_at_level(D, l + 1);
+  myth_running_env_t victim_env = 0;
   for (i = 0; i < D.levels[l].n_children; i++) {
     if (i != idx) {
+      int b = a + i * sz;
+      int e = b + sz;
       int j;
-      for (j = i * sz; j < (i + 1) * sz; j++) {
+      for (j = b; j < e; j++) {
 	if (ws->status[j]) {
 	  if (y == x) {
-	    myth_running_env_t victim_env = &g_envs[j];
-	    return myth_queue_take(&victim_env->runnable_q);
+	    victim_env = &g_envs[j];
 	  }
 	  y++;
 	}
       }
     }
   }
-  assert(0);
-  return 0;
+  assert(y == n_candidates);
+  assert(victim_env);
+  return myth_queue_take(&victim_env->runnable_q);
 }
 
 static myth_thread_t myth_steal_func_with_global_status(int rank) {
