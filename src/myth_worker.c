@@ -11,8 +11,9 @@
 #if EXPERIMENTAL_SCHEDULER
 static myth_thread_t myth_steal_func_with_prob(int rank) __attribute__((unused));
 static myth_thread_t myth_steal_func_with_prob_and_min_success(int rank)  __attribute__((unused));
-static myth_thread_t myth_steal_func_with_prob_and_double_check(int rank);
-myth_steal_func_t g_myth_steal_func = myth_steal_func_with_prob_and_double_check;
+static myth_thread_t myth_steal_func_with_prob_and_double_check(int rank)  __attribute__((unused));
+static myth_thread_t myth_steal_func_with_global_status(int rank);
+myth_steal_func_t g_myth_steal_func = myth_steal_func_with_global_status;
 #else
 myth_thread_t myth_default_steal_func(int rank);
 myth_steal_func_t g_myth_steal_func = myth_default_steal_func;
@@ -76,6 +77,7 @@ myth_thread_t myth_default_steal_func(int rank) {
 static long * myth_steal_prob_table;
 static int * myth_min_success_table;
 static int * myth_double_check_table;
+static domain myth_cpu_domain;
 
 static myth_running_env_t
 myth_env_choose_victim(myth_running_env_t e) {
@@ -127,35 +129,16 @@ static myth_thread_t myth_steal_func_with_prob(int rank) {
 }
 
 void steal_history_init(steal_history * h, size_t sz) {
-#if 0
-  char * hist = (char *)myth_malloc(sz);
-  size_t i;
-  for (i = 0; i < sz; i++) {
-    hist[i] = 0;
-  }
-  h->sz = sz;
-  h->idx = 0;
-  h->hist = hist;
-#endif
   h->n_con_success = 0;
 }
 
 long steal_history_put(steal_history * h, char x) {
-#if 0
-  size_t idx = h->idx;
-  char old = h->hist[idx];
-  h->hist[idx] = x;
-  h->n_success += x - old;
-  h->idx = idx + 1;
-  if (h->idx == h->sz) h->idx = 0;
-#else
   if (x) {
     h->n_con_success++;
   } else {
     h->n_con_success = 0;
   }
   return h->n_con_success;
-#endif
 }
 
 static myth_thread_t myth_steal_func_with_prob_and_min_success(int rank) {
@@ -198,7 +181,154 @@ static myth_thread_t myth_steal_func_with_prob_and_double_check(int rank) {
   return next_run;
 }
 
+static int n_cpus_at_level(domain D, int level) {
+  int l;
+  int n = 1;
+  for (l = level; l < D.n_levels; l++) {
+    n *= D.levels[l].n_children;
+  }
+  return n;
+}
 
+static void worker_status_init(worker_status * ws, int rank, int nw) {
+  int i;
+  domain D = myth_cpu_domain;
+  int n_levels = D.n_levels;
+  int ** busy_count = (int **)myth_malloc(sizeof(int *) * n_levels);
+  int * my_index = (int *)myth_malloc(sizeof(int) * n_levels);
+  char * status = (char *)myth_malloc(nw);
+  for (i = 0; i < n_levels; i++) {
+    int * c = (int *)myth_malloc(sizeof(int) * D.levels[i].n_children);
+    int j;
+    for (j = 0; j < D.levels[i].n_children; j++) {
+      c[j] = 0;
+    }
+    busy_count[i] = c;
+  }
+  for (i = 0; i < nw; i++) {
+    status[i] = 0;
+  }
+  for (i = 0; i < n_levels; i++) {
+    int cpus_per_child = n_cpus_at_level(D, i + 1);
+    int idx = rank / cpus_per_child;
+    my_index[i] = idx;
+  }
+  ws->nw = nw;
+  ws->n_levels = n_levels;
+  ws->busy_count = busy_count;
+  ws->my_index = my_index;
+  ws->status = status;
+}
+
+static int count_busy_in_range(worker_status * ws, int p, int q) {
+  int i;
+  int nw = ws->nw;
+  int s = 0;
+  p = (p < nw ? p : nw);
+  q = (q < nw ? q : nw);
+  for (i = p; i < q; i++) {
+    myth_running_env_t victim_env = &g_envs[i];
+    myth_thread_t th = myth_queue_peek(&victim_env->runnable_q);
+    int x = (th ? 1 : 0);
+    ws->status[i] = x;
+    s += x;
+  }
+  return s;
+}
+
+/* return l s.t. an interval at level l has at least one empty child */
+static void count_busy_at_levels(int l, int a, int b, int rank,
+				 worker_status * ws, domain D) {
+  if (l < D.n_levels) {
+    int np = D.levels[l].n_children;
+    int workers_per_child = n_cpus_at_level(D, l + 1);
+    int i;
+    assert((b - a) / np == workers_per_child);
+    assert((b - a) % np == 0);
+    for (i = 0; i < np; i++) {
+      int p = a +  i      * workers_per_child;
+      int q = a + (i + 1) * workers_per_child;
+      ws->busy_count[l][i] = count_busy_in_range(ws, p, q);
+      if (p <= rank && rank < q) {
+	count_busy_at_levels(l + 1, p, q, rank, ws, D);
+      }
+    }
+  }
+}
+
+/* return l s.t. an interval at level l has at least one empty child */
+static int find_level_to_steal(worker_status * ws, domain D) {
+  int l;
+  for (l = 0; l < D.n_levels; l++) {
+    int np = D.levels[l].n_children;
+    int i;
+    for (i = 0; i < np; i++) {
+      if (ws->busy_count[l][i] == 0) {
+	return l;
+      }
+    }
+  }
+  assert(0);			/* should not reach here */
+}
+
+myth_thread_t steal_from_level(myth_running_env_t env,
+			       worker_status * ws, int idx, int l, domain D) {
+  int sz = n_cpus_at_level(D, l + 1);
+  int i;
+  int n_candidates = 0;
+  for (i = 0; i < D.levels[l].n_children; i++) {
+    if (i != idx) {
+      n_candidates += ws->busy_count[l][i];
+    }
+  }
+  if (n_candidates == 0) {
+    assert(l == 0);
+    return 0;
+  }
+  int x = nrand48(env->steal_rg) % n_candidates;
+  int y = 0;
+  for (i = 0; i < D.levels[l].n_children; i++) {
+    if (i != idx) {
+      int j;
+      for (j = i * sz; j < (i + 1) * sz; j++) {
+	if (ws->status[j]) {
+	  if (y == x) {
+	    myth_running_env_t victim_env = &g_envs[j];
+	    return myth_queue_take(&victim_env->runnable_q);
+	  }
+	  y++;
+	}
+      }
+    }
+  }
+  assert(0);
+  return 0;
+}
+
+static myth_thread_t myth_steal_func_with_global_status(int rank) {
+  /* 
+     (1) if any level 1 domain is empty, only one worker in each 
+     level 1 domain is active 
+     (2) otherwise if any level 2 domain is empty, 
+   */
+  myth_running_env_t env = &g_envs[rank];
+  worker_status * ws = env->worker_status;
+  domain D = myth_cpu_domain;
+  int n_cpus = n_cpus_at_level(D, 0);
+  count_busy_at_levels(0, 0, n_cpus, rank, ws, D);
+  int l = find_level_to_steal(ws, D);
+  int idx = ws->my_index[l];
+  if (ws->busy_count[l][idx]) {
+    /* my domain is not empty, but there are some empty siblings.
+       let one of them to steal */
+    return 0;
+  } else {
+    /* my domain is empty */
+    myth_thread_t th = steal_from_level(env, ws, idx, l, D);
+    return th;
+  }
+}
+  
 /* probability base stealing works by first building an 
    array of n_cpus x n_cpus and then converting it to 
    n_workers x n_workers.
@@ -293,16 +423,6 @@ static long * myth_array_to_int_prob(int * p, int n_cpus, int n_workers) {
 
 */
 
-typedef struct {
-  int n_children;		/* number of children of this level */
-  int val;			/* value associated with this level */
-} domain_level;
-
-typedef struct {
-  int n_levels;
-  domain_level * levels;
-} domain;
-
 /* convert domain hierarchy of the machine into 
    2D array of values */
 
@@ -380,10 +500,8 @@ domain parse_domain_desc(char * s) {
       H[l].n_children = atoi(p);
       H[l].val = atoi(comma + 1);
     } else {
-      fprintf(stderr,
-	      "could not parse domain string (%s)."
-	      " should have a form n,p:n,p:...\n", s);
-      exit(1);
+      H[l].n_children = atoi(p);
+      H[l].val = 1;
     }
     p = x + 1;
   }
@@ -391,13 +509,22 @@ domain parse_domain_desc(char * s) {
   return D;
 }
 
-static long * myth_prob_from_domain(char * s, int n_workers) {
-  int n_cpus = 1;
-  int l; 
-  domain D = parse_domain_desc(s);
-  for (l = 0; l < D.n_levels; l++) {
-    n_cpus *= D.levels[l].n_children;
+static domain myth_parse_domain(char * s, int nw) {
+  domain D;
+  if (s) {
+    D = parse_domain_desc(s);
+  } else {
+    D.levels = (domain_level *)myth_malloc(sizeof(domain_level));
+    D.levels->n_children = nw;
+    D.levels->val = 1;
+    D.n_levels = 1;
   }
+  return D;
+}
+
+static long * myth_prob_from_domain(char * s, int n_workers) {
+  domain D = myth_parse_domain(s, n_workers);
+  int n_cpus = n_cpus_at_level(D, 0);
   int * p = myth_domain_to_array(D, n_cpus);
   long * P = myth_array_to_int_prob(p, n_cpus, n_workers);
   myth_free(D.levels);
@@ -449,15 +576,7 @@ static long * myth_prob_from_file(FILE * fp, int nw) {
 static int * myth_min_success(char * s, int nw) {
   int n_cpus = 1;
   int l; 
-  domain D;
-  if (s) {
-    D = parse_domain_desc(s);
-  } else {
-    D.levels = (domain_level *)myth_malloc(sizeof(domain_level));
-    D.levels->n_children = nw;
-    D.levels->val = 1;
-    D.n_levels = 1;
-  }
+  domain D = myth_parse_domain(s, nw);
   for (l = 0; l < D.n_levels; l++) {
     n_cpus *= D.levels[l].n_children;
   }
@@ -490,6 +609,9 @@ int myth_scheduler_global_init(int nw) {
 
   char * double_check = getenv("MYTH_DOUBLE_CHECK");
   myth_double_check_table = myth_double_check(double_check, nw);
+
+  char * cpu_domain = getenv("MYTH_CPU_DOMAIN");
+  myth_cpu_domain = myth_parse_domain(cpu_domain, nw);
   
   return 0;
 }
@@ -504,6 +626,8 @@ int myth_scheduler_worker_init(int rank, int nw) {
   env->steal_rg[0] = rank;
   env->steal_rg[1] = rank + 1;
   env->steal_rg[2] = rank + 2;
+
+  worker_status_init(env->worker_status, rank, nw);
   return 0;
 }
 

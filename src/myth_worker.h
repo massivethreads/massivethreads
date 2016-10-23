@@ -96,16 +96,37 @@ typedef struct myth_prof_data {
 } myth_prof_data, *myth_prof_data_t;
 
 
+#if EXPERIMENTAL_SCHEDULER
+typedef struct {
+  int n_children;		/* number of children of this level */
+  int val;			/* value associated with this level */
+} domain_level;
 
 typedef struct {
-#if 0
-  size_t sz;
-  size_t idx;
-  char * hist;
-#endif
+  int n_levels;
+  domain_level * levels;
+} domain;
+
+typedef struct {
   long n_con_success; /* number of consecutive successful attempts in a row */
 } steal_history;
 
+typedef struct {
+  int nw;
+  int n_levels;
+  /* busy_count[l][i] is the number of busy workers in 
+     the ith child of the level l domain this worker
+     belongs to */
+  int ** busy_count;
+  /* my_index[l] is the index of this worker in the
+     children list of the level l domain it belongs to */
+  int * my_index;
+  /* status[w] == 1 if worker w is busy */
+  char * status;
+} worker_status;
+
+
+#endif
 
 //A structure describing an environment for executing a thread
 //(scheduler, worker thread, runqueue, etc...)
@@ -163,6 +184,8 @@ typedef struct myth_running_env {
   steal_history steal_hist;
   int * min_success;
   int * double_check;
+  domain dom;
+  worker_status worker_status[1];
 #endif
   
 } __attribute__((aligned(CACHE_LINE_SIZE))) myth_running_env;
