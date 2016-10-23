@@ -9,9 +9,10 @@
 #include "myth_worker_func.h"
 
 #if EXPERIMENTAL_SCHEDULER
-static myth_thread_t myth_steal_func_with_prob(int rank);
-static myth_thread_t myth_steal_func_with_prob_and_locality(int rank);
-myth_steal_func_t g_myth_steal_func = myth_steal_func_with_prob_and_locality;
+static myth_thread_t myth_steal_func_with_prob(int rank) __attribute__((unused));
+static myth_thread_t myth_steal_func_with_prob_and_min_success(int rank)  __attribute__((unused));
+static myth_thread_t myth_steal_func_with_prob_and_double_check(int rank);
+myth_steal_func_t g_myth_steal_func = myth_steal_func_with_prob_and_double_check;
 #else
 myth_thread_t myth_default_steal_func(int rank);
 myth_steal_func_t g_myth_steal_func = myth_default_steal_func;
@@ -74,6 +75,7 @@ myth_thread_t myth_default_steal_func(int rank) {
 
 static long * myth_steal_prob_table;
 static int * myth_min_success_table;
+static int * myth_double_check_table;
 
 static myth_running_env_t
 myth_env_choose_victim(myth_running_env_t e) {
@@ -156,7 +158,7 @@ long steal_history_put(steal_history * h, char x) {
 #endif
 }
 
-static myth_thread_t myth_steal_func_with_prob_and_locality(int rank) {
+static myth_thread_t myth_steal_func_with_prob_and_min_success(int rank) {
   assert(g_attr.n_workers > 1);
   myth_running_env_t env = &g_envs[rank];
   while (1) {
@@ -173,6 +175,27 @@ static myth_thread_t myth_steal_func_with_prob_and_locality(int rank) {
       steal_history_put(&env->steal_hist, (next_run ? 1 : 0));
     }
   }
+}
+
+static myth_thread_t myth_steal_func_with_prob_and_double_check(int rank) {
+  assert(g_attr.n_workers > 1);
+  myth_running_env_t env = &g_envs[rank];
+  myth_running_env_t victim_env = myth_env_choose_victim(env);
+  myth_thread_t next_run = 0;
+  int i;
+  int n_checks = env->double_check[victim_env->rank];
+  assert(n_checks > 0);
+  for (i = 0; i < n_checks; i++) {
+    myth_thread_t check_next_run = ((i == n_checks - 1) ?
+				    myth_queue_take(&victim_env->runnable_q) :
+				    myth_queue_peek(&victim_env->runnable_q));
+    if (0 < i && i < n_checks - 1 && check_next_run != next_run) {
+      /* bottom of the deque changed, start over */
+      return 0;
+    }
+    next_run = check_next_run;
+  }
+  return next_run;
 }
 
 
@@ -443,6 +466,10 @@ static int * myth_min_success(char * s, int nw) {
   return S;
 }
 
+static int * myth_double_check(char * s, int nw) {
+  return myth_min_success(s, nw);
+}
+
 int myth_scheduler_global_init(int nw) {
   char * hierarchy = getenv("MYTH_CPU_HIERARCHY");
   char * prob_file = getenv("MYTH_PROB_FILE");
@@ -460,6 +487,10 @@ int myth_scheduler_global_init(int nw) {
   /*  */
   char * min_success = getenv("MYTH_MIN_SUCCESS");
   myth_min_success_table = myth_min_success(min_success, nw);
+
+  char * double_check = getenv("MYTH_DOUBLE_CHECK");
+  myth_double_check_table = myth_double_check(double_check, nw);
+  
   return 0;
 }
 
@@ -468,6 +499,7 @@ int myth_scheduler_worker_init(int rank, int nw) {
   myth_running_env_t env = &g_envs[rank];
   env->steal_prob = &myth_steal_prob_table[rank * nw];
   env->min_success = &myth_min_success_table[rank * nw];
+  env->double_check = &myth_double_check_table[rank * nw];
   /* random seed */
   env->steal_rg[0] = rank;
   env->steal_rg[1] = rank + 1;

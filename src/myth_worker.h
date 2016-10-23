@@ -162,6 +162,7 @@ typedef struct myth_running_env {
   unsigned short steal_rg[3];
   steal_history steal_hist;
   int * min_success;
+  int * double_check;
 #endif
   
 } __attribute__((aligned(CACHE_LINE_SIZE))) myth_running_env;
