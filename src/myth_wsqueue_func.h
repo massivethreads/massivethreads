@@ -303,7 +303,7 @@ static inline myth_thread_t myth_queue_take(myth_thread_queue_t q)
     myth_spin_unlock_body(&q->m_lock);
 #endif
     return ret;
-  }else{
+  } else {
     q->base = b;
     myth_wsqueue_lock_unlock(&q->lock);
 #if USE_LOCK || USE_LOCK_TAKE
