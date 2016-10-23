@@ -9,15 +9,14 @@
 #include "myth_worker_func.h"
 
 #if EXPERIMENTAL_SCHEDULER
-static myth_thread_t myth_steal_func_with_prob(int rank) __attribute__((unused));
-static myth_thread_t myth_steal_func_with_prob_and_min_success(int rank)  __attribute__((unused));
-static myth_thread_t myth_steal_func_with_prob_and_double_check(int rank)  __attribute__((unused));
+static myth_thread_t myth_steal_func_with_prob(int rank);
+static myth_thread_t myth_steal_func_with_prob_and_min_success(int rank);
+static myth_thread_t myth_steal_func_with_prob_and_double_check(int rank);
 static myth_thread_t myth_steal_func_with_global_status(int rank);
-myth_steal_func_t g_myth_steal_func = myth_steal_func_with_global_status;
-#else
+#endif
+
 myth_thread_t myth_default_steal_func(int rank);
 myth_steal_func_t g_myth_steal_func = myth_default_steal_func;
-#endif
 
 myth_steal_func_t myth_wsapi_set_stealfunc(myth_steal_func_t fn)
 {
@@ -603,19 +602,21 @@ static int * myth_double_check(char * s, int nw) {
 
 int myth_scheduler_global_init(int nw) {
   char * hierarchy = getenv("MYTH_CPU_HIERARCHY");
-  char * prob_file = getenv("MYTH_PROB_FILE");
   if (hierarchy) {
     myth_steal_prob_table = myth_prob_from_domain(hierarchy, nw);
-  } else if (prob_file) {
-    FILE * fp = fopen(prob_file, "rb");
-    if (!fp) { perror("fopen"); exit(1); }
-    myth_steal_prob_table = myth_prob_from_file(fp, nw);
-    fclose(fp);
   } else {
-    /* default. uniform */
-    myth_steal_prob_table = myth_prob_from_file(0, nw);
+    char * prob_file = getenv("MYTH_PROB_FILE");
+    if (prob_file) {
+      FILE * fp = fopen(prob_file, "rb");
+      if (!fp) { perror("fopen"); exit(1); }
+      myth_steal_prob_table = myth_prob_from_file(fp, nw);
+      fclose(fp);
+    } else {
+      /* default. uniform */
+      myth_steal_prob_table = myth_prob_from_file(0, nw);
+    }
   }
-  /*  */
+
   char * min_success = getenv("MYTH_MIN_SUCCESS");
   myth_min_success_table = myth_min_success(min_success, nw);
 
@@ -625,6 +626,15 @@ int myth_scheduler_global_init(int nw) {
   char * cpu_domain = getenv("MYTH_CPU_DOMAIN");
   myth_cpu_domain = myth_parse_domain(cpu_domain, nw);
   
+  if (cpu_domain) {
+    g_myth_steal_func = myth_steal_func_with_global_status;
+  } else if (double_check) {
+    g_myth_steal_func = myth_steal_func_with_prob_and_double_check;
+  } else if (min_success) {
+    g_myth_steal_func = myth_steal_func_with_prob_and_min_success;
+  } else {
+    g_myth_steal_func = myth_steal_func_with_prob;
+  }
   return 0;
 }
 
