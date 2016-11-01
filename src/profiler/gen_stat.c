@@ -303,6 +303,14 @@ dr_basic_stat_write_to_file(dr_basic_stat * bs, FILE * wp) {
   fprintf(wp, "critical_path (T_inf) = %llu\n", t_inf);
   fprintf(wp, "n_workers (P)         = %ld\n", bs->n_workers);
   fprintf(wp, "elapsed               = %llu\n", bs->t);
+  fprintf(wp, "n_counters            = %d\n", GS.opts.papi_max_events);
+  int c;
+  for (c = 0; c < GS.opts.papi_max_events; c++) {
+      fprintf(wp, "counters_1            = %lld\n", G->T[0].info.counters_1[c]);
+  }
+  for (c = 0; c < GS.opts.papi_max_events; c++) {
+      fprintf(wp, "counters_inf          = %lld\n", G->T[0].info.counters_inf[c]);
+  }
 
   if (work + delay + no_work != bs->n_workers * bs->t) {
     fprintf(wp, 
