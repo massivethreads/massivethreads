@@ -495,3 +495,32 @@ static void pfor_allatonce_aux(T first, T a, T b, T step, T grainsize, std::func
 #endif //__cplusplus
 
 #endif // defined any PFOR_TO_XXX 
+
+#if TO_TBB
+//It is necessary in tp_init()
+#include <tbb/task_scheduler_init.h>
+#endif
+
+inline void tp_init() {
+#if TO_QTHREAD
+  qthread_initialize();
+#elif TO_TBB
+  /* it is possible that it is included from C file,
+     in which case we do not call it.
+     we assume there is still a main C++ file
+     and the one defined in C does not get called */
+  const char* TBB_NTHREADS = "TBB_NTHREADS";
+  if(char *tbb_nthreads = getenv(TBB_NTHREADS)) {
+    int num_workers = atoi(tbb_nthreads);
+    if(num_workers <= 0) {
+      fprintf(stderr, "could not parse environment variable %s as a number (treated as 
+1)\n", TBB_NTHRE$
+      num_workers = 1;
+    }
+    new tbb::task_scheduler_init(num_workers);
+  } else {
+    fprintf(stderr, "could not get number of workers (set %s)\n", TBB_NTHREADS);
+    //Use a default value (= a number of cores)
+  }
+#endif
+}
