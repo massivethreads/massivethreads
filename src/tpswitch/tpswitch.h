@@ -513,8 +513,7 @@ inline void tp_init() {
   if(char *tbb_nthreads = getenv(TBB_NTHREADS)) {
     int num_workers = atoi(tbb_nthreads);
     if(num_workers <= 0) {
-      fprintf(stderr, "could not parse environment variable %s as a number (treated as 
-1)\n", TBB_NTHRE$
+      fprintf(stderr, "could not parse environment variable %s as a number (treated as 1)\n", TBB_NTHRE$
       num_workers = 1;
     }
     new tbb::task_scheduler_init(num_workers);
