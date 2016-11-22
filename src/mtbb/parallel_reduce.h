@@ -33,14 +33,14 @@ not have const qualifier, as a matter of fact.
 namespace mtbb {
 
   /* functional reduce */
-  template<typename Range, typename Value, 
+  template<typename Range, typename Value,
     typename Func, typename Reduction>
-    Value parallel_reduce(const Range& range, 
+    Value parallel_reduce(const Range& range,
                           const Value& identity,
-                          const Func& func, 
+                          const Func& func,
                           const Reduction& reduction);
 
-  template<typename Range, typename Value, 
+  template<typename Range, typename Value,
     typename Func, typename Reduction>
     struct parallel_reduce_functional_callable {
       Value& result;
@@ -53,16 +53,16 @@ namespace mtbb {
                                         const Func& func_, const Reduction& reduction_) :
       result(result_), range(range_), identity(identity_),
         func(func_), reduction(reduction_) {}
-      void operator() () {
+      void operator() () const {
         result = mtbb::parallel_reduce(range, identity, func, reduction);
       }
     };
-  
-  template<typename Range, typename Value, 
+
+  template<typename Range, typename Value,
     typename Func, typename Reduction>
-    Value parallel_reduce(const Range& range, 
+    Value parallel_reduce(const Range& range,
                           const Value& identity,
-                          const Func& func, 
+                          const Func& func,
                           const Reduction& reduction) {
     if (range.empty()) {
       return identity;
@@ -79,24 +79,24 @@ namespace mtbb {
       return reduction(left_result, right_result);
     }
   }
-  
+
   /* imperative reduce */
-  template<typename Range, typename Body> 
+  template<typename Range, typename Body>
     void parallel_reduce( const Range& range, Body& body );
 
-  template<typename Range, typename Body> 
+  template<typename Range, typename Body>
     struct parallel_reduce_imperative_callable {
       const Range& range;
       Body& body;
-    parallel_reduce_imperative_callable(const Range& range_, 
+    parallel_reduce_imperative_callable(const Range& range_,
                                         Body& body_) :
       range(range_), body(body_) {}
-      void operator() () {
+      void operator() () const {
         mtbb::parallel_reduce<Range,Body>(range, body);
       }
     };
-  
-  template<typename Range, typename Body> 
+
+  template<typename Range, typename Body>
     void parallel_reduce( const Range& range, Body& body ) {
     if (range.empty()) {
       return;
