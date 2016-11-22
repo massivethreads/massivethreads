@@ -5,6 +5,7 @@
 #pragma once
 
 #include <cilk/cilk.h>
+#include <cilk/cilk_api.h>
 
 #if DAG_RECORDER>=2
 #include <dag_recorder.h>
