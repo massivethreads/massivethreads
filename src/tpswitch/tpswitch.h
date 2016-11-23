@@ -624,7 +624,7 @@ static void pfor_allatonce_aux(T first, T a, T b, T step, T grainsize, std::func
     #elif TO_OMP
       template<typename IntTy, typename StepIntTy, typename LeafFuncTy> static void pfor_original(IntTy first, IntTy last, StepIntTy step, IntTy grainsize, LeafFuncTy leaffunc, const char * file, int line) {
         const IntTy elementnum = (last - first) / step;
-        const IntTy tasknum = elementnum / grainsize;
+        const IntTy tasknum = (elementnum + grainsize - 1) / grainsize;
         pragma_omp(parallel for)
         for(IntTy i = 0; i < tasknum; i++) {
           IntTy leaf_first = first + i * step * grainsize;
@@ -637,7 +637,7 @@ static void pfor_allatonce_aux(T first, T a, T b, T step, T grainsize, std::func
     #elif TO_CILKPLUS
       template<typename IntTy, typename StepIntTy, typename LeafFuncTy> static void pfor_original(IntTy first, IntTy last, StepIntTy step, IntTy grainsize, LeafFuncTy leaffunc, const char * file, int line) {
         const IntTy elementnum = (last - first) / step;
-        const IntTy tasknum = elementnum / grainsize;
+        const IntTy tasknum = (elementnum + grainsize - 1) / grainsize;
         cilk_for (IntTy i = 0; i < tasknum; i++) {
           IntTy leaf_first = first + i * step * grainsize;
           IntTy leaf_last  = first + (i + 1) * step * grainsize;
@@ -738,7 +738,7 @@ static void pfor_allatonce_aux(T first, T a, T b, T step, T grainsize, std::func
           int     eval_step      = (STEP);\
           INTTYPE eval_grainsize = (GRAINSIZE);\
           const INTTYPE MACRO_elementnum = (eval_last - eval_first) / eval_step;\
-          const INTTYPE MACRO_tasknum    = MACRO_elementnum / eval_grainsize;\
+          const INTTYPE MACRO_tasknum    = (MACRO_elementnum + eval_grainsize - 1) / eval_grainsize;\
           pragma_omp(parallel for)\
           for(INTTYPE MACRO_i = 0; MACRO_i < MACRO_tasknum; MACRO_i++) {\
             INTTYPE FIRST_VAR = eval_first + MACRO_i * eval_step * eval_grainsize;\
@@ -755,7 +755,7 @@ static void pfor_allatonce_aux(T first, T a, T b, T step, T grainsize, std::func
           int     eval_step      = (STEP);\
           INTTYPE eval_grainsize = (GRAINSIZE);\
           const INTTYPE MACRO_elementnum = (eval_last - eval_first) / eval_step;\
-          const INTTYPE MACRO_tasknum    = MACRO_elementnum / eval_grainsize;\
+          const INTTYPE MACRO_tasknum    = (MACRO_elementnum + eval_grainsize - 1) / eval_grainsize;\
           pragma_omp(parallel for)\
           for(INTTYPE MACRO_i = 0; MACRO_i < MACRO_tasknum; MACRO_i++) {\
             INTTYPE FIRST_VAR = eval_first + MACRO_i * eval_step * eval_grainsize;\
@@ -773,7 +773,7 @@ static void pfor_allatonce_aux(T first, T a, T b, T step, T grainsize, std::func
           int     eval_step      = (STEP);\
           INTTYPE eval_grainsize = (GRAINSIZE);\
           const INTTYPE MACRO_elementnum = (eval_last - eval_first) / eval_step;\
-          const INTTYPE MACRO_tasknum    = MACRO_elementnum / eval_grainsize;\
+          const INTTYPE MACRO_tasknum    = (MACRO_elementnum + eval_grainsize - 1) / eval_grainsize;\
           cilk_for(INTTYPE MACRO_i = 0; MACRO_i < MACRO_tasknum; MACRO_i++) {\
             INTTYPE FIRST_VAR = eval_first + MACRO_i * eval_step * eval_grainsize;\
             INTTYPE LAST_VAR  = eval_first + (MACRO_i + 1) * eval_step * eval_grainsize;\
@@ -789,7 +789,7 @@ static void pfor_allatonce_aux(T first, T a, T b, T step, T grainsize, std::func
           int     eval_step      = (STEP);\
           INTTYPE eval_grainsize = (GRAINSIZE);\
           const INTTYPE MACRO_elementnum = (eval_last - eval_first) / eval_step;\
-          const INTTYPE MACRO_tasknum    = MACRO_elementnum / eval_grainsize;\
+          const INTTYPE MACRO_tasknum    = (MACRO_elementnum -eval_grainsize - 1) / eval_grainsize;\
           cilk_for(INTTYPE MACRO_i = 0; MACRO_i < MACRO_tasknum; MACRO_i++) {\
             INTTYPE FIRST_VAR = eval_first + MACRO_i * eval_step * eval_grainsize;\
             INTTYPE LAST_VAR  = eval_first + (MACRO_i + 1) * eval_step * eval_grainsize;\
