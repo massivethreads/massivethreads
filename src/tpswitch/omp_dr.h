@@ -45,7 +45,10 @@
 
 #pragma once
 #include <omp.h>
+
+#if DAG_RECORDER>=2
 #include <dag_recorder.h>
+#endif
 
 #define do_pragma(x)               _Pragma( #x )
 #define pragma_omp(x)              do_pragma(omp x)
@@ -57,6 +60,8 @@
   pragma_omp_task_no_prof(options, callable())
 
 #define pragma_omp_taskwait_no_prof pragma_omp(taskwait)
+
+#if DAG_RECORDER>=2
 
 #define pragma_omp_task_with_prof(options, statement) do { \
     dr_dag_node * __c__ = 0;				   \
@@ -94,8 +99,6 @@
     pragma_omp(taskwait);                                              \
     dr_return_from_wait_tasks_(__t__, file, line);                     \
   } while(0)
-
-#if DAG_RECORDER>=2
 
 #define pragma_omp_task(options, statement)	\
   pragma_omp_task_with_prof(options, statement)
