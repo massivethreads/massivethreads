@@ -412,8 +412,7 @@ static void pfor_bisection_aux(T first, T a, T b, T step, T grainsize, std::func
     mk_task_group;
     const T c = a + (b - a) / 2;
     create_task0_(spawn pfor_bisection_aux(first, a, c, step, grainsize, f, file, line), file, line);
-    call_task(spawn pfor_bisection_aux(first, c, b, step, grainsize, f, file, line));
-    wait_tasks_(file, line);
+    create_task_and_wait(spawn pfor_bisection_aux(first, c, b, step, grainsize, f, file, line));
   }
   cilk_void_return;
 }
@@ -423,12 +422,11 @@ static void pfor_bisection_aux(T first, T a, T b, T step, T grainsize, std::func
     T eval_first = (first);                                \
     T eval_last  = (last);                                 \
     T eval_step  = (step);                                 \
-    pfor_bisection_aux<T>(eval_first, 0, (eval_last - eval_first + eval_step - 1) / eval_step, eval_step, grainsize, [=] (T FIRST_, T LAST_) { S }, __FILE__, __LINE__); \
+    call_task(spawn pfor_bisection_aux<T>(eval_first, 0, (eval_last - eval_first + eval_step - 1) / eval_step, eval_step, grainsize, [=] (T FIRST_, T LAST_) { S }, __FILE__, __LINE__)); \
   } while(0)
 
 template<typename T>
 static void pfor_allatonce_aux(T first, T a, T b, T step, T grainsize, std::function<void (T, T)> f, const char * file, int line) {
-  cilk_begin;
   mk_task_group;
   T ia = a;
   T ib = a;
@@ -439,7 +437,6 @@ static void pfor_allatonce_aux(T first, T a, T b, T step, T grainsize, std::func
     ia = ib;
   }
   wait_tasks;
-  cilk_void_return;
 }
 
 #define pfor_allatonce(T, first, last, step, grainsize, S) \
@@ -657,25 +654,23 @@ static void pfor_allatonce_aux(T first, T a, T b, T step, T grainsize, std::func
     template<typename IntTy, typename StepIntTy, typename LeafFuncTy> void pfor_bisection_aux(IntTy first, IntTy a, IntTy b, StepIntTy step, IntTy grainsize, LeafFuncTy leaffunc, const char * file, int line) {
       cilk_begin;
       if (b - a <= grainsize) {
-        leaffunc(first + a * step, first + b * step);
+        call_task(spawn leaffunc(first + a * step, first + b * step));
       } else {
         mk_task_group;
         const IntTy c = a + (b - a) / 2;
         create_task0_(spawn pfor_bisection_aux(first, a, c, step, grainsize, leaffunc, file, line), file, line);
-        call_task    (spawn pfor_bisection_aux(first, c, b, step, grainsize, leaffunc, file, line));
-        wait_tasks_(file, line);
+        create_task_and_wait(spawn pfor_bisection_aux(first, c, b, step, grainsize, leaffunc, file, line));
       }
       cilk_void_return;
     }
     template<typename IntTy, typename StepIntTy, typename LeafFuncTy> static void pfor_bisection(IntTy first, IntTy last, StepIntTy step, IntTy grainsize, LeafFuncTy leaffunc, const char * file, int line) {
       IntTy a = 0;
       IntTy b = (last - first + step - 1) / step;
-      pfor_bisection_aux(first, a, b, step, grainsize, leaffunc, file, line);
+      call_task(spawn pfor_bisection_aux(first, a, b, step, grainsize, leaffunc, file, line));
     }
   #elif PFOR_TO_ALLATONCE
     #define PFOR_IMPL pfor_allatonce
     template<typename IntTy, typename StepIntTy, typename LeafFuncTy> static void pfor_allatonce_aux(IntTy first, IntTy a, IntTy b, StepIntTy step, IntTy grainsize, LeafFuncTy leaffunc, const char * file, int line) {
-      cilk_begin;
       mk_task_group;
       IntTy ia = a;
       IntTy ib = a;
@@ -687,7 +682,6 @@ static void pfor_allatonce_aux(T first, T a, T b, T step, T grainsize, std::func
         ia = ib;
       }
       wait_tasks;
-      cilk_void_return;
     }
     template<typename IntTy, typename StepIntTy, typename LeafFuncTy> static void pfor_allatonce(IntTy first, IntTy last, StepIntTy step, IntTy grainsize, LeafFuncTy leaffunc, const char * file, int line) {
       IntTy a = 0;
