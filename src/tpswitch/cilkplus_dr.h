@@ -67,22 +67,19 @@ cilk int f(int x) {
 
 #define cilk_return_with_prof_t(type_of_x, x) do {	   \
     type_of_x __cilk_return_value__ = x;		   \
-    (void)__cilk_begin__;				   \
-    dr_end_task();					   \
+    if (__cilk_begin__) dr_end_task();                     \
     return __cilk_return_value__;			   \
   } while(0)
 
 
 #define cilk_return_with_prof(x) do {			   \
     typeof(x) __cilk_return_value__ = x;		   \
-    (void)__cilk_begin__;				   \
-    dr_end_task();					   \
+    if (__cilk_begin__) dr_end_task();                     \
     return __cilk_return_value__;			   \
   } while(0)
 
-#define cilk_void_return_with_prof do {		   \
-    (void)__cilk_begin__;				   \
-    dr_end_task();					   \
+#define cilk_void_return_with_prof do {                    \
+    if (__cilk_begin__) dr_end_task();                     \
     return;						   \
   } while(0)
 
@@ -124,6 +121,8 @@ cilk int f(int x) {
 #define sync_                 sync_with_prof
 #define sync__(file, line)    sync_with_prof_(file, line)
 
+#define clkp_begin_section    dr_begin_section()
+
 #define dr_get_max_workers()     __cilkrts_get_nworkers()
 #define dr_get_worker()          __cilkrts_get_worker_number()
 
@@ -139,5 +138,7 @@ cilk int f(int x) {
 #define _Cilk_sync_           sync_no_prof
 #define sync_                 sync_no_prof
 #define sync__(file, line)    sync_no_prof
+
+#define clkp_begin_section
 
 #endif

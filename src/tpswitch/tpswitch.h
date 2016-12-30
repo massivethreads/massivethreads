@@ -225,7 +225,11 @@
 #endif
 
 //#define mk_task_group int __mk_task_group__ __attribute__((unused)) = 0
-#define mk_task_group 
+#if TO_CILK
+#define mk_task_group
+#elif TO_CILKPLUS
+#define mk_task_group clkp_begin_section
+#endif
 #define create_task0(spawn_stmt)       spawn_(spawn_stmt)
 #define create_task0_(spawn_stmt, file, line)       spawn__(spawn_stmt, file, line)
 #define create_task1(s0,spawn_stmt)    spawn_(spawn_stmt)
@@ -237,12 +241,24 @@
 #else
 #define create_taskc(callable)            spawn_(_Cilk_spawn callable())
 #endif
-#define create_task_and_wait(spawn_stmt)			\
+
+#if TO_CILK
+#define create_task_and_wait(spawn_stmt)                \
   do { create_taskA(spawn_stmt); wait_tasks; } while(0)
 #define create_taskc_and_wait(callable)			\
   do { create_taskc(callable); wait_tasks; } while(0)
 #define call_task(spawn_stmt)          create_task_and_wait(spawn_stmt)
 #define call_taskc(callable)              create_taskc_and_wait(callable)   
+#elif TO_CILKPLUS
+#define call_task(spawn_stmt)                           \
+  do { create_taskA(spawn_stmt); wait_tasks; } while(0)
+#define call_taskc(callable)                            \
+  do { callable(); wait_tasks; } while(0)
+#define create_task_and_wait(spawn_stmt)                \
+  do { create_taskA(spawn_stmt); wait_tasks; } while(0)
+#define create_taskc_and_wait(callable)			\
+  do { callable(); wait_tasks; } while(0)
+#endif
 
 #define wait_tasks sync_
 #define wait_tasks_(file, line) sync__(file, line)
