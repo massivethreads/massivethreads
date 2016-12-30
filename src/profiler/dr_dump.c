@@ -193,6 +193,8 @@ dr_copy_dag_node_1(dr_dag_node * g,
   assert(strlen(g->info.start.pos.file) > 0);
   p->info.start.pos.file_idx
     = dr_string_table_intern(st, g->info.start.pos.file);
+  assert(g->info.end.pos.file);
+  assert(strlen(g->info.end.pos.file) > 0);
   p->info.end.pos.file = 0;
   p->info.end.pos.file_idx
     = dr_string_table_intern(st, g->info.end.pos.file);
