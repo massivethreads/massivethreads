@@ -84,26 +84,33 @@ cilk int f(int x) {
   } while(0)
 
 #define spawn_with_prof(spawn_stmt) do {			\
+    if (__n_outstanding_children__ == 0) dr_begin_section();    \
+    __n_outstanding_children__++;                               \
     dr_dag_node * __t__ = dr_enter_create_cilk_proc_task();	\
     spawn_stmt;							\
     dr_return_from_create_task(__t__);				\
   } while (0)
 
 #define spawn_with_prof_(spawn_stmt, file, line) do {                   \
+    if (__n_outstanding_children__ == 0) dr_begin_section();            \
+    __n_outstanding_children__++;                                       \
     dr_dag_node * __t__ = dr_enter_create_cilk_proc_task_(file, line);  \
     spawn_stmt;                                                         \
     dr_return_from_create_task_(__t__, file, line);                     \
   } while (0)
 
 #define sync_with_prof do {				       \
+    if (__n_outstanding_children__ == 0) dr_begin_section();   \
     dr_dag_node * __t__ = dr_enter_wait_tasks();	       \
     cilk_sync;						       \
     dr_return_from_wait_tasks(__t__);			       \
   } while(0)
 
 #define sync_with_prof_(file, line) do {                       \
+    if (__n_outstanding_children__ == 0) dr_begin_section();   \
     dr_dag_node * __t__ = dr_enter_wait_tasks_(file, line);    \
     cilk_sync;						       \
+    __n_outstanding_children__ = 0;                            \
     dr_return_from_wait_tasks_(__t__, file, line);             \
   } while(0)
 
@@ -121,7 +128,8 @@ cilk int f(int x) {
 #define sync_                 sync_with_prof
 #define sync__(file, line)    sync_with_prof_(file, line)
 
-#define clkp_begin_section    dr_begin_section()
+#define clkp_mk_task_group \
+  int __n_outstanding_children__ = 0
 
 #define dr_get_max_workers()     __cilkrts_get_nworkers()
 #define dr_get_worker()          __cilkrts_get_worker_number()
@@ -139,6 +147,6 @@ cilk int f(int x) {
 #define sync_                 sync_no_prof
 #define sync__(file, line)    sync_no_prof
 
-#define clkp_begin_section
+#define clkp_mk_task_group
 
 #endif

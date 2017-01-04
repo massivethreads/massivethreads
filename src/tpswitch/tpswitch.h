@@ -228,7 +228,7 @@
 #if TO_CILK
 #define mk_task_group
 #elif TO_CILKPLUS
-#define mk_task_group clkp_begin_section
+#define mk_task_group clkp_mk_task_group
 #endif
 #define create_task0(spawn_stmt)       spawn_(spawn_stmt)
 #define create_task0_(spawn_stmt, file, line)       spawn__(spawn_stmt, file, line)
@@ -438,6 +438,7 @@ static void pfor_bisection_aux(T first, T a, T b, T step, T grainsize, std::func
     T eval_first = (first);                                \
     T eval_last  = (last);                                 \
     T eval_step  = (step);                                 \
+    mk_task_group;                                         \
     call_task(spawn pfor_bisection_aux<T>(eval_first, 0, (eval_last - eval_first + eval_step - 1) / eval_step, eval_step, grainsize, [=] (T FIRST_, T LAST_) { S }, __FILE__, __LINE__)); \
   } while(0)
 
