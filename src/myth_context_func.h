@@ -33,7 +33,7 @@ static inline void myth_make_context_voidcall(myth_context_t ctx, void_func_t fu
 #define myth_context_switch_hook(ctx)
 #endif
 
-#if MYTH_CONTEXT == MYTH_CONTEXT_i386 \
+#if  MYTH_CONTEXT == MYTH_CONTEXT_i386 \
   || MYTH_CONTEXT == MYTH_CONTEXT_amd64 \
   || MYTH_CONTEXT == MYTH_CONTEXT_amd64_knc \
   || MYTH_CONTEXT == MYTH_CONTEXT_sparc_v9 \
@@ -62,8 +62,8 @@ void myth_set_context_withcall_s(myth_context_t switch_to,
 
 #endif 
 
-static inline void myth_swap_context_s(myth_context_t switch_from,
-				       myth_context_t switch_to) {
+static inline void myth_swap_context_uc(myth_context_t switch_from,
+					myth_context_t switch_to) {
   //clear
   g_ctx_withcall_params.fn = NULL;
   PRESERVE_TLSREG(switch_to);
@@ -76,10 +76,10 @@ static inline void myth_swap_context_s(myth_context_t switch_from,
   }
 }
 
-static inline void myth_swap_context_withcall_s(myth_context_t switch_from,
-						myth_context_t switch_to, 
-						void(*func)(void*,void*,void*), 
-						void *arg1, void *arg2, void *arg3) {
+static inline void myth_swap_context_withcall_uc(myth_context_t switch_from,
+						 myth_context_t switch_to, 
+						 void(*func)(void*,void*,void*), 
+						 void *arg1, void *arg2, void *arg3) {
   //set
   g_ctx_withcall_params.fn = func;
   g_ctx_withcall_params.arg1 = arg1;
@@ -95,16 +95,16 @@ static inline void myth_swap_context_withcall_s(myth_context_t switch_from,
   }
 }
 
-static inline void myth_set_context_s(myth_context_t ctx) {
+static inline void myth_set_context_uc(myth_context_t ctx) {
   //clear
   g_ctx_withcall_params.fn = NULL;
   PRESERVE_TLSREG(ctx);
   setcontext(&ctx->uc);
 }
 
-static inline void myth_set_context_withcall_s(myth_context_t switch_to,
-					       void(*func)(void*,void*,void*), 
-					       void *arg1, void *arg2, void *arg3) {
+static inline void myth_set_context_withcall_uc(myth_context_t switch_to,
+						void(*func)(void*,void*,void*), 
+						void *arg1, void *arg2, void *arg3) {
   //set
   g_ctx_withcall_params.fn = func;
   g_ctx_withcall_params.arg1 = arg1;
@@ -152,9 +152,29 @@ static void voidcall_context_ep(int pfn0, int pfn1) {
 
 #endif /* MYTH_CONTEXT */
 
+#if MYTH_CONTEXT == MYTH_CONTEXT_UCONTEXT
 
+#define myth_set_context(ctx) { \
+    myth_context_switch_hook(ctx); \
+    myth_set_context_uc(ctx); \
+}
 
-#if MYTH_INLINE_CONTEXT
+#define myth_swap_context(from,to) { \
+    myth_context_switch_hook(to); \
+    myth_swap_context_uc(from,to); \
+}
+
+#define myth_swap_context_withcall(from,to,fn,a1,a2,a3) { \
+    myth_context_switch_hook(to); \
+    myth_swap_context_withcall_uc(from,to,fn,a1,a2,a3); \
+}
+
+#define myth_set_context_withcall(ctx,fn,a1,a2,a3) { \
+    myth_context_switch_hook(ctx); \
+    myth_set_context_withcall_uc(ctx,fn,a1,a2,a3); \
+}
+
+#elif MYTH_INLINE_CONTEXT
 #define myth_set_context(ctx) { \
     myth_context_switch_hook(ctx); \
     myth_set_context_i(ctx); \
