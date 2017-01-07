@@ -91,7 +91,8 @@ static inline void myth_swap_context_withcall_uc(myth_context_t switch_from,
   //execute
   if (g_ctx_withcall_params.fn) {
     g_ctx_withcall_params.fn(g_ctx_withcall_params.arg1,
-			     g_ctx_withcall_params.arg2, g_ctx_withcall_params.arg3);
+			     g_ctx_withcall_params.arg2, 
+			     g_ctx_withcall_params.arg3);
   }
 }
 

@@ -4,6 +4,7 @@
 
 #include <signal.h>
 
+#include "myth_config.h"
 #include "myth_internal_barrier.h"
 #include "myth_sched.h"
 #include "myth_sched_func.h"

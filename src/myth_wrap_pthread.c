@@ -5,6 +5,7 @@
 #include <assert.h>
 #define should_not_reach_here() assert(0)
 
+#include "myth_config.h"
 #include "myth/myth.h"
 #include "myth_real.h"
 #include "myth_wrap_util_func.h"

@@ -3,7 +3,7 @@
  */
 
 #include "myth/myth.h"
-
+#include "myth_config.h"
 #include "myth_init.h"
 #include "myth_misc.h"
 #include "myth_sched.h"

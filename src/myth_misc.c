@@ -3,6 +3,7 @@
  */
 #include <ctype.h>
 
+#include "myth_config.h"
 #include "myth_misc.h"
 #include "myth_misc_func.h"
 

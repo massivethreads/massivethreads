@@ -14,13 +14,6 @@
 
 #if MYTH_FORCE_UCONTEXT || MYTH_ARCH == MYTH_ARCH_UNIVERSAL
 #define MYTH_CONTEXT MYTH_CONTEXT_UCONTEXT
-/* _XOPEN_SOURCE is defined on Linux but not on Mac OS X.
-   on Mac OS X, functions in ucontext.h cannot be used unless
-   we define _XOPEN_SOURCE (we still get warnings they are
-   deprecated) */
-#ifndef _XOPEN_SOURCE
-#define _XOPEN_SOURCE
-#endif
 #include <ucontext.h>
 
 #elif MYTH_ARCH == MYTH_ARCH_i386

@@ -1,11 +1,12 @@
 /* 
  * myth_init.c
  */
+
 #include <sys/time.h>
 #include <sched.h>
 
 #include "myth/myth.h"
-
+#include "myth_config.h"
 #include "myth_init.h"
 #include "myth_log.h"
 #include "myth_bind_worker.h"
