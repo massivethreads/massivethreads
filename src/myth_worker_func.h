@@ -19,6 +19,7 @@
 
 #include "myth_init_func.h"
 #include "myth_misc_func.h"
+#include "myth_context_func.h"
 #include "myth_wsqueue_func.h"
 #include "myth_sched_func.h"
 #include "myth_log_func.h"

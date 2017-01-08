@@ -465,8 +465,13 @@ WRAP_SRCS = \
 	myth_wrap_malloc.c \
 	myth_wrap_socket.c
 
+
+#
+# _XOPEN_SOURCE is necessary on mac os to use ucontext correctly
+#
 COMMON_CFLAGS = \
 	-D_GNU_SOURCE \
+	-D_XOPEN_SOURCE \
 	-I$(abs_top_srcdir)/include
 
 VANILLA_CFLAGS = -DMYTH_WRAP=MYTH_WRAP_VANILLA

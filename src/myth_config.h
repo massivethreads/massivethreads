@@ -192,17 +192,12 @@
 //Use TLS on malloc with freelist
 #define MYTH_FLMALLOC_TLS 0
 
-//Inline context switching codes by inline assembler
-#define MYTH_INLINE_CONTEXT 1
 //At inlined codes, save callee-saved registers explicitly
 #define MYTH_INLINE_PUSH_CALLEE_SAVED 1
 
 //To switch context, use jmp instruction instead of ret
 #define USE_JUMP_INSN_A 1
 #define USE_JUMP_INSN_B 1
-
-// force to use ucontext
-//#define MYTH_FORCE_UCONTEXT 1
 
 /* ------------------
    Global symbol modifier choices
@@ -254,16 +249,27 @@
 #else
 #define MYTH_ARCH MYTH_ARCH_sparc_v8
 #endif
-/* as it's not implemented on this platform;
-   TODO: may be we should abandon MYTH_INLINE_CONTEXT altogether */
-#define MYTH_INLINE_CONTEXT 0
 
 #else
 #define MYTH_ARCH MYTH_ARCH_UNIVERSAL
-/* as it's not implemented on this platform;
-   TODO: may be we should abandon MYTH_INLINE_CONTEXT altogether */
-#define MYTH_INLINE_CONTEXT 0
 
+#endif
+
+/* choose whether you use inline-assembly version of 
+   context swithing (MYTH_INLINE_CONTEXT == 1)
+   or assembly version (MYTH_INLINE_CONTEXT == 1).
+   not all platforms support both; sparc platforms
+   support only assembly version, so you should always
+   define MYTH_INLINE_CONTEXT 0;
+   otherwise you can choose
+*/
+
+#if MYTH_ARCH == MYTH_ARCH_sparc_v9
+#define MYTH_INLINE_CONTEXT 0
+#elif MYTH_ARCH == MYTH_ARCH_sparc_v8
+#define MYTH_INLINE_CONTEXT 0
+#else
+#define MYTH_INLINE_CONTEXT 1
 #endif
 
 /* I don't know what it is for.

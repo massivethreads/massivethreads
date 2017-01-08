@@ -33,7 +33,7 @@ static inline void myth_make_context_voidcall(myth_context_t ctx, void_func_t fu
 #define myth_context_switch_hook(ctx)
 #endif
 
-#if MYTH_CONTEXT == MYTH_CONTEXT_i386 \
+#if  MYTH_CONTEXT == MYTH_CONTEXT_i386 \
   || MYTH_CONTEXT == MYTH_CONTEXT_amd64 \
   || MYTH_CONTEXT == MYTH_CONTEXT_amd64_knc \
   || MYTH_CONTEXT == MYTH_CONTEXT_sparc_v9 \
@@ -53,14 +53,17 @@ void myth_set_context_withcall_s(myth_context_t switch_to,
 
 #if MYTH_ARCH == MYTH_ARCH_sparc_v9
 #define PRESERVE_TLSREG(ctx) asm volatile("stx %%g7,[%0]" :: "r"(&ctx->uc.uc_mcontext.mc_gregs[MC_G7]) : "memory")
+
 #elif MYTH_ARCH == MYTH_ARCH_sparc_v8
 #define PRESERVE_TLSREG(ctx) asm volatile("st %%g7,[%0]" :: "r"(&ctx->uc.uc_mcontext.gregs[REG_G7]) : "memory")
+
 #else
 #define PRESERVE_TLSREG(ctx) do { } while(0)
+
 #endif 
 
-static inline void myth_swap_context_s(myth_context_t switch_from,
-				       myth_context_t switch_to) {
+static inline void myth_swap_context_uc(myth_context_t switch_from,
+					myth_context_t switch_to) {
   //clear
   g_ctx_withcall_params.fn = NULL;
   PRESERVE_TLSREG(switch_to);
@@ -73,10 +76,10 @@ static inline void myth_swap_context_s(myth_context_t switch_from,
   }
 }
 
-static inline void myth_swap_context_withcall_s(myth_context_t switch_from,
-						myth_context_t switch_to, 
-						void(*func)(void*,void*,void*), 
-						void *arg1, void *arg2, void *arg3) {
+static inline void myth_swap_context_withcall_uc(myth_context_t switch_from,
+						 myth_context_t switch_to, 
+						 void(*func)(void*,void*,void*), 
+						 void *arg1, void *arg2, void *arg3) {
   //set
   g_ctx_withcall_params.fn = func;
   g_ctx_withcall_params.arg1 = arg1;
@@ -88,20 +91,21 @@ static inline void myth_swap_context_withcall_s(myth_context_t switch_from,
   //execute
   if (g_ctx_withcall_params.fn) {
     g_ctx_withcall_params.fn(g_ctx_withcall_params.arg1,
-			     g_ctx_withcall_params.arg2, g_ctx_withcall_params.arg3);
+			     g_ctx_withcall_params.arg2, 
+			     g_ctx_withcall_params.arg3);
   }
 }
 
-static inline void myth_set_context_s(myth_context_t ctx) {
+static inline void myth_set_context_uc(myth_context_t ctx) {
   //clear
   g_ctx_withcall_params.fn = NULL;
   PRESERVE_TLSREG(ctx);
   setcontext(&ctx->uc);
 }
 
-static inline void myth_set_context_withcall_s(myth_context_t switch_to,
-					       void(*func)(void*,void*,void*), 
-					       void *arg1, void *arg2, void *arg3) {
+static inline void myth_set_context_withcall_uc(myth_context_t switch_to,
+						void(*func)(void*,void*,void*), 
+						void *arg1, void *arg2, void *arg3) {
   //set
   g_ctx_withcall_params.fn = func;
   g_ctx_withcall_params.arg1 = arg1;
@@ -120,9 +124,11 @@ static void empty_context_ep(void) {
 }
 
 #define NUMBER_OF_INTS_TO_PASS_PTR (SIZEOF_VOIDP/SIZEOF_INT)
+
 #if ((SIZEOF_VOIDP%SIZEOF_INT)!=0)
 #error "sizeof(void*) cannot be divided by sizeof(void*)"
 #endif
+
 #if NUMBER_OF_INTS_TO_PASS_PTR>2
 #error "sizeof(void*) is too relatively small with sizeof(void*)"
 #endif
@@ -147,25 +153,71 @@ static void voidcall_context_ep(int pfn0, int pfn1) {
 
 #endif /* MYTH_CONTEXT */
 
-#if MYTH_INLINE_CONTEXT
-#define myth_set_context(ctx) \
-  {myth_context_switch_hook(ctx); myth_set_context_i(ctx);}
-#define myth_swap_context(from,to) \
-  {myth_context_switch_hook(to); myth_swap_context_i(from,to);}
-#define myth_swap_context_withcall(from,to,fn,a1,a2,a3) \
-  {myth_context_switch_hook(to); myth_swap_context_withcall_i(from,to,fn,a1,a2,a3);}
-#define myth_set_context_withcall(ctx,fn,a1,a2,a3) \
-  {myth_context_switch_hook(ctx); myth_set_context_withcall_i(ctx,fn,a1,a2,a3);}
+#if MYTH_CONTEXT == MYTH_CONTEXT_UCONTEXT
+
+#define myth_set_context(ctx) { \
+    myth_context_switch_hook(ctx); \
+    myth_set_context_uc(ctx); \
+}
+
+#define myth_swap_context(from,to) { \
+    myth_context_switch_hook(to); \
+    myth_swap_context_uc(from,to); \
+}
+
+#define myth_swap_context_withcall(from,to,fn,a1,a2,a3) { \
+    myth_context_switch_hook(to); \
+    myth_swap_context_withcall_uc(from,to,fn,a1,a2,a3); \
+}
+
+#define myth_set_context_withcall(ctx,fn,a1,a2,a3) { \
+    myth_context_switch_hook(ctx); \
+    myth_set_context_withcall_uc(ctx,fn,a1,a2,a3); \
+}
+
+#elif MYTH_INLINE_CONTEXT
+#define myth_set_context(ctx) { \
+    myth_context_switch_hook(ctx); \
+    myth_set_context_i(ctx); \
+}
+
+#define myth_swap_context(from,to) { \
+    myth_context_switch_hook(to); \
+    myth_swap_context_i(from,to); \
+}
+
+#define myth_swap_context_withcall(from,to,fn,a1,a2,a3) { \
+    myth_context_switch_hook(to); \
+    myth_swap_context_withcall_i(from,to,fn,a1,a2,a3); \
+}
+
+#define myth_set_context_withcall(ctx,fn,a1,a2,a3) { \
+    myth_context_switch_hook(ctx); \
+    myth_set_context_withcall_i(ctx,fn,a1,a2,a3); \
+}
+
 #else /* MYTH_ASSEMBLY_CONTEXT */
-#define myth_set_context(ctx) \
-  {myth_context_switch_hook(ctx); myth_set_context_s(ctx);}
-#define myth_swap_context(from,to) \
-  {myth_context_switch_hook(to); myth_swap_context_s(from,to);}
-#define myth_swap_context_withcall(from,to,fn,a1,a2,a3) \
-  {myth_context_switch_hook(to); myth_swap_context_withcall_s(from,to,fn,a1,a2,a3);}
-#define myth_set_context_withcall(ctx,fn,a1,a2,a3) \
-  {myth_context_switch_hook(ctx); myth_set_context_withcall_s(ctx,fn,a1,a2,a3);}
+#define myth_set_context(ctx) { \
+    myth_context_switch_hook(ctx); \
+    myth_set_context_s(ctx); \
+}
+
+#define myth_swap_context(from,to) { \
+    myth_context_switch_hook(to); \
+    myth_swap_context_s(from,to); \
+}
+
+#define myth_swap_context_withcall(from,to,fn,a1,a2,a3) { \
+    myth_context_switch_hook(to); \
+    myth_swap_context_withcall_s(from,to,fn,a1,a2,a3); \
+}
+
+#define myth_set_context_withcall(ctx,fn,a1,a2,a3) { \
+    myth_context_switch_hook(ctx); \
+    myth_set_context_withcall_s(ctx,fn,a1,a2,a3); \
+}
 #endif
+
 
 //Make a context for executing "void foo(void)"
 static inline void myth_make_context_voidcall(myth_context_t ctx,
@@ -293,25 +345,15 @@ static inline void myth_make_context_empty(myth_context_t ctx, void *stack,
 #define FUNC_SUFFIX ""
 #else
 #error "none of HAVE_NO_UNDERSCORE_PLT, HAVE_UNDERSCORE_PLT, HAVE_NO_UNDERSCORE, HAVE_UNDERSCORE defined"
-#endif
+#endif	/* GLOBAL_SYM_MODIFIER */
 
 #else  /* PIC */
 #define FUNC_PREFIX ""
 #define FUNC_SUFFIX ""
-#endif
+#endif	/* PIC */
 
-#if MYTH_CONTEXT == MYTH_CONTEXT_i386
-
-#if 0
-//Suffix for PLT
-#if PIC
-#define FUNC_SUFFIX "@PLT"
-#define GOTPCREL_SUFFIX "@GOTPCREL"
-#else
-#define FUNC_SUFFIX ""
-#define GOTPCREL_SUFFIX ""
-#endif
-#endif	/* 0 */
+// #if MYTH_CONTEXT == MYTH_CONTEXT_i386
+#if MYTH_ARCH == MYTH_ARCH_i386
 
 #if MYTH_INLINE_PUSH_CALLEE_SAVED
 #define PUSH_CALLEE_SAVED() \
@@ -397,23 +439,8 @@ static inline void myth_make_context_empty(myth_context_t ctx, void *stack,
 	myth_unreachable();\
 	}
 
-#elif MYTH_CONTEXT == MYTH_CONTEXT_amd64 || MYTH_CONTEXT == MYTH_CONTEXT_amd64_knc
-
-#if 0
-//Suffix for PLT
-#if PIC
-//Linux
-//#define FUNC_SUFFIX "@PLT"
-//Mac
-#define FUNC_PREFIX "_"
-#define FUNC_SUFFIX 
-#define GOTPCREL_SUFFIX "@GOTPCREL"
-#else
-#define FUNC_PREFIX 
-#define FUNC_SUFFIX 
-#define GOTPCREL_SUFFIX 
-#endif
-#endif	/* 0 */
+//#elif MYTH_CONTEXT == MYTH_CONTEXT_amd64 || MYTH_CONTEXT == MYTH_CONTEXT_amd64_knc
+#elif MYTH_ARCH == MYTH_ARCH_amd64 || MYTH_ARCH == MYTH_ARCH_amd64_knc
 
 #if PIC
 #define PUSH_LABEL_USING_A(label) \
@@ -422,21 +449,14 @@ static inline void myth_make_context_empty(myth_context_t ctx, void *stack,
 #define PUSH_LABEL_USING_BP(label) \
 	"leaq "label"(%%rip),%%rbp\n"\
 	"push %%rbp\n"
-#else
-#if 0
-#define PUSH_LABEL(label)			\
-	"pushq $" label "\n"
-#define PUSH_LABEL_USING_A(label) PUSH_LABEL(label)
-#define PUSH_LABEL_USING_BP(label) PUSH_LABEL(label)
-#else
+#else  /* PIC */
 #define PUSH_LABEL_USING_A(label) \
 	"leaq "label"(%%rip),%%rax\n"\
 	"push %%rax\n"
 #define PUSH_LABEL_USING_BP(label) \
 	"leaq "label"(%%rip),%%rbp\n"\
 	"push %%rbp\n"
-#endif
-#endif
+#endif	/* PIC */
 
 #if MYTH_SAVE_FPCSR
 #define PUSH_FPCSR() \
@@ -447,10 +467,10 @@ static inline void myth_make_context_empty(myth_context_t ctx, void *stack,
 	"fldcw (%%rsp)\n"\
 	"ldmxcsr 8(%%rsp)\n"\
 	"add $16,%%rsp\n"
-#else
+#else  /* MYTH_SAVE_FPCSR */
 #define PUSH_FPCSR()
 #define POP_FPCSR()
-#endif
+#endif	/* MYTH_SAVE_FPCSR */
 
 #if MYTH_INLINE_PUSH_CALLEE_SAVED
 
@@ -529,16 +549,23 @@ static inline void myth_make_context_empty(myth_context_t ctx, void *stack,
 #define MY_RET_B "ret\n"
 #endif
 
+#define SUB_RSP_8() "sub $8,%%rsp\n"
+#define ADD_RSP_8() "add $8,%%rsp\n"
+  //#define SUB_RSP_8() 
+  //#define ADD_RSP_8() 
+
 //Context switching functions (inlined)
 #define myth_swap_context_i(switch_from,switch_to) \
 	{DECLARE_DUMMY_VARIABLES\
 	asm volatile(\
 		PUSH_CALLEE_SAVED() \
+		SUB_RSP_8() \
 		PUSH_LABEL_USING_BP("1f") \
 		"mov %%rsp,("C0")\n"\
 		"mov ("C1"),%%rsp\n"\
 		MY_RET_A \
 		"1:\n"\
+		ADD_RSP_8() \
 		POP_CALLEE_SAVED() \
 		:DUMMY_VARIABLE_CONSTRAINTS\
 		:R_A((void*)(switch_from)),R_D((void*)(switch_to))\
@@ -549,12 +576,14 @@ static inline void myth_make_context_empty(myth_context_t ctx, void *stack,
 	{DECLARE_DUMMY_VARIABLES\
 	asm volatile(\
 		PUSH_CALLEE_SAVED() \
+		SUB_RSP_8() \
 		PUSH_LABEL_USING_BP("1f") \
 		"mov %%rsp,("C0")\n"\
 		"mov ("C1"),%%rsp\n"\
 		"call " FUNC_PREFIX #f FUNC_SUFFIX "\n"\
 		MY_RET_A \
 		"1:\n"\
+		ADD_RSP_8() \
 		POP_CALLEE_SAVED() \
 		:DUMMY_VARIABLE_CONSTRAINTS\
 		:R_A((void*)(switch_from)),R_C((void*)(switch_to)),R_DI((void*)arg1),R_SI((void*)arg2),R_D((void*)arg3)\
@@ -584,16 +613,18 @@ static inline void myth_make_context_empty(myth_context_t ctx, void *stack,
 	myth_unreachable();\
 	}
 
-#elif MYTH_CONTEXT == MYTH_CONTEXT_sparc_v9
+#elif MYTH_ARCH == MYTH_ARCH_sparc_v9
 
-#elif MYTH_CONTEXT == MYTH_CONTEXT_sparc_v8
+#elif MYTH_ARCH == MYTH_ARCH_sparc_v8
 
-#elif MYTH_CONTEXT == MYTH_CONTEXT_UCONTEXT
+#elif MYTH_ARCH == MYTH_ARCH_UCONTEXT
 
 #else /* UNSUPPORTED ARCH */
 
 #error "This architecture is not supported"
 
 #endif
+
+
 
 #endif /* MYTH_CONTEXT_FUNC_H_ */

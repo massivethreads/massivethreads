@@ -45,7 +45,10 @@
 
 #pragma once
 #include <omp.h>
+
+#if DAG_RECORDER>=2
 #include <dag_recorder.h>
+#endif
 
 #define do_pragma(x)               _Pragma( #x )
 #define pragma_omp(x)              do_pragma(omp x)

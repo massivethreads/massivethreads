@@ -5,8 +5,6 @@
 #include <assert.h>
 #include <stdarg.h>
 
-#include "myth_config.h"
-
 /* this is how function-wrapping works.
 
    let's say we want to wrap a function (e.g., pthread_create).

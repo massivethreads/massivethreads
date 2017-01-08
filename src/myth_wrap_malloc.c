@@ -2,6 +2,7 @@
  * myth_wrap_malloc.c : malloc and friends
  */
 
+#include "myth_config.h"
 #include "myth_real.h"
 #include "myth_wrap_util_func.h"
 

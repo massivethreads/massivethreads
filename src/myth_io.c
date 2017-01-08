@@ -4,6 +4,7 @@
 
 #include <assert.h>
 
+#include "myth_config.h"
 #include "myth_worker.h"
 #include "myth_io.h"
 
