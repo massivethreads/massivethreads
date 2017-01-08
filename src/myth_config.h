@@ -304,6 +304,6 @@
 /* ------------------
    experimental locality-aware(?) scheduler
    ------------------ */
-#define EXPERIMENTAL_SCHEDULER 1
+#define EXPERIMENTAL_SCHEDULER 0
 
 #endif /* MYTH_CONFIG_H_ */
