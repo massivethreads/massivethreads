@@ -269,7 +269,7 @@
 #elif MYTH_ARCH == MYTH_ARCH_sparc_v8
 #define MYTH_INLINE_CONTEXT 0
 #else
-#define MYTH_INLINE_CONTEXT 0
+#define MYTH_INLINE_CONTEXT 1
 #endif
 
 /* I don't know what it is for.
