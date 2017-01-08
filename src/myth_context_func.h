@@ -549,16 +549,23 @@ static inline void myth_make_context_empty(myth_context_t ctx, void *stack,
 #define MY_RET_B "ret\n"
 #endif
 
+#define SUB_RSP_8() "sub $8,%%rsp\n"
+#define ADD_RSP_8() "add $8,%%rsp\n"
+  //#define SUB_RSP_8() 
+  //#define ADD_RSP_8() 
+
 //Context switching functions (inlined)
 #define myth_swap_context_i(switch_from,switch_to) \
 	{DECLARE_DUMMY_VARIABLES\
 	asm volatile(\
 		PUSH_CALLEE_SAVED() \
+		SUB_RSP_8() \
 		PUSH_LABEL_USING_BP("1f") \
 		"mov %%rsp,("C0")\n"\
 		"mov ("C1"),%%rsp\n"\
 		MY_RET_A \
 		"1:\n"\
+		ADD_RSP_8() \
 		POP_CALLEE_SAVED() \
 		:DUMMY_VARIABLE_CONSTRAINTS\
 		:R_A((void*)(switch_from)),R_D((void*)(switch_to))\
@@ -569,12 +576,14 @@ static inline void myth_make_context_empty(myth_context_t ctx, void *stack,
 	{DECLARE_DUMMY_VARIABLES\
 	asm volatile(\
 		PUSH_CALLEE_SAVED() \
+		SUB_RSP_8() \
 		PUSH_LABEL_USING_BP("1f") \
 		"mov %%rsp,("C0")\n"\
 		"mov ("C1"),%%rsp\n"\
 		"call " FUNC_PREFIX #f FUNC_SUFFIX "\n"\
 		MY_RET_A \
 		"1:\n"\
+		ADD_RSP_8() \
 		POP_CALLEE_SAVED() \
 		:DUMMY_VARIABLE_CONSTRAINTS\
 		:R_A((void*)(switch_from)),R_C((void*)(switch_to)),R_DI((void*)arg1),R_SI((void*)arg2),R_D((void*)arg3)\
