@@ -71,7 +71,7 @@ myth_thread_t myth_default_steal_func(int rank) {
 
 #if EXPERIMENTAL_SCHEDULER
 
-static long * myth_steal_prob_table;
+static unsigned long * myth_steal_prob_table;
 
 static myth_running_env_t
 myth_env_choose_victim(myth_running_env_t e) {
@@ -80,8 +80,8 @@ myth_env_choose_victim(myth_running_env_t e) {
   if (n == 1) {
     return NULL;
   } else {
-    long * P = e->steal_prob;
-    long x = nrand48(e->steal_rg);
+    unsigned long * P = e->steal_prob;
+    unsigned long x = (unsigned long)nrand48(e->steal_rg);
     if (P[n - 1] <= x) {
       return &g_envs[n - 1];
     } else {

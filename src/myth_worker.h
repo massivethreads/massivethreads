@@ -146,7 +146,7 @@ typedef struct myth_running_env {
   //1:Application is terminated. Worker thread should exit scheduling loop and terminate itself
 
 #if EXPERIMENTAL_SCHEDULER
-  long * steal_prob;
+  unsigned long * steal_prob;
   unsigned short steal_rg[3];
 #endif
   

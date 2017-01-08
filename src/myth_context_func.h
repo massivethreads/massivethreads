@@ -549,12 +549,24 @@ static inline void myth_make_context_empty(myth_context_t ctx, void *stack,
 #define MY_RET_B "ret\n"
 #endif
 
+  /* we always align stack pointer to 16 bytes boundary.
+     to this end, sub_rsp_8 and add_rsp_8 below 
+     adjust it by eight bytes.
+     we insert sub_rsp_8() before context switching
+     if the stack pointer is not aligned to 16 bytes
+     (it is always aligned to 8 bytes).
+     whether we need this depends on the number of push
+     instructions before context switch.
+     below, PUSH_CALLEE_SAVED() executes six push instructions
+     and PUSH_LABEL_USING_BP another push instruction.
+     so, we align the stack pointer to 16 bytes by adjusting
+     it by 8 bytes.
+ */
+
 #define SUB_RSP_8() "sub $8,%%rsp\n"
 #define ADD_RSP_8() "add $8,%%rsp\n"
-  //#define SUB_RSP_8() 
-  //#define ADD_RSP_8() 
 
-//Context switching functions (inlined)
+  //Context switching functions (inlined)
 #define myth_swap_context_i(switch_from,switch_to) \
 	{DECLARE_DUMMY_VARIABLES\
 	asm volatile(\

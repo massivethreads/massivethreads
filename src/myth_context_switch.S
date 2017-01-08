@@ -165,6 +165,9 @@ myth_set_context_withcall_s:
 #define PUSH_1F_USING_RAX pushq $1f
 #endif
 
+#define SUB_RSP_8 subq $8,%rsp
+#define ADD_RSP_8 addq $8,%rsp
+
 /*
 	uint64_t rsp;
 */
@@ -191,12 +194,14 @@ myth_swap_context_s:
 	push %r14
 	push %r15
 	PUSH_FPCSR
+	SUB_RSP_8
 	PUSH_1F_USING_RAX
 	//Switch stack and return
 	mov %rsp,(%rdi)
 	mov (%rsi),%rsp
 	MY_RET_A
 1:
+	ADD_RSP_8
 	POP_FPCSR
 	pop %r15
 	pop %r14
@@ -219,6 +224,7 @@ myth_swap_context_withcall_s:
 	push %r14
 	push %r15
 	PUSH_FPCSR
+	SUB_RSP_8
 	PUSH_1F_USING_RAX
 	//Switch stack and return
 	mov %rsp,(%rdi)
@@ -230,6 +236,7 @@ myth_swap_context_withcall_s:
 	call *%rax
 	MY_RET_A
 1:
+	ADD_RSP_8
 	POP_FPCSR
 	pop %r15
 	pop %r14
