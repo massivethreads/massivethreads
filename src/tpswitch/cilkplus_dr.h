@@ -1,5 +1,5 @@
 /* 
- * cilk or cilkplus + dag recorder
+ * cilkplus + dag recorder
  */
 
 #pragma once
@@ -87,7 +87,7 @@ cilk int f(int x) {
     if (__n_outstanding_children__ == 0) dr_begin_section();    \
     __n_outstanding_children__++;                               \
     dr_dag_node * __t__ = dr_enter_create_cilk_proc_task();	\
-    spawn_stmt;							\
+    spawn_stmt;                                                 \
     dr_return_from_create_task(__t__);				\
   } while (0)
 

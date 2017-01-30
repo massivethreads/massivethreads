@@ -107,6 +107,9 @@
 #define cilk_spawn
 #define _Cilk_spawn
 #define spawn
+#define mit_spawn
+#define cilk
+#define cilk_static static
 
 
 /* TBB, MassiveThredhads, Qthreads, Nanos++ */
@@ -164,6 +167,10 @@
 #define cilk_spawn
 #define _Cilk_spawn
 #define spawn
+#define mit_spawn
+#define cilk
+#define cilk_static static
+#define pragma_omp_parallel_single(clause, S) do { S } while(0)
 
 
 /* No C++ or serial */
@@ -210,59 +217,105 @@
     return;						   \
   } while(0)
 
-
 #define cilk_spawn
 #define _Cilk_spawn
 #define spawn
+#define mit_spawn
+#define cilk
+#define cilk_static static
+#define pragma_omp_parallel_single(clause, S) do { S } while(0)
+
 
 /* Cilk */
 #elif TO_CILK || TO_CILKPLUS
 
 #if TO_CILK
-#include <tpswitch/cilk_dr.cilkh>
-#elif TO_CILKPLUS
-#include <tpswitch/cilkplus_dr.h>
-#endif
 
-//#define mk_task_group int __mk_task_group__ __attribute__((unused)) = 0
-#if TO_CILK
+#include <tpswitch/cilk_dr.cilkh>
 #define mk_task_group
-#elif TO_CILKPLUS
-#define mk_task_group clkp_mk_task_group
-#endif
+
 #define create_task0(spawn_stmt)       spawn_(spawn_stmt)
 #define create_task0_(spawn_stmt, file, line)       spawn__(spawn_stmt, file, line)
 #define create_task1(s0,spawn_stmt)    spawn_(spawn_stmt)
 #define create_task2(s0,s1,spawn_stmt) spawn_(spawn_stmt)
 #define create_taskA(spawn_stmt)       spawn_(spawn_stmt)
-#if TO_CILK
+
 #define create_taskc(callable)            spawn_(spawn callable())
 #define create_taskc_(callable)            spawn_(spawn callable())
-#else
-#define create_taskc(callable)            spawn_(_Cilk_spawn callable())
-#endif
 
-#if TO_CILK
 #define create_task_and_wait(spawn_stmt)                \
   do { create_taskA(spawn_stmt); wait_tasks; } while(0)
 #define create_taskc_and_wait(callable)			\
   do { create_taskc(callable); wait_tasks; } while(0)
+
 #define call_task(spawn_stmt)          create_task_and_wait(spawn_stmt)
 #define call_taskc(callable)              create_taskc_and_wait(callable)   
+
+#define mit_spawn spawn
+#define cilk_static cilk
+
 #elif TO_CILKPLUS
-#define call_task(spawn_stmt)                           \
-  do { create_taskA(spawn_stmt); wait_tasks; } while(0)
-#define call_taskc(callable)                            \
-  do { callable(); wait_tasks; } while(0)
+
+#include <tpswitch/cilkplus_dr.h>
+#define mk_task_group clkp_mk_task_group
+
+#define create_task0(spawn_stmt)       spawn_(spawn_stmt)
+#define create_task0_(spawn_stmt, file, line)       spawn__(spawn_stmt, file, line)
+#define create_task1(s0,spawn_stmt)    spawn_(spawn_stmt)
+#define create_task2(s0,s1,spawn_stmt) spawn_(spawn_stmt)
+#define create_taskA(spawn_stmt)       spawn_(spawn_stmt)
+
+#define create_taskc(callable)            spawn_(_Cilk_spawn callable())
+
+/* "mit_spawn" keyword is used with create_task_and_wait() and call_task(),
+   by default "mit_spawn" translates to null when targeting cilk plus and to "spawn"
+   when targeting mit cilk.
+   In cilk plus target, "mit_spawn" would translate to "spawn" when the flag
+   -Dcreate_task_and_wait_spawns=1 is set to 1, needed for old code which did not
+   use "mit_spawn" yet, e.g.,
+
+   #define create_task_and_wait_spawns 1
+   #include <tpswitch/tpswitch.h>
+*/
+#if !defined(create_task_and_wait_spawns)
+#define create_task_and_wait_spawns 0
+#endif
+
+#if create_task_and_wait_spawns
+#define mit_spawn spawn
+#else
+#define mit_spawn
+#endif
+
+#define cilk
+#define cilk_static static
+
+#if create_task_and_wait_spawns
 #define create_task_and_wait(spawn_stmt)                \
   do { create_taskA(spawn_stmt); wait_tasks; } while(0)
 #define create_taskc_and_wait(callable)			\
+  do { create_taskc(callable); wait_tasks; } while(0)
+#define call_task(spawn_stmt)                           \
+  do { mk_task_group; create_taskA(spawn_stmt); wait_tasks; } while(0)
+#define call_taskc(callable)                            \
+  do { mk_task_group; create_taskc(callable); wait_tasks; } while(0)
+#else
+#define create_task_and_wait(stmt)              \
+  do { stmt; wait_tasks; } while(0)
+#define create_taskc_and_wait(callable)         \
   do { callable(); wait_tasks; } while(0)
+#define call_task(stmt)                         \
+  do { stmt; } while(0)
+#define call_taskc(callable)                    \
+  do { callable(); } while(0)
 #endif
 
-#define wait_tasks sync_
-#define wait_tasks_(file, line) sync__(file, line)
+#endif /* TO_CILKPLUS */
 
+#define wait_tasks sync_
+#define wait_tasks_(file,line) sync__(file,line)
+
+#define pragma_omp_parallel_single(clause, S) do { S } while(0)
 
 #else
 #error "neither TO_SERIAL, TO_OMP, TO_TBB, TO_CILK, TO_CILKPLUS, TO_MTHREAD, TO_MTHREAD_NATIVE, TO_QTHREAD, nor TO_NANOX defined"
@@ -286,234 +339,6 @@ do { if (X) { create_task_and_wait(E); } else { call_task(E); } } while(0)
 #define create_taskc_and_wait_if(X,E) \
 do { if (X) { create_taskc_and_wait(E); } else { call_taskc(E); } } while(0)
 
-
-/*
-   tpswitch parallel for (pfor)
-   -->
-   omp parallel for (OpenMP)
-   cilk_for (Cilk Plus)
-   mtbb::parallel_for (TBB-like)
-
-   tpswitch::parallel_for(T, var, FIRST, LAST, STEP, S)
-
-   pragma omp parallel for
-   for (var = FIRST; var < LAST; i += INC) S
-
-   cilk_for (var = FIRST; var < LAST; i += INC) S
-
-   mtbb::parallel_for(FIRST, LAST, STEP, [&] (int VAR) { S })
-
-   Note: they cannot deal with a post-increment operation correctly.
-
-   Example:
-   
-//original for version:
-
-#include <stdio.h>
-
-int main() {
-  int first, last, step;
-  first = 0;
-  last = 10;
-  step = 1;
-  for(int i = first; i < last; i += step) {
-    char s[100];
-    sprintf(s, "I processed elements: ");
-    sprintf(s, "%s %d ", s, i);
-    printf("%s\n", s);
-  }
-}
-
-//pfor version.
-
-#include <stdio.h>
-
-//original for-loop parallelization if available (e.g., #omp parallel for)
-#define PFOR_TO_ORIGINAL
-//iteration space is divided by two until it becomes less than a certain size.
-//#define PFOR_TO_BISECTION
-//all tasks are created by the parent
-//#define PFOR_TO_ALLATONCE
-
-#include "tpswitch.h"
-
-int main() {
-  int first, last, step, grainsize;
-  first = 0;
-  last = 10;
-  step = 1;
-  grainsize = 2;
-  pfor(int, first, last, step, grainsize,
-       { char s[100];
-         sprintf(s, "I processed elements: ");
-         int i;
-         // FIRST_ and LAST_ are defined inside.
-         for (i = FIRST_; i < LAST_; i += step)
-           sprintf(s, "%s %d ", s, i);
-         printf("%s\n", s);
-       });
-}
-   
- */
-
-#ifndef PFOR2_EXPERIMENTAL
-
-#if PFOR_TO_ORIGINAL || PFOR_TO_BISECTION || PFOR_TO_ALLATONCE || PFOR_TO_ALLATONCE_2
-
-#if __cplusplus >= 201103L 
-
-#include <functional>
-
-#if TO_SERIAL
-
-#define pfor_original(T, first, last, step, grainsize, S)   \
-  do {                                                      \
-    T eval_first = (first);                                 \
-    T eval_last  = (last);                                  \
-    T eval_step  = (step);                                  \
-    for (T x = eval_first; x < eval_last; x += eval_step) { \
-      T FIRST_ = x;                                         \
-      T LAST_  = x + 1;                                     \
-      S                                                     \
-    };                                                      \
-  } while(0)
-
-#elif TO_OMP
-
-#define pfor_original(T, first, last, step, grainsize, S)   \
-  do {                                                      \
-    T eval_first = (first);                                 \
-    T eval_last  = (last);                                  \
-    T eval_step  = (step);                                  \
-    pragma_omp(parallel for)                                \
-    for (T x = eval_first; x < eval_last; x += eval_step) { \
-      T FIRST_ = x;                                         \
-      T LAST_  = x + 1;                                     \
-      S                                                     \
-    };                                                      \
-  } while(0)
-
-#elif TO_CILKPLUS
-
-#define pfor_original(T, first, last, step, grainsize, S)        \
-  do {                                                           \
-    T eval_first = (first);                                      \
-    T eval_last  = (last);                                       \
-    T eval_step  = (step);                                       \
-    cilk_for (T x = eval_first; x < eval_last; x += eval_step) { \
-      T FIRST_ = x;                                              \
-      T LAST_  = x + 1;                                          \
-      S                                                          \
-    };                                                           \
-  } while(0)
-
-#elif TO_TBB || TO_MTHREAD || TO_MTHREAD_NATIVE || TO_QTHREAD || TO_NANOX
-
-#include <mtbb/parallel_for.h>
-#define pfor_original(T, first, last, step, grainsize, S) \
-  mtbb::parallel_for(first, last, step, grainsize, [=] (T FIRST_, T LAST_) { S } )
-
-#else
-
-#error "please define TO_SERIAL, TO_OMP, TO_TBB, TO_MTHREAD, TO_MTHREAD_NATIVE, TO_QTHREAD, TO_NANOX, or TO_CILKPLUS"
-
-#endif // TO_XXX
-
-template<typename T>
-static void pfor_bisection_aux(T first, T a, T b, T step, T grainsize, std::function<void (T, T)> f, const char * file, int line) {
-  cilk_begin;
-  if (b - a <= grainsize) {
-    f(first + a * step, first + b * step);
-  } else {
-    mk_task_group;
-    const T c = a + (b - a) / 2;
-    create_task0_(spawn pfor_bisection_aux(first, a, c, step, grainsize, f, file, line), file, line);
-    create_task_and_wait(spawn pfor_bisection_aux(first, c, b, step, grainsize, f, file, line));
-  }
-  cilk_void_return;
-}
-
-#define pfor_bisection(T, first, last, step, grainsize, S) \
-  do {                                                     \
-    T eval_first = (first);                                \
-    T eval_last  = (last);                                 \
-    T eval_step  = (step);                                 \
-    mk_task_group;                                         \
-    call_task(spawn pfor_bisection_aux<T>(eval_first, 0, (eval_last - eval_first + eval_step - 1) / eval_step, eval_step, grainsize, [=] (T FIRST_, T LAST_) { S }, __FILE__, __LINE__)); \
-  } while(0)
-
-template<typename T>
-static void pfor_allatonce_aux(T first, T a, T b, T step, T grainsize, std::function<void (T, T)> f, const char * file, int line) {
-  mk_task_group;
-  T ia = a;
-  T ib = a;
-  while (ib < b) {
-    ib += grainsize;
-    if (ib > b) ib = b;
-    create_task0_(spawn f(first + ia * step, first + ib * step), file, line);
-    ia = ib;
-  }
-  wait_tasks;
-}
-
-#define pfor_allatonce(T, first, last, step, grainsize, S) \
-  do {                                                     \
-    T eval_first = (first);                                \
-    T eval_last  = (last);                                 \
-    T eval_step  = (step);                                 \
-    pfor_allatonce_aux<T>(eval_first, 0, (eval_last - eval_first + eval_step - 1) / eval_step, eval_step, grainsize, [=] (T FIRST_, T LAST_) { S }, __FILE__, __LINE__); \
-  } while(0)
-
-#define pfor_allatonce_2(T, first, last, step, grainsize, S)            \
-  do {                                                                  \
-    mk_task_group;                                                      \
-    T _first = first;                                                   \
-    T _last = last;                                                     \
-    T last = first;                                                     \
-    while (last < _last) {                                              \
-      last += step * grainsize;                                         \
-      if (last > _last) last = _last;                                   \
-      T FIRST_ = first, LAST_ = last;                                   \
-      create_task0(spawn S);                                            \
-      first = last;                                                     \
-    }                                                                   \
-    wait_tasks;                                                         \
-  } while (0)
-
-#if PFOR_TO_ORIGINAL
-
-#define pfor(T, first, last, step, grainsize, S) pfor_original(T, first, last, step, grainsize, S)
-
-#elif PFOR_TO_BISECTION
-
-#define pfor(T, first, last, step, grainsize, S) pfor_bisection(T, first, last, step, grainsize, S)
-
-#elif PFOR_TO_ALLATONCE
-
-#define pfor(T, first, last, step, grainsize, S) pfor_allatonce(T, first, last, step, grainsize, S)
-
-#elif PFOR_TO_ALLATONCE_2
-
-#warning "warning: experimental implementation."
-#define pfor(T, first, last, step, grainsize, S) pfor_allatonce_2(T, first, last, step, grainsize, S)
-
-#else
-
-#warning "warning: there was no define for pfor, default to pfor_bisection()"
-#define pfor(T, first, last, step, grainsize, S) pfor_bisection(T, first, last, step, grainsize, S)
-
-#endif // PFOR_TO_XXX
-
-#else
-
-#error "error: pfor (parallel for) needs C++11; add a flag -std=c++11"
-
-#endif //__cplusplus
-
-#endif // defined any PFOR_TO_XXX 
-#endif//PFOR2_EXPERIMENTAL
-
-#ifdef PFOR2_EXPERIMENTAL
 
 /*
   tpswitch parallel for (pfor)
@@ -628,6 +453,10 @@ static void pfor_allatonce_aux(T first, T a, T b, T step, T grainsize, std::func
   }
 */
 
+#if !defined(PFOR_TO_ALLATONCE) && !defined(PFOR_TO_BISECTION) && !defined(PFOR_TO_ORIGINAL)
+#define PFOR_TO_BISECTION 1
+#endif
+
 #if __cplusplus >= 201103L
   #if PFOR_TO_ORIGINAL
     #define PFOR_IMPL pfor_original
@@ -668,7 +497,7 @@ static void pfor_allatonce_aux(T first, T a, T b, T step, T grainsize, std::func
     #endif
   #elif PFOR_TO_BISECTION
     #define PFOR_IMPL pfor_bisection
-    template<typename IntTy, typename StepIntTy, typename LeafFuncTy> void pfor_bisection_aux(IntTy first, IntTy a, IntTy b, StepIntTy step, IntTy grainsize, LeafFuncTy leaffunc, const char * file, int line) {
+    template<typename IntTy, typename StepIntTy, typename LeafFuncTy> cilk_static void pfor_bisection_aux(IntTy first, IntTy a, IntTy b, StepIntTy step, IntTy grainsize, LeafFuncTy leaffunc, const char * file, int line) {
       cilk_begin;
       if (b - a <= grainsize) {
         leaffunc(first + a * step, first + b * step);
@@ -676,18 +505,18 @@ static void pfor_allatonce_aux(T first, T a, T b, T step, T grainsize, std::func
         mk_task_group;
         const IntTy c = a + (b - a) / 2;
         create_task0_(spawn pfor_bisection_aux(first, a, c, step, grainsize, leaffunc, file, line), file, line);
-        create_task_and_wait(spawn pfor_bisection_aux(first, c, b, step, grainsize, leaffunc, file, line));
+        create_task_and_wait(mit_spawn pfor_bisection_aux(first, c, b, step, grainsize, leaffunc, file, line));
       }
       cilk_void_return;
     }
-    template<typename IntTy, typename StepIntTy, typename LeafFuncTy> static void pfor_bisection(IntTy first, IntTy last, StepIntTy step, IntTy grainsize, LeafFuncTy leaffunc, const char * file, int line) {
+    template<typename IntTy, typename StepIntTy, typename LeafFuncTy> cilk_static void pfor_bisection(IntTy first, IntTy last, StepIntTy step, IntTy grainsize, LeafFuncTy leaffunc, const char * file, int line) {
       IntTy a = 0;
       IntTy b = (last - first + step - 1) / step;
-      pfor_bisection_aux(first, a, b, step, grainsize, leaffunc, file, line);
+      call_task(mit_spawn pfor_bisection_aux(first, a, b, step, grainsize, leaffunc, file, line));
     }
   #elif PFOR_TO_ALLATONCE
     #define PFOR_IMPL pfor_allatonce
-    template<typename IntTy, typename StepIntTy, typename LeafFuncTy> static void pfor_allatonce_aux(IntTy first, IntTy a, IntTy b, StepIntTy step, IntTy grainsize, LeafFuncTy leaffunc, const char * file, int line) {
+    template<typename IntTy, typename StepIntTy, typename LeafFuncTy> cilk_static void pfor_allatonce_aux(IntTy first, IntTy a, IntTy b, StepIntTy step, IntTy grainsize, LeafFuncTy leaffunc, const char * file, int line) {
       mk_task_group;
       IntTy ia = a;
       IntTy ib = a;
@@ -700,10 +529,10 @@ static void pfor_allatonce_aux(T first, T a, T b, T step, T grainsize, std::func
       }
       wait_tasks;
     }
-    template<typename IntTy, typename StepIntTy, typename LeafFuncTy> static void pfor_allatonce(IntTy first, IntTy last, StepIntTy step, IntTy grainsize, LeafFuncTy leaffunc, const char * file, int line) {
+    template<typename IntTy, typename StepIntTy, typename LeafFuncTy> cilk_static void pfor_allatonce(IntTy first, IntTy last, StepIntTy step, IntTy grainsize, LeafFuncTy leaffunc, const char * file, int line) {
       IntTy a = 0;
       IntTy b = (last - first + step - 1) / step;
-      pfor_allatonce_aux(first, a, b, step, grainsize, leaffunc, file, line);
+      call_task(mit_spawn pfor_allatonce_aux(first, a, b, step, grainsize, leaffunc, file, line));
     }
   #endif
   #ifdef PFOR_IMPL
@@ -821,7 +650,6 @@ static void pfor_allatonce_aux(T first, T a, T b, T step, T grainsize, std::func
   #endif
 #endif
 
-#endif//PFOR2_EXPERIMENTAL
 
 #if TO_TBB
 //It is necessary in tp_init()
