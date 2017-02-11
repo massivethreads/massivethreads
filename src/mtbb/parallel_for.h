@@ -145,8 +145,8 @@ namespace mtbb {
       Index a;
       Index b;
       Index step;
-      const Func & f;
-    parallel_for_aux_callable(Index first_, Index a_, Index b_, Index step_, Index grainsize_, const Func & f_) :
+      const Func & f; // Index grainsize_, 
+    parallel_for_aux_callable(Index first_, Index a_, Index b_, Index step_, const Func & f_) :
       first(first_), a(a_), b(b_), step(step_), f(f_) {}
       void operator() () const {
         parallel_for_aux(first, a, b, step, f);
@@ -182,13 +182,13 @@ namespace mtbb {
   template<typename Index, typename Func>
     Func parallel_for(Index first, Index last, Index step,
                       const Func& f) {
-    return parallel_for_aux(first, 0, (last - first + step - 1) / step, step, f);
+    return parallel_for_aux(first, Index(0), (last - first + step - 1) / step, step, f);
   }
 
   template<typename Index, typename Func>
     Func parallel_for(Index first, Index last,
                       const Func& f) {
-    return parallel_for_aux(first, 0, (last - first), 1, f);
+    return parallel_for_aux(first, Index(0), (last - first), Index(1), f);
   }
 
   /* index-based parallel: END */
