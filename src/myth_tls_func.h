@@ -20,8 +20,51 @@
 #include "myth_misc_func.h"
 #include "myth_worker_func.h"
 
-static inline myth_tls_tree_node_t * myth_tls_tree_node_alloc_node() {
-  myth_tls_tree_node_t * n = myth_malloc(sizeof(myth_tls_tree_node_t));
+/* allocate a node (internal or leaf) of a tls tree */
+static inline myth_tls_tree_node_t *
+myth_tls_tree_node_alloc(myth_tls_tree_t * t, size_t sz) {
+#if MYTH_TLS_TREE_PRE_ALLOC
+  /* try to bump-allocate from a pre-allocated buffer */
+  char * start = t->pre_alloc_buf;
+  char * end = start + myth_tls_tree_pre_alloc_sz;
+  char * p = t->pre_alloc_p;
+  myth_assert(p >= start);
+  myth_assert(p < end);
+  if (p + sz <= end) {
+    t->pre_alloc_p = p + sz;
+    return (myth_tls_tree_node_t *)p;
+  } else {
+    /* resort to general alloc */
+    myth_tls_tree_node_t * p = myth_malloc(sz);
+    myth_assert(p);
+    return p;
+  }
+#else
+  myth_tls_tree_node_t * p = myth_malloc(sz);
+  myth_assert(p);
+  return p;
+#endif
+}
+
+/* free a node (internal or leaf) of a tls tree */
+static inline void myth_tls_tree_node_free(myth_tls_tree_t * t, myth_tls_tree_node_t * n) {
+#if MYTH_TLS_TREE_PRE_ALLOC
+  /* do nothing if it is from a pre-allocated buffer */
+  char * nc = (char *)n;
+  char * start = t->pre_alloc_buf;
+  char * end = start + myth_tls_tree_pre_alloc_sz;
+  if (nc < start || nc >= end) {
+    myth_free(n);
+  }
+#else
+  myth_free(n);
+#endif
+}
+
+/* allocate an internal node */
+static inline myth_tls_tree_node_t *
+myth_tls_tree_node_alloc_node(myth_tls_tree_t * t) {
+  myth_tls_tree_node_t * n = myth_tls_tree_node_alloc(t, myth_tls_tree_node_sz_node);
   int i;
 #if MYTH_TLS_DBG
   n->type = myth_tls_tree_node_type_internal;
@@ -32,9 +75,11 @@ static inline myth_tls_tree_node_t * myth_tls_tree_node_alloc_node() {
   return n;
 }
 
-static inline myth_tls_tree_node_t * myth_tls_tree_node_alloc_leaf() {
-  size_t sz = (size_t)(&(((myth_tls_tree_node_t *)0)->entries[myth_tls_tree_node_n_entries_in_leaf]));
-  myth_tls_tree_node_t * n = myth_malloc(sz);
+/* allocate a leaf node */
+static inline myth_tls_tree_node_t *
+myth_tls_tree_node_alloc_leaf(myth_tls_tree_t * t) {
+  size_t sz = myth_tls_tree_node_sz_leaf;
+  myth_tls_tree_node_t * n = myth_tls_tree_node_alloc(t, sz);
   int i;
 #if MYTH_TLS_DBG
   n->type = myth_tls_tree_node_type_leaf;
@@ -47,12 +92,14 @@ static inline myth_tls_tree_node_t * myth_tls_tree_node_alloc_leaf() {
 
 static inline void myth_tls_tree_init(myth_tls_tree_t * t) {
   t->root = 0;
+#if MYTH_TLS_TREE_PRE_ALLOC
+  t->pre_alloc_p = t->pre_alloc_buf;
+#endif
 }
 
-/* ---------------------------------------
-   
- */
+/* --------------------------------------- */
 
+/* call destructors on all nodes under n */
 static inline int
 myth_tls_call_destructors_rec(myth_tls_tree_node_t * n,
 			      int depth, myth_key_t base, myth_key_t stride,
@@ -96,43 +143,43 @@ myth_tls_call_destructors_rec(myth_tls_tree_node_t * n,
   }
 }
 
+/* call all destructors */
 static inline int
-myth_tls_call_destructors(myth_tls_tree_node_t * n,
+myth_tls_call_destructors(myth_tls_tree_t * t,
 			  myth_tls_key_allocator_t * ka) {
-  return myth_tls_call_destructors_rec(n, 0, 0, myth_tls_n_keys, ka);
+  return myth_tls_call_destructors_rec(t->root, 0, 0, myth_tls_n_keys, ka);
 }
 
+/* destroy all nodes under n */
 static inline int
-myth_tls_tree_destroy_rec(myth_tls_tree_node_t * n,
+myth_tls_tree_destroy_rec(myth_tls_tree_t * t, myth_tls_tree_node_t * n,
 			  int depth, myth_key_t base, myth_key_t stride) {
   assert(n);
-  if (depth == myth_tls_tree_depth) {
-    myth_free(n);
-  } else {
+  if (depth < myth_tls_tree_depth) {
     int i;
     int c_stride = stride >> myth_tls_tree_node_log_n_children;
     int c_base = base;
     for (i = 0; i < myth_tls_tree_node_n_children; i++) {
       myth_tls_tree_node_t * c = n->children[i];
       if (!c) break;
-      myth_tls_tree_destroy_rec(c, depth + 1, c_base, c_stride);
+      myth_tls_tree_destroy_rec(t, c, depth + 1, c_base, c_stride);
       c_base += stride;
     }
   }
+  myth_tls_tree_node_free(t, n);
   return 0;
 }
 
 static inline int
-myth_tls_tree_destroy(myth_tls_tree_node_t * n) {
-  return myth_tls_tree_destroy_rec(n, 0, 0, myth_tls_n_keys);
+myth_tls_tree_destroy(myth_tls_tree_t * t) {
+  return myth_tls_tree_destroy_rec(t, t->root, 0, 0, myth_tls_n_keys);
 }
 
 static inline void
 myth_tls_tree_fini(myth_tls_tree_t * t, myth_tls_key_allocator_t * ka) {
-  myth_tls_tree_node_t * r = t->root;
-  if (r) {
-    myth_tls_call_destructors(r, ka);
-    myth_tls_tree_destroy(r);
+  if (t->root) {
+    myth_tls_call_destructors(t, ka);
+    myth_tls_tree_destroy(t);
   }
 }
 
@@ -164,9 +211,9 @@ static inline int myth_tls_tree_set(myth_tls_tree_t * t, int idx,
   myth_tls_tree_node_t * n = t->root;
   if (!n) {
     if (myth_tls_tree_depth == 0) {
-      t->root = n = myth_tls_tree_node_alloc_leaf();
+      t->root = n = myth_tls_tree_node_alloc_leaf(t);
     } else {
-      t->root = n = myth_tls_tree_node_alloc_node();
+      t->root = n = myth_tls_tree_node_alloc_node(t);
     }
   }
   int i;
@@ -179,9 +226,9 @@ static inline int myth_tls_tree_set(myth_tls_tree_t * t, int idx,
     myth_tls_tree_node_t * c = n->children[cidx];
     if (!c) {
       if (i < myth_tls_tree_depth - 1) {
-	c = myth_tls_tree_node_alloc_node();
+	c = myth_tls_tree_node_alloc_node(t);
       } else {
-	c = myth_tls_tree_node_alloc_leaf();
+	c = myth_tls_tree_node_alloc_leaf(t);
       }
       n->children[cidx] = c;
     }

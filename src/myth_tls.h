@@ -30,9 +30,11 @@ enum {
   myth_tls_tree_node_n_entries_in_leaf = 1 << myth_tls_tree_node_log_n_entries_in_leaf,
   myth_tls_tree_depth = 3,
   myth_tls_n_keys = 1 << (myth_tls_tree_node_log_n_entries_in_leaf
-			  + myth_tls_tree_node_log_n_children
-			  * myth_tls_tree_depth),
+			  + myth_tls_tree_node_log_n_children * myth_tls_tree_depth),
 };
+
+/* size of memory pool pre-allocated (embedded in thread descriptor) for tls nodes, in bytes */
+#define MYTH_TLS_TREE_PRE_ALLOC 1
 
 /* 
  * data structure to maintain unused keys and to allocate a free key  
@@ -104,8 +106,23 @@ typedef struct myth_tls_tree_node {
   };
 } myth_tls_tree_node_t;
 
+enum {
+  myth_tls_tree_node_sz_node = sizeof(myth_tls_tree_node_t),
+  myth_tls_tree_node_sz_leaf = (size_t)(&((myth_tls_tree_node_t *)0)->entries[myth_tls_tree_node_n_entries_in_leaf])
+};
+
+enum {
+  /* a reasonable size of pre-allocated buffer is a spine from the root to a leaf */
+  myth_tls_tree_pre_alloc_sz
+  = myth_tls_tree_node_sz_node * myth_tls_tree_depth + 1 * myth_tls_tree_node_sz_leaf
+};
+
 typedef struct {
   myth_tls_tree_node_t * root;
+#if MYTH_TLS_TREE_PRE_ALLOC
+  char   pre_alloc_buf[myth_tls_tree_pre_alloc_sz];
+  char * pre_alloc_p;
+#endif
 } myth_tls_tree_t;
 
 static inline myth_thread_t myth_self_body(void);

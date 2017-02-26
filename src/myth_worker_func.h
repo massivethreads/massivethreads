@@ -328,6 +328,10 @@ static inline void myth_startpoint_init_ex_body(int rank)
 #if MYTH_ENABLE_THREAD_ANNOTATION && MYTH_COLLECT_LOG
   sprintf(this_th->annotation_str,"%p(main)",this_th);
 #endif
+  /* todo: make this a part of allocation and unify 
+     with myth_create_ex_body */
+  myth_tls_tree_init(this_th->tls);
+  
   //Set worker thread descrptor
   this_th->env = env;
   //Initialize context for scheduler

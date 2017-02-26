@@ -404,6 +404,8 @@ static inline int myth_create_ex_body(myth_thread_t * id,
   new_thread->waiter = (struct myth_thread *)-1;
   new_thread->when_I_finished = "";
 #endif
+  /* todo: make this a part of allocation and unify 
+     with myth_startpoint_init_ex_body */
   myth_tls_tree_init(new_thread->tls);
 
 #if MYTH_SPLIT_STACK_DESC /* default */
