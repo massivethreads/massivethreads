@@ -108,8 +108,9 @@ check_PROGRAMS = myth_malloc$(EXEEXT) myth_free$(EXEEXT) \
 	myth_dag_1d$(EXEEXT) myth_dag_2d$(EXEEXT) \
 	myth_dag_random$(EXEEXT) myth_key_create$(EXEEXT) \
 	myth_key_getspecific$(EXEEXT) myth_key_destructor$(EXEEXT) \
-	measure_create$(EXEEXT) measure_latency$(EXEEXT) \
-	measure_wakeup_latency$(EXEEXT) measure_malloc$(EXEEXT) \
+	myth_globalattr_set_n_workers$(EXEEXT) measure_create$(EXEEXT) \
+	measure_latency$(EXEEXT) measure_wakeup_latency$(EXEEXT) \
+	measure_malloc$(EXEEXT) measure_thread_specific$(EXEEXT) \
 	new_test$(EXEEXT) myth_create_0_cc$(EXEEXT) \
 	myth_create_1_cc$(EXEEXT) myth_create_2_cc$(EXEEXT) \
 	myth_create_join_many_cc$(EXEEXT) myth_yield_0_cc$(EXEEXT) \
@@ -122,10 +123,13 @@ check_PROGRAMS = myth_malloc$(EXEEXT) myth_free$(EXEEXT) \
 	myth_dag_1d_cc$(EXEEXT) myth_dag_2d_cc$(EXEEXT) \
 	myth_dag_random_cc$(EXEEXT) myth_key_create_cc$(EXEEXT) \
 	myth_key_getspecific_cc$(EXEEXT) \
-	myth_key_destructor_cc$(EXEEXT) measure_create_cc$(EXEEXT) \
-	measure_latency_cc$(EXEEXT) measure_wakeup_latency_cc$(EXEEXT) \
-	$(am__EXEEXT_2) $(am__EXEEXT_3) $(am__EXEEXT_4) \
-	$(am__EXEEXT_5) $(am__EXEEXT_6) $(am__EXEEXT_7)
+	myth_key_destructor_cc$(EXEEXT) \
+	myth_globalattr_set_n_workers_cc$(EXEEXT) \
+	measure_create_cc$(EXEEXT) measure_latency_cc$(EXEEXT) \
+	measure_wakeup_latency_cc$(EXEEXT) measure_malloc_cc$(EXEEXT) \
+	measure_thread_specific_cc$(EXEEXT) $(am__EXEEXT_2) \
+	$(am__EXEEXT_3) $(am__EXEEXT_4) $(am__EXEEXT_5) \
+	$(am__EXEEXT_6) $(am__EXEEXT_7)
 @BUILD_TEST_MYTH_ALIGNED_ALLOC_TRUE@am__append_1 = myth_aligned_alloc
 @BUILD_MYTH_LD_TRUE@am__append_2 = myth_malloc_ld myth_free_ld \
 @BUILD_MYTH_LD_TRUE@	myth_calloc_ld myth_posix_memalign_ld \
@@ -144,10 +148,12 @@ check_PROGRAMS = myth_malloc$(EXEEXT) myth_free$(EXEEXT) \
 @BUILD_MYTH_LD_TRUE@	myth_dag_1d_ld myth_dag_2d_ld \
 @BUILD_MYTH_LD_TRUE@	myth_dag_random_ld myth_key_create_ld \
 @BUILD_MYTH_LD_TRUE@	myth_key_getspecific_ld \
-@BUILD_MYTH_LD_TRUE@	myth_key_destructor_ld measure_create_ld \
-@BUILD_MYTH_LD_TRUE@	measure_latency_ld \
+@BUILD_MYTH_LD_TRUE@	myth_key_destructor_ld \
+@BUILD_MYTH_LD_TRUE@	myth_globalattr_set_n_workers_ld \
+@BUILD_MYTH_LD_TRUE@	measure_create_ld measure_latency_ld \
 @BUILD_MYTH_LD_TRUE@	measure_wakeup_latency_ld \
-@BUILD_MYTH_LD_TRUE@	measure_malloc_ld pth_barrier_ld \
+@BUILD_MYTH_LD_TRUE@	measure_malloc_ld \
+@BUILD_MYTH_LD_TRUE@	measure_thread_specific_ld pth_barrier_ld \
 @BUILD_MYTH_LD_TRUE@	pth_cond_broadcast_0_ld \
 @BUILD_MYTH_LD_TRUE@	pth_cond_broadcast_1_ld pth_cond_signal_ld \
 @BUILD_MYTH_LD_TRUE@	pth_create_0_ld pth_create_1_ld \
@@ -169,8 +175,11 @@ check_PROGRAMS = myth_malloc$(EXEEXT) myth_free$(EXEEXT) \
 @BUILD_MYTH_LD_TRUE@	myth_key_create_cc_ld \
 @BUILD_MYTH_LD_TRUE@	myth_key_getspecific_cc_ld \
 @BUILD_MYTH_LD_TRUE@	myth_key_destructor_cc_ld \
+@BUILD_MYTH_LD_TRUE@	myth_globalattr_set_n_workers_cc_ld \
 @BUILD_MYTH_LD_TRUE@	measure_create_cc_ld measure_latency_cc_ld \
 @BUILD_MYTH_LD_TRUE@	measure_wakeup_latency_cc_ld \
+@BUILD_MYTH_LD_TRUE@	measure_malloc_cc_ld \
+@BUILD_MYTH_LD_TRUE@	measure_thread_specific_cc_ld \
 @BUILD_MYTH_LD_TRUE@	pth_barrier_cc_ld \
 @BUILD_MYTH_LD_TRUE@	pth_cond_broadcast_0_cc_ld \
 @BUILD_MYTH_LD_TRUE@	pth_cond_broadcast_1_cc_ld \
@@ -196,10 +205,12 @@ check_PROGRAMS = myth_malloc$(EXEEXT) myth_free$(EXEEXT) \
 @BUILD_MYTH_DL_TRUE@	myth_dag_1d_dl myth_dag_2d_dl \
 @BUILD_MYTH_DL_TRUE@	myth_dag_random_dl myth_key_create_dl \
 @BUILD_MYTH_DL_TRUE@	myth_key_getspecific_dl \
-@BUILD_MYTH_DL_TRUE@	myth_key_destructor_dl measure_create_dl \
-@BUILD_MYTH_DL_TRUE@	measure_latency_dl \
+@BUILD_MYTH_DL_TRUE@	myth_key_destructor_dl \
+@BUILD_MYTH_DL_TRUE@	myth_globalattr_set_n_workers_dl \
+@BUILD_MYTH_DL_TRUE@	measure_create_dl measure_latency_dl \
 @BUILD_MYTH_DL_TRUE@	measure_wakeup_latency_dl \
-@BUILD_MYTH_DL_TRUE@	measure_malloc_dl pth_barrier_dl \
+@BUILD_MYTH_DL_TRUE@	measure_malloc_dl \
+@BUILD_MYTH_DL_TRUE@	measure_thread_specific_dl pth_barrier_dl \
 @BUILD_MYTH_DL_TRUE@	pth_cond_broadcast_0_dl \
 @BUILD_MYTH_DL_TRUE@	pth_cond_broadcast_1_dl pth_cond_signal_dl \
 @BUILD_MYTH_DL_TRUE@	pth_create_0_dl pth_create_1_dl \
@@ -221,8 +232,11 @@ check_PROGRAMS = myth_malloc$(EXEEXT) myth_free$(EXEEXT) \
 @BUILD_MYTH_DL_TRUE@	myth_key_create_cc_dl \
 @BUILD_MYTH_DL_TRUE@	myth_key_getspecific_cc_dl \
 @BUILD_MYTH_DL_TRUE@	myth_key_destructor_cc_dl \
+@BUILD_MYTH_DL_TRUE@	myth_globalattr_set_n_workers_cc_dl \
 @BUILD_MYTH_DL_TRUE@	measure_create_cc_dl measure_latency_cc_dl \
 @BUILD_MYTH_DL_TRUE@	measure_wakeup_latency_cc_dl \
+@BUILD_MYTH_DL_TRUE@	measure_malloc_cc_dl \
+@BUILD_MYTH_DL_TRUE@	measure_thread_specific_cc_dl \
 @BUILD_MYTH_DL_TRUE@	pth_barrier_cc_dl \
 @BUILD_MYTH_DL_TRUE@	pth_cond_broadcast_0_cc_dl \
 @BUILD_MYTH_DL_TRUE@	pth_cond_broadcast_1_cc_dl \
@@ -278,10 +292,12 @@ CONFIG_CLEAN_VPATH_FILES =
 @BUILD_MYTH_LD_TRUE@	myth_key_create_ld$(EXEEXT) \
 @BUILD_MYTH_LD_TRUE@	myth_key_getspecific_ld$(EXEEXT) \
 @BUILD_MYTH_LD_TRUE@	myth_key_destructor_ld$(EXEEXT) \
+@BUILD_MYTH_LD_TRUE@	myth_globalattr_set_n_workers_ld$(EXEEXT) \
 @BUILD_MYTH_LD_TRUE@	measure_create_ld$(EXEEXT) \
 @BUILD_MYTH_LD_TRUE@	measure_latency_ld$(EXEEXT) \
 @BUILD_MYTH_LD_TRUE@	measure_wakeup_latency_ld$(EXEEXT) \
 @BUILD_MYTH_LD_TRUE@	measure_malloc_ld$(EXEEXT) \
+@BUILD_MYTH_LD_TRUE@	measure_thread_specific_ld$(EXEEXT) \
 @BUILD_MYTH_LD_TRUE@	pth_barrier_ld$(EXEEXT) \
 @BUILD_MYTH_LD_TRUE@	pth_cond_broadcast_0_ld$(EXEEXT) \
 @BUILD_MYTH_LD_TRUE@	pth_cond_broadcast_1_ld$(EXEEXT) \
@@ -317,9 +333,12 @@ CONFIG_CLEAN_VPATH_FILES =
 @BUILD_MYTH_LD_TRUE@	myth_key_create_cc_ld$(EXEEXT) \
 @BUILD_MYTH_LD_TRUE@	myth_key_getspecific_cc_ld$(EXEEXT) \
 @BUILD_MYTH_LD_TRUE@	myth_key_destructor_cc_ld$(EXEEXT) \
+@BUILD_MYTH_LD_TRUE@	myth_globalattr_set_n_workers_cc_ld$(EXEEXT) \
 @BUILD_MYTH_LD_TRUE@	measure_create_cc_ld$(EXEEXT) \
 @BUILD_MYTH_LD_TRUE@	measure_latency_cc_ld$(EXEEXT) \
 @BUILD_MYTH_LD_TRUE@	measure_wakeup_latency_cc_ld$(EXEEXT) \
+@BUILD_MYTH_LD_TRUE@	measure_malloc_cc_ld$(EXEEXT) \
+@BUILD_MYTH_LD_TRUE@	measure_thread_specific_cc_ld$(EXEEXT) \
 @BUILD_MYTH_LD_TRUE@	pth_barrier_cc_ld$(EXEEXT) \
 @BUILD_MYTH_LD_TRUE@	pth_cond_broadcast_0_cc_ld$(EXEEXT) \
 @BUILD_MYTH_LD_TRUE@	pth_cond_broadcast_1_cc_ld$(EXEEXT) \
@@ -364,10 +383,12 @@ CONFIG_CLEAN_VPATH_FILES =
 @BUILD_MYTH_DL_TRUE@	myth_key_create_dl$(EXEEXT) \
 @BUILD_MYTH_DL_TRUE@	myth_key_getspecific_dl$(EXEEXT) \
 @BUILD_MYTH_DL_TRUE@	myth_key_destructor_dl$(EXEEXT) \
+@BUILD_MYTH_DL_TRUE@	myth_globalattr_set_n_workers_dl$(EXEEXT) \
 @BUILD_MYTH_DL_TRUE@	measure_create_dl$(EXEEXT) \
 @BUILD_MYTH_DL_TRUE@	measure_latency_dl$(EXEEXT) \
 @BUILD_MYTH_DL_TRUE@	measure_wakeup_latency_dl$(EXEEXT) \
 @BUILD_MYTH_DL_TRUE@	measure_malloc_dl$(EXEEXT) \
+@BUILD_MYTH_DL_TRUE@	measure_thread_specific_dl$(EXEEXT) \
 @BUILD_MYTH_DL_TRUE@	pth_barrier_dl$(EXEEXT) \
 @BUILD_MYTH_DL_TRUE@	pth_cond_broadcast_0_dl$(EXEEXT) \
 @BUILD_MYTH_DL_TRUE@	pth_cond_broadcast_1_dl$(EXEEXT) \
@@ -403,9 +424,12 @@ CONFIG_CLEAN_VPATH_FILES =
 @BUILD_MYTH_DL_TRUE@	myth_key_create_cc_dl$(EXEEXT) \
 @BUILD_MYTH_DL_TRUE@	myth_key_getspecific_cc_dl$(EXEEXT) \
 @BUILD_MYTH_DL_TRUE@	myth_key_destructor_cc_dl$(EXEEXT) \
+@BUILD_MYTH_DL_TRUE@	myth_globalattr_set_n_workers_cc_dl$(EXEEXT) \
 @BUILD_MYTH_DL_TRUE@	measure_create_cc_dl$(EXEEXT) \
 @BUILD_MYTH_DL_TRUE@	measure_latency_cc_dl$(EXEEXT) \
 @BUILD_MYTH_DL_TRUE@	measure_wakeup_latency_cc_dl$(EXEEXT) \
+@BUILD_MYTH_DL_TRUE@	measure_malloc_cc_dl$(EXEEXT) \
+@BUILD_MYTH_DL_TRUE@	measure_thread_specific_cc_dl$(EXEEXT) \
 @BUILD_MYTH_DL_TRUE@	pth_barrier_cc_dl$(EXEEXT) \
 @BUILD_MYTH_DL_TRUE@	pth_cond_broadcast_0_cc_dl$(EXEEXT) \
 @BUILD_MYTH_DL_TRUE@	pth_cond_broadcast_1_cc_dl$(EXEEXT) \
@@ -532,6 +556,32 @@ measure_malloc_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
 	$(measure_malloc_CFLAGS) $(CFLAGS) $(measure_malloc_LDFLAGS) \
 	$(LDFLAGS) -o $@
+am_measure_malloc_cc_OBJECTS =  \
+	measure_malloc_cc-measure_malloc_cc.$(OBJEXT)
+measure_malloc_cc_OBJECTS = $(am_measure_malloc_cc_OBJECTS)
+measure_malloc_cc_DEPENDENCIES = $(myth_ldadd)
+measure_malloc_cc_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX \
+	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CXXLD) \
+	$(measure_malloc_cc_CXXFLAGS) $(CXXFLAGS) \
+	$(measure_malloc_cc_LDFLAGS) $(LDFLAGS) -o $@
+am__measure_malloc_cc_dl_SOURCES_DIST = measure_malloc_cc.cc
+@BUILD_MYTH_DL_TRUE@am_measure_malloc_cc_dl_OBJECTS = measure_malloc_cc_dl-measure_malloc_cc.$(OBJEXT)
+measure_malloc_cc_dl_OBJECTS = $(am_measure_malloc_cc_dl_OBJECTS)
+@BUILD_MYTH_DL_TRUE@measure_malloc_cc_dl_DEPENDENCIES =  \
+@BUILD_MYTH_DL_TRUE@	$(am__DEPENDENCIES_1)
+measure_malloc_cc_dl_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX \
+	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CXXLD) \
+	$(measure_malloc_cc_dl_CXXFLAGS) $(CXXFLAGS) \
+	$(measure_malloc_cc_dl_LDFLAGS) $(LDFLAGS) -o $@
+am__measure_malloc_cc_ld_SOURCES_DIST = measure_malloc_cc.cc
+@BUILD_MYTH_LD_TRUE@am_measure_malloc_cc_ld_OBJECTS = measure_malloc_cc_ld-measure_malloc_cc.$(OBJEXT)
+measure_malloc_cc_ld_OBJECTS = $(am_measure_malloc_cc_ld_OBJECTS)
+@BUILD_MYTH_LD_TRUE@measure_malloc_cc_ld_DEPENDENCIES =  \
+@BUILD_MYTH_LD_TRUE@	$(myth_ld_ldadd)
+measure_malloc_cc_ld_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX \
+	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CXXLD) \
+	$(measure_malloc_cc_ld_CXXFLAGS) $(CXXFLAGS) \
+	$(measure_malloc_cc_ld_LDFLAGS) $(LDFLAGS) -o $@
 am__measure_malloc_dl_SOURCES_DIST = measure_malloc.c
 @BUILD_MYTH_DL_TRUE@am_measure_malloc_dl_OBJECTS = measure_malloc_dl-measure_malloc.$(OBJEXT)
 measure_malloc_dl_OBJECTS = $(am_measure_malloc_dl_OBJECTS)
@@ -549,6 +599,67 @@ measure_malloc_ld_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
 	$(measure_malloc_ld_CFLAGS) $(CFLAGS) \
 	$(measure_malloc_ld_LDFLAGS) $(LDFLAGS) -o $@
+am_measure_thread_specific_OBJECTS =  \
+	measure_thread_specific-measure_thread_specific.$(OBJEXT)
+measure_thread_specific_OBJECTS =  \
+	$(am_measure_thread_specific_OBJECTS)
+measure_thread_specific_DEPENDENCIES = $(myth_ldadd)
+measure_thread_specific_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
+	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
+	$(measure_thread_specific_CFLAGS) $(CFLAGS) \
+	$(measure_thread_specific_LDFLAGS) $(LDFLAGS) -o $@
+am_measure_thread_specific_cc_OBJECTS = measure_thread_specific_cc-measure_thread_specific_cc.$(OBJEXT)
+measure_thread_specific_cc_OBJECTS =  \
+	$(am_measure_thread_specific_cc_OBJECTS)
+measure_thread_specific_cc_DEPENDENCIES = $(myth_ldadd)
+measure_thread_specific_cc_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX \
+	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CXXLD) \
+	$(measure_thread_specific_cc_CXXFLAGS) $(CXXFLAGS) \
+	$(measure_thread_specific_cc_LDFLAGS) $(LDFLAGS) -o $@
+am__measure_thread_specific_cc_dl_SOURCES_DIST =  \
+	measure_thread_specific_cc.cc
+@BUILD_MYTH_DL_TRUE@am_measure_thread_specific_cc_dl_OBJECTS = measure_thread_specific_cc_dl-measure_thread_specific_cc.$(OBJEXT)
+measure_thread_specific_cc_dl_OBJECTS =  \
+	$(am_measure_thread_specific_cc_dl_OBJECTS)
+@BUILD_MYTH_DL_TRUE@measure_thread_specific_cc_dl_DEPENDENCIES =  \
+@BUILD_MYTH_DL_TRUE@	$(am__DEPENDENCIES_1)
+measure_thread_specific_cc_dl_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX \
+	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CXXLD) \
+	$(measure_thread_specific_cc_dl_CXXFLAGS) $(CXXFLAGS) \
+	$(measure_thread_specific_cc_dl_LDFLAGS) $(LDFLAGS) -o $@
+am__measure_thread_specific_cc_ld_SOURCES_DIST =  \
+	measure_thread_specific_cc.cc
+@BUILD_MYTH_LD_TRUE@am_measure_thread_specific_cc_ld_OBJECTS = measure_thread_specific_cc_ld-measure_thread_specific_cc.$(OBJEXT)
+measure_thread_specific_cc_ld_OBJECTS =  \
+	$(am_measure_thread_specific_cc_ld_OBJECTS)
+@BUILD_MYTH_LD_TRUE@measure_thread_specific_cc_ld_DEPENDENCIES =  \
+@BUILD_MYTH_LD_TRUE@	$(myth_ld_ldadd)
+measure_thread_specific_cc_ld_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX \
+	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CXXLD) \
+	$(measure_thread_specific_cc_ld_CXXFLAGS) $(CXXFLAGS) \
+	$(measure_thread_specific_cc_ld_LDFLAGS) $(LDFLAGS) -o $@
+am__measure_thread_specific_dl_SOURCES_DIST =  \
+	measure_thread_specific.c
+@BUILD_MYTH_DL_TRUE@am_measure_thread_specific_dl_OBJECTS = measure_thread_specific_dl-measure_thread_specific.$(OBJEXT)
+measure_thread_specific_dl_OBJECTS =  \
+	$(am_measure_thread_specific_dl_OBJECTS)
+@BUILD_MYTH_DL_TRUE@measure_thread_specific_dl_DEPENDENCIES =  \
+@BUILD_MYTH_DL_TRUE@	$(am__DEPENDENCIES_1)
+measure_thread_specific_dl_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
+	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
+	$(measure_thread_specific_dl_CFLAGS) $(CFLAGS) \
+	$(measure_thread_specific_dl_LDFLAGS) $(LDFLAGS) -o $@
+am__measure_thread_specific_ld_SOURCES_DIST =  \
+	measure_thread_specific.c
+@BUILD_MYTH_LD_TRUE@am_measure_thread_specific_ld_OBJECTS = measure_thread_specific_ld-measure_thread_specific.$(OBJEXT)
+measure_thread_specific_ld_OBJECTS =  \
+	$(am_measure_thread_specific_ld_OBJECTS)
+@BUILD_MYTH_LD_TRUE@measure_thread_specific_ld_DEPENDENCIES =  \
+@BUILD_MYTH_LD_TRUE@	$(myth_ld_ldadd)
+measure_thread_specific_ld_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
+	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
+	$(measure_thread_specific_ld_CFLAGS) $(CFLAGS) \
+	$(measure_thread_specific_ld_LDFLAGS) $(LDFLAGS) -o $@
 am_measure_wakeup_latency_OBJECTS =  \
 	measure_wakeup_latency-measure_wakeup_latency.$(OBJEXT)
 measure_wakeup_latency_OBJECTS = $(am_measure_wakeup_latency_OBJECTS)
@@ -1312,6 +1423,69 @@ myth_free_ld_OBJECTS = $(am_myth_free_ld_OBJECTS)
 myth_free_ld_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(myth_free_ld_CFLAGS) \
 	$(CFLAGS) $(myth_free_ld_LDFLAGS) $(LDFLAGS) -o $@
+am_myth_globalattr_set_n_workers_OBJECTS = myth_globalattr_set_n_workers-myth_globalattr_set_n_workers.$(OBJEXT)
+myth_globalattr_set_n_workers_OBJECTS =  \
+	$(am_myth_globalattr_set_n_workers_OBJECTS)
+myth_globalattr_set_n_workers_DEPENDENCIES = $(myth_ldadd)
+myth_globalattr_set_n_workers_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
+	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
+	$(myth_globalattr_set_n_workers_CFLAGS) $(CFLAGS) \
+	$(myth_globalattr_set_n_workers_LDFLAGS) $(LDFLAGS) -o $@
+am_myth_globalattr_set_n_workers_cc_OBJECTS = myth_globalattr_set_n_workers_cc-myth_globalattr_set_n_workers_cc.$(OBJEXT)
+myth_globalattr_set_n_workers_cc_OBJECTS =  \
+	$(am_myth_globalattr_set_n_workers_cc_OBJECTS)
+myth_globalattr_set_n_workers_cc_DEPENDENCIES = $(myth_ldadd)
+myth_globalattr_set_n_workers_cc_LINK = $(LIBTOOL) $(AM_V_lt) \
+	--tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link \
+	$(CXXLD) $(myth_globalattr_set_n_workers_cc_CXXFLAGS) \
+	$(CXXFLAGS) $(myth_globalattr_set_n_workers_cc_LDFLAGS) \
+	$(LDFLAGS) -o $@
+am__myth_globalattr_set_n_workers_cc_dl_SOURCES_DIST =  \
+	myth_globalattr_set_n_workers_cc.cc
+@BUILD_MYTH_DL_TRUE@am_myth_globalattr_set_n_workers_cc_dl_OBJECTS = myth_globalattr_set_n_workers_cc_dl-myth_globalattr_set_n_workers_cc.$(OBJEXT)
+myth_globalattr_set_n_workers_cc_dl_OBJECTS =  \
+	$(am_myth_globalattr_set_n_workers_cc_dl_OBJECTS)
+@BUILD_MYTH_DL_TRUE@myth_globalattr_set_n_workers_cc_dl_DEPENDENCIES =  \
+@BUILD_MYTH_DL_TRUE@	$(am__DEPENDENCIES_1)
+myth_globalattr_set_n_workers_cc_dl_LINK = $(LIBTOOL) $(AM_V_lt) \
+	--tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link \
+	$(CXXLD) $(myth_globalattr_set_n_workers_cc_dl_CXXFLAGS) \
+	$(CXXFLAGS) $(myth_globalattr_set_n_workers_cc_dl_LDFLAGS) \
+	$(LDFLAGS) -o $@
+am__myth_globalattr_set_n_workers_cc_ld_SOURCES_DIST =  \
+	myth_globalattr_set_n_workers_cc.cc
+@BUILD_MYTH_LD_TRUE@am_myth_globalattr_set_n_workers_cc_ld_OBJECTS = myth_globalattr_set_n_workers_cc_ld-myth_globalattr_set_n_workers_cc.$(OBJEXT)
+myth_globalattr_set_n_workers_cc_ld_OBJECTS =  \
+	$(am_myth_globalattr_set_n_workers_cc_ld_OBJECTS)
+@BUILD_MYTH_LD_TRUE@myth_globalattr_set_n_workers_cc_ld_DEPENDENCIES =  \
+@BUILD_MYTH_LD_TRUE@	$(myth_ld_ldadd)
+myth_globalattr_set_n_workers_cc_ld_LINK = $(LIBTOOL) $(AM_V_lt) \
+	--tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link \
+	$(CXXLD) $(myth_globalattr_set_n_workers_cc_ld_CXXFLAGS) \
+	$(CXXFLAGS) $(myth_globalattr_set_n_workers_cc_ld_LDFLAGS) \
+	$(LDFLAGS) -o $@
+am__myth_globalattr_set_n_workers_dl_SOURCES_DIST =  \
+	myth_globalattr_set_n_workers.c
+@BUILD_MYTH_DL_TRUE@am_myth_globalattr_set_n_workers_dl_OBJECTS = myth_globalattr_set_n_workers_dl-myth_globalattr_set_n_workers.$(OBJEXT)
+myth_globalattr_set_n_workers_dl_OBJECTS =  \
+	$(am_myth_globalattr_set_n_workers_dl_OBJECTS)
+@BUILD_MYTH_DL_TRUE@myth_globalattr_set_n_workers_dl_DEPENDENCIES =  \
+@BUILD_MYTH_DL_TRUE@	$(am__DEPENDENCIES_1)
+myth_globalattr_set_n_workers_dl_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
+	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
+	$(myth_globalattr_set_n_workers_dl_CFLAGS) $(CFLAGS) \
+	$(myth_globalattr_set_n_workers_dl_LDFLAGS) $(LDFLAGS) -o $@
+am__myth_globalattr_set_n_workers_ld_SOURCES_DIST =  \
+	myth_globalattr_set_n_workers.c
+@BUILD_MYTH_LD_TRUE@am_myth_globalattr_set_n_workers_ld_OBJECTS = myth_globalattr_set_n_workers_ld-myth_globalattr_set_n_workers.$(OBJEXT)
+myth_globalattr_set_n_workers_ld_OBJECTS =  \
+	$(am_myth_globalattr_set_n_workers_ld_OBJECTS)
+@BUILD_MYTH_LD_TRUE@myth_globalattr_set_n_workers_ld_DEPENDENCIES =  \
+@BUILD_MYTH_LD_TRUE@	$(myth_ld_ldadd)
+myth_globalattr_set_n_workers_ld_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
+	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
+	$(myth_globalattr_set_n_workers_ld_CFLAGS) $(CFLAGS) \
+	$(myth_globalattr_set_n_workers_ld_LDFLAGS) $(LDFLAGS) -o $@
 am_myth_join_counter_OBJECTS =  \
 	myth_join_counter-myth_join_counter.$(OBJEXT)
 myth_join_counter_OBJECTS = $(am_myth_join_counter_OBJECTS)
@@ -2570,7 +2744,15 @@ SOURCES = $(measure_create_SOURCES) $(measure_create_cc_SOURCES) \
 	$(measure_latency_cc_SOURCES) $(measure_latency_cc_dl_SOURCES) \
 	$(measure_latency_cc_ld_SOURCES) $(measure_latency_dl_SOURCES) \
 	$(measure_latency_ld_SOURCES) $(measure_malloc_SOURCES) \
-	$(measure_malloc_dl_SOURCES) $(measure_malloc_ld_SOURCES) \
+	$(measure_malloc_cc_SOURCES) $(measure_malloc_cc_dl_SOURCES) \
+	$(measure_malloc_cc_ld_SOURCES) $(measure_malloc_dl_SOURCES) \
+	$(measure_malloc_ld_SOURCES) \
+	$(measure_thread_specific_SOURCES) \
+	$(measure_thread_specific_cc_SOURCES) \
+	$(measure_thread_specific_cc_dl_SOURCES) \
+	$(measure_thread_specific_cc_ld_SOURCES) \
+	$(measure_thread_specific_dl_SOURCES) \
+	$(measure_thread_specific_ld_SOURCES) \
 	$(measure_wakeup_latency_SOURCES) \
 	$(measure_wakeup_latency_cc_SOURCES) \
 	$(measure_wakeup_latency_cc_dl_SOURCES) \
@@ -2627,6 +2809,12 @@ SOURCES = $(measure_create_SOURCES) $(measure_create_cc_SOURCES) \
 	$(myth_felock_cc_ld_SOURCES) $(myth_felock_dl_SOURCES) \
 	$(myth_felock_ld_SOURCES) $(myth_free_SOURCES) \
 	$(myth_free_dl_SOURCES) $(myth_free_ld_SOURCES) \
+	$(myth_globalattr_set_n_workers_SOURCES) \
+	$(myth_globalattr_set_n_workers_cc_SOURCES) \
+	$(myth_globalattr_set_n_workers_cc_dl_SOURCES) \
+	$(myth_globalattr_set_n_workers_cc_ld_SOURCES) \
+	$(myth_globalattr_set_n_workers_dl_SOURCES) \
+	$(myth_globalattr_set_n_workers_ld_SOURCES) \
 	$(myth_join_counter_SOURCES) $(myth_join_counter_cc_SOURCES) \
 	$(myth_join_counter_cc_dl_SOURCES) \
 	$(myth_join_counter_cc_ld_SOURCES) \
@@ -2720,9 +2908,17 @@ DIST_SOURCES = $(measure_create_SOURCES) $(measure_create_cc_SOURCES) \
 	$(am__measure_latency_cc_ld_SOURCES_DIST) \
 	$(am__measure_latency_dl_SOURCES_DIST) \
 	$(am__measure_latency_ld_SOURCES_DIST) \
-	$(measure_malloc_SOURCES) \
+	$(measure_malloc_SOURCES) $(measure_malloc_cc_SOURCES) \
+	$(am__measure_malloc_cc_dl_SOURCES_DIST) \
+	$(am__measure_malloc_cc_ld_SOURCES_DIST) \
 	$(am__measure_malloc_dl_SOURCES_DIST) \
 	$(am__measure_malloc_ld_SOURCES_DIST) \
+	$(measure_thread_specific_SOURCES) \
+	$(measure_thread_specific_cc_SOURCES) \
+	$(am__measure_thread_specific_cc_dl_SOURCES_DIST) \
+	$(am__measure_thread_specific_cc_ld_SOURCES_DIST) \
+	$(am__measure_thread_specific_dl_SOURCES_DIST) \
+	$(am__measure_thread_specific_ld_SOURCES_DIST) \
 	$(measure_wakeup_latency_SOURCES) \
 	$(measure_wakeup_latency_cc_SOURCES) \
 	$(am__measure_wakeup_latency_cc_dl_SOURCES_DIST) \
@@ -2798,8 +2994,14 @@ DIST_SOURCES = $(measure_create_SOURCES) $(measure_create_cc_SOURCES) \
 	$(am__myth_felock_dl_SOURCES_DIST) \
 	$(am__myth_felock_ld_SOURCES_DIST) $(myth_free_SOURCES) \
 	$(am__myth_free_dl_SOURCES_DIST) \
-	$(am__myth_free_ld_SOURCES_DIST) $(myth_join_counter_SOURCES) \
-	$(myth_join_counter_cc_SOURCES) \
+	$(am__myth_free_ld_SOURCES_DIST) \
+	$(myth_globalattr_set_n_workers_SOURCES) \
+	$(myth_globalattr_set_n_workers_cc_SOURCES) \
+	$(am__myth_globalattr_set_n_workers_cc_dl_SOURCES_DIST) \
+	$(am__myth_globalattr_set_n_workers_cc_ld_SOURCES_DIST) \
+	$(am__myth_globalattr_set_n_workers_dl_SOURCES_DIST) \
+	$(am__myth_globalattr_set_n_workers_ld_SOURCES_DIST) \
+	$(myth_join_counter_SOURCES) $(myth_join_counter_cc_SOURCES) \
 	$(am__myth_join_counter_cc_dl_SOURCES_DIST) \
 	$(am__myth_join_counter_cc_ld_SOURCES_DIST) \
 	$(am__myth_join_counter_dl_SOURCES_DIST) \
@@ -3412,6 +3614,10 @@ myth_key_destructor_SOURCES = myth_key_destructor.c
 myth_key_destructor_CFLAGS = $(common_cflags)
 myth_key_destructor_LDADD = $(myth_ldadd)
 myth_key_destructor_LDFLAGS = $(myth_ldflags)
+myth_globalattr_set_n_workers_SOURCES = myth_globalattr_set_n_workers.c
+myth_globalattr_set_n_workers_CFLAGS = $(common_cflags)
+myth_globalattr_set_n_workers_LDADD = $(myth_ldadd)
+myth_globalattr_set_n_workers_LDFLAGS = $(myth_ldflags)
 measure_create_SOURCES = measure_create.c
 measure_create_CFLAGS = $(common_cflags)
 measure_create_LDADD = $(myth_ldadd)
@@ -3428,6 +3634,10 @@ measure_malloc_SOURCES = measure_malloc.c
 measure_malloc_CFLAGS = $(common_cflags)
 measure_malloc_LDADD = $(myth_ldadd)
 measure_malloc_LDFLAGS = $(myth_ldflags)
+measure_thread_specific_SOURCES = measure_thread_specific.c
+measure_thread_specific_CFLAGS = $(common_cflags)
+measure_thread_specific_LDADD = $(myth_ldadd)
+measure_thread_specific_LDFLAGS = $(myth_ldflags)
 new_test_SOURCES = new_test.c
 new_test_CFLAGS = $(common_cflags)
 new_test_LDADD = $(myth_ldadd)
@@ -3524,6 +3734,10 @@ myth_key_destructor_cc_SOURCES = myth_key_destructor_cc.cc
 myth_key_destructor_cc_CXXFLAGS = $(common_cxxflags)
 myth_key_destructor_cc_LDADD = $(myth_ldadd)
 myth_key_destructor_cc_LDFLAGS = $(myth_ldflags)
+myth_globalattr_set_n_workers_cc_SOURCES = myth_globalattr_set_n_workers_cc.cc
+myth_globalattr_set_n_workers_cc_CXXFLAGS = $(common_cxxflags)
+myth_globalattr_set_n_workers_cc_LDADD = $(myth_ldadd)
+myth_globalattr_set_n_workers_cc_LDFLAGS = $(myth_ldflags)
 measure_create_cc_SOURCES = measure_create_cc.cc
 measure_create_cc_CXXFLAGS = $(common_cxxflags)
 measure_create_cc_LDADD = $(myth_ldadd)
@@ -3536,6 +3750,14 @@ measure_wakeup_latency_cc_SOURCES = measure_wakeup_latency_cc.cc
 measure_wakeup_latency_cc_CXXFLAGS = $(common_cxxflags)
 measure_wakeup_latency_cc_LDADD = $(myth_ldadd)
 measure_wakeup_latency_cc_LDFLAGS = $(myth_ldflags)
+measure_malloc_cc_SOURCES = measure_malloc_cc.cc
+measure_malloc_cc_CXXFLAGS = $(common_cxxflags)
+measure_malloc_cc_LDADD = $(myth_ldadd)
+measure_malloc_cc_LDFLAGS = $(myth_ldflags)
+measure_thread_specific_cc_SOURCES = measure_thread_specific_cc.cc
+measure_thread_specific_cc_CXXFLAGS = $(common_cxxflags)
+measure_thread_specific_cc_LDADD = $(myth_ldadd)
+measure_thread_specific_cc_LDFLAGS = $(myth_ldflags)
 @BUILD_MYTH_LD_TRUE@myth_malloc_ld_SOURCES = myth_malloc.c
 @BUILD_MYTH_LD_TRUE@myth_malloc_ld_CFLAGS = $(common_cflags)
 @BUILD_MYTH_LD_TRUE@myth_malloc_ld_LDADD = $(myth_ld_ldadd)
@@ -3664,6 +3886,10 @@ measure_wakeup_latency_cc_LDFLAGS = $(myth_ldflags)
 @BUILD_MYTH_LD_TRUE@myth_key_destructor_ld_CFLAGS = $(common_cflags)
 @BUILD_MYTH_LD_TRUE@myth_key_destructor_ld_LDADD = $(myth_ld_ldadd)
 @BUILD_MYTH_LD_TRUE@myth_key_destructor_ld_LDFLAGS = $(myth_ld_ldflags)
+@BUILD_MYTH_LD_TRUE@myth_globalattr_set_n_workers_ld_SOURCES = myth_globalattr_set_n_workers.c
+@BUILD_MYTH_LD_TRUE@myth_globalattr_set_n_workers_ld_CFLAGS = $(common_cflags)
+@BUILD_MYTH_LD_TRUE@myth_globalattr_set_n_workers_ld_LDADD = $(myth_ld_ldadd)
+@BUILD_MYTH_LD_TRUE@myth_globalattr_set_n_workers_ld_LDFLAGS = $(myth_ld_ldflags)
 @BUILD_MYTH_LD_TRUE@measure_create_ld_SOURCES = measure_create.c
 @BUILD_MYTH_LD_TRUE@measure_create_ld_CFLAGS = $(common_cflags)
 @BUILD_MYTH_LD_TRUE@measure_create_ld_LDADD = $(myth_ld_ldadd)
@@ -3680,6 +3906,10 @@ measure_wakeup_latency_cc_LDFLAGS = $(myth_ldflags)
 @BUILD_MYTH_LD_TRUE@measure_malloc_ld_CFLAGS = $(common_cflags)
 @BUILD_MYTH_LD_TRUE@measure_malloc_ld_LDADD = $(myth_ld_ldadd)
 @BUILD_MYTH_LD_TRUE@measure_malloc_ld_LDFLAGS = $(myth_ld_ldflags)
+@BUILD_MYTH_LD_TRUE@measure_thread_specific_ld_SOURCES = measure_thread_specific.c
+@BUILD_MYTH_LD_TRUE@measure_thread_specific_ld_CFLAGS = $(common_cflags)
+@BUILD_MYTH_LD_TRUE@measure_thread_specific_ld_LDADD = $(myth_ld_ldadd)
+@BUILD_MYTH_LD_TRUE@measure_thread_specific_ld_LDFLAGS = $(myth_ld_ldflags)
 @BUILD_MYTH_LD_TRUE@pth_barrier_ld_SOURCES = pth_barrier.c
 @BUILD_MYTH_LD_TRUE@pth_barrier_ld_CFLAGS = $(common_cflags)
 @BUILD_MYTH_LD_TRUE@pth_barrier_ld_LDADD = $(myth_ld_ldadd)
@@ -3824,6 +4054,10 @@ measure_wakeup_latency_cc_LDFLAGS = $(myth_ldflags)
 @BUILD_MYTH_LD_TRUE@myth_key_destructor_cc_ld_CXXFLAGS = $(common_cxxflags)
 @BUILD_MYTH_LD_TRUE@myth_key_destructor_cc_ld_LDADD = $(myth_ld_ldadd)
 @BUILD_MYTH_LD_TRUE@myth_key_destructor_cc_ld_LDFLAGS = $(myth_ld_ldflags)
+@BUILD_MYTH_LD_TRUE@myth_globalattr_set_n_workers_cc_ld_SOURCES = myth_globalattr_set_n_workers_cc.cc
+@BUILD_MYTH_LD_TRUE@myth_globalattr_set_n_workers_cc_ld_CXXFLAGS = $(common_cxxflags)
+@BUILD_MYTH_LD_TRUE@myth_globalattr_set_n_workers_cc_ld_LDADD = $(myth_ld_ldadd)
+@BUILD_MYTH_LD_TRUE@myth_globalattr_set_n_workers_cc_ld_LDFLAGS = $(myth_ld_ldflags)
 @BUILD_MYTH_LD_TRUE@measure_create_cc_ld_SOURCES = measure_create_cc.cc
 @BUILD_MYTH_LD_TRUE@measure_create_cc_ld_CXXFLAGS = $(common_cxxflags)
 @BUILD_MYTH_LD_TRUE@measure_create_cc_ld_LDADD = $(myth_ld_ldadd)
@@ -3836,6 +4070,14 @@ measure_wakeup_latency_cc_LDFLAGS = $(myth_ldflags)
 @BUILD_MYTH_LD_TRUE@measure_wakeup_latency_cc_ld_CXXFLAGS = $(common_cxxflags)
 @BUILD_MYTH_LD_TRUE@measure_wakeup_latency_cc_ld_LDADD = $(myth_ld_ldadd)
 @BUILD_MYTH_LD_TRUE@measure_wakeup_latency_cc_ld_LDFLAGS = $(myth_ld_ldflags)
+@BUILD_MYTH_LD_TRUE@measure_malloc_cc_ld_SOURCES = measure_malloc_cc.cc
+@BUILD_MYTH_LD_TRUE@measure_malloc_cc_ld_CXXFLAGS = $(common_cxxflags)
+@BUILD_MYTH_LD_TRUE@measure_malloc_cc_ld_LDADD = $(myth_ld_ldadd)
+@BUILD_MYTH_LD_TRUE@measure_malloc_cc_ld_LDFLAGS = $(myth_ld_ldflags)
+@BUILD_MYTH_LD_TRUE@measure_thread_specific_cc_ld_SOURCES = measure_thread_specific_cc.cc
+@BUILD_MYTH_LD_TRUE@measure_thread_specific_cc_ld_CXXFLAGS = $(common_cxxflags)
+@BUILD_MYTH_LD_TRUE@measure_thread_specific_cc_ld_LDADD = $(myth_ld_ldadd)
+@BUILD_MYTH_LD_TRUE@measure_thread_specific_cc_ld_LDFLAGS = $(myth_ld_ldflags)
 @BUILD_MYTH_LD_TRUE@pth_barrier_cc_ld_SOURCES = pth_barrier_cc.cc
 @BUILD_MYTH_LD_TRUE@pth_barrier_cc_ld_CXXFLAGS = $(common_cxxflags)
 @BUILD_MYTH_LD_TRUE@pth_barrier_cc_ld_LDADD = $(myth_ld_ldadd)
@@ -4012,6 +4254,10 @@ measure_wakeup_latency_cc_LDFLAGS = $(myth_ldflags)
 @BUILD_MYTH_DL_TRUE@myth_key_destructor_dl_CFLAGS = $(common_cflags)
 @BUILD_MYTH_DL_TRUE@myth_key_destructor_dl_LDADD = $(myth_dl_ldadd)
 @BUILD_MYTH_DL_TRUE@myth_key_destructor_dl_LDFLAGS = $(myth_dl_ldflags)
+@BUILD_MYTH_DL_TRUE@myth_globalattr_set_n_workers_dl_SOURCES = myth_globalattr_set_n_workers.c
+@BUILD_MYTH_DL_TRUE@myth_globalattr_set_n_workers_dl_CFLAGS = $(common_cflags)
+@BUILD_MYTH_DL_TRUE@myth_globalattr_set_n_workers_dl_LDADD = $(myth_dl_ldadd)
+@BUILD_MYTH_DL_TRUE@myth_globalattr_set_n_workers_dl_LDFLAGS = $(myth_dl_ldflags)
 @BUILD_MYTH_DL_TRUE@measure_create_dl_SOURCES = measure_create.c
 @BUILD_MYTH_DL_TRUE@measure_create_dl_CFLAGS = $(common_cflags)
 @BUILD_MYTH_DL_TRUE@measure_create_dl_LDADD = $(myth_dl_ldadd)
@@ -4028,6 +4274,10 @@ measure_wakeup_latency_cc_LDFLAGS = $(myth_ldflags)
 @BUILD_MYTH_DL_TRUE@measure_malloc_dl_CFLAGS = $(common_cflags)
 @BUILD_MYTH_DL_TRUE@measure_malloc_dl_LDADD = $(myth_dl_ldadd)
 @BUILD_MYTH_DL_TRUE@measure_malloc_dl_LDFLAGS = $(myth_dl_ldflags)
+@BUILD_MYTH_DL_TRUE@measure_thread_specific_dl_SOURCES = measure_thread_specific.c
+@BUILD_MYTH_DL_TRUE@measure_thread_specific_dl_CFLAGS = $(common_cflags)
+@BUILD_MYTH_DL_TRUE@measure_thread_specific_dl_LDADD = $(myth_dl_ldadd)
+@BUILD_MYTH_DL_TRUE@measure_thread_specific_dl_LDFLAGS = $(myth_dl_ldflags)
 @BUILD_MYTH_DL_TRUE@pth_barrier_dl_SOURCES = pth_barrier.c
 @BUILD_MYTH_DL_TRUE@pth_barrier_dl_CFLAGS = $(common_cflags)
 @BUILD_MYTH_DL_TRUE@pth_barrier_dl_LDADD = $(myth_dl_ldadd)
@@ -4172,6 +4422,10 @@ measure_wakeup_latency_cc_LDFLAGS = $(myth_ldflags)
 @BUILD_MYTH_DL_TRUE@myth_key_destructor_cc_dl_CXXFLAGS = $(common_cxxflags)
 @BUILD_MYTH_DL_TRUE@myth_key_destructor_cc_dl_LDADD = $(myth_dl_ldadd)
 @BUILD_MYTH_DL_TRUE@myth_key_destructor_cc_dl_LDFLAGS = $(myth_dl_ldflags)
+@BUILD_MYTH_DL_TRUE@myth_globalattr_set_n_workers_cc_dl_SOURCES = myth_globalattr_set_n_workers_cc.cc
+@BUILD_MYTH_DL_TRUE@myth_globalattr_set_n_workers_cc_dl_CXXFLAGS = $(common_cxxflags)
+@BUILD_MYTH_DL_TRUE@myth_globalattr_set_n_workers_cc_dl_LDADD = $(myth_dl_ldadd)
+@BUILD_MYTH_DL_TRUE@myth_globalattr_set_n_workers_cc_dl_LDFLAGS = $(myth_dl_ldflags)
 @BUILD_MYTH_DL_TRUE@measure_create_cc_dl_SOURCES = measure_create_cc.cc
 @BUILD_MYTH_DL_TRUE@measure_create_cc_dl_CXXFLAGS = $(common_cxxflags)
 @BUILD_MYTH_DL_TRUE@measure_create_cc_dl_LDADD = $(myth_dl_ldadd)
@@ -4184,6 +4438,14 @@ measure_wakeup_latency_cc_LDFLAGS = $(myth_ldflags)
 @BUILD_MYTH_DL_TRUE@measure_wakeup_latency_cc_dl_CXXFLAGS = $(common_cxxflags)
 @BUILD_MYTH_DL_TRUE@measure_wakeup_latency_cc_dl_LDADD = $(myth_dl_ldadd)
 @BUILD_MYTH_DL_TRUE@measure_wakeup_latency_cc_dl_LDFLAGS = $(myth_dl_ldflags)
+@BUILD_MYTH_DL_TRUE@measure_malloc_cc_dl_SOURCES = measure_malloc_cc.cc
+@BUILD_MYTH_DL_TRUE@measure_malloc_cc_dl_CXXFLAGS = $(common_cxxflags)
+@BUILD_MYTH_DL_TRUE@measure_malloc_cc_dl_LDADD = $(myth_dl_ldadd)
+@BUILD_MYTH_DL_TRUE@measure_malloc_cc_dl_LDFLAGS = $(myth_dl_ldflags)
+@BUILD_MYTH_DL_TRUE@measure_thread_specific_cc_dl_SOURCES = measure_thread_specific_cc.cc
+@BUILD_MYTH_DL_TRUE@measure_thread_specific_cc_dl_CXXFLAGS = $(common_cxxflags)
+@BUILD_MYTH_DL_TRUE@measure_thread_specific_cc_dl_LDADD = $(myth_dl_ldadd)
+@BUILD_MYTH_DL_TRUE@measure_thread_specific_cc_dl_LDFLAGS = $(myth_dl_ldflags)
 @BUILD_MYTH_DL_TRUE@pth_barrier_cc_dl_SOURCES = pth_barrier_cc.cc
 @BUILD_MYTH_DL_TRUE@pth_barrier_cc_dl_CXXFLAGS = $(common_cxxflags)
 @BUILD_MYTH_DL_TRUE@pth_barrier_cc_dl_LDADD = $(myth_dl_ldadd)
@@ -4328,6 +4590,18 @@ measure_malloc$(EXEEXT): $(measure_malloc_OBJECTS) $(measure_malloc_DEPENDENCIES
 	@rm -f measure_malloc$(EXEEXT)
 	$(AM_V_CCLD)$(measure_malloc_LINK) $(measure_malloc_OBJECTS) $(measure_malloc_LDADD) $(LIBS)
 
+measure_malloc_cc$(EXEEXT): $(measure_malloc_cc_OBJECTS) $(measure_malloc_cc_DEPENDENCIES) $(EXTRA_measure_malloc_cc_DEPENDENCIES) 
+	@rm -f measure_malloc_cc$(EXEEXT)
+	$(AM_V_CXXLD)$(measure_malloc_cc_LINK) $(measure_malloc_cc_OBJECTS) $(measure_malloc_cc_LDADD) $(LIBS)
+
+measure_malloc_cc_dl$(EXEEXT): $(measure_malloc_cc_dl_OBJECTS) $(measure_malloc_cc_dl_DEPENDENCIES) $(EXTRA_measure_malloc_cc_dl_DEPENDENCIES) 
+	@rm -f measure_malloc_cc_dl$(EXEEXT)
+	$(AM_V_CXXLD)$(measure_malloc_cc_dl_LINK) $(measure_malloc_cc_dl_OBJECTS) $(measure_malloc_cc_dl_LDADD) $(LIBS)
+
+measure_malloc_cc_ld$(EXEEXT): $(measure_malloc_cc_ld_OBJECTS) $(measure_malloc_cc_ld_DEPENDENCIES) $(EXTRA_measure_malloc_cc_ld_DEPENDENCIES) 
+	@rm -f measure_malloc_cc_ld$(EXEEXT)
+	$(AM_V_CXXLD)$(measure_malloc_cc_ld_LINK) $(measure_malloc_cc_ld_OBJECTS) $(measure_malloc_cc_ld_LDADD) $(LIBS)
+
 measure_malloc_dl$(EXEEXT): $(measure_malloc_dl_OBJECTS) $(measure_malloc_dl_DEPENDENCIES) $(EXTRA_measure_malloc_dl_DEPENDENCIES) 
 	@rm -f measure_malloc_dl$(EXEEXT)
 	$(AM_V_CCLD)$(measure_malloc_dl_LINK) $(measure_malloc_dl_OBJECTS) $(measure_malloc_dl_LDADD) $(LIBS)
@@ -4335,6 +4609,30 @@ measure_malloc_dl$(EXEEXT): $(measure_malloc_dl_OBJECTS) $(measure_malloc_dl_DEP
 measure_malloc_ld$(EXEEXT): $(measure_malloc_ld_OBJECTS) $(measure_malloc_ld_DEPENDENCIES) $(EXTRA_measure_malloc_ld_DEPENDENCIES) 
 	@rm -f measure_malloc_ld$(EXEEXT)
 	$(AM_V_CCLD)$(measure_malloc_ld_LINK) $(measure_malloc_ld_OBJECTS) $(measure_malloc_ld_LDADD) $(LIBS)
+
+measure_thread_specific$(EXEEXT): $(measure_thread_specific_OBJECTS) $(measure_thread_specific_DEPENDENCIES) $(EXTRA_measure_thread_specific_DEPENDENCIES) 
+	@rm -f measure_thread_specific$(EXEEXT)
+	$(AM_V_CCLD)$(measure_thread_specific_LINK) $(measure_thread_specific_OBJECTS) $(measure_thread_specific_LDADD) $(LIBS)
+
+measure_thread_specific_cc$(EXEEXT): $(measure_thread_specific_cc_OBJECTS) $(measure_thread_specific_cc_DEPENDENCIES) $(EXTRA_measure_thread_specific_cc_DEPENDENCIES) 
+	@rm -f measure_thread_specific_cc$(EXEEXT)
+	$(AM_V_CXXLD)$(measure_thread_specific_cc_LINK) $(measure_thread_specific_cc_OBJECTS) $(measure_thread_specific_cc_LDADD) $(LIBS)
+
+measure_thread_specific_cc_dl$(EXEEXT): $(measure_thread_specific_cc_dl_OBJECTS) $(measure_thread_specific_cc_dl_DEPENDENCIES) $(EXTRA_measure_thread_specific_cc_dl_DEPENDENCIES) 
+	@rm -f measure_thread_specific_cc_dl$(EXEEXT)
+	$(AM_V_CXXLD)$(measure_thread_specific_cc_dl_LINK) $(measure_thread_specific_cc_dl_OBJECTS) $(measure_thread_specific_cc_dl_LDADD) $(LIBS)
+
+measure_thread_specific_cc_ld$(EXEEXT): $(measure_thread_specific_cc_ld_OBJECTS) $(measure_thread_specific_cc_ld_DEPENDENCIES) $(EXTRA_measure_thread_specific_cc_ld_DEPENDENCIES) 
+	@rm -f measure_thread_specific_cc_ld$(EXEEXT)
+	$(AM_V_CXXLD)$(measure_thread_specific_cc_ld_LINK) $(measure_thread_specific_cc_ld_OBJECTS) $(measure_thread_specific_cc_ld_LDADD) $(LIBS)
+
+measure_thread_specific_dl$(EXEEXT): $(measure_thread_specific_dl_OBJECTS) $(measure_thread_specific_dl_DEPENDENCIES) $(EXTRA_measure_thread_specific_dl_DEPENDENCIES) 
+	@rm -f measure_thread_specific_dl$(EXEEXT)
+	$(AM_V_CCLD)$(measure_thread_specific_dl_LINK) $(measure_thread_specific_dl_OBJECTS) $(measure_thread_specific_dl_LDADD) $(LIBS)
+
+measure_thread_specific_ld$(EXEEXT): $(measure_thread_specific_ld_OBJECTS) $(measure_thread_specific_ld_DEPENDENCIES) $(EXTRA_measure_thread_specific_ld_DEPENDENCIES) 
+	@rm -f measure_thread_specific_ld$(EXEEXT)
+	$(AM_V_CCLD)$(measure_thread_specific_ld_LINK) $(measure_thread_specific_ld_OBJECTS) $(measure_thread_specific_ld_LDADD) $(LIBS)
 
 measure_wakeup_latency$(EXEEXT): $(measure_wakeup_latency_OBJECTS) $(measure_wakeup_latency_DEPENDENCIES) $(EXTRA_measure_wakeup_latency_DEPENDENCIES) 
 	@rm -f measure_wakeup_latency$(EXEEXT)
@@ -4683,6 +4981,30 @@ myth_free_dl$(EXEEXT): $(myth_free_dl_OBJECTS) $(myth_free_dl_DEPENDENCIES) $(EX
 myth_free_ld$(EXEEXT): $(myth_free_ld_OBJECTS) $(myth_free_ld_DEPENDENCIES) $(EXTRA_myth_free_ld_DEPENDENCIES) 
 	@rm -f myth_free_ld$(EXEEXT)
 	$(AM_V_CCLD)$(myth_free_ld_LINK) $(myth_free_ld_OBJECTS) $(myth_free_ld_LDADD) $(LIBS)
+
+myth_globalattr_set_n_workers$(EXEEXT): $(myth_globalattr_set_n_workers_OBJECTS) $(myth_globalattr_set_n_workers_DEPENDENCIES) $(EXTRA_myth_globalattr_set_n_workers_DEPENDENCIES) 
+	@rm -f myth_globalattr_set_n_workers$(EXEEXT)
+	$(AM_V_CCLD)$(myth_globalattr_set_n_workers_LINK) $(myth_globalattr_set_n_workers_OBJECTS) $(myth_globalattr_set_n_workers_LDADD) $(LIBS)
+
+myth_globalattr_set_n_workers_cc$(EXEEXT): $(myth_globalattr_set_n_workers_cc_OBJECTS) $(myth_globalattr_set_n_workers_cc_DEPENDENCIES) $(EXTRA_myth_globalattr_set_n_workers_cc_DEPENDENCIES) 
+	@rm -f myth_globalattr_set_n_workers_cc$(EXEEXT)
+	$(AM_V_CXXLD)$(myth_globalattr_set_n_workers_cc_LINK) $(myth_globalattr_set_n_workers_cc_OBJECTS) $(myth_globalattr_set_n_workers_cc_LDADD) $(LIBS)
+
+myth_globalattr_set_n_workers_cc_dl$(EXEEXT): $(myth_globalattr_set_n_workers_cc_dl_OBJECTS) $(myth_globalattr_set_n_workers_cc_dl_DEPENDENCIES) $(EXTRA_myth_globalattr_set_n_workers_cc_dl_DEPENDENCIES) 
+	@rm -f myth_globalattr_set_n_workers_cc_dl$(EXEEXT)
+	$(AM_V_CXXLD)$(myth_globalattr_set_n_workers_cc_dl_LINK) $(myth_globalattr_set_n_workers_cc_dl_OBJECTS) $(myth_globalattr_set_n_workers_cc_dl_LDADD) $(LIBS)
+
+myth_globalattr_set_n_workers_cc_ld$(EXEEXT): $(myth_globalattr_set_n_workers_cc_ld_OBJECTS) $(myth_globalattr_set_n_workers_cc_ld_DEPENDENCIES) $(EXTRA_myth_globalattr_set_n_workers_cc_ld_DEPENDENCIES) 
+	@rm -f myth_globalattr_set_n_workers_cc_ld$(EXEEXT)
+	$(AM_V_CXXLD)$(myth_globalattr_set_n_workers_cc_ld_LINK) $(myth_globalattr_set_n_workers_cc_ld_OBJECTS) $(myth_globalattr_set_n_workers_cc_ld_LDADD) $(LIBS)
+
+myth_globalattr_set_n_workers_dl$(EXEEXT): $(myth_globalattr_set_n_workers_dl_OBJECTS) $(myth_globalattr_set_n_workers_dl_DEPENDENCIES) $(EXTRA_myth_globalattr_set_n_workers_dl_DEPENDENCIES) 
+	@rm -f myth_globalattr_set_n_workers_dl$(EXEEXT)
+	$(AM_V_CCLD)$(myth_globalattr_set_n_workers_dl_LINK) $(myth_globalattr_set_n_workers_dl_OBJECTS) $(myth_globalattr_set_n_workers_dl_LDADD) $(LIBS)
+
+myth_globalattr_set_n_workers_ld$(EXEEXT): $(myth_globalattr_set_n_workers_ld_OBJECTS) $(myth_globalattr_set_n_workers_ld_DEPENDENCIES) $(EXTRA_myth_globalattr_set_n_workers_ld_DEPENDENCIES) 
+	@rm -f myth_globalattr_set_n_workers_ld$(EXEEXT)
+	$(AM_V_CCLD)$(myth_globalattr_set_n_workers_ld_LINK) $(myth_globalattr_set_n_workers_ld_OBJECTS) $(myth_globalattr_set_n_workers_ld_LDADD) $(LIBS)
 
 myth_join_counter$(EXEEXT): $(myth_join_counter_OBJECTS) $(myth_join_counter_DEPENDENCIES) $(EXTRA_myth_join_counter_DEPENDENCIES) 
 	@rm -f myth_join_counter$(EXEEXT)
@@ -5243,8 +5565,17 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/measure_latency_dl-measure_latency.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/measure_latency_ld-measure_latency.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/measure_malloc-measure_malloc.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/measure_malloc_cc-measure_malloc_cc.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/measure_malloc_cc_dl-measure_malloc_cc.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/measure_malloc_cc_ld-measure_malloc_cc.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/measure_malloc_dl-measure_malloc.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/measure_malloc_ld-measure_malloc.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/measure_thread_specific-measure_thread_specific.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/measure_thread_specific_cc-measure_thread_specific_cc.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/measure_thread_specific_cc_dl-measure_thread_specific_cc.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/measure_thread_specific_cc_ld-measure_thread_specific_cc.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/measure_thread_specific_dl-measure_thread_specific.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/measure_thread_specific_ld-measure_thread_specific.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/measure_wakeup_latency-measure_wakeup_latency.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/measure_wakeup_latency_cc-measure_wakeup_latency_cc.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/measure_wakeup_latency_cc_dl-measure_wakeup_latency_cc.Po@am__quote@
@@ -5332,6 +5663,12 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/myth_free-myth_free.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/myth_free_dl-myth_free.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/myth_free_ld-myth_free.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/myth_globalattr_set_n_workers-myth_globalattr_set_n_workers.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/myth_globalattr_set_n_workers_cc-myth_globalattr_set_n_workers_cc.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/myth_globalattr_set_n_workers_cc_dl-myth_globalattr_set_n_workers_cc.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/myth_globalattr_set_n_workers_cc_ld-myth_globalattr_set_n_workers_cc.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/myth_globalattr_set_n_workers_dl-myth_globalattr_set_n_workers.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/myth_globalattr_set_n_workers_ld-myth_globalattr_set_n_workers.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/myth_join_counter-myth_join_counter.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/myth_join_counter_cc-myth_join_counter_cc.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/myth_join_counter_cc_dl-myth_join_counter_cc.Po@am__quote@
@@ -5614,6 +5951,48 @@ measure_malloc_ld-measure_malloc.obj: measure_malloc.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='measure_malloc.c' object='measure_malloc_ld-measure_malloc.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(measure_malloc_ld_CFLAGS) $(CFLAGS) -c -o measure_malloc_ld-measure_malloc.obj `if test -f 'measure_malloc.c'; then $(CYGPATH_W) 'measure_malloc.c'; else $(CYGPATH_W) '$(srcdir)/measure_malloc.c'; fi`
+
+measure_thread_specific-measure_thread_specific.o: measure_thread_specific.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(measure_thread_specific_CFLAGS) $(CFLAGS) -MT measure_thread_specific-measure_thread_specific.o -MD -MP -MF $(DEPDIR)/measure_thread_specific-measure_thread_specific.Tpo -c -o measure_thread_specific-measure_thread_specific.o `test -f 'measure_thread_specific.c' || echo '$(srcdir)/'`measure_thread_specific.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/measure_thread_specific-measure_thread_specific.Tpo $(DEPDIR)/measure_thread_specific-measure_thread_specific.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='measure_thread_specific.c' object='measure_thread_specific-measure_thread_specific.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(measure_thread_specific_CFLAGS) $(CFLAGS) -c -o measure_thread_specific-measure_thread_specific.o `test -f 'measure_thread_specific.c' || echo '$(srcdir)/'`measure_thread_specific.c
+
+measure_thread_specific-measure_thread_specific.obj: measure_thread_specific.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(measure_thread_specific_CFLAGS) $(CFLAGS) -MT measure_thread_specific-measure_thread_specific.obj -MD -MP -MF $(DEPDIR)/measure_thread_specific-measure_thread_specific.Tpo -c -o measure_thread_specific-measure_thread_specific.obj `if test -f 'measure_thread_specific.c'; then $(CYGPATH_W) 'measure_thread_specific.c'; else $(CYGPATH_W) '$(srcdir)/measure_thread_specific.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/measure_thread_specific-measure_thread_specific.Tpo $(DEPDIR)/measure_thread_specific-measure_thread_specific.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='measure_thread_specific.c' object='measure_thread_specific-measure_thread_specific.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(measure_thread_specific_CFLAGS) $(CFLAGS) -c -o measure_thread_specific-measure_thread_specific.obj `if test -f 'measure_thread_specific.c'; then $(CYGPATH_W) 'measure_thread_specific.c'; else $(CYGPATH_W) '$(srcdir)/measure_thread_specific.c'; fi`
+
+measure_thread_specific_dl-measure_thread_specific.o: measure_thread_specific.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(measure_thread_specific_dl_CFLAGS) $(CFLAGS) -MT measure_thread_specific_dl-measure_thread_specific.o -MD -MP -MF $(DEPDIR)/measure_thread_specific_dl-measure_thread_specific.Tpo -c -o measure_thread_specific_dl-measure_thread_specific.o `test -f 'measure_thread_specific.c' || echo '$(srcdir)/'`measure_thread_specific.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/measure_thread_specific_dl-measure_thread_specific.Tpo $(DEPDIR)/measure_thread_specific_dl-measure_thread_specific.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='measure_thread_specific.c' object='measure_thread_specific_dl-measure_thread_specific.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(measure_thread_specific_dl_CFLAGS) $(CFLAGS) -c -o measure_thread_specific_dl-measure_thread_specific.o `test -f 'measure_thread_specific.c' || echo '$(srcdir)/'`measure_thread_specific.c
+
+measure_thread_specific_dl-measure_thread_specific.obj: measure_thread_specific.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(measure_thread_specific_dl_CFLAGS) $(CFLAGS) -MT measure_thread_specific_dl-measure_thread_specific.obj -MD -MP -MF $(DEPDIR)/measure_thread_specific_dl-measure_thread_specific.Tpo -c -o measure_thread_specific_dl-measure_thread_specific.obj `if test -f 'measure_thread_specific.c'; then $(CYGPATH_W) 'measure_thread_specific.c'; else $(CYGPATH_W) '$(srcdir)/measure_thread_specific.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/measure_thread_specific_dl-measure_thread_specific.Tpo $(DEPDIR)/measure_thread_specific_dl-measure_thread_specific.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='measure_thread_specific.c' object='measure_thread_specific_dl-measure_thread_specific.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(measure_thread_specific_dl_CFLAGS) $(CFLAGS) -c -o measure_thread_specific_dl-measure_thread_specific.obj `if test -f 'measure_thread_specific.c'; then $(CYGPATH_W) 'measure_thread_specific.c'; else $(CYGPATH_W) '$(srcdir)/measure_thread_specific.c'; fi`
+
+measure_thread_specific_ld-measure_thread_specific.o: measure_thread_specific.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(measure_thread_specific_ld_CFLAGS) $(CFLAGS) -MT measure_thread_specific_ld-measure_thread_specific.o -MD -MP -MF $(DEPDIR)/measure_thread_specific_ld-measure_thread_specific.Tpo -c -o measure_thread_specific_ld-measure_thread_specific.o `test -f 'measure_thread_specific.c' || echo '$(srcdir)/'`measure_thread_specific.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/measure_thread_specific_ld-measure_thread_specific.Tpo $(DEPDIR)/measure_thread_specific_ld-measure_thread_specific.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='measure_thread_specific.c' object='measure_thread_specific_ld-measure_thread_specific.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(measure_thread_specific_ld_CFLAGS) $(CFLAGS) -c -o measure_thread_specific_ld-measure_thread_specific.o `test -f 'measure_thread_specific.c' || echo '$(srcdir)/'`measure_thread_specific.c
+
+measure_thread_specific_ld-measure_thread_specific.obj: measure_thread_specific.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(measure_thread_specific_ld_CFLAGS) $(CFLAGS) -MT measure_thread_specific_ld-measure_thread_specific.obj -MD -MP -MF $(DEPDIR)/measure_thread_specific_ld-measure_thread_specific.Tpo -c -o measure_thread_specific_ld-measure_thread_specific.obj `if test -f 'measure_thread_specific.c'; then $(CYGPATH_W) 'measure_thread_specific.c'; else $(CYGPATH_W) '$(srcdir)/measure_thread_specific.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/measure_thread_specific_ld-measure_thread_specific.Tpo $(DEPDIR)/measure_thread_specific_ld-measure_thread_specific.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='measure_thread_specific.c' object='measure_thread_specific_ld-measure_thread_specific.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(measure_thread_specific_ld_CFLAGS) $(CFLAGS) -c -o measure_thread_specific_ld-measure_thread_specific.obj `if test -f 'measure_thread_specific.c'; then $(CYGPATH_W) 'measure_thread_specific.c'; else $(CYGPATH_W) '$(srcdir)/measure_thread_specific.c'; fi`
 
 measure_wakeup_latency-measure_wakeup_latency.o: measure_wakeup_latency.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(measure_wakeup_latency_CFLAGS) $(CFLAGS) -MT measure_wakeup_latency-measure_wakeup_latency.o -MD -MP -MF $(DEPDIR)/measure_wakeup_latency-measure_wakeup_latency.Tpo -c -o measure_wakeup_latency-measure_wakeup_latency.o `test -f 'measure_wakeup_latency.c' || echo '$(srcdir)/'`measure_wakeup_latency.c
@@ -6286,6 +6665,48 @@ myth_free_ld-myth_free.obj: myth_free.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='myth_free.c' object='myth_free_ld-myth_free.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_free_ld_CFLAGS) $(CFLAGS) -c -o myth_free_ld-myth_free.obj `if test -f 'myth_free.c'; then $(CYGPATH_W) 'myth_free.c'; else $(CYGPATH_W) '$(srcdir)/myth_free.c'; fi`
+
+myth_globalattr_set_n_workers-myth_globalattr_set_n_workers.o: myth_globalattr_set_n_workers.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_globalattr_set_n_workers_CFLAGS) $(CFLAGS) -MT myth_globalattr_set_n_workers-myth_globalattr_set_n_workers.o -MD -MP -MF $(DEPDIR)/myth_globalattr_set_n_workers-myth_globalattr_set_n_workers.Tpo -c -o myth_globalattr_set_n_workers-myth_globalattr_set_n_workers.o `test -f 'myth_globalattr_set_n_workers.c' || echo '$(srcdir)/'`myth_globalattr_set_n_workers.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/myth_globalattr_set_n_workers-myth_globalattr_set_n_workers.Tpo $(DEPDIR)/myth_globalattr_set_n_workers-myth_globalattr_set_n_workers.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='myth_globalattr_set_n_workers.c' object='myth_globalattr_set_n_workers-myth_globalattr_set_n_workers.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_globalattr_set_n_workers_CFLAGS) $(CFLAGS) -c -o myth_globalattr_set_n_workers-myth_globalattr_set_n_workers.o `test -f 'myth_globalattr_set_n_workers.c' || echo '$(srcdir)/'`myth_globalattr_set_n_workers.c
+
+myth_globalattr_set_n_workers-myth_globalattr_set_n_workers.obj: myth_globalattr_set_n_workers.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_globalattr_set_n_workers_CFLAGS) $(CFLAGS) -MT myth_globalattr_set_n_workers-myth_globalattr_set_n_workers.obj -MD -MP -MF $(DEPDIR)/myth_globalattr_set_n_workers-myth_globalattr_set_n_workers.Tpo -c -o myth_globalattr_set_n_workers-myth_globalattr_set_n_workers.obj `if test -f 'myth_globalattr_set_n_workers.c'; then $(CYGPATH_W) 'myth_globalattr_set_n_workers.c'; else $(CYGPATH_W) '$(srcdir)/myth_globalattr_set_n_workers.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/myth_globalattr_set_n_workers-myth_globalattr_set_n_workers.Tpo $(DEPDIR)/myth_globalattr_set_n_workers-myth_globalattr_set_n_workers.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='myth_globalattr_set_n_workers.c' object='myth_globalattr_set_n_workers-myth_globalattr_set_n_workers.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_globalattr_set_n_workers_CFLAGS) $(CFLAGS) -c -o myth_globalattr_set_n_workers-myth_globalattr_set_n_workers.obj `if test -f 'myth_globalattr_set_n_workers.c'; then $(CYGPATH_W) 'myth_globalattr_set_n_workers.c'; else $(CYGPATH_W) '$(srcdir)/myth_globalattr_set_n_workers.c'; fi`
+
+myth_globalattr_set_n_workers_dl-myth_globalattr_set_n_workers.o: myth_globalattr_set_n_workers.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_globalattr_set_n_workers_dl_CFLAGS) $(CFLAGS) -MT myth_globalattr_set_n_workers_dl-myth_globalattr_set_n_workers.o -MD -MP -MF $(DEPDIR)/myth_globalattr_set_n_workers_dl-myth_globalattr_set_n_workers.Tpo -c -o myth_globalattr_set_n_workers_dl-myth_globalattr_set_n_workers.o `test -f 'myth_globalattr_set_n_workers.c' || echo '$(srcdir)/'`myth_globalattr_set_n_workers.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/myth_globalattr_set_n_workers_dl-myth_globalattr_set_n_workers.Tpo $(DEPDIR)/myth_globalattr_set_n_workers_dl-myth_globalattr_set_n_workers.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='myth_globalattr_set_n_workers.c' object='myth_globalattr_set_n_workers_dl-myth_globalattr_set_n_workers.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_globalattr_set_n_workers_dl_CFLAGS) $(CFLAGS) -c -o myth_globalattr_set_n_workers_dl-myth_globalattr_set_n_workers.o `test -f 'myth_globalattr_set_n_workers.c' || echo '$(srcdir)/'`myth_globalattr_set_n_workers.c
+
+myth_globalattr_set_n_workers_dl-myth_globalattr_set_n_workers.obj: myth_globalattr_set_n_workers.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_globalattr_set_n_workers_dl_CFLAGS) $(CFLAGS) -MT myth_globalattr_set_n_workers_dl-myth_globalattr_set_n_workers.obj -MD -MP -MF $(DEPDIR)/myth_globalattr_set_n_workers_dl-myth_globalattr_set_n_workers.Tpo -c -o myth_globalattr_set_n_workers_dl-myth_globalattr_set_n_workers.obj `if test -f 'myth_globalattr_set_n_workers.c'; then $(CYGPATH_W) 'myth_globalattr_set_n_workers.c'; else $(CYGPATH_W) '$(srcdir)/myth_globalattr_set_n_workers.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/myth_globalattr_set_n_workers_dl-myth_globalattr_set_n_workers.Tpo $(DEPDIR)/myth_globalattr_set_n_workers_dl-myth_globalattr_set_n_workers.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='myth_globalattr_set_n_workers.c' object='myth_globalattr_set_n_workers_dl-myth_globalattr_set_n_workers.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_globalattr_set_n_workers_dl_CFLAGS) $(CFLAGS) -c -o myth_globalattr_set_n_workers_dl-myth_globalattr_set_n_workers.obj `if test -f 'myth_globalattr_set_n_workers.c'; then $(CYGPATH_W) 'myth_globalattr_set_n_workers.c'; else $(CYGPATH_W) '$(srcdir)/myth_globalattr_set_n_workers.c'; fi`
+
+myth_globalattr_set_n_workers_ld-myth_globalattr_set_n_workers.o: myth_globalattr_set_n_workers.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_globalattr_set_n_workers_ld_CFLAGS) $(CFLAGS) -MT myth_globalattr_set_n_workers_ld-myth_globalattr_set_n_workers.o -MD -MP -MF $(DEPDIR)/myth_globalattr_set_n_workers_ld-myth_globalattr_set_n_workers.Tpo -c -o myth_globalattr_set_n_workers_ld-myth_globalattr_set_n_workers.o `test -f 'myth_globalattr_set_n_workers.c' || echo '$(srcdir)/'`myth_globalattr_set_n_workers.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/myth_globalattr_set_n_workers_ld-myth_globalattr_set_n_workers.Tpo $(DEPDIR)/myth_globalattr_set_n_workers_ld-myth_globalattr_set_n_workers.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='myth_globalattr_set_n_workers.c' object='myth_globalattr_set_n_workers_ld-myth_globalattr_set_n_workers.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_globalattr_set_n_workers_ld_CFLAGS) $(CFLAGS) -c -o myth_globalattr_set_n_workers_ld-myth_globalattr_set_n_workers.o `test -f 'myth_globalattr_set_n_workers.c' || echo '$(srcdir)/'`myth_globalattr_set_n_workers.c
+
+myth_globalattr_set_n_workers_ld-myth_globalattr_set_n_workers.obj: myth_globalattr_set_n_workers.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_globalattr_set_n_workers_ld_CFLAGS) $(CFLAGS) -MT myth_globalattr_set_n_workers_ld-myth_globalattr_set_n_workers.obj -MD -MP -MF $(DEPDIR)/myth_globalattr_set_n_workers_ld-myth_globalattr_set_n_workers.Tpo -c -o myth_globalattr_set_n_workers_ld-myth_globalattr_set_n_workers.obj `if test -f 'myth_globalattr_set_n_workers.c'; then $(CYGPATH_W) 'myth_globalattr_set_n_workers.c'; else $(CYGPATH_W) '$(srcdir)/myth_globalattr_set_n_workers.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/myth_globalattr_set_n_workers_ld-myth_globalattr_set_n_workers.Tpo $(DEPDIR)/myth_globalattr_set_n_workers_ld-myth_globalattr_set_n_workers.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='myth_globalattr_set_n_workers.c' object='myth_globalattr_set_n_workers_ld-myth_globalattr_set_n_workers.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_globalattr_set_n_workers_ld_CFLAGS) $(CFLAGS) -c -o myth_globalattr_set_n_workers_ld-myth_globalattr_set_n_workers.obj `if test -f 'myth_globalattr_set_n_workers.c'; then $(CYGPATH_W) 'myth_globalattr_set_n_workers.c'; else $(CYGPATH_W) '$(srcdir)/myth_globalattr_set_n_workers.c'; fi`
 
 myth_join_counter-myth_join_counter.o: myth_join_counter.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_join_counter_CFLAGS) $(CFLAGS) -MT myth_join_counter-myth_join_counter.o -MD -MP -MF $(DEPDIR)/myth_join_counter-myth_join_counter.Tpo -c -o myth_join_counter-myth_join_counter.o `test -f 'myth_join_counter.c' || echo '$(srcdir)/'`myth_join_counter.c
@@ -7484,6 +7905,90 @@ measure_latency_cc_ld-measure_latency_cc.obj: measure_latency_cc.cc
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(measure_latency_cc_ld_CXXFLAGS) $(CXXFLAGS) -c -o measure_latency_cc_ld-measure_latency_cc.obj `if test -f 'measure_latency_cc.cc'; then $(CYGPATH_W) 'measure_latency_cc.cc'; else $(CYGPATH_W) '$(srcdir)/measure_latency_cc.cc'; fi`
 
+measure_malloc_cc-measure_malloc_cc.o: measure_malloc_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(measure_malloc_cc_CXXFLAGS) $(CXXFLAGS) -MT measure_malloc_cc-measure_malloc_cc.o -MD -MP -MF $(DEPDIR)/measure_malloc_cc-measure_malloc_cc.Tpo -c -o measure_malloc_cc-measure_malloc_cc.o `test -f 'measure_malloc_cc.cc' || echo '$(srcdir)/'`measure_malloc_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/measure_malloc_cc-measure_malloc_cc.Tpo $(DEPDIR)/measure_malloc_cc-measure_malloc_cc.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='measure_malloc_cc.cc' object='measure_malloc_cc-measure_malloc_cc.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(measure_malloc_cc_CXXFLAGS) $(CXXFLAGS) -c -o measure_malloc_cc-measure_malloc_cc.o `test -f 'measure_malloc_cc.cc' || echo '$(srcdir)/'`measure_malloc_cc.cc
+
+measure_malloc_cc-measure_malloc_cc.obj: measure_malloc_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(measure_malloc_cc_CXXFLAGS) $(CXXFLAGS) -MT measure_malloc_cc-measure_malloc_cc.obj -MD -MP -MF $(DEPDIR)/measure_malloc_cc-measure_malloc_cc.Tpo -c -o measure_malloc_cc-measure_malloc_cc.obj `if test -f 'measure_malloc_cc.cc'; then $(CYGPATH_W) 'measure_malloc_cc.cc'; else $(CYGPATH_W) '$(srcdir)/measure_malloc_cc.cc'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/measure_malloc_cc-measure_malloc_cc.Tpo $(DEPDIR)/measure_malloc_cc-measure_malloc_cc.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='measure_malloc_cc.cc' object='measure_malloc_cc-measure_malloc_cc.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(measure_malloc_cc_CXXFLAGS) $(CXXFLAGS) -c -o measure_malloc_cc-measure_malloc_cc.obj `if test -f 'measure_malloc_cc.cc'; then $(CYGPATH_W) 'measure_malloc_cc.cc'; else $(CYGPATH_W) '$(srcdir)/measure_malloc_cc.cc'; fi`
+
+measure_malloc_cc_dl-measure_malloc_cc.o: measure_malloc_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(measure_malloc_cc_dl_CXXFLAGS) $(CXXFLAGS) -MT measure_malloc_cc_dl-measure_malloc_cc.o -MD -MP -MF $(DEPDIR)/measure_malloc_cc_dl-measure_malloc_cc.Tpo -c -o measure_malloc_cc_dl-measure_malloc_cc.o `test -f 'measure_malloc_cc.cc' || echo '$(srcdir)/'`measure_malloc_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/measure_malloc_cc_dl-measure_malloc_cc.Tpo $(DEPDIR)/measure_malloc_cc_dl-measure_malloc_cc.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='measure_malloc_cc.cc' object='measure_malloc_cc_dl-measure_malloc_cc.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(measure_malloc_cc_dl_CXXFLAGS) $(CXXFLAGS) -c -o measure_malloc_cc_dl-measure_malloc_cc.o `test -f 'measure_malloc_cc.cc' || echo '$(srcdir)/'`measure_malloc_cc.cc
+
+measure_malloc_cc_dl-measure_malloc_cc.obj: measure_malloc_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(measure_malloc_cc_dl_CXXFLAGS) $(CXXFLAGS) -MT measure_malloc_cc_dl-measure_malloc_cc.obj -MD -MP -MF $(DEPDIR)/measure_malloc_cc_dl-measure_malloc_cc.Tpo -c -o measure_malloc_cc_dl-measure_malloc_cc.obj `if test -f 'measure_malloc_cc.cc'; then $(CYGPATH_W) 'measure_malloc_cc.cc'; else $(CYGPATH_W) '$(srcdir)/measure_malloc_cc.cc'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/measure_malloc_cc_dl-measure_malloc_cc.Tpo $(DEPDIR)/measure_malloc_cc_dl-measure_malloc_cc.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='measure_malloc_cc.cc' object='measure_malloc_cc_dl-measure_malloc_cc.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(measure_malloc_cc_dl_CXXFLAGS) $(CXXFLAGS) -c -o measure_malloc_cc_dl-measure_malloc_cc.obj `if test -f 'measure_malloc_cc.cc'; then $(CYGPATH_W) 'measure_malloc_cc.cc'; else $(CYGPATH_W) '$(srcdir)/measure_malloc_cc.cc'; fi`
+
+measure_malloc_cc_ld-measure_malloc_cc.o: measure_malloc_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(measure_malloc_cc_ld_CXXFLAGS) $(CXXFLAGS) -MT measure_malloc_cc_ld-measure_malloc_cc.o -MD -MP -MF $(DEPDIR)/measure_malloc_cc_ld-measure_malloc_cc.Tpo -c -o measure_malloc_cc_ld-measure_malloc_cc.o `test -f 'measure_malloc_cc.cc' || echo '$(srcdir)/'`measure_malloc_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/measure_malloc_cc_ld-measure_malloc_cc.Tpo $(DEPDIR)/measure_malloc_cc_ld-measure_malloc_cc.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='measure_malloc_cc.cc' object='measure_malloc_cc_ld-measure_malloc_cc.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(measure_malloc_cc_ld_CXXFLAGS) $(CXXFLAGS) -c -o measure_malloc_cc_ld-measure_malloc_cc.o `test -f 'measure_malloc_cc.cc' || echo '$(srcdir)/'`measure_malloc_cc.cc
+
+measure_malloc_cc_ld-measure_malloc_cc.obj: measure_malloc_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(measure_malloc_cc_ld_CXXFLAGS) $(CXXFLAGS) -MT measure_malloc_cc_ld-measure_malloc_cc.obj -MD -MP -MF $(DEPDIR)/measure_malloc_cc_ld-measure_malloc_cc.Tpo -c -o measure_malloc_cc_ld-measure_malloc_cc.obj `if test -f 'measure_malloc_cc.cc'; then $(CYGPATH_W) 'measure_malloc_cc.cc'; else $(CYGPATH_W) '$(srcdir)/measure_malloc_cc.cc'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/measure_malloc_cc_ld-measure_malloc_cc.Tpo $(DEPDIR)/measure_malloc_cc_ld-measure_malloc_cc.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='measure_malloc_cc.cc' object='measure_malloc_cc_ld-measure_malloc_cc.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(measure_malloc_cc_ld_CXXFLAGS) $(CXXFLAGS) -c -o measure_malloc_cc_ld-measure_malloc_cc.obj `if test -f 'measure_malloc_cc.cc'; then $(CYGPATH_W) 'measure_malloc_cc.cc'; else $(CYGPATH_W) '$(srcdir)/measure_malloc_cc.cc'; fi`
+
+measure_thread_specific_cc-measure_thread_specific_cc.o: measure_thread_specific_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(measure_thread_specific_cc_CXXFLAGS) $(CXXFLAGS) -MT measure_thread_specific_cc-measure_thread_specific_cc.o -MD -MP -MF $(DEPDIR)/measure_thread_specific_cc-measure_thread_specific_cc.Tpo -c -o measure_thread_specific_cc-measure_thread_specific_cc.o `test -f 'measure_thread_specific_cc.cc' || echo '$(srcdir)/'`measure_thread_specific_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/measure_thread_specific_cc-measure_thread_specific_cc.Tpo $(DEPDIR)/measure_thread_specific_cc-measure_thread_specific_cc.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='measure_thread_specific_cc.cc' object='measure_thread_specific_cc-measure_thread_specific_cc.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(measure_thread_specific_cc_CXXFLAGS) $(CXXFLAGS) -c -o measure_thread_specific_cc-measure_thread_specific_cc.o `test -f 'measure_thread_specific_cc.cc' || echo '$(srcdir)/'`measure_thread_specific_cc.cc
+
+measure_thread_specific_cc-measure_thread_specific_cc.obj: measure_thread_specific_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(measure_thread_specific_cc_CXXFLAGS) $(CXXFLAGS) -MT measure_thread_specific_cc-measure_thread_specific_cc.obj -MD -MP -MF $(DEPDIR)/measure_thread_specific_cc-measure_thread_specific_cc.Tpo -c -o measure_thread_specific_cc-measure_thread_specific_cc.obj `if test -f 'measure_thread_specific_cc.cc'; then $(CYGPATH_W) 'measure_thread_specific_cc.cc'; else $(CYGPATH_W) '$(srcdir)/measure_thread_specific_cc.cc'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/measure_thread_specific_cc-measure_thread_specific_cc.Tpo $(DEPDIR)/measure_thread_specific_cc-measure_thread_specific_cc.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='measure_thread_specific_cc.cc' object='measure_thread_specific_cc-measure_thread_specific_cc.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(measure_thread_specific_cc_CXXFLAGS) $(CXXFLAGS) -c -o measure_thread_specific_cc-measure_thread_specific_cc.obj `if test -f 'measure_thread_specific_cc.cc'; then $(CYGPATH_W) 'measure_thread_specific_cc.cc'; else $(CYGPATH_W) '$(srcdir)/measure_thread_specific_cc.cc'; fi`
+
+measure_thread_specific_cc_dl-measure_thread_specific_cc.o: measure_thread_specific_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(measure_thread_specific_cc_dl_CXXFLAGS) $(CXXFLAGS) -MT measure_thread_specific_cc_dl-measure_thread_specific_cc.o -MD -MP -MF $(DEPDIR)/measure_thread_specific_cc_dl-measure_thread_specific_cc.Tpo -c -o measure_thread_specific_cc_dl-measure_thread_specific_cc.o `test -f 'measure_thread_specific_cc.cc' || echo '$(srcdir)/'`measure_thread_specific_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/measure_thread_specific_cc_dl-measure_thread_specific_cc.Tpo $(DEPDIR)/measure_thread_specific_cc_dl-measure_thread_specific_cc.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='measure_thread_specific_cc.cc' object='measure_thread_specific_cc_dl-measure_thread_specific_cc.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(measure_thread_specific_cc_dl_CXXFLAGS) $(CXXFLAGS) -c -o measure_thread_specific_cc_dl-measure_thread_specific_cc.o `test -f 'measure_thread_specific_cc.cc' || echo '$(srcdir)/'`measure_thread_specific_cc.cc
+
+measure_thread_specific_cc_dl-measure_thread_specific_cc.obj: measure_thread_specific_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(measure_thread_specific_cc_dl_CXXFLAGS) $(CXXFLAGS) -MT measure_thread_specific_cc_dl-measure_thread_specific_cc.obj -MD -MP -MF $(DEPDIR)/measure_thread_specific_cc_dl-measure_thread_specific_cc.Tpo -c -o measure_thread_specific_cc_dl-measure_thread_specific_cc.obj `if test -f 'measure_thread_specific_cc.cc'; then $(CYGPATH_W) 'measure_thread_specific_cc.cc'; else $(CYGPATH_W) '$(srcdir)/measure_thread_specific_cc.cc'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/measure_thread_specific_cc_dl-measure_thread_specific_cc.Tpo $(DEPDIR)/measure_thread_specific_cc_dl-measure_thread_specific_cc.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='measure_thread_specific_cc.cc' object='measure_thread_specific_cc_dl-measure_thread_specific_cc.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(measure_thread_specific_cc_dl_CXXFLAGS) $(CXXFLAGS) -c -o measure_thread_specific_cc_dl-measure_thread_specific_cc.obj `if test -f 'measure_thread_specific_cc.cc'; then $(CYGPATH_W) 'measure_thread_specific_cc.cc'; else $(CYGPATH_W) '$(srcdir)/measure_thread_specific_cc.cc'; fi`
+
+measure_thread_specific_cc_ld-measure_thread_specific_cc.o: measure_thread_specific_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(measure_thread_specific_cc_ld_CXXFLAGS) $(CXXFLAGS) -MT measure_thread_specific_cc_ld-measure_thread_specific_cc.o -MD -MP -MF $(DEPDIR)/measure_thread_specific_cc_ld-measure_thread_specific_cc.Tpo -c -o measure_thread_specific_cc_ld-measure_thread_specific_cc.o `test -f 'measure_thread_specific_cc.cc' || echo '$(srcdir)/'`measure_thread_specific_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/measure_thread_specific_cc_ld-measure_thread_specific_cc.Tpo $(DEPDIR)/measure_thread_specific_cc_ld-measure_thread_specific_cc.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='measure_thread_specific_cc.cc' object='measure_thread_specific_cc_ld-measure_thread_specific_cc.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(measure_thread_specific_cc_ld_CXXFLAGS) $(CXXFLAGS) -c -o measure_thread_specific_cc_ld-measure_thread_specific_cc.o `test -f 'measure_thread_specific_cc.cc' || echo '$(srcdir)/'`measure_thread_specific_cc.cc
+
+measure_thread_specific_cc_ld-measure_thread_specific_cc.obj: measure_thread_specific_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(measure_thread_specific_cc_ld_CXXFLAGS) $(CXXFLAGS) -MT measure_thread_specific_cc_ld-measure_thread_specific_cc.obj -MD -MP -MF $(DEPDIR)/measure_thread_specific_cc_ld-measure_thread_specific_cc.Tpo -c -o measure_thread_specific_cc_ld-measure_thread_specific_cc.obj `if test -f 'measure_thread_specific_cc.cc'; then $(CYGPATH_W) 'measure_thread_specific_cc.cc'; else $(CYGPATH_W) '$(srcdir)/measure_thread_specific_cc.cc'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/measure_thread_specific_cc_ld-measure_thread_specific_cc.Tpo $(DEPDIR)/measure_thread_specific_cc_ld-measure_thread_specific_cc.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='measure_thread_specific_cc.cc' object='measure_thread_specific_cc_ld-measure_thread_specific_cc.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(measure_thread_specific_cc_ld_CXXFLAGS) $(CXXFLAGS) -c -o measure_thread_specific_cc_ld-measure_thread_specific_cc.obj `if test -f 'measure_thread_specific_cc.cc'; then $(CYGPATH_W) 'measure_thread_specific_cc.cc'; else $(CYGPATH_W) '$(srcdir)/measure_thread_specific_cc.cc'; fi`
+
 measure_wakeup_latency_cc-measure_wakeup_latency_cc.o: measure_wakeup_latency_cc.cc
 @am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(measure_wakeup_latency_cc_CXXFLAGS) $(CXXFLAGS) -MT measure_wakeup_latency_cc-measure_wakeup_latency_cc.o -MD -MP -MF $(DEPDIR)/measure_wakeup_latency_cc-measure_wakeup_latency_cc.Tpo -c -o measure_wakeup_latency_cc-measure_wakeup_latency_cc.o `test -f 'measure_wakeup_latency_cc.cc' || echo '$(srcdir)/'`measure_wakeup_latency_cc.cc
 @am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/measure_wakeup_latency_cc-measure_wakeup_latency_cc.Tpo $(DEPDIR)/measure_wakeup_latency_cc-measure_wakeup_latency_cc.Po
@@ -8029,6 +8534,48 @@ myth_felock_cc_ld-myth_felock_cc.obj: myth_felock_cc.cc
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='myth_felock_cc.cc' object='myth_felock_cc_ld-myth_felock_cc.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_felock_cc_ld_CXXFLAGS) $(CXXFLAGS) -c -o myth_felock_cc_ld-myth_felock_cc.obj `if test -f 'myth_felock_cc.cc'; then $(CYGPATH_W) 'myth_felock_cc.cc'; else $(CYGPATH_W) '$(srcdir)/myth_felock_cc.cc'; fi`
+
+myth_globalattr_set_n_workers_cc-myth_globalattr_set_n_workers_cc.o: myth_globalattr_set_n_workers_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_globalattr_set_n_workers_cc_CXXFLAGS) $(CXXFLAGS) -MT myth_globalattr_set_n_workers_cc-myth_globalattr_set_n_workers_cc.o -MD -MP -MF $(DEPDIR)/myth_globalattr_set_n_workers_cc-myth_globalattr_set_n_workers_cc.Tpo -c -o myth_globalattr_set_n_workers_cc-myth_globalattr_set_n_workers_cc.o `test -f 'myth_globalattr_set_n_workers_cc.cc' || echo '$(srcdir)/'`myth_globalattr_set_n_workers_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/myth_globalattr_set_n_workers_cc-myth_globalattr_set_n_workers_cc.Tpo $(DEPDIR)/myth_globalattr_set_n_workers_cc-myth_globalattr_set_n_workers_cc.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='myth_globalattr_set_n_workers_cc.cc' object='myth_globalattr_set_n_workers_cc-myth_globalattr_set_n_workers_cc.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_globalattr_set_n_workers_cc_CXXFLAGS) $(CXXFLAGS) -c -o myth_globalattr_set_n_workers_cc-myth_globalattr_set_n_workers_cc.o `test -f 'myth_globalattr_set_n_workers_cc.cc' || echo '$(srcdir)/'`myth_globalattr_set_n_workers_cc.cc
+
+myth_globalattr_set_n_workers_cc-myth_globalattr_set_n_workers_cc.obj: myth_globalattr_set_n_workers_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_globalattr_set_n_workers_cc_CXXFLAGS) $(CXXFLAGS) -MT myth_globalattr_set_n_workers_cc-myth_globalattr_set_n_workers_cc.obj -MD -MP -MF $(DEPDIR)/myth_globalattr_set_n_workers_cc-myth_globalattr_set_n_workers_cc.Tpo -c -o myth_globalattr_set_n_workers_cc-myth_globalattr_set_n_workers_cc.obj `if test -f 'myth_globalattr_set_n_workers_cc.cc'; then $(CYGPATH_W) 'myth_globalattr_set_n_workers_cc.cc'; else $(CYGPATH_W) '$(srcdir)/myth_globalattr_set_n_workers_cc.cc'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/myth_globalattr_set_n_workers_cc-myth_globalattr_set_n_workers_cc.Tpo $(DEPDIR)/myth_globalattr_set_n_workers_cc-myth_globalattr_set_n_workers_cc.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='myth_globalattr_set_n_workers_cc.cc' object='myth_globalattr_set_n_workers_cc-myth_globalattr_set_n_workers_cc.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_globalattr_set_n_workers_cc_CXXFLAGS) $(CXXFLAGS) -c -o myth_globalattr_set_n_workers_cc-myth_globalattr_set_n_workers_cc.obj `if test -f 'myth_globalattr_set_n_workers_cc.cc'; then $(CYGPATH_W) 'myth_globalattr_set_n_workers_cc.cc'; else $(CYGPATH_W) '$(srcdir)/myth_globalattr_set_n_workers_cc.cc'; fi`
+
+myth_globalattr_set_n_workers_cc_dl-myth_globalattr_set_n_workers_cc.o: myth_globalattr_set_n_workers_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_globalattr_set_n_workers_cc_dl_CXXFLAGS) $(CXXFLAGS) -MT myth_globalattr_set_n_workers_cc_dl-myth_globalattr_set_n_workers_cc.o -MD -MP -MF $(DEPDIR)/myth_globalattr_set_n_workers_cc_dl-myth_globalattr_set_n_workers_cc.Tpo -c -o myth_globalattr_set_n_workers_cc_dl-myth_globalattr_set_n_workers_cc.o `test -f 'myth_globalattr_set_n_workers_cc.cc' || echo '$(srcdir)/'`myth_globalattr_set_n_workers_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/myth_globalattr_set_n_workers_cc_dl-myth_globalattr_set_n_workers_cc.Tpo $(DEPDIR)/myth_globalattr_set_n_workers_cc_dl-myth_globalattr_set_n_workers_cc.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='myth_globalattr_set_n_workers_cc.cc' object='myth_globalattr_set_n_workers_cc_dl-myth_globalattr_set_n_workers_cc.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_globalattr_set_n_workers_cc_dl_CXXFLAGS) $(CXXFLAGS) -c -o myth_globalattr_set_n_workers_cc_dl-myth_globalattr_set_n_workers_cc.o `test -f 'myth_globalattr_set_n_workers_cc.cc' || echo '$(srcdir)/'`myth_globalattr_set_n_workers_cc.cc
+
+myth_globalattr_set_n_workers_cc_dl-myth_globalattr_set_n_workers_cc.obj: myth_globalattr_set_n_workers_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_globalattr_set_n_workers_cc_dl_CXXFLAGS) $(CXXFLAGS) -MT myth_globalattr_set_n_workers_cc_dl-myth_globalattr_set_n_workers_cc.obj -MD -MP -MF $(DEPDIR)/myth_globalattr_set_n_workers_cc_dl-myth_globalattr_set_n_workers_cc.Tpo -c -o myth_globalattr_set_n_workers_cc_dl-myth_globalattr_set_n_workers_cc.obj `if test -f 'myth_globalattr_set_n_workers_cc.cc'; then $(CYGPATH_W) 'myth_globalattr_set_n_workers_cc.cc'; else $(CYGPATH_W) '$(srcdir)/myth_globalattr_set_n_workers_cc.cc'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/myth_globalattr_set_n_workers_cc_dl-myth_globalattr_set_n_workers_cc.Tpo $(DEPDIR)/myth_globalattr_set_n_workers_cc_dl-myth_globalattr_set_n_workers_cc.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='myth_globalattr_set_n_workers_cc.cc' object='myth_globalattr_set_n_workers_cc_dl-myth_globalattr_set_n_workers_cc.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_globalattr_set_n_workers_cc_dl_CXXFLAGS) $(CXXFLAGS) -c -o myth_globalattr_set_n_workers_cc_dl-myth_globalattr_set_n_workers_cc.obj `if test -f 'myth_globalattr_set_n_workers_cc.cc'; then $(CYGPATH_W) 'myth_globalattr_set_n_workers_cc.cc'; else $(CYGPATH_W) '$(srcdir)/myth_globalattr_set_n_workers_cc.cc'; fi`
+
+myth_globalattr_set_n_workers_cc_ld-myth_globalattr_set_n_workers_cc.o: myth_globalattr_set_n_workers_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_globalattr_set_n_workers_cc_ld_CXXFLAGS) $(CXXFLAGS) -MT myth_globalattr_set_n_workers_cc_ld-myth_globalattr_set_n_workers_cc.o -MD -MP -MF $(DEPDIR)/myth_globalattr_set_n_workers_cc_ld-myth_globalattr_set_n_workers_cc.Tpo -c -o myth_globalattr_set_n_workers_cc_ld-myth_globalattr_set_n_workers_cc.o `test -f 'myth_globalattr_set_n_workers_cc.cc' || echo '$(srcdir)/'`myth_globalattr_set_n_workers_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/myth_globalattr_set_n_workers_cc_ld-myth_globalattr_set_n_workers_cc.Tpo $(DEPDIR)/myth_globalattr_set_n_workers_cc_ld-myth_globalattr_set_n_workers_cc.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='myth_globalattr_set_n_workers_cc.cc' object='myth_globalattr_set_n_workers_cc_ld-myth_globalattr_set_n_workers_cc.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_globalattr_set_n_workers_cc_ld_CXXFLAGS) $(CXXFLAGS) -c -o myth_globalattr_set_n_workers_cc_ld-myth_globalattr_set_n_workers_cc.o `test -f 'myth_globalattr_set_n_workers_cc.cc' || echo '$(srcdir)/'`myth_globalattr_set_n_workers_cc.cc
+
+myth_globalattr_set_n_workers_cc_ld-myth_globalattr_set_n_workers_cc.obj: myth_globalattr_set_n_workers_cc.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_globalattr_set_n_workers_cc_ld_CXXFLAGS) $(CXXFLAGS) -MT myth_globalattr_set_n_workers_cc_ld-myth_globalattr_set_n_workers_cc.obj -MD -MP -MF $(DEPDIR)/myth_globalattr_set_n_workers_cc_ld-myth_globalattr_set_n_workers_cc.Tpo -c -o myth_globalattr_set_n_workers_cc_ld-myth_globalattr_set_n_workers_cc.obj `if test -f 'myth_globalattr_set_n_workers_cc.cc'; then $(CYGPATH_W) 'myth_globalattr_set_n_workers_cc.cc'; else $(CYGPATH_W) '$(srcdir)/myth_globalattr_set_n_workers_cc.cc'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/myth_globalattr_set_n_workers_cc_ld-myth_globalattr_set_n_workers_cc.Tpo $(DEPDIR)/myth_globalattr_set_n_workers_cc_ld-myth_globalattr_set_n_workers_cc.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='myth_globalattr_set_n_workers_cc.cc' object='myth_globalattr_set_n_workers_cc_ld-myth_globalattr_set_n_workers_cc.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_globalattr_set_n_workers_cc_ld_CXXFLAGS) $(CXXFLAGS) -c -o myth_globalattr_set_n_workers_cc_ld-myth_globalattr_set_n_workers_cc.obj `if test -f 'myth_globalattr_set_n_workers_cc.cc'; then $(CYGPATH_W) 'myth_globalattr_set_n_workers_cc.cc'; else $(CYGPATH_W) '$(srcdir)/myth_globalattr_set_n_workers_cc.cc'; fi`
 
 myth_join_counter_cc-myth_join_counter_cc.o: myth_join_counter_cc.cc
 @am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(myth_join_counter_cc_CXXFLAGS) $(CXXFLAGS) -MT myth_join_counter_cc-myth_join_counter_cc.o -MD -MP -MF $(DEPDIR)/myth_join_counter_cc-myth_join_counter_cc.Tpo -c -o myth_join_counter_cc-myth_join_counter_cc.o `test -f 'myth_join_counter_cc.cc' || echo '$(srcdir)/'`myth_join_counter_cc.cc
@@ -9251,6 +9798,13 @@ myth_key_destructor.log: myth_key_destructor$(EXEEXT)
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
 	"$$tst" $(AM_TESTS_FD_REDIRECT)
+myth_globalattr_set_n_workers.log: myth_globalattr_set_n_workers$(EXEEXT)
+	@p='myth_globalattr_set_n_workers$(EXEEXT)'; \
+	b='myth_globalattr_set_n_workers'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
 measure_create.log: measure_create$(EXEEXT)
 	@p='measure_create$(EXEEXT)'; \
 	b='measure_create'; \
@@ -9275,6 +9829,13 @@ measure_wakeup_latency.log: measure_wakeup_latency$(EXEEXT)
 measure_malloc.log: measure_malloc$(EXEEXT)
 	@p='measure_malloc$(EXEEXT)'; \
 	b='measure_malloc'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+measure_thread_specific.log: measure_thread_specific$(EXEEXT)
+	@p='measure_thread_specific$(EXEEXT)'; \
+	b='measure_thread_specific'; \
 	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
@@ -9447,6 +10008,13 @@ myth_key_destructor_cc.log: myth_key_destructor_cc$(EXEEXT)
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
 	"$$tst" $(AM_TESTS_FD_REDIRECT)
+myth_globalattr_set_n_workers_cc.log: myth_globalattr_set_n_workers_cc$(EXEEXT)
+	@p='myth_globalattr_set_n_workers_cc$(EXEEXT)'; \
+	b='myth_globalattr_set_n_workers_cc'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
 measure_create_cc.log: measure_create_cc$(EXEEXT)
 	@p='measure_create_cc$(EXEEXT)'; \
 	b='measure_create_cc'; \
@@ -9464,6 +10032,20 @@ measure_latency_cc.log: measure_latency_cc$(EXEEXT)
 measure_wakeup_latency_cc.log: measure_wakeup_latency_cc$(EXEEXT)
 	@p='measure_wakeup_latency_cc$(EXEEXT)'; \
 	b='measure_wakeup_latency_cc'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+measure_malloc_cc.log: measure_malloc_cc$(EXEEXT)
+	@p='measure_malloc_cc$(EXEEXT)'; \
+	b='measure_malloc_cc'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+measure_thread_specific_cc.log: measure_thread_specific_cc$(EXEEXT)
+	@p='measure_thread_specific_cc$(EXEEXT)'; \
+	b='measure_thread_specific_cc'; \
 	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
@@ -9692,6 +10274,13 @@ myth_key_destructor_ld.log: myth_key_destructor_ld$(EXEEXT)
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
 	"$$tst" $(AM_TESTS_FD_REDIRECT)
+myth_globalattr_set_n_workers_ld.log: myth_globalattr_set_n_workers_ld$(EXEEXT)
+	@p='myth_globalattr_set_n_workers_ld$(EXEEXT)'; \
+	b='myth_globalattr_set_n_workers_ld'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
 measure_create_ld.log: measure_create_ld$(EXEEXT)
 	@p='measure_create_ld$(EXEEXT)'; \
 	b='measure_create_ld'; \
@@ -9716,6 +10305,13 @@ measure_wakeup_latency_ld.log: measure_wakeup_latency_ld$(EXEEXT)
 measure_malloc_ld.log: measure_malloc_ld$(EXEEXT)
 	@p='measure_malloc_ld$(EXEEXT)'; \
 	b='measure_malloc_ld'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+measure_thread_specific_ld.log: measure_thread_specific_ld$(EXEEXT)
+	@p='measure_thread_specific_ld$(EXEEXT)'; \
+	b='measure_thread_specific_ld'; \
 	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
@@ -9972,6 +10568,13 @@ myth_key_destructor_cc_ld.log: myth_key_destructor_cc_ld$(EXEEXT)
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
 	"$$tst" $(AM_TESTS_FD_REDIRECT)
+myth_globalattr_set_n_workers_cc_ld.log: myth_globalattr_set_n_workers_cc_ld$(EXEEXT)
+	@p='myth_globalattr_set_n_workers_cc_ld$(EXEEXT)'; \
+	b='myth_globalattr_set_n_workers_cc_ld'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
 measure_create_cc_ld.log: measure_create_cc_ld$(EXEEXT)
 	@p='measure_create_cc_ld$(EXEEXT)'; \
 	b='measure_create_cc_ld'; \
@@ -9989,6 +10592,20 @@ measure_latency_cc_ld.log: measure_latency_cc_ld$(EXEEXT)
 measure_wakeup_latency_cc_ld.log: measure_wakeup_latency_cc_ld$(EXEEXT)
 	@p='measure_wakeup_latency_cc_ld$(EXEEXT)'; \
 	b='measure_wakeup_latency_cc_ld'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+measure_malloc_cc_ld.log: measure_malloc_cc_ld$(EXEEXT)
+	@p='measure_malloc_cc_ld$(EXEEXT)'; \
+	b='measure_malloc_cc_ld'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+measure_thread_specific_cc_ld.log: measure_thread_specific_cc_ld$(EXEEXT)
+	@p='measure_thread_specific_cc_ld$(EXEEXT)'; \
+	b='measure_thread_specific_cc_ld'; \
 	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
@@ -10301,6 +10918,13 @@ myth_key_destructor_dl.log: myth_key_destructor_dl$(EXEEXT)
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
 	"$$tst" $(AM_TESTS_FD_REDIRECT)
+myth_globalattr_set_n_workers_dl.log: myth_globalattr_set_n_workers_dl$(EXEEXT)
+	@p='myth_globalattr_set_n_workers_dl$(EXEEXT)'; \
+	b='myth_globalattr_set_n_workers_dl'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
 measure_create_dl.log: measure_create_dl$(EXEEXT)
 	@p='measure_create_dl$(EXEEXT)'; \
 	b='measure_create_dl'; \
@@ -10325,6 +10949,13 @@ measure_wakeup_latency_dl.log: measure_wakeup_latency_dl$(EXEEXT)
 measure_malloc_dl.log: measure_malloc_dl$(EXEEXT)
 	@p='measure_malloc_dl$(EXEEXT)'; \
 	b='measure_malloc_dl'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+measure_thread_specific_dl.log: measure_thread_specific_dl$(EXEEXT)
+	@p='measure_thread_specific_dl$(EXEEXT)'; \
+	b='measure_thread_specific_dl'; \
 	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
@@ -10581,6 +11212,13 @@ myth_key_destructor_cc_dl.log: myth_key_destructor_cc_dl$(EXEEXT)
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
 	"$$tst" $(AM_TESTS_FD_REDIRECT)
+myth_globalattr_set_n_workers_cc_dl.log: myth_globalattr_set_n_workers_cc_dl$(EXEEXT)
+	@p='myth_globalattr_set_n_workers_cc_dl$(EXEEXT)'; \
+	b='myth_globalattr_set_n_workers_cc_dl'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
 measure_create_cc_dl.log: measure_create_cc_dl$(EXEEXT)
 	@p='measure_create_cc_dl$(EXEEXT)'; \
 	b='measure_create_cc_dl'; \
@@ -10598,6 +11236,20 @@ measure_latency_cc_dl.log: measure_latency_cc_dl$(EXEEXT)
 measure_wakeup_latency_cc_dl.log: measure_wakeup_latency_cc_dl$(EXEEXT)
 	@p='measure_wakeup_latency_cc_dl$(EXEEXT)'; \
 	b='measure_wakeup_latency_cc_dl'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+measure_malloc_cc_dl.log: measure_malloc_cc_dl$(EXEEXT)
+	@p='measure_malloc_cc_dl$(EXEEXT)'; \
+	b='measure_malloc_cc_dl'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+measure_thread_specific_cc_dl.log: measure_thread_specific_cc_dl$(EXEEXT)
+	@p='measure_thread_specific_cc_dl$(EXEEXT)'; \
+	b='measure_thread_specific_cc_dl'; \
 	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \

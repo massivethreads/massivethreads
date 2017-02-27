@@ -29,7 +29,7 @@ myth_tls_tree_node_alloc(myth_tls_tree_t * t, size_t sz) {
   char * end = start + myth_tls_tree_pre_alloc_sz;
   char * p = t->pre_alloc_p;
   myth_assert(p >= start);
-  myth_assert(p < end);
+  myth_assert(p <= end);
   if (p + sz <= end) {
     t->pre_alloc_p = p + sz;
     return (myth_tls_tree_node_t *)p;

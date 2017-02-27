@@ -14,7 +14,7 @@ typedef struct node {
 } node;
 
 node * make_leaf(long v) {
-  node * t = malloc(sizeof(node));
+  node * t = (node *)malloc(sizeof(node));
   t->v = v;
   t->c[0] = t->c[1] = 0;
   t->leaf = 1;
@@ -22,7 +22,7 @@ node * make_leaf(long v) {
 }
 
 node * make_node(long v, node * l, node * r) {
-  node * t = malloc(sizeof(node));
+  node * t = (node *)malloc(sizeof(node));
   t->v = v;
   t->c[0] = l;
   t->c[1] = r;

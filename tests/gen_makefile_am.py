@@ -39,6 +39,7 @@ files_in_order = [
     (0, "measure_latency"),
     (0, "measure_wakeup_latency"),
     (0, "measure_malloc"),
+    (0, "measure_thread_specific"),
     (0, "pth_barrier"),
     (0, "pth_cond_broadcast_0"),
     (0, "pth_cond_broadcast_1"),
