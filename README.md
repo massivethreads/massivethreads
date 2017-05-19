@@ -1,7 +1,7 @@
 
 MassiveThreads - a Lightweight Thread Library for High Productivity Languages
 ============================================================================
-Verion 0.98
+Verion 0.99
 May 19th 2016 
 
 API reference
