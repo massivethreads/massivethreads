@@ -21,74 +21,74 @@
 /* cilk interface; each cilk procedure (a procedure
    that calls spawn or sync) should look like:
 
-cilk int f(int x) {
-  cilk_begin;
-  spawn_(cilk_spawn f(x));
-  spawn_(y = cilk_spawn g(x));
-  cilk_sync_;
-  cilk_return(y);
-}
+   cilk int f(int x) {
+   cilk_begin;
+   spawn_(cilk_spawn f(x));
+   spawn_(y = cilk_spawn g(x));
+   cilk_sync_;
+   cilk_return(y);
+   }
 
-  - you put cilk begin when it begins
+   - you put cilk begin when it begins
    (syntactically, it is a variable declaration,
    so you can put other variable decls after it)
 
-  - spawn f(x); -> spawn_(cilk_spawn f(x));
-  - sync        -> cilk_sync_;
+   - spawn f(x); -> spawn_(cilk_spawn f(x));
+   - sync        -> cilk_sync_;
 
-  - return x;   -> cilk_return(x)
-  - return;     -> cilk_void_return;
+   - return x;   -> cilk_return(x)
+   - return;     -> cilk_void_return;
 
- */
+*/
 
-#define cilk_begin_no_prof			\
+#define cilk_begin_no_prof                      \
   int __cilk_begin__ = 0
 
-#define cilk_return_no_prof(x) do {			   \
-    (void)__cilk_begin__;				   \
-    return x;						   \
+#define cilk_return_no_prof(x) do {             \
+    (void)__cilk_begin__;                       \
+    return x;                                   \
   } while(0)
 
-#define cilk_void_return_no_prof do {			   \
-    (void)__cilk_begin__;				   \
-    return;						   \
+#define cilk_void_return_no_prof do {           \
+    (void)__cilk_begin__;                       \
+    return;                                     \
   } while(0)
 
 
 #define spawn_no_prof(spawn_stmt) spawn_stmt
 
-#define sync_no_prof do {				       \
-    cilk_sync;						       \
+#define sync_no_prof do {                       \
+    cilk_sync;                                  \
   } while(0)
 
 
-#define cilk_begin_with_prof			\
+#define cilk_begin_with_prof                    \
   int __cilk_begin__ = dr_start_cilk_proc()
 
-#define cilk_return_with_prof_t(type_of_x, x) do {	   \
-    type_of_x __cilk_return_value__ = x;		   \
-    if (__cilk_begin__) dr_end_task();                     \
-    return __cilk_return_value__;			   \
+#define cilk_return_with_prof_t(type_of_x, x) do {  \
+    type_of_x __cilk_return_value__ = x;            \
+    if (__cilk_begin__) dr_end_task();              \
+    return __cilk_return_value__;                   \
   } while(0)
 
 
-#define cilk_return_with_prof(x) do {			   \
-    typeof(x) __cilk_return_value__ = x;		   \
-    if (__cilk_begin__) dr_end_task();                     \
-    return __cilk_return_value__;			   \
+#define cilk_return_with_prof(x) do {           \
+    __typeof__(x) __cilk_return_value__ = x;    \
+    if (__cilk_begin__) dr_end_task();          \
+    return __cilk_return_value__;               \
   } while(0)
 
-#define cilk_void_return_with_prof do {                    \
-    if (__cilk_begin__) dr_end_task();                     \
-    return;						   \
+#define cilk_void_return_with_prof do {         \
+    if (__cilk_begin__) dr_end_task();          \
+    return;                                     \
   } while(0)
 
-#define spawn_with_prof(spawn_stmt) do {			\
-    if (__n_outstanding_children__ == 0) dr_begin_section();    \
-    __n_outstanding_children__++;                               \
-    dr_dag_node * __t__ = dr_enter_create_cilk_proc_task();	\
-    spawn_stmt;                                                 \
-    dr_return_from_create_task(__t__);				\
+#define spawn_with_prof(spawn_stmt) do {                      \
+    if (__n_outstanding_children__ == 0) dr_begin_section();  \
+    __n_outstanding_children__++;                             \
+    dr_dag_node * __t__ = dr_enter_create_cilk_proc_task();   \
+    spawn_stmt;                                               \
+    dr_return_from_create_task(__t__);                        \
   } while (0)
 
 #define spawn_with_prof_(spawn_stmt, file, line) do {                   \
@@ -99,19 +99,19 @@ cilk int f(int x) {
     dr_return_from_create_task_(__t__, file, line);                     \
   } while (0)
 
-#define sync_with_prof do {				       \
-    if (__n_outstanding_children__ == 0) dr_begin_section();   \
-    dr_dag_node * __t__ = dr_enter_wait_tasks();	       \
-    cilk_sync;						       \
-    dr_return_from_wait_tasks(__t__);			       \
+#define sync_with_prof do {                                   \
+    if (__n_outstanding_children__ == 0) dr_begin_section();  \
+    dr_dag_node * __t__ = dr_enter_wait_tasks();              \
+    cilk_sync;                                                \
+    dr_return_from_wait_tasks(__t__);                         \
   } while(0)
 
-#define sync_with_prof_(file, line) do {                       \
-    if (__n_outstanding_children__ == 0) dr_begin_section();   \
-    dr_dag_node * __t__ = dr_enter_wait_tasks_(file, line);    \
-    cilk_sync;						       \
-    __n_outstanding_children__ = 0;                            \
-    dr_return_from_wait_tasks_(__t__, file, line);             \
+#define sync_with_prof_(file, line) do {                      \
+    if (__n_outstanding_children__ == 0) dr_begin_section();  \
+    dr_dag_node * __t__ = dr_enter_wait_tasks_(file, line);   \
+    cilk_sync;                                                \
+    __n_outstanding_children__ = 0;                           \
+    dr_return_from_wait_tasks_(__t__, file, line);            \
   } while(0)
 
 
@@ -128,7 +128,7 @@ cilk int f(int x) {
 #define sync_                 sync_with_prof
 #define sync__(file, line)    sync_with_prof_(file, line)
 
-#define clkp_mk_task_group \
+#define clkp_mk_task_group                      \
   int __n_outstanding_children__ = 0
 
 #define dr_get_max_workers()     __cilkrts_get_nworkers()
