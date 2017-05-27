@@ -918,7 +918,13 @@ extern "C" {
     if (GS.generation % 2) {
       dr_worker_specific_state * wss 
 	= dr_get_worker_specific_state(worker);
-      dr_start_task__(wss->parent, file, line, worker);
+      if (wss->parent) {
+        dr_start_task__(wss->parent, file, line, worker);
+        wss->parent = 0;
+        return 1;
+      } else {
+        return 0;
+      }
     }
     return 0;
   }

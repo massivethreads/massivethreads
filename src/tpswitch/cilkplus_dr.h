@@ -1,5 +1,5 @@
 /* 
- * cilk or cilkplus + dag recorder
+ * cilkplus + dag recorder
  */
 
 #pragma once
@@ -58,7 +58,6 @@ cilk int f(int x) {
 #define spawn_no_prof(spawn_stmt) spawn_stmt
 
 #define sync_no_prof do {				       \
-    (void)__cilk_begin__;				       \
     cilk_sync;						       \
   } while(0)
 
@@ -68,50 +67,50 @@ cilk int f(int x) {
 
 #define cilk_return_with_prof_t(type_of_x, x) do {	   \
     type_of_x __cilk_return_value__ = x;		   \
-    (void)__cilk_begin__;				   \
-    dr_end_task();					   \
+    if (__cilk_begin__) dr_end_task();                     \
     return __cilk_return_value__;			   \
   } while(0)
 
 
 #define cilk_return_with_prof(x) do {			   \
     typeof(x) __cilk_return_value__ = x;		   \
-    (void)__cilk_begin__;				   \
-    dr_end_task();					   \
+    if (__cilk_begin__) dr_end_task();                     \
     return __cilk_return_value__;			   \
   } while(0)
 
-#define cilk_void_return_with_prof do {		   \
-    (void)__cilk_begin__;				   \
-    dr_end_task();					   \
+#define cilk_void_return_with_prof do {                    \
+    if (__cilk_begin__) dr_end_task();                     \
     return;						   \
   } while(0)
 
 #define spawn_with_prof(spawn_stmt) do {			\
+    if (__n_outstanding_children__ == 0) dr_begin_section();    \
+    __n_outstanding_children__++;                               \
     dr_dag_node * __t__ = dr_enter_create_cilk_proc_task();	\
-    (void)__cilk_begin__;					\
-    spawn_stmt;							\
+    spawn_stmt;                                                 \
     dr_return_from_create_task(__t__);				\
   } while (0)
 
 #define spawn_with_prof_(spawn_stmt, file, line) do {                   \
+    if (__n_outstanding_children__ == 0) dr_begin_section();            \
+    __n_outstanding_children__++;                                       \
     dr_dag_node * __t__ = dr_enter_create_cilk_proc_task_(file, line);  \
-    (void)__cilk_begin__;                                               \
     spawn_stmt;                                                         \
     dr_return_from_create_task_(__t__, file, line);                     \
   } while (0)
 
 #define sync_with_prof do {				       \
+    if (__n_outstanding_children__ == 0) dr_begin_section();   \
     dr_dag_node * __t__ = dr_enter_wait_tasks();	       \
-    (void)__cilk_begin__;				       \
     cilk_sync;						       \
     dr_return_from_wait_tasks(__t__);			       \
   } while(0)
 
 #define sync_with_prof_(file, line) do {                       \
+    if (__n_outstanding_children__ == 0) dr_begin_section();   \
     dr_dag_node * __t__ = dr_enter_wait_tasks_(file, line);    \
-    (void)__cilk_begin__;				       \
     cilk_sync;						       \
+    __n_outstanding_children__ = 0;                            \
     dr_return_from_wait_tasks_(__t__, file, line);             \
   } while(0)
 
@@ -129,6 +128,9 @@ cilk int f(int x) {
 #define sync_                 sync_with_prof
 #define sync__(file, line)    sync_with_prof_(file, line)
 
+#define clkp_mk_task_group \
+  int __n_outstanding_children__ = 0
+
 #define dr_get_max_workers()     __cilkrts_get_nworkers()
 #define dr_get_worker()          __cilkrts_get_worker_number()
 
@@ -144,5 +146,7 @@ cilk int f(int x) {
 #define _Cilk_sync_           sync_no_prof
 #define sync_                 sync_no_prof
 #define sync__(file, line)    sync_no_prof
+
+#define clkp_mk_task_group
 
 #endif
