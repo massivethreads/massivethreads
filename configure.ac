@@ -280,7 +280,9 @@ AM_CONDITIONAL([BUILD_DAG_RECORDER_WITH_PAPI],
 # headers
 # =============================
 
-AC_CHECK_HEADERS([malloc.h])
+AC_CHECK_HEADERS([malloc.h],
+    AM_CONDITIONAL(HAVE_MALLOC_H, true),
+    AM_CONDITIONAL(HAVE_MALLOC_H, false))
 AC_CHECK_HEADERS([link.h])
 # define HAVE_DL_ITERATE_BY_PHDR 1
 

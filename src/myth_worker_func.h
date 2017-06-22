@@ -51,9 +51,6 @@ static void myth_set_current_env(myth_running_env_t e) {
 static inline myth_running_env_t myth_get_current_env(void) {
   myth_running_env_t env
     = (myth_running_env_t)real_pthread_getspecific(g_env_key);
-#if 0
-  myth_assert(env->tid == syscall(SYS_gettid));
-#endif
   return env;
 }
 #elif WENV_IMPL == WENV_IMPL_ELF
@@ -73,9 +70,6 @@ static inline myth_running_env_t myth_get_current_env(void) {
   myth_assert(g_worker_rank < g_envs_sz);
   myth_running_env_t env = &g_envs[g_worker_rank];
   myth_assert(env->rank == g_worker_rank);
-#if 0
-  myth_assert(env->tid == syscall(SYS_gettid));
-#endif
   return env;
 }
 #elif WENV_IMPL == WENV_IMPL_NONE
@@ -126,13 +120,9 @@ static inline myth_running_env_t myth_env_get_randomly(void) {
 void myth_alrm_sighandler(int signum,siginfo_t *sinfo,void* ctx);
 
 static void myth_setup_worker(int rank) {
-  pid_t tid;
-  //Get thread ID(for debug)
-  tid = syscall(SYS_gettid);
   myth_running_env_t env = &g_envs[rank];
   env->rank = rank;
   env->exit_flag = 0;
-  env->tid = tid;
   memset(&env->prof_data, 0, sizeof(myth_prof_data));
   //Initialize allocators
   myth_flmalloc_init_worker(rank);

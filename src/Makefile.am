@@ -30,9 +30,13 @@ WRAP_SRCS = \
 #
 # _XOPEN_SOURCE is necessary on mac os to use ucontext correctly
 #
+# _DARWIN_C_SOURCE is necessary on mac os to use pthread_getname_np
+# if _XOPEN_SOURCE is specified
+#
 COMMON_CFLAGS = \
 	-D_GNU_SOURCE \
 	-D_XOPEN_SOURCE \
+	-D_DARWIN_C_SOURCE \
 	-I$(abs_top_srcdir)/include
 
 VANILLA_CFLAGS  = -DMYTH_WRAP=MYTH_WRAP_VANILLA
