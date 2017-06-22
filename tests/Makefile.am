@@ -22,11 +22,15 @@ check_PROGRAMS += myth_free
 check_PROGRAMS += myth_calloc
 check_PROGRAMS += myth_posix_memalign
 check_PROGRAMS += myth_valloc
+if HAVE_MALLOC_H
 check_PROGRAMS += myth_memalign
+endif
 if BUILD_TEST_MYTH_ALIGNED_ALLOC
 check_PROGRAMS += myth_aligned_alloc
 endif
+if HAVE_MALLOC_H
 check_PROGRAMS += myth_pvalloc
+endif
 check_PROGRAMS += myth_realloc
 check_PROGRAMS += myth_create_0
 check_PROGRAMS += myth_create_1
@@ -94,11 +98,15 @@ check_PROGRAMS += myth_free_ld
 check_PROGRAMS += myth_calloc_ld
 check_PROGRAMS += myth_posix_memalign_ld
 check_PROGRAMS += myth_valloc_ld
+if HAVE_MALLOC_H
 check_PROGRAMS += myth_memalign_ld
+endif
 if BUILD_TEST_MYTH_ALIGNED_ALLOC
 check_PROGRAMS += myth_aligned_alloc_ld
 endif
+if HAVE_MALLOC_H
 check_PROGRAMS += myth_pvalloc_ld
+endif
 check_PROGRAMS += myth_realloc_ld
 check_PROGRAMS += myth_create_0_ld
 check_PROGRAMS += myth_create_1_ld
@@ -191,11 +199,15 @@ check_PROGRAMS += myth_free_dl
 check_PROGRAMS += myth_calloc_dl
 check_PROGRAMS += myth_posix_memalign_dl
 check_PROGRAMS += myth_valloc_dl
+if HAVE_MALLOC_H
 check_PROGRAMS += myth_memalign_dl
+endif
 if BUILD_TEST_MYTH_ALIGNED_ALLOC
 check_PROGRAMS += myth_aligned_alloc_dl
 endif
+if HAVE_MALLOC_H
 check_PROGRAMS += myth_pvalloc_dl
+endif
 check_PROGRAMS += myth_realloc_dl
 check_PROGRAMS += myth_create_0_dl
 check_PROGRAMS += myth_create_1_dl
@@ -302,20 +314,24 @@ myth_valloc_SOURCES = myth_valloc.c
 myth_valloc_CFLAGS = $(common_cflags)
 myth_valloc_LDADD = $(myth_ldadd)
 myth_valloc_LDFLAGS = $(myth_ldflags)
+if HAVE_MALLOC_H
 myth_memalign_SOURCES = myth_memalign.c
 myth_memalign_CFLAGS = $(common_cflags)
 myth_memalign_LDADD = $(myth_ldadd)
 myth_memalign_LDFLAGS = $(myth_ldflags)
+endif
 if BUILD_TEST_MYTH_ALIGNED_ALLOC
 myth_aligned_alloc_SOURCES = myth_aligned_alloc.c
 myth_aligned_alloc_CFLAGS = $(common_cflags)
 myth_aligned_alloc_LDADD = $(myth_ldadd)
 myth_aligned_alloc_LDFLAGS = $(myth_ldflags)
 endif
+if HAVE_MALLOC_H
 myth_pvalloc_SOURCES = myth_pvalloc.c
 myth_pvalloc_CFLAGS = $(common_cflags)
 myth_pvalloc_LDADD = $(myth_ldadd)
 myth_pvalloc_LDFLAGS = $(myth_ldflags)
+endif
 myth_realloc_SOURCES = myth_realloc.c
 myth_realloc_CFLAGS = $(common_cflags)
 myth_realloc_LDADD = $(myth_ldadd)
@@ -578,20 +594,24 @@ myth_valloc_ld_SOURCES = myth_valloc.c
 myth_valloc_ld_CFLAGS = $(common_cflags)
 myth_valloc_ld_LDADD = $(myth_ld_ldadd)
 myth_valloc_ld_LDFLAGS = $(myth_ld_ldflags)
+if HAVE_MALLOC_H
 myth_memalign_ld_SOURCES = myth_memalign.c
 myth_memalign_ld_CFLAGS = $(common_cflags)
 myth_memalign_ld_LDADD = $(myth_ld_ldadd)
 myth_memalign_ld_LDFLAGS = $(myth_ld_ldflags)
+endif
 if BUILD_TEST_MYTH_ALIGNED_ALLOC
 myth_aligned_alloc_ld_SOURCES = myth_aligned_alloc.c
 myth_aligned_alloc_ld_CFLAGS = $(common_cflags)
 myth_aligned_alloc_ld_LDADD = $(myth_ld_ldadd)
 myth_aligned_alloc_ld_LDFLAGS = $(myth_ld_ldflags)
 endif
+if HAVE_MALLOC_H
 myth_pvalloc_ld_SOURCES = myth_pvalloc.c
 myth_pvalloc_ld_CFLAGS = $(common_cflags)
 myth_pvalloc_ld_LDADD = $(myth_ld_ldadd)
 myth_pvalloc_ld_LDFLAGS = $(myth_ld_ldflags)
+endif
 myth_realloc_ld_SOURCES = myth_realloc.c
 myth_realloc_ld_CFLAGS = $(common_cflags)
 myth_realloc_ld_LDADD = $(myth_ld_ldadd)
@@ -951,20 +971,24 @@ myth_valloc_dl_SOURCES = myth_valloc.c
 myth_valloc_dl_CFLAGS = $(common_cflags)
 myth_valloc_dl_LDADD = $(myth_dl_ldadd)
 myth_valloc_dl_LDFLAGS = $(myth_dl_ldflags)
+if HAVE_MALLOC_H
 myth_memalign_dl_SOURCES = myth_memalign.c
 myth_memalign_dl_CFLAGS = $(common_cflags)
 myth_memalign_dl_LDADD = $(myth_dl_ldadd)
 myth_memalign_dl_LDFLAGS = $(myth_dl_ldflags)
+endif
 if BUILD_TEST_MYTH_ALIGNED_ALLOC
 myth_aligned_alloc_dl_SOURCES = myth_aligned_alloc.c
 myth_aligned_alloc_dl_CFLAGS = $(common_cflags)
 myth_aligned_alloc_dl_LDADD = $(myth_dl_ldadd)
 myth_aligned_alloc_dl_LDFLAGS = $(myth_dl_ldflags)
 endif
+if HAVE_MALLOC_H
 myth_pvalloc_dl_SOURCES = myth_pvalloc.c
 myth_pvalloc_dl_CFLAGS = $(common_cflags)
 myth_pvalloc_dl_LDADD = $(myth_dl_ldadd)
 myth_pvalloc_dl_LDFLAGS = $(myth_dl_ldflags)
+endif
 myth_realloc_dl_SOURCES = myth_realloc.c
 myth_realloc_dl_CFLAGS = $(common_cflags)
 myth_realloc_dl_LDADD = $(myth_dl_ldadd)
