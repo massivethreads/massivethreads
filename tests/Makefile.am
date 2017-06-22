@@ -137,7 +137,9 @@ check_PROGRAMS += measure_latency_ld
 check_PROGRAMS += measure_wakeup_latency_ld
 check_PROGRAMS += measure_malloc_ld
 check_PROGRAMS += measure_thread_specific_ld
+if BUILD_TEST_PTH_BARRIER
 check_PROGRAMS += pth_barrier_ld
+endif
 check_PROGRAMS += pth_cond_broadcast_0_ld
 check_PROGRAMS += pth_cond_broadcast_1_ld
 check_PROGRAMS += pth_cond_signal_ld
@@ -148,7 +150,9 @@ check_PROGRAMS += pth_lock_ld
 check_PROGRAMS += pth_mixlock_ld
 check_PROGRAMS += pth_mutex_initializer_ld
 check_PROGRAMS += pth_trylock_ld
+if BUILD_TEST_PTH_YIELD
 check_PROGRAMS += pth_yield_ld
+endif
 check_PROGRAMS += new_test_ld
 check_PROGRAMS += myth_create_0_cc_ld
 check_PROGRAMS += myth_create_1_cc_ld
@@ -179,7 +183,9 @@ check_PROGRAMS += measure_latency_cc_ld
 check_PROGRAMS += measure_wakeup_latency_cc_ld
 check_PROGRAMS += measure_malloc_cc_ld
 check_PROGRAMS += measure_thread_specific_cc_ld
+if BUILD_TEST_PTH_BARRIER
 check_PROGRAMS += pth_barrier_cc_ld
+endif
 check_PROGRAMS += pth_cond_broadcast_0_cc_ld
 check_PROGRAMS += pth_cond_broadcast_1_cc_ld
 check_PROGRAMS += pth_cond_signal_cc_ld
@@ -190,7 +196,9 @@ check_PROGRAMS += pth_lock_cc_ld
 check_PROGRAMS += pth_mixlock_cc_ld
 check_PROGRAMS += pth_mutex_initializer_cc_ld
 check_PROGRAMS += pth_trylock_cc_ld
+if BUILD_TEST_PTH_YIELD
 check_PROGRAMS += pth_yield_cc_ld
+endif
 endif
 
 if BUILD_MYTH_DL
@@ -238,7 +246,9 @@ check_PROGRAMS += measure_latency_dl
 check_PROGRAMS += measure_wakeup_latency_dl
 check_PROGRAMS += measure_malloc_dl
 check_PROGRAMS += measure_thread_specific_dl
+if BUILD_TEST_PTH_BARRIER
 check_PROGRAMS += pth_barrier_dl
+endif
 check_PROGRAMS += pth_cond_broadcast_0_dl
 check_PROGRAMS += pth_cond_broadcast_1_dl
 check_PROGRAMS += pth_cond_signal_dl
@@ -249,7 +259,9 @@ check_PROGRAMS += pth_lock_dl
 check_PROGRAMS += pth_mixlock_dl
 check_PROGRAMS += pth_mutex_initializer_dl
 check_PROGRAMS += pth_trylock_dl
+if BUILD_TEST_PTH_YIELD
 check_PROGRAMS += pth_yield_dl
+endif
 check_PROGRAMS += new_test_dl
 check_PROGRAMS += myth_create_0_cc_dl
 check_PROGRAMS += myth_create_1_cc_dl
@@ -280,7 +292,9 @@ check_PROGRAMS += measure_latency_cc_dl
 check_PROGRAMS += measure_wakeup_latency_cc_dl
 check_PROGRAMS += measure_malloc_cc_dl
 check_PROGRAMS += measure_thread_specific_cc_dl
+if BUILD_TEST_PTH_BARRIER
 check_PROGRAMS += pth_barrier_cc_dl
+endif
 check_PROGRAMS += pth_cond_broadcast_0_cc_dl
 check_PROGRAMS += pth_cond_broadcast_1_cc_dl
 check_PROGRAMS += pth_cond_signal_cc_dl
@@ -291,7 +305,9 @@ check_PROGRAMS += pth_lock_cc_dl
 check_PROGRAMS += pth_mixlock_cc_dl
 check_PROGRAMS += pth_mutex_initializer_cc_dl
 check_PROGRAMS += pth_trylock_cc_dl
+if BUILD_TEST_PTH_YIELD
 check_PROGRAMS += pth_yield_cc_dl
+endif
 endif
 
 myth_malloc_SOURCES = myth_malloc.c
@@ -732,10 +748,12 @@ measure_thread_specific_ld_SOURCES = measure_thread_specific.c
 measure_thread_specific_ld_CFLAGS = $(common_cflags)
 measure_thread_specific_ld_LDADD = $(myth_ld_ldadd)
 measure_thread_specific_ld_LDFLAGS = $(myth_ld_ldflags)
+if BUILD_TEST_PTH_BARRIER
 pth_barrier_ld_SOURCES = pth_barrier.c
 pth_barrier_ld_CFLAGS = $(common_cflags)
 pth_barrier_ld_LDADD = $(myth_ld_ldadd)
 pth_barrier_ld_LDFLAGS = $(myth_ld_ldflags)
+endif
 pth_cond_broadcast_0_ld_SOURCES = pth_cond_broadcast_0.c
 pth_cond_broadcast_0_ld_CFLAGS = $(common_cflags)
 pth_cond_broadcast_0_ld_LDADD = $(myth_ld_ldadd)
@@ -776,10 +794,12 @@ pth_trylock_ld_SOURCES = pth_trylock.c
 pth_trylock_ld_CFLAGS = $(common_cflags)
 pth_trylock_ld_LDADD = $(myth_ld_ldadd)
 pth_trylock_ld_LDFLAGS = $(myth_ld_ldflags)
+if BUILD_TEST_PTH_YIELD
 pth_yield_ld_SOURCES = pth_yield.c
 pth_yield_ld_CFLAGS = $(common_cflags)
 pth_yield_ld_LDADD = $(myth_ld_ldadd)
 pth_yield_ld_LDFLAGS = $(myth_ld_ldflags)
+endif
 new_test_ld_SOURCES = new_test.c
 new_test_ld_CFLAGS = $(common_cflags)
 new_test_ld_LDADD = $(myth_ld_ldadd)
@@ -900,10 +920,12 @@ measure_thread_specific_cc_ld_SOURCES = measure_thread_specific_cc.cc
 measure_thread_specific_cc_ld_CXXFLAGS = $(common_cxxflags)
 measure_thread_specific_cc_ld_LDADD = $(myth_ld_ldadd)
 measure_thread_specific_cc_ld_LDFLAGS = $(myth_ld_ldflags)
+if BUILD_TEST_PTH_BARRIER
 pth_barrier_cc_ld_SOURCES = pth_barrier_cc.cc
 pth_barrier_cc_ld_CXXFLAGS = $(common_cxxflags)
 pth_barrier_cc_ld_LDADD = $(myth_ld_ldadd)
 pth_barrier_cc_ld_LDFLAGS = $(myth_ld_ldflags)
+endif
 pth_cond_broadcast_0_cc_ld_SOURCES = pth_cond_broadcast_0_cc.cc
 pth_cond_broadcast_0_cc_ld_CXXFLAGS = $(common_cxxflags)
 pth_cond_broadcast_0_cc_ld_LDADD = $(myth_ld_ldadd)
@@ -944,10 +966,12 @@ pth_trylock_cc_ld_SOURCES = pth_trylock_cc.cc
 pth_trylock_cc_ld_CXXFLAGS = $(common_cxxflags)
 pth_trylock_cc_ld_LDADD = $(myth_ld_ldadd)
 pth_trylock_cc_ld_LDFLAGS = $(myth_ld_ldflags)
+if BUILD_TEST_PTH_YIELD
 pth_yield_cc_ld_SOURCES = pth_yield_cc.cc
 pth_yield_cc_ld_CXXFLAGS = $(common_cxxflags)
 pth_yield_cc_ld_LDADD = $(myth_ld_ldadd)
 pth_yield_cc_ld_LDFLAGS = $(myth_ld_ldflags)
+endif
 endif
 
 if BUILD_MYTH_DL
@@ -1109,10 +1133,12 @@ measure_thread_specific_dl_SOURCES = measure_thread_specific.c
 measure_thread_specific_dl_CFLAGS = $(common_cflags)
 measure_thread_specific_dl_LDADD = $(myth_dl_ldadd)
 measure_thread_specific_dl_LDFLAGS = $(myth_dl_ldflags)
+if BUILD_TEST_PTH_BARRIER
 pth_barrier_dl_SOURCES = pth_barrier.c
 pth_barrier_dl_CFLAGS = $(common_cflags)
 pth_barrier_dl_LDADD = $(myth_dl_ldadd)
 pth_barrier_dl_LDFLAGS = $(myth_dl_ldflags)
+endif
 pth_cond_broadcast_0_dl_SOURCES = pth_cond_broadcast_0.c
 pth_cond_broadcast_0_dl_CFLAGS = $(common_cflags)
 pth_cond_broadcast_0_dl_LDADD = $(myth_dl_ldadd)
@@ -1153,10 +1179,12 @@ pth_trylock_dl_SOURCES = pth_trylock.c
 pth_trylock_dl_CFLAGS = $(common_cflags)
 pth_trylock_dl_LDADD = $(myth_dl_ldadd)
 pth_trylock_dl_LDFLAGS = $(myth_dl_ldflags)
+if BUILD_TEST_PTH_YIELD
 pth_yield_dl_SOURCES = pth_yield.c
 pth_yield_dl_CFLAGS = $(common_cflags)
 pth_yield_dl_LDADD = $(myth_dl_ldadd)
 pth_yield_dl_LDFLAGS = $(myth_dl_ldflags)
+endif
 new_test_dl_SOURCES = new_test.c
 new_test_dl_CFLAGS = $(common_cflags)
 new_test_dl_LDADD = $(myth_dl_ldadd)
@@ -1277,10 +1305,12 @@ measure_thread_specific_cc_dl_SOURCES = measure_thread_specific_cc.cc
 measure_thread_specific_cc_dl_CXXFLAGS = $(common_cxxflags)
 measure_thread_specific_cc_dl_LDADD = $(myth_dl_ldadd)
 measure_thread_specific_cc_dl_LDFLAGS = $(myth_dl_ldflags)
+if BUILD_TEST_PTH_BARRIER
 pth_barrier_cc_dl_SOURCES = pth_barrier_cc.cc
 pth_barrier_cc_dl_CXXFLAGS = $(common_cxxflags)
 pth_barrier_cc_dl_LDADD = $(myth_dl_ldadd)
 pth_barrier_cc_dl_LDFLAGS = $(myth_dl_ldflags)
+endif
 pth_cond_broadcast_0_cc_dl_SOURCES = pth_cond_broadcast_0_cc.cc
 pth_cond_broadcast_0_cc_dl_CXXFLAGS = $(common_cxxflags)
 pth_cond_broadcast_0_cc_dl_LDADD = $(myth_dl_ldadd)
@@ -1321,10 +1351,12 @@ pth_trylock_cc_dl_SOURCES = pth_trylock_cc.cc
 pth_trylock_cc_dl_CXXFLAGS = $(common_cxxflags)
 pth_trylock_cc_dl_LDADD = $(myth_dl_ldadd)
 pth_trylock_cc_dl_LDFLAGS = $(myth_dl_ldflags)
+if BUILD_TEST_PTH_YIELD
 pth_yield_cc_dl_SOURCES = pth_yield_cc.cc
 pth_yield_cc_dl_CXXFLAGS = $(common_cxxflags)
 pth_yield_cc_dl_LDADD = $(myth_dl_ldadd)
 pth_yield_cc_dl_LDFLAGS = $(myth_dl_ldflags)
+endif
 endif
 
 TESTS = $(check_PROGRAMS)
