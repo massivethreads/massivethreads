@@ -27,11 +27,11 @@ interpolate_sample(unsigned long long t0, long long x0,
 static void 
 interpolate_point(dr_clock_pos * q0, dr_clock_pos * q1, 
 		  dr_clock_pos * q, int nc) {
-  dr_check(q0->t < q1->t);
   int c;
   dr_clock_t t0 = q0->t;
   dr_clock_t t1 = q1->t;
   dr_clock_t t  = q->t;
+  (void)dr_check(q0->t < q1->t);
   for (c = 0; c < nc; c++) {
     if (!q->counters[c]) {
       /* q's value is missing. interpolate it */
@@ -135,7 +135,7 @@ interpolate_worker(dr_clock_pos ** B, dr_clock_pos ** E, int w, int nc) {
   dr_clock_pos ** p1 
     = (p0 ? next_sample_of_worker(p0 + 1, E, w, nc, (**p0).t) : 0);
   dr_clock_pos ** p;
-  dr_check(!p0 || !p1 || (p1 != p0 && (*p1)->t > (*p0)->t));
+  (void)dr_check(!p0 || !p1 || (p1 != p0 && (*p1)->t > (*p0)->t));
 
   /* scan B */
   for (p = B; p < E && (*p)->worker == w; p++) {
@@ -172,7 +172,7 @@ interpolate_worker(dr_clock_pos ** B, dr_clock_pos ** E, int w, int nc) {
         /* we reached the greater sample.
            try to find the next sample. */
         dr_clock_pos ** p2 = next_sample_of_worker(p1 + 1, E, w, nc, (**p1).t);
-        dr_check(p2 != p1);
+        (void)dr_check(p2 != p1);
         if (p2) {
           /* found. now shift the interval use for
              interpolation */
