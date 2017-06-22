@@ -20,6 +20,7 @@
 #include <papi.h>
 #endif
 
+#if DAG_RECORDER_ENABLE_PAPI
 /* show PAPI error message */
 static void 
 dr_papi_show_error_(int retval, const char * file, int line) {
@@ -159,6 +160,7 @@ static void
 mem_barrier() {
   __sync_synchronize();
 }
+#endif /* DAG_RECORDER_ENABLE_PAPI */
 
 dr_papi_gdata_t *
 dr_papi_make_gdata() {
@@ -227,6 +229,7 @@ dr_papi_make_tdata(dr_papi_gdata_t * gd) {
 #endif /* DAG_RECORDER_ENABLE_PAPI */
 }
 
+#if DAG_RECORDER_ENABLE_PAPI
 /* create an event set from an array of event_codes,
    set it to thread-local data td. 
    return the number of events successfully put in the set */
@@ -264,6 +267,7 @@ dr_papi_make_thread_eventset(char ** event_names, int * event_codes, int n_event
   return 0;                        /* no events */
 #endif
 }
+#endif /* DAG_RECORDER_ENABLE_PAPI */
 
 /* initialize thread-specific PAPI measurement,
    should be called by every thread */
@@ -308,6 +312,7 @@ dr_papi_init_thread(dr_papi_gdata_t * gd, dr_papi_tdata_t * td) {
 #endif /* DAG_RECORDER_ENABLE_PAPI */  
 };
 
+#if DAG_RECORDER_ENABLE_PAPI
 static long long
 dr_papi_interpolate(unsigned long long t0, long long v0, unsigned long long t1, long long v1, unsigned long long t) {
   (void) dr_check(t0 < t1);
@@ -315,6 +320,7 @@ dr_papi_interpolate(unsigned long long t0, long long v0, unsigned long long t1, 
   double b = ((double)t1 - (double)t) / ((double)t1 - (double)t0);
   return (long long)(a * v1 + b * v0);  
 }
+#endif /* DAG_RECORDER_ENABLE_PAPI */
 
 int
 dr_papi_read(dr_papi_gdata_t * gd, dr_papi_tdata_t * td, long long * values) {

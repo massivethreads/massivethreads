@@ -96,6 +96,7 @@ next_sample_of_worker(dr_clock_pos ** B, dr_clock_pos ** E, int w, int nc, dr_cl
 }
 
 
+#if 0
 static void
 get_counter_value_string(char * s, dr_clock_pos * p, int nc) {
   sprintf(s, "%lld", p->counters[0]);
@@ -104,6 +105,7 @@ get_counter_value_string(char * s, dr_clock_pos * p, int nc) {
     sprintf(s, "%s/%lld", s, p->counters[c]);
   }
 }
+#endif
 
 /*
    as the result of executing this function,
