@@ -113,7 +113,6 @@ typedef struct myth_running_env {
   myth_spinlock_t log_lock;
   struct myth_log_entry *log_data;
   struct myth_prof_data prof_data;
-  pid_t tid;//an ID of the worker thread
   struct myth_sched sched;	//Scheduler descriptor
   //The following entries may be read from other worker threads
   pthread_t worker;
