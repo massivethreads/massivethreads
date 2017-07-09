@@ -21,7 +21,11 @@ void * f(void * arg_) {
   long a = arg->a, b = arg->b, n_keys = arg->n_keys;
   if (b - a == 1) {
     long i;
-    unsigned short rg[3] = { a, a + 1, a + 2 };
+    unsigned short rg[3] = {
+      (unsigned short)(     a  & 0xffff),
+      (unsigned short)((a + 1) & 0xffff),
+      (unsigned short)((a + 2) & 0xffff)
+    };
     void * vals[n_keys];
     for (i = 0; i < n_keys; i++) {
       void * v = (void *)jrand48(rg);
