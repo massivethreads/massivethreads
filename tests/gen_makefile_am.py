@@ -29,6 +29,7 @@ files_in_order = [
     (0, "myth_join_counter"),
     (0, "myth_felock"),
     (0, "myth_uncond_signal"),
+    (0, "myth_uncond_bounded_buf"),
     (0, "myth_dag_1d"),
     (0, "myth_dag_2d"),
     (0, "myth_dag_random"),
