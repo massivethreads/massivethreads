@@ -1354,10 +1354,12 @@ extern "C" {
 
      P:
        1: atomically_change_data_to_indicate_I_am_sleeping;
+
        2: myth_uncond_wait(u);
 
      Q:
        3: atomically_change_data_to_indicate_none_is_sleeping;
+
        4: myth_uncond_signal(u);
 
      line 1 and 3 must be done atomically with respect to each other.
