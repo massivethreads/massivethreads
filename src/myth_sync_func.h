@@ -1011,4 +1011,60 @@ static inline int myth_felockattr_destroy_body(myth_felockattr_t * attr) {
   return 0;
 }
 
+/* ----------- uncond ----------- */
+
+static inline int myth_uncond_init_body(myth_uncond_t * u) {
+  u->th = 0;
+  return 0;
+}
+
+static inline int myth_uncond_destroy_body(myth_uncond_t * u) {
+  u->th = 0;
+  return 0;
+}
+
+// __attribute__((used,noinline,sysv_abi)) 
+MYTH_CTX_CALLBACK
+void myth_uncond_wait_cb(void *arg1,void *arg2,void *arg3) {
+  myth_uncond_t * u = arg1;
+  myth_thread_t cur = arg2;
+  u->th = cur;
+}
+
+static inline int myth_uncond_wait_body(myth_uncond_t * u) {
+  myth_running_env_t env = myth_get_current_env();
+  myth_thread_t cur = env->this_thread;
+  /* pop next thread to run */
+  myth_thread_t next = myth_queue_pop(&env->runnable_q);
+  /* next context to run. either another thread
+     or the scheduler */
+  myth_context_t next_ctx;
+  env->this_thread = next;
+  if (next) {
+    /* a runnable thread */
+    next->env = env;
+    next_ctx = &next->context;
+  } else {
+    /* no runnable thread -> scheduler */
+    next_ctx = &env->sched.context;
+  }
+  /* now save the current context, myth_sleep_queue_enq_th(q, cur)
+     to put cur in the q, and jump to next_ctx */
+  myth_swap_context_withcall(&cur->context, next_ctx,
+			     myth_uncond_wait_cb, u, cur, 0);
+  return 0;
+}
+
+static inline int myth_uncond_signal_body(myth_uncond_t * u) {
+  myth_running_env_t env = myth_get_current_env();
+  myth_thread_t to_wake = u->th;
+  while (!to_wake) {
+    to_wake = u->th;
+  }
+  to_wake->env = env;
+  u->th = 0;
+  myth_queue_push(&env->runnable_q, to_wake);
+  return 0;
+}
+
 #endif /* MYTH_SYNC_FUNC_H_ */

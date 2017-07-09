@@ -16,6 +16,14 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+  /* 
+     at this point we define myth_thread_t
+     to be an opaque pointer. struct myth_thread
+     is defined in myth_desc.h
+  */
+
+  typedef struct myth_thread * myth_thread_t;
+
 
   /* ---------------------------------------
      --- mutex ---
@@ -135,6 +143,13 @@ extern "C" {
     myth_felockattr_t attr;
   } myth_felock_t;
 
+  /* ---------------------------------------
+     --- uncondition variable ---
+     --------------------------------------- */
+
+  typedef struct {
+    volatile myth_thread_t th; /* the thread sleeping on it */
+  } myth_uncond_t;
 
   /* ---------------------------------------
      --- global attributes and initialization functions ---
@@ -355,14 +370,6 @@ extern "C" {
   
   typedef void*(*myth_func_t)(void*);
   
-  /* 
-     at this point we define myth_thread_t
-     to be an opaque pointer. struct myth_thread
-     is defined in myth_desc.h
-  */
-
-  typedef struct myth_thread * myth_thread_t;
-
   /*
     Function: myth_create
 
@@ -1246,6 +1253,26 @@ extern "C" {
   /* felock */
 
   /* 
+     Function: myth_uncond_init
+   */
+  int myth_uncond_init(myth_uncond_t * u);
+
+  /* 
+     Function: myth_uncond_destroy
+   */
+  int myth_uncond_destroy(myth_uncond_t * u);
+
+  /* 
+     Function: myth_uncond_wait
+   */
+  int myth_uncond_wait(myth_uncond_t * u);
+
+  /* 
+     Function: myth_uncond_signal
+   */
+  int myth_uncond_signal(myth_uncond_t * u);
+
+  /* 
      Function: myth_felock_init
    */
   int myth_felock_init(myth_felock_t * fe, const myth_felockattr_t * attr);
@@ -1290,6 +1317,9 @@ extern "C" {
    */
   int myth_felockattr_destroy(myth_felockattr_t * attr);
 
+
+
+  
 
   typedef int myth_key_t;
 

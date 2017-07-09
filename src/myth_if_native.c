@@ -519,6 +519,26 @@ int myth_felockattr_destroy(myth_felockattr_t * attr) {
   return myth_felockattr_destroy_body(attr);
 }
 
+/* ------------------------------
+   --- uncondition variables 
+   ------------------------------ */
+
+int myth_uncond_init(myth_uncond_t * u) {
+  return myth_uncond_init_body(u);
+}
+
+int myth_uncond_destroy(myth_uncond_t * u) {
+  return myth_uncond_destroy_body(u);
+}
+
+int myth_uncond_wait(myth_uncond_t * u) {
+  return myth_uncond_wait_body(u);
+}
+
+int myth_uncond_signal(myth_uncond_t * u) {
+  return myth_uncond_signal_body(u);
+}
+
 /* --------------------------------
    --- thread local storage 
    -------------------------------- */
