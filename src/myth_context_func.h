@@ -566,8 +566,27 @@ static inline void myth_make_context_empty(myth_context_t ctx, void *stack,
 #define SUB_RSP_8() "sub $8,%%rsp\n"
 #define ADD_RSP_8() "add $8,%%rsp\n"
 
-  //Context switching functions (inlined)
 #define myth_swap_context_i(switch_from,switch_to) \
+  {DECLARE_DUMMY_VARIABLES			   \
+      asm volatile(				   \
+		   PUSH_CALLEE_SAVED()		   \
+		   SUB_RSP_8()			   \
+		   PUSH_LABEL_USING_BP("1f")	   \
+		   "mov %%rsp,("C0")\n"		   \
+		   "mov ("C1"),%%rsp\n"		   \
+		   MY_RET_A			   \
+		   "1:\n"			   \
+		   ADD_RSP_8()			   \
+		   POP_CALLEE_SAVED()		   \
+		   :DUMMY_VARIABLE_CONSTRAINTS				\
+		   :R_A((void*)(switch_from)),R_D((void*)(switch_to))	\
+		   :CLOBBERED_CONSTRAINTS);				\
+    /*REG_BARRIER();*/}
+
+
+// the following is another (work-in-progress) attempt to make rsp always
+// aligned to 16 bytes. examine it later
+#define xxx_myth_swap_context_i(switch_from,switch_to) \
 	{DECLARE_DUMMY_VARIABLES\
 	asm volatile("movq %%rsp,%%rbx\n"	\
 		     "andq $-0x10,%%rsp\n"	\
@@ -580,12 +599,13 @@ static inline void myth_make_context_empty(myth_context_t ctx, void *stack,
 		     "pop %%rax\n"		\
 		     "jmp *%%rax\n"		\
 		     "1:\n"			\
-		     "addq $0x8,%%rsp\n"		\
+		     "addq $0x8,%%rsp\n"	\
 		     POP_CALLEE_SAVED()		\
 		     :DUMMY_VARIABLE_CONSTRAINTS			\
 		     :R_A((void*)(switch_from)),R_D((void*)(switch_to))	\
 		     :CLOBBERED_CONSTRAINTS);				\
 	  /*REG_BARRIER();*/}
+
 
 #define myth_swap_context_withcall_i(switch_from,switch_to,f,arg1,arg2,arg3) \
 	{DECLARE_DUMMY_VARIABLES\
