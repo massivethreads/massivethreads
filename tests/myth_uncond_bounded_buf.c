@@ -14,14 +14,18 @@ void sleep_exit(long sec) {
 
 /* -------------------------------------------- */
 
+/* multiple producer, single consumer bounded buffer */
+
+/* an item in a bounded buffer.
+   not very important in this program (just for checking
+   if the result is correct) */
 typedef struct {
-  volatile long producer;
-  volatile long payload;
+  volatile long producer;	/* producer rank */
+  volatile long payload;	/* payload */
 } bb_item;
 
-/* multiple producer, single consumer bounded buffer */
 typedef struct {
-  volatile long h;	    /* number of items that have been gotten */
+  volatile long h;	    /* number of items that have been gotten | consumer_waiting_bit */
   volatile long t;	    /* number of items that have been put */
   long sz;		    /* length of a */
   volatile bb_item * a;	    /* items array */
@@ -46,37 +50,28 @@ int bb_init(bounded_buffer_t * bb, long sz) {
 #endif
 const int dbg = DBG;
 
+/* tail pointer is <index>|<consumer_waiting_bit> */
 long mk_tail(long t, int consumer_waiting) {
   return (t << 1) | consumer_waiting;
 }
 
-int consumer_waiting(long t_) {
+int is_consumer_waiting(long t_) {
   return t_ & 1;
 }
 
-void membar() {
-}
 
-/* 
-
-get 
-   (t,c) - put -> (t+1,c)   not full
-   (t,c) - put -> (t,  c)   full (sleep)
-
-   (t,c) - get -> (t,  c)   not empty
-   (t,c) - get -> (t,  1)   empty (sleep)
+/* put an item x in bounded buffer bb.
+   it bails out after n_tires trials
+   (assuming that it is caused by a bug, not
+   an inherint scheduling delay)
  */
-
-
 int bb_put(bounded_buffer_t * bb, bb_item x, long n_tries) {
   long sz = bb->sz;
   for (long i = 0; i < n_tries; i++) {
     long t_ = bb->t;		/* tail + sleep bits */
     long h  = bb->h;		/* head */
-    /* t_ < 0 means bits are flipped by a sleeper.
-       make it the valid pointer */
-    long t = t_ >> 1;
-    int cw = consumer_waiting(t_);  /* consumer waiting */
+    long t = t_ >> 1;		/* t = number of items that have been put */
+    int cw = is_consumer_waiting(t_);  /* consumer waiting */
     if (dbg>=2) {
       printf(" put [%ld]: h=%ld, t=(%ld,%d)\n", i, h, t, cw);
     }
@@ -88,7 +83,7 @@ int bb_put(bounded_buffer_t * bb, bb_item x, long n_tries) {
 	       i, t, cw, t + 1, 0);
       }
       if (__sync_bool_compare_and_swap(&bb->t, t_, mk_tail(t + 1, 0))) {
-	/* I won */
+	/* I won. I am the one who put t-th item */
 	if (dbg>=2) {
 	  printf(" put [%ld]: won\n", i);
 	}
@@ -111,6 +106,7 @@ int bb_put(bounded_buffer_t * bb, bb_item x, long n_tries) {
 	}
       }
     } else {
+      /* queue is full. yield */
       myth_yield();
     }
   }
@@ -128,12 +124,12 @@ bb_item bb_get(bounded_buffer_t * bb, long n_tries) {
   long sz = bb->sz;
   for (long i = 0; i < n_tries; i++) {
     long t_ = bb->t;		/* tail of the queue */
-    long t = t_ >> 1;
-    int cw = consumer_waiting(t_);  /* consumer waiting */
+    long t = t_ >> 1;		/* t = number of items that have been put */
+    int cw = is_consumer_waiting(t_);  /* consumer waiting */
     if (dbg>=2) {
       printf(" get [%ld]: h=%ld, (%ld,%d)\n", i, h, t, cw);
     }
-    assert(h <= t);		/* unless bit-flipped, be always true */
+    assert(h <= t);
     if (h < t) {		/* the queue has an item (not empty). get it */
       assert(cw == 0);
       if (dbg>=2) {
@@ -149,7 +145,6 @@ bb_item bb_get(bounded_buffer_t * bb, long n_tries) {
 	if (x.payload != -1 && x.producer != -1) {
 	  bb->a[h % sz].producer = -1;
 	  bb->a[h % sz].payload = -1;
-	  membar();
 	  bb->h = h + 1;	/* advance head pointer */
 	  if (dbg>=2) {
 	    printf(" get [%ld]: -> %ld\n", i, x.payload);
