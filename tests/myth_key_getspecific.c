@@ -9,7 +9,11 @@ myth_key_t keys[n_keys];
 
 void * f(void * x) {
   long a = (long)x;
-  unsigned short rg[3] = { a, a + 1, a + 2 };
+  unsigned short rg[3] = {
+    (unsigned short)(     a  & 0xffff),
+    (unsigned short)((a + 1) & 0xffff),
+    (unsigned short)((a + 2) & 0xffff)
+  };
   void * vals[n_keys];
   int i, t;
   for (i = 0; i < n_keys; i++) {
