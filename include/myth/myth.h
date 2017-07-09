@@ -1253,26 +1253,6 @@ extern "C" {
   /* felock */
 
   /* 
-     Function: myth_uncond_init
-   */
-  int myth_uncond_init(myth_uncond_t * u);
-
-  /* 
-     Function: myth_uncond_destroy
-   */
-  int myth_uncond_destroy(myth_uncond_t * u);
-
-  /* 
-     Function: myth_uncond_wait
-   */
-  int myth_uncond_wait(myth_uncond_t * u);
-
-  /* 
-     Function: myth_uncond_signal
-   */
-  int myth_uncond_signal(myth_uncond_t * u);
-
-  /* 
      Function: myth_felock_init
    */
   int myth_felock_init(myth_felock_t * fe, const myth_felockattr_t * attr);
@@ -1318,7 +1298,112 @@ extern "C" {
   int myth_felockattr_destroy(myth_felockattr_t * attr);
 
 
+  /* 
+     Function: myth_uncond_init
 
+     initialize an uncondition variable.
+
+     Parameters:
+     uncond - a pointer to an unconditional variable data structure 
+     to initialize
+
+     Returns:
+     zero if it succeeds and non-zero otherwise
+   */
+  int myth_uncond_init(myth_uncond_t * uncond);
+
+  /* 
+     Function: myth_uncond_destroy
+
+     destroy an uncondition variable.
+
+     Parameters:
+     uncond - a pointer to an unconditional variable data structure
+     to destroy
+
+     Returns:
+     zero if it succeeds and non-zero otherwise
+   */
+  int myth_uncond_destroy(myth_uncond_t * u);
+
+  /* 
+     Function: myth_uncond_wait
+
+     block on an uncondition variable, to be waken up later
+     by myth_uncond_signal.  there can be only one thread
+     blocking on a single myth_uncond_t variable at the same time.
+     
+     this function is typically called after
+     the caller checked a data structure and learned that
+     it cannot proceed (e.g., a caller thread trying to 
+     get an element from a queue learned the queue is empty).
+     unlike cond_wait, however, it does not take an extra mutex variable
+     that is assumed to be held by the caller.  
+     thus, it is the user's responsibility to implement a means 
+     to resolve the race condition between the caller (P) and another
+     thread (Q) that might be changing the data structure concurrently.
+     unless correctly done, it might cause a deadlock bug;
+     if Q changes the data structure a moment 
+     after P learned it cannot proceed but before 
+     P enters myth_uncond_wait, Q might miss the opportunity 
+     to wake up P.  myth_uncond_signal waits until a thread blocks
+     on myth_uncond_t and wakes it up.
+
+     In summary, a typical (correct) sequence to use myth_uncond_wait
+     and myth_uncond_signal is as follows.
+
+     P:
+       1: atomically_change_data_to_indicate_I_am_sleeping;
+       2: myth_uncond_wait(u);
+
+     Q:
+       3: atomically_change_data_to_indicate_none_is_sleeping;
+       4: myth_uncond_signal(u);
+
+     line 1 and 3 must be done atomically with respect to each other.
+     when 1 succeds, a subsequent execution of line 3 by Q must witness
+     P should be blocking.  when Q enters line 4, P might not have
+     executed line 2.  myth_uncond_signal guarantees it waits for P
+     to enter.
+
+     Parameters:
+     uncond - a pointer to an unconditional variable data structure
+     on which the calling thread blocks.
+
+     Returns:
+     zero if it succeeds and non-zero otherwise
+   */
+  int myth_uncond_wait(myth_uncond_t * uncond);
+
+  /* 
+     Function: myth_uncond_signal
+
+     unblock the thread blocking on uncond.
+     even if no threads are found on uncond at the moment
+     of the call to this function, the caller _waits_ for
+     a thread to block on it, and then wakes it up.
+     in other words, this function _always_ wakes up a thread.
+     
+     this function is typically called after
+     the caller checked a data structure and learned that
+     a thread should be blocked waiting for a condition to be met.
+     unlike cond_signal, this function does not assume there is a common
+     mutex protecting the data structure. therefore it is 
+     the user's responsibility to implement a means for the
+     caller to be able to "learn that a thread should be blocked."
+
+     see the description of myth_uncond_wait for details.
+
+
+     Parameters:
+     uncond - a pointer to an unconditional variable data structure
+     on which a thread is blocked.
+
+     Returns:
+     zero if it succeeds and non-zero otherwise
+
+   */
+  int myth_uncond_signal(myth_uncond_t * uncond);
   
 
   typedef int myth_key_t;
