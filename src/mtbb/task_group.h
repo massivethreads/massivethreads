@@ -472,7 +472,7 @@ namespace mtbb {
       c(c_), parent_interval(parent_interval_),
 	file(file_), line(line_) {}
       
-      void operator() () {
+      void operator() () const {
 	dr_start_task_(parent_interval, file, line);
 	c();
 	dr_end_task_(file, line);

@@ -453,9 +453,7 @@ do { if (X) { create_taskc_and_wait(E); } else { call_taskc(E); } } while(0)
   }
 */
 
-#if !defined(PFOR_TO_ALLATONCE) && !defined(PFOR_TO_BISECTION) && !defined(PFOR_TO_ORIGINAL)
-#define PFOR_TO_BISECTION 1
-#endif
+#if defined(PFOR_TO_ALLATONCE) || defined(PFOR_TO_BISECTION) || defined(PFOR_TO_ORIGINAL)
 
 #if __cplusplus >= 201103L
   #if PFOR_TO_ORIGINAL
@@ -648,6 +646,8 @@ do { if (X) { create_taskc_and_wait(E); } else { call_taskc(E); } } while(0)
   #elif PFOR_TO_ALLATONCE
     #error "error: pfor_allatonce (parallel for) needs C++11; add a flag -std=c++11"
   #endif
+#endif
+
 #endif
 
 
