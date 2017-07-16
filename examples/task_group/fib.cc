@@ -13,7 +13,7 @@ double cur_time() {
 }
 
 int fib(int n) {
-  if (n < 2) return 1;
+  if (n < 2) return n;
   else {
     mtbb::task_group tg; int x, y;
     tg.run([=,&x] { x = fib(n - 1); });

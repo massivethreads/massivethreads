@@ -294,7 +294,7 @@ void * tree_free_parallel(void * args)
   node_t *p = (node_t *) args;
   int i;
 
-  if (p == NULL) return;
+  if (p == NULL) return (void *) 0;
 
   for (i = 0; i < N_CHILD; i++) {
     if (i < N_CHILD - 1)

@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <string.h>
+#include <mcheck.h>
 #include <pthread.h>
 #include <sys/time.h>
 
@@ -85,6 +86,24 @@ inline void memp_put(node_t * ptr)
   }
 }
 
+inline int quick_base(int depth)
+{
+  switch (depth) {
+    case 0: return 0;
+    case 1: return 1;
+    case 2: return 9;
+    case 3: return 73;
+    case 4: return 585;
+    case 5: return 4681;
+    case 6: return 37449;
+    case 7: return 299593;
+    case 8: return 2396745;
+    case 9: return 19173961;
+    case 10: return 153391689;
+    default: return (pow(N_CHILD, depth) - 1) / (N_CHILD - 1);
+  }
+}
+
 inline node_t * new_node(void) {
   node_t *n = (node_t *) xmalloc(sizeof(struct node));
   memset(n, 0x0, sizeof(node_t));
@@ -157,24 +176,6 @@ void tree_build_serial_downtop(node_t * node)
   }
 }
 
-inline int quick_base(int depth)
-{
-  switch (depth) {
-    case 0: return 0;
-    case 1: return 1;
-    case 2: return 9;
-    case 3: return 73;
-    case 4: return 585;
-    case 5: return 4681;
-    case 6: return 37449;
-    case 7: return 299593;
-    case 8: return 2396745;
-    case 9: return 19173961;
-    case 10: return 153391689;
-    default: return (pow(N_CHILD, depth) - 1) / (N_CHILD - 1);
-  }
-}
-
 void * tree_build_parallel_topdown(void * args)
 {
   pthread_t ths[N_CHILD];
@@ -239,7 +240,7 @@ void * tree_build_parallel_downtop(void * args)
   int t0, t1, t2, t3;
 
   
-  if (node->depth >= G_MAX_DEPTH) return;
+  if (node->depth >= G_MAX_DEPTH) return (void *)0;
 
   child_depth = node->depth + 1;
   memset(nodes, 0x0, sizeof(node_t) * N_CHILD);

@@ -10,8 +10,7 @@ fi
 WORKERS=$1; shift
 PROG=$1; shift
 
-export LD_LIBRARY_PATH=../../.libs
-export MYTH_WORKER_NUM=${WORKERS}
+export MYTH_NUM_WORKERS=${WORKERS}
 export PATH=./:${PATH}
 
 if [ ! -f ${PROG} ]; then

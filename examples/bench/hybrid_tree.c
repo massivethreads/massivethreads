@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <string.h>
+#include <mcheck.h>
 #include <pthread.h>
 #include <sys/time.h>
 
@@ -93,7 +94,7 @@ void * tree_build_parallel(void *args)
   int child_dep, base, offset, off, idx, i;
   node_t *child;
 
-  if (node->dep >= G_MAX_DEPTH) return;
+  if (node->dep >= G_MAX_DEPTH) return (void *) 0;
 
   child_dep = node->dep + 1;
   base = quick_base(child_dep);

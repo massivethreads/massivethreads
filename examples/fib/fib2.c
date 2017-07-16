@@ -58,6 +58,6 @@ int main(int argc, char **argv)
   pthread_create(&th, NULL, fib, (void *) n);
   pthread_join(th, (void **) &ret);
   t1 = curr_time();
-  printf("fib(%d)=%d, took %lf sec\n", n, ret, t1 - t0);
+  printf("fib(%d)=%d, took %lf sec\n", (int) n, (int) ret, t1 - t0);
   return 0;
 }

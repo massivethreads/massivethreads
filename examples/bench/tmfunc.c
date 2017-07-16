@@ -8,22 +8,22 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <unistd.h>
 #include <sys/time.h>
-
-//#define ARCH_I386
-//#define ARCH_AMD64
-#define ARCH_SPARC
 
 static inline uint64_t rdtsc()
 {
-#if (defined ARCH_I386 || defined ARCH_AMD64)
-  uint32_t hi,lo;
-  asm volatile("lfence\nrdtsc\n":"=a"(lo),"=d"(hi));
+#if defined __i386__ || defined __x86_64__
+  uint32_t hi, lo;
+  asm volatile("lfence\nrdtsc\n" : "=a"(lo),"=d"(hi));
   return ((uint64_t)hi)<<32 | lo;
-#elif (defined ARCH_SPARC)
-	uint64_t tickreg;
-	asm volatile("rd %%tick, %0" : "=r" (tickreg));
-	return tickreg;
+#elif __sparc__
+  uint64_t tick;
+  asm volatile("rd %%tick, %0" : "=r" (tick));
+  return tick;
+#else
+#error "get_rdtsc() not implemented"
+  return 0;
 #endif
 }
 

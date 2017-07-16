@@ -5,6 +5,7 @@ PROG=treecode
 CC_CXX_FLAGS = -O3 -lm
 CFLAGS = $(CC_CXX_FLAGS)
 CXXFLAGS = $(CC_CXX_FLAGS)
+LDFLAGS=@../../src/myth-ld.opts -Wl,-R../../src/.libs -L../../src/.libs -lmyth-ld
 
 SRCS = $(PROG).cc vector.cc mol.cc tree.cc opts.cc utils.cc
 .PHONY: cver debug clean
@@ -12,7 +13,7 @@ SRCS = $(PROG).cc vector.cc mol.cc tree.cc opts.cc utils.cc
 all: cver
 
 cver: treecode.c
-	$(CC) -o $(PROG) $< $(CFLAGS) -L../../.libs -lmyth-compat
+	$(CC) -o $(PROG) $< $(CFLAGS) $(LDFLAGS)
 
 debug: treecode.c
 	$(CC) -o $(PROG) $? -pthread -ggdb -lm
