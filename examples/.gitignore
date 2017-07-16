@@ -1,0 +1,24 @@
+# bench
+bench/fiber/ctx
+bench/fiber/jmp
+bench/fiber/mix
+bench/hybrid_tree
+bench/hybrid_tree_debug
+bench/mm
+bench/mm_debug
+bench/tmfunc
+bench/tree
+bench/tree_debug
+
+# fib
+fib/fib
+fib/fib2
+
+# nbody
+nbody/nbody
+
+# taskgroup
+task_group/fib
+
+# treecode
+treecode/treecode
