@@ -20,6 +20,7 @@ FILE *g_log_fp;
 
 int g_sched_prof=0;
 int g_log_worker_stat=0;
+pthread_key_t g_worker_key;
 
 #define PAGE_ALIGN(n) ((((n)+(PAGE_SIZE)-1)/(PAGE_SIZE))*PAGE_SIZE)
 

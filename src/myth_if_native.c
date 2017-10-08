@@ -163,6 +163,14 @@ int myth_detach(myth_thread_t th) {
    --- myth_self and equality
    --------------------------- */
 
+int myth_is_myth_worker(void) {
+  return myth_is_myth_worker_body();
+}
+
+/* ---------------------------
+   --- myth_self and equality
+   --------------------------- */
+
 myth_thread_t myth_self(void) {
   return myth_self_body();
 }

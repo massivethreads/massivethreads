@@ -646,6 +646,16 @@ extern "C" {
   int myth_detach(myth_thread_t th);
 
   /*
+    Function: myth_is_myth_worker
+
+    Returns:
+    1 if the calling OS-level thread is a massivethreads
+    worker.  useful when you mix pthreads and massivethreads.
+
+  */
+  int myth_is_myth_worker(void);
+  
+  /*
     Function: myth_self
 
     Returns:

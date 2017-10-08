@@ -31,6 +31,26 @@
 
 static void myth_sched_loop(void);
 
+// pthread key to indicate a worker is a worker,
+// so that user code can tell if the running pthread
+// is a massivethread worker or not
+extern pthread_key_t g_worker_key;
+static void myth_worker_key_init() {
+  real_pthread_key_create(&g_worker_key, NULL);
+}
+static void myth_set_worker_key() {
+  /* TODO: shouldn't we set something more useful? */
+  real_pthread_setspecific(g_worker_key, (void*)1);
+}
+static void * myth_get_worker_key() {
+  /* TODO: shouldn't we set something more useful? */
+  void * x = real_pthread_getspecific(g_worker_key);
+  return x;
+}
+static int myth_is_myth_worker_body(void) {
+  return (myth_get_worker_key() ? 1 : 0);
+}
+
 //TLS implementations
 #if WENV_IMPL == WENV_IMPL_PTHREAD
 //TLS by pthread_key_XXX
@@ -129,6 +149,7 @@ static void myth_setup_worker(int rank) {
   //myth_malloc_wrapper_init_worker(rank);
   //Initialize logger
   myth_log_worker_init(env);
+  myth_set_worker_key();
   myth_set_current_env(env);
   //Initialize random seed
   myth_random_init(((unsigned)time(NULL)) + rank);

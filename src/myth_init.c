@@ -41,6 +41,8 @@ static int myth_init_ex_body_really(const myth_globalattr_t * attr) {
   //Allocate worker thread descriptors
   g_envs = myth_malloc(sizeof(myth_running_env) * nw);
   g_envs_sz = nw;
+  // create pthread_key to indicate massivethread workers are massivethread workers
+  myth_worker_key_init();
   //Initialize TLS for worker thread descriptor
   myth_env_init();
 #if MYTH_ECO_MODE
