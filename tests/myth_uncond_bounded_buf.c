@@ -36,7 +36,7 @@ int bb_init(bounded_buffer_t * bb, long sz) {
   bb->h = 0;
   bb->t = 0;
   bb->sz = sz;
-  bb->a = malloc(sizeof(bb_item) * sz);
+  bb->a = (bb_item *)malloc(sizeof(bb_item) * sz);
   for (long i = 0; i < sz; i++) {
     bb->a[i].producer = -1;
     bb->a[i].payload = -1;
@@ -139,7 +139,9 @@ bb_item bb_get(bounded_buffer_t * bb, long n_tries) {
       }
       /* the element may not have been populated yet; loop until it has */
       for (long k = 0; k < n_tries; k++) {
-	bb_item x = bb->a[h % sz];
+	bb_item x;
+        x.producer = bb->a[h % sz].producer;
+        x.payload  = bb->a[h % sz].payload;
 	/* if x.payload == -1 => 
 	   not populated yet. someone must be writing to it just now */
 	if (x.payload != -1 && x.producer != -1) {
@@ -218,7 +220,7 @@ typedef struct {
 } thread_arg_t;
 
 void * producer_or_consumer(void * arg_) {
-  thread_arg_t * a = arg_;
+  thread_arg_t * a = (thread_arg_t *)arg_;
   int rank = a->rank;
   int n_producers = a->n_producers;
   long n = a->n;
