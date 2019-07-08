@@ -113,7 +113,7 @@ void * producer_or_consumer(void * arg_) {
 }
 
 int main(int argc, char ** argv) {
-  long n        = (argc > 1 ? atol(argv[1]) : 1000000);
+  long n        = (argc > 1 ? atol(argv[1]) :  100 * 1000);
   long n_tries  = (argc > 2 ? atol(argv[2]) : 1000 * 1000 * 1000);
   volatile long p[1] = { 0 };
   myth_uncond_t u[1] = { { 0 } };

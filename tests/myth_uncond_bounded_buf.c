@@ -234,7 +234,7 @@ void * producer_or_consumer(void * arg_) {
 }
 
 int main(int argc, char ** argv) {
-  long n        = (argc > 1 ? atol(argv[1]) : 100000);
+  long n        = (argc > 1 ? atol(argv[1]) : 10 * 1000);
   long bb_size  = (argc > 2 ? atol(argv[2]) : 10);
   long n_producers = (argc > 3 ? atol(argv[3]) : 100);
   long n_tries  = (argc > 4 ? atol(argv[4]) : 1000 * 1000 * 1000);
