@@ -176,9 +176,16 @@ static inline int myth_wake_one_from_queue(myth_sleep_queue_t * q,
   /* wait until the queue becomes non-empty.
      necessary for example when lock/unlock
      are called almost at the same time on 
-     a mutex. if lock was slightly ahead, the
+     a mutex. if unlocker was slightly ahead, the
      unlocker may observe the queue before
      the locker enters the queue */
+  /* the empty_loop below is important for 
+     the locker to enqueue a thread to the queue.
+     without this, this unlocked thread seems to 
+     keep winning the spin lock in myth_sleep_queue_deq_th,
+     repeating the following loop many times.
+     this happened on an AMD processor.
+  */
   myth_thread_t to_wake = 0;
   int failed = 0;
   while (1) {
