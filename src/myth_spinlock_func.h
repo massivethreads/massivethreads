@@ -25,9 +25,11 @@ static inline int myth_spin_destroy_body(myth_spinlock_t *lock) {
 static inline int myth_spin_trylock_body(myth_spinlock_t *lock);
 
 static inline int myth_spin_lock_body(myth_spinlock_t *lock) {
+  int failed = 0;
   while (!myth_spin_trylock_body(lock)) {
+    failed++;
   }
-  return 0;
+  return failed;
 }
 
 static inline int myth_compare_and_set_int(volatile int * a, int oldv, int newv) {

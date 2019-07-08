@@ -155,6 +155,14 @@ static inline void myth_block_on_stack(myth_sleep_stack_t * s,
 
 typedef void * (*callback_on_wakeup_t)(void *);
 
+static inline void empty_loop(uint64_t dt) {
+  uint64_t t = myth_get_rdtsc();
+  uint64_t end_t = t + dt;
+  while (t < end_t) {
+    t = myth_get_rdtsc();
+  }
+}
+
 /* wake up exactly one thread from the queue.
    you must gurantee there is one in the queue,
    or an attempt is perhaps concurrently made
@@ -172,8 +180,12 @@ static inline int myth_wake_one_from_queue(myth_sleep_queue_t * q,
      unlocker may observe the queue before
      the locker enters the queue */
   myth_thread_t to_wake = 0;
-  while (!to_wake) {
+  int failed = 0;
+  while (1) {
     to_wake = myth_sleep_queue_deq_th(q);
+    if (to_wake) break;
+    failed++;
+    empty_loop(100);
   }
   /* wake up this guy */
   to_wake->env = env;
@@ -192,7 +204,7 @@ static inline int myth_wake_one_from_queue(myth_sleep_queue_t * q,
   }
   /* put the thread to wake up in run queue */
   myth_queue_push(&env->runnable_q, to_wake);
-  return 1;
+  return failed;
 }
 
 /* wake up exactly n threads from the q.
@@ -500,6 +512,7 @@ static inline int myth_mutex_trylock_body(myth_mutex_t * mutex) {
  */
 static inline int myth_mutex_lock_body(myth_mutex_t * mutex) {
   /* TODO: spin block */
+  int failed = 0;
   while (1) {
     long s = mutex->state;
     assert(s >= 0);
@@ -508,6 +521,11 @@ static inline int myth_mutex_lock_body(myth_mutex_t * mutex) {
       /* lock bit clear -> try to become the one who set it */
       if (__sync_bool_compare_and_swap(&mutex->state, s, s + 1)) {
 	break;
+      } else {
+        //struct timespec req[1] = { { ns / 1000000000, ns % 1000000000 } };
+        //nanosleep(req, 0);
+        //ns += ns;
+        failed++;
       }
     } else {
       /* lock bit set. indicate I am going to block on it.
@@ -519,6 +537,7 @@ static inline int myth_mutex_lock_body(myth_mutex_t * mutex) {
 	   wake me up */
 	myth_block_on_queue(mutex->sleep_q, 0);
       }
+      failed++;
     }
   }
   return 0;
@@ -562,6 +581,7 @@ static void * myth_mutex_clear_lock_bit(void * mutex_) {
 
 /* unlock a mutex */
 static inline int myth_mutex_unlock_body(myth_mutex_t * mutex) {
+  int failed = 0;
   while (1) {
     long s = mutex->state;
     /* the mutex must be locked now (by me). 
@@ -580,19 +600,28 @@ static inline int myth_mutex_unlock_body(myth_mutex_t * mutex) {
 	 wake up one, and then clear the lock bit */
       if (__sync_bool_compare_and_swap(&mutex->state, s, s - 2)) {
 	// myth_mutex_wake_one_from_queue(mutex);
-	myth_wake_one_from_queue(mutex->sleep_q, 
-				 myth_mutex_clear_lock_bit, mutex);
+        uint64_t t0 = myth_get_rdtsc();
+	failed += myth_wake_one_from_queue(mutex->sleep_q, 
+                                           myth_mutex_clear_lock_bit, mutex);
+        uint64_t t1 = myth_get_rdtsc();
+        if (t1 - t0 > 1000000000) {
+          fprintf(stderr, "myth_wake_one_from_queue : took too long (%ld)\n", t1 - t0);
+        }
 	break;
+      } else {
+        failed++;
       }
     } else {
       /* nobody waiting. clear the lock bit and done */
       assert(s == 1);
       if (__sync_bool_compare_and_swap(&mutex->state, 1, 0)) {
 	break;
+      } else {
+        failed++;
       }
     }
   }
-  return 0;
+  return failed;
 }
 
 static inline int

@@ -84,7 +84,7 @@ static inline void myth_sleep_queue_destroy(myth_sleep_queue_t * q) {
 static inline long myth_sleep_queue_enq(myth_sleep_queue_t * q, 
 					myth_sleep_queue_item_t t) {
   t->next = 0;
-  myth_spin_lock_body(q->ilock);
+  long spin_failed = myth_spin_lock_body(q->ilock);
   myth_sleep_queue_item_t tail = q->tail;
   if (tail) {
     tail->next = t;
@@ -93,7 +93,7 @@ static inline long myth_sleep_queue_enq(myth_sleep_queue_t * q,
   }
   q->tail = t;
   myth_spin_unlock_body(q->ilock);
-  return 0;		/* done */
+  return spin_failed;		/* done */
 }
 
 static inline myth_sleep_queue_item_t myth_sleep_queue_deq(myth_sleep_queue_t * q) {
