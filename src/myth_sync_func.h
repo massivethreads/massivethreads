@@ -606,14 +606,8 @@ static inline int myth_mutex_unlock_body(myth_mutex_t * mutex) {
 	 on the queue. decrement it (while still keeping the lock bit)
 	 wake up one, and then clear the lock bit */
       if (__sync_bool_compare_and_swap(&mutex->state, s, s - 2)) {
-	// myth_mutex_wake_one_from_queue(mutex);
-        uint64_t t0 = myth_get_rdtsc();
 	failed += myth_wake_one_from_queue(mutex->sleep_q, 
                                            myth_mutex_clear_lock_bit, mutex);
-        uint64_t t1 = myth_get_rdtsc();
-        if (t1 - t0 > 1000000000) {
-          fprintf(stderr, "myth_wake_one_from_queue : took too long (%ld)\n", t1 - t0);
-        }
 	break;
       } else {
         failed++;
