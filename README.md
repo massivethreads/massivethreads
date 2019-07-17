@@ -7,7 +7,7 @@ September 20th 2016
 API reference
 ============================================================================
 
- * http://www.eidos.ic.i.u-tokyo.ac.jp/massivethreads/massivethreads/docs/reference/
+ * https://massivethreads.github.io/massivethreads/reference/
 
 Supported Systems
 ============================================================================
