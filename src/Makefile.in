@@ -484,7 +484,7 @@ VANILLA_LDFLAGS =
 WRAP_LD_CFLAGS = -DMYTH_WRAP=MYTH_WRAP_LD
 WRAP_LD_LDFLAGS = @myth-ld.opts
 WRAP_DL_CFLAGS = -DMYTH_WRAP=MYTH_WRAP_DL
-WRAP_DL_LDFLAGS = 
+WRAP_DL_LDFLAGS = -shared
 
 # required when you use libtool (for building shared libs)
 ACLOCAL_AMFLAGS = -I m4
