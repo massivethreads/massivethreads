@@ -50,19 +50,28 @@
 #define myth_unreachable()
 #endif
 
-
-
 typedef struct myth_freelist_cell {
-  struct myth_freelist_cell * next;
+  struct myth_freelist_cell* next;
 } myth_freelist_cell_t;
-  
+
 typedef struct {
-  myth_freelist_cell_t * head;
+  myth_freelist_cell_t* head;
 } myth_freelist_t;
 
-static inline void myth_freelist_init(myth_freelist_t * fl);
-static inline void myth_freelist_push(myth_freelist_t * fl, void * h_);
-static inline void * myth_freelist_pop(myth_freelist_t * fl);
+// Multi-Producer Single-Consumer (MPSC) queue
+typedef struct {
+  myth_freelist_cell_t* head;
+  myth_freelist_cell_t* tail;
+} myth_freelist_mpsc_t;
+
+static inline void myth_freelist_init(myth_freelist_t* fl);
+static inline void myth_freelist_push(myth_freelist_t* fl, void* h_);
+static inline void* myth_freelist_pop(myth_freelist_t* fl);
+
+static inline void myth_freelist_mpsc_init(myth_freelist_mpsc_t* fl, void* h_);
+static inline void myth_freelist_mpsc_push(myth_freelist_mpsc_t* fl, void* h_);
+static inline void* myth_freelist_mpsc_pop(myth_freelist_mpsc_t* fl);
+static inline void myth_freelist_mpsc_pass(myth_freelist_mpsc_t* fl, void* h_, void* t_);
 
 static inline void * myth_malloc(size_t size);
 static inline void myth_free_with_size(void *ptr,size_t size);

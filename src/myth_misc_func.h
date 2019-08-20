@@ -1,4 +1,4 @@
-/* 
+/*
  * myth_misc_func.h
  */
 #pragma once
@@ -35,7 +35,7 @@ static inline uint64_t myth_get_rdtsc() {
   asm volatile("rd %%tick, %0" : "=r" (tick));
   return tick;
 #else
-#warning "myth_get_rdtsc() not implemented" 
+#warning "myth_get_rdtsc() not implemented"
   return 0;
 #endif
 }
@@ -73,24 +73,56 @@ static inline int myth_random(int min,int max) {
   return ret;
 }
 
-static inline void myth_freelist_init(myth_freelist_t * fl) {
-  fl->head = 0;
+static inline void myth_freelist_init(myth_freelist_t* fl) {
+  fl->head = NULL;
 }
 
-static inline void myth_freelist_push(myth_freelist_t * fl, void * h_) {
-  myth_freelist_cell_t * h = h_;
+static inline void myth_freelist_push(myth_freelist_t* fl, void* h_) {
+  myth_freelist_cell_t* h = (myth_freelist_cell_t*)h_;
   h->next = fl->head;
   fl->head = h;
 }
 
-static inline void * myth_freelist_pop(myth_freelist_t * fl) {
-  myth_freelist_cell_t * h = fl->head;
+static inline void* myth_freelist_pop(myth_freelist_t* fl) {
+  myth_freelist_cell_t* h = fl->head;
   if (h) {
     fl->head = h->next;
-    return (void *)h;
+    return (void*)h;
   } else {
-    return 0;
+    return NULL;
   }
+}
+
+static inline void myth_freelist_mpsc_init(myth_freelist_mpsc_t* fl, void* h_) {
+  fl->head = (myth_freelist_cell_t*)h_;
+  fl->tail = (myth_freelist_cell_t*)h_;
+}
+
+static inline void myth_freelist_mpsc_push(myth_freelist_mpsc_t* fl, void* h_) {
+  myth_freelist_cell_t* h = (myth_freelist_cell_t*)h_;
+  h->next = fl->head;
+  fl->head = h;
+}
+
+static inline void* myth_freelist_mpsc_pop(myth_freelist_mpsc_t* fl) {
+  myth_freelist_cell_t* h = fl->head;
+  myth_assert(h);
+  if (h->next) {
+    fl->head = h->next;
+    // acquire fence
+    return (void*)h;
+  } else {
+    return NULL;
+  }
+}
+
+static inline void myth_freelist_mpsc_pass(myth_freelist_mpsc_t* fl, void* h_, void* t_) {
+  myth_freelist_cell_t* h = (myth_freelist_cell_t*)h_;
+  myth_freelist_cell_t* t = (myth_freelist_cell_t*)t_;
+  t->next = NULL;
+  // require fence
+  myth_freelist_cell_t* prev = __sync_lock_test_and_set(&(fl->tail), t);
+  prev->next = h;
 }
 
 #if MYTH_FLMALLOC_PROF

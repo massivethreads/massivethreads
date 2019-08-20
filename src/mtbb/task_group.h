@@ -1,18 +1,17 @@
-/* 
+/*
  * task_group.h
  */
 
-/* 
+/*
  * this file provides a class task_group compatible to
  * the task_group class in the Intel Threading Building Block.
  * see the following TBB "design pattern" page to learn what
  * task_group class provides.
  http://software.intel.com/sites/products/documentation/doclib/tbb_sa/help/tbb_userguide/Design_Patterns/Divide_and_Conquer.htm
 
- * unlike TBB, scheduler is a genuine, greedy work-first work 
+ * unlike TBB, scheduler is a genuine, greedy work-first work
  * stealing scheduler, which tends to have a better scalability
  * than TBB.
- * 
  */
 
 #pragma once
@@ -22,9 +21,9 @@
 #include <functional>
 #include <new>
 
-/* 
- * 
- */
+#if !defined(MYTH_ENABLE_ADWS)
+#define MYTH_ENABLE_ADWS 1
+#endif
 
 #if !defined(TO_SERIAL) && !defined(TO_MTHREAD) && !defined(TO_MTHREAD_NATIVE) && !defined(TO_TBB) && !defined(TO_QTHREAD) && !defined(TO_NANOX)
 /* from Nov 8. 2013, native is default */
@@ -33,7 +32,6 @@
 // #define TO_MTHREAD 1
 #endif
 
-
 /* include files */
 #if TO_SERIAL
 
@@ -41,7 +39,7 @@
 #include <pthread.h>
 #elif TO_MTHREAD_NATIVE
 #include <myth/myth.h>
-#elif TO_QTHREAD 
+#elif TO_QTHREAD
 #include <qthread.h>
 #elif TO_NANOX
 #include <nanos.h>
@@ -71,12 +69,11 @@
 #endif
 
 /* if set to one, it "serializes" task
-   creations, no matter which underlying 
+   creations, no matter which underlying
    system you use */
 #if !defined(TASK_GROUP_NULL_CREATE)
 #define TASK_GROUP_NULL_CREATE 0
 #endif
-
 
 #if !defined(TASK_MEMORY_CHUNK_SZ)
 #define TASK_MEMORY_CHUNK_SZ 256
@@ -104,9 +101,9 @@ namespace mtbb {
   typedef tbb::task task;
 
   /* even with TBB, we still wrap the original
-     task_group class, with one that defines 
-     run_ and wait_ methods, which take extra 
-     file and line parameters.  
+     task_group class, with one that defines
+     run_ and wait_ methods, which take extra
+     file and line parameters.
      they are used only when DAG_RECORDER=2.
      in order to simplify matters, they are
      defined even when DAG_RECORDER!=2.
@@ -128,17 +125,16 @@ namespace mtbb {
     }
   };
 
-  
 #else  /* anything but TBB */
 
-
-  /* repreesntation of a task. 
-     a subclass of a task should implement 
+  /* repreesntation of a task.
+     a subclass of a task should implement
      execute() method, just as in tbb */
   struct task {
     virtual void * execute() = 0;
+
 #if TO_SERIAL
-    
+
 #elif TO_MTHREAD
     pthread_t tid;
 #elif TO_MTHREAD_NATIVE
@@ -146,7 +142,7 @@ namespace mtbb {
 #elif TO_QTHREAD
     aligned_t ret;
 #elif TO_NANOX
-    
+
 #else
 #error "none of TO_SERIAL/TO_QTHREAD/TO_NANOX/TO_MTHREAD/TO_MTHREAD_NATIVE defined"
 #endif
@@ -161,7 +157,7 @@ namespace mtbb {
   };
 
   /* an implementation of a list of tasks;
-     used inside task_group class to store 
+     used inside task_group class to store
      outstanding tasks */
   struct task_list_node {
     task_list_node * next;
@@ -174,7 +170,7 @@ namespace mtbb {
       n = 0;
     }
   };
-  
+
   struct task_list {
     task_list_node head[1];
     task_list_node * tail;
@@ -186,8 +182,8 @@ namespace mtbb {
     void reset() {
       task_list_node * q = NULL;
       for (task_list_node * p = head->next; p; p = q) {
-	q = p->next;
-	delete p;
+        q = p->next;
+        delete p;
       }
       init();
     }
@@ -215,10 +211,10 @@ namespace mtbb {
     task_memory_chunk * next;
     void init(size_t s) {
       if (s <= TASK_MEMORY_CHUNK_SZ) {
-	s = TASK_MEMORY_CHUNK_SZ;
-	a = a_;
+        s = TASK_MEMORY_CHUNK_SZ;
+        a = a_;
       } else {
-	a = new char[s];
+        a = new char[s];
       }
       end = a + s;
       p = a;
@@ -232,7 +228,7 @@ namespace mtbb {
   struct task_memory_allocator {
     task_memory_chunk head[1];
     task_memory_chunk * tail;
-    void init() { 
+    void init() {
       head->init(TASK_MEMORY_CHUNK_SZ);
       tail = head;
     }
@@ -246,7 +242,7 @@ namespace mtbb {
     void * alloc(size_t s) {
       char * p = tail->p;
       if (p + s > tail->end)
-	p = new_chunk(s);
+        p = new_chunk(s);
       assert(tail->p == p);
       assert(tail->p + s <= tail->end);
       tail->p = p + s;
@@ -255,15 +251,15 @@ namespace mtbb {
     void reset() {
       task_memory_chunk * q = NULL;
       for (task_memory_chunk * p = head->next; p; p = q) {
-	q = p->next;
-	delete p;
+        q = p->next;
+        delete p;
       }
       init();
     }
   };
 
   /* receive a task object and invoke it.
-     invoke_task is the one passed to the 
+     invoke_task is the one passed to the
      underlying thread creation function.
      e.g., pthread_create(invoke_task, task_obj) */
   static th_func_ret_type invoke_task(void * arg_) {
@@ -272,26 +268,26 @@ namespace mtbb {
 #if TO_SERIAL || TO_MTHREAD || TO_QTHREAD || TO_MTHREAD_NATIVE
     return 0;
 #elif TO_NANOX
-    
+
 #else
 #error "none of TO_QTHREAD/TO_NANOX/TO_MTHREAD/TO_MTHREAD_NATIVE defined"
 #endif
   }
-  
+
 #if TO_NANOX
   static nanos_smp_args_t invoke_task_arg={invoke_task};
-  
+
   struct nanos_const_wd_definition_for_task {
     nanos_const_wd_definition_t base;
     nanos_device_t devices[1];
   };
-  
+
   static struct nanos_const_wd_definition_for_task wd_definition_for_task = {
     {
       {
-	0,			/* mandatory_creation */
-	0,			/* tied */
-	0,0,0,0,0,0		/* reserved0-5 */
+        0,			/* mandatory_creation */
+        0,			/* tied */
+        0,0,0,0,0,0		/* reserved0-5 */
       },
       __alignof__(struct task),	/* data_alignment */
       0,			/* num_copies */
@@ -301,8 +297,8 @@ namespace mtbb {
     },
     {
       {
-	nanos_smp_factory,
-	&invoke_task_arg
+        nanos_smp_factory,
+        &invoke_task_arg
       }
     }
   };
@@ -312,29 +308,46 @@ namespace mtbb {
   struct task_group_no_prof {
     task_list tasks;
     task_memory_allocator mem;
+#if MYTH_ENABLE_ADWS
+    myth_workers_range_t workers_range;
+    double w_total;
+    int is_adws;
+#endif
+
     task_group_no_prof() {
       tasks.init();
       mem.init();
+#if MYTH_ENABLE_ADWS
+      is_adws = 0;
+#endif
     }
 
-    void 
-    run_task(task * t)  
-    {
+#if MYTH_ENABLE_ADWS
+    template<typename D>
+    task_group_no_prof(D w) {
+      tasks.init();
+      mem.init();
+      w_total = (double)w;
+      is_adws = 1;
+    }
+#endif
+
+    void run_task(task * t) {
 #if EASY_PAPI2 || EASY_PAPI
       /* if you get a "no such function" error,
-	 it's because you didn't include easy_papi2.c 
-	 BEFORE you include this file. */
+         it's because you didn't include easy_papi2.c
+         BEFORE you include this file. */
       epapi_read();
 #endif
       tasks.add(t);
 #if TASK_GROUP_NULL_CREATE
-      invoke_task((void *)t);
+      invoke_task((void*)t);
 #elif TO_SERIAL
-      invoke_task((void *)t);
+      invoke_task((void*)t);
 #elif TO_MTHREAD
       pthread_create(&t->tid, NULL, invoke_task, (void*)t);
 #elif TO_MTHREAD_NATIVE
-      t->hthread=myth_create(invoke_task,(void*)t);
+      t->hthread = myth_create(invoke_task, (void*)t);
 #elif TO_QTHREAD
       qthread_fork(invoke_task, (void*)t, &t->ret);
 #elif TO_NANOX
@@ -374,6 +387,22 @@ namespace mtbb {
       run_task(ct);
     }
 
+#if MYTH_ENABLE_ADWS
+    /* specify the amount of work for the task */
+    template<typename C, typename D>
+    void run(C c, D work) {
+      void * a = mem.alloc(sizeof(mtbb::callable_task<C>));
+      mtbb::callable_task<C> * ct = new (a) mtbb::callable_task<C>(c);
+      tasks.add(ct);
+      if (w_total < 0) {
+        ct->hthread = myth_adws_create(invoke_task, (void*)ct, (double)work);
+      } else {
+        ct->hthread = myth_adws_create_first(invoke_task, (void*)ct, (double)work, w_total, &workers_range);
+        w_total = -1.0;
+      }
+    }
+#endif
+
     /* run if x is true. otherwise call it in serial */
     template<typename C>
     void run_if(bool x, C c) {
@@ -387,30 +416,54 @@ namespace mtbb {
       epapi_read();
 #endif
       for (task_list_node * p = tasks.head; p; p = p->next) {
-	for (int i = 0; i < p->n; i++) {
-#if TASK_GROUP_NULL_CREATE 
-	  /* noop */
+        for (int i = 0; i < p->n; i++) {
+#if TASK_GROUP_NULL_CREATE
+          /* noop */
 #elif TO_SERIAL
-	  /* noop */
+          /* noop */
 #elif TO_MTHREAD
-	  pthread_join(p->a[i]->tid, NULL);
+          pthread_join(p->a[i]->tid, NULL);
 #elif TO_MTHREAD_NATIVE
-	  myth_join(p->a[i]->hthread,NULL);
+
+#if MYTH_ENABLE_ADWS
+          if (is_adws) {
+            if (i == p->n - 1 && !p->next) {
+              // if it is the last task
+              myth_adws_join_last(p->a[i]->hthread, NULL, workers_range);
+            } else {
+              myth_adws_join(p->a[i]->hthread, NULL);
+            }
+          } else {
+            myth_join(p->a[i]->hthread, NULL);
+          }
+#else
+          myth_join(p->a[i]->hthread, NULL);
+#endif
+
 #elif TO_QTHREAD
-	  aligned_t ret;
-	  qthread_readFF(&ret,&p->a[i]->ret);
+          aligned_t ret;
+          qthread_readFF(&ret,&p->a[i]->ret);
 #elif TO_NANOX
-	  if (n_joined == 0) {
-	    NANOS_SAFE(nanos_wg_wait_completion(nanos_current_wd(), 1));
-	  }
+          if (n_joined == 0) {
+            NANOS_SAFE(nanos_wg_wait_completion(nanos_current_wd(), 1));
+          }
 #else
 
 #error "none of TO_QTHREAD/TO_NANOX/TO_MTHREAD/TO_MTHREAD_NATIVE defined"
 
 #endif
-	  n_joined++;
-	}
+          n_joined++;
+        }
       }
+#if MYTH_ENABLE_ADWS
+      if (is_adws) {
+        for (task_list_node * p = tasks.head; p; p = p->next) {
+          for (int i = 0; i < p->n; i++) {
+            myth_cleanup_thread(p->a[i]->hthread);
+          }
+        }
+      }
+#endif
       tasks.reset();
       mem.reset();
     }
@@ -436,7 +489,7 @@ namespace mtbb {
 /* task_group with dag profiler*/
 #if defined(dr_get_worker)
 /* you have your own dr_get_worker */
-#elif TASK_GROUP_NULL_CREATE 
+#elif TASK_GROUP_NULL_CREATE
 #define dr_get_worker() 0
 #define dr_get_max_workers() 1
 #elif TO_SERIAL
@@ -462,22 +515,22 @@ namespace mtbb {
 #endif
 
   template<typename Callable>
-    struct dr_wrap_callable {
-      Callable c;
-      dr_dag_node * parent_interval;
-      const char * file;
-      long line;
+  struct dr_wrap_callable {
+    Callable c;
+    dr_dag_node * parent_interval;
+    const char * file;
+    long line;
     dr_wrap_callable(Callable c_, dr_dag_node * parent_interval_,
-		     const char * file_, long line_) :
+        const char * file_, long line_) :
       c(c_), parent_interval(parent_interval_),
-	file(file_), line(line_) {}
-      
-      void operator() () const {
-	dr_start_task_(parent_interval, file, line);
-	c();
-	dr_end_task_(file, line);
-      }
-    };
+      file(file_), line(line_) {}
+
+    void operator() () const {
+      dr_start_task_(parent_interval, file, line);
+      c();
+      dr_end_task_(file, line);
+    }
+  };
 
   struct task_group_with_prof : public task_group_no_prof {
     int n_outstanding_children;
@@ -487,7 +540,7 @@ namespace mtbb {
     }
 
     template <typename Callable>
-      void run_(Callable c, const char * file, int line) {
+    void run_(Callable c, const char * file, int line) {
 #if EASY_PAPI2 || EASY_PAPI
       epapi_read();
 #endif
@@ -500,7 +553,7 @@ namespace mtbb {
     }
 
     template <typename Callable>
-      void run(Callable c) {
+    void run(Callable c) {
       run_(c, __FILE__, __LINE__);
     }
 
@@ -528,4 +581,3 @@ namespace mtbb {
 #endif
 
 } /* namespace mtbb */
-

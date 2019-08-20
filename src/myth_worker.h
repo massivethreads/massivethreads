@@ -1,4 +1,4 @@
-/* 
+/*
  * myth_worker.h
  */
 #pragma once
@@ -9,13 +9,15 @@
 #include <time.h>
 
 #include "myth/myth.h"
-
 #include "myth_config.h"
+
 #include "myth_internal_barrier.h"
 #include "myth_misc.h"
 #include "myth_sched.h"
 #include "myth_io.h"
 #include "myth_wsqueue.h"
+#include "myth_thread_pool.h"
+#include "myth_steal_range.h"
 
 #if MYTH_ECO_MODE && MYTH_ECO_TEIAN_STEAL
 typedef enum {
@@ -26,7 +28,6 @@ typedef enum {
   EXITED,
 }worker_cond_t;
 #endif
-
 
 //Profiling data
 typedef struct myth_prof_data {
@@ -100,31 +101,59 @@ typedef struct myth_prof_data {
 //Each worker thread have one of them
 
 typedef struct myth_running_env {
-  //The following entries are only accessed from the owner
+
+  /*
+   * The following entries are only accessed from the owner
+   */
+
   struct myth_thread *this_thread;//Currently executing thread
-#if MYTH_SPLIT_STACK_DESC
-  myth_freelist_t freelist_desc;//Freelist of thread descriptor
-  myth_freelist_t freelist_stack;//Freelist of stack
-#else
-  myth_freelist_t freelist_ds;//Freelis
+
+  myth_thread_pool_t thread_pool;
+
+#if MYTH_ENABLE_ADWS
+  int is_searching;
+  double total_work;
+  myth_workers_range_t workers_range;
+  int use_migration_q;
+  int ready_to_activate_steal_range;
+  myth_freelist_t freelist_steal_range;
+  myth_steal_range_t* cur_steal_range;
 #endif
+
   int log_buf_size;
   int log_count;
   myth_spinlock_t log_lock;
   struct myth_log_entry *log_data;
   struct myth_prof_data prof_data;
   struct myth_sched sched;	//Scheduler descriptor
-  //The following entries may be read from other worker threads
+
+  /*
+   * The following entries may be read from other worker threads
+   */
+
   pthread_t worker;
   int rank;
-  //The following entries may be written by other worker threads
-  //Appropriate synchronization is required
+
+  char pad0[CACHE_LINE_SIZE]; // to avoid false sharing
+
+  /*
+   * The following entries may be written by other worker threads
+   * Appropriate synchronization is required
+   */
+
   myth_thread_queue runnable_q;//Runqueue
-  //Reference to Global free list
-#if MYTH_SPLIT_STACK_DESC
-  myth_freelist_t *freelist_desc_g;//Freelist of thread descriptor
-  myth_freelist_t *freelist_stack_g;//Freelist of stack
+
+#if MYTH_ENABLE_ADWS
+  myth_thread_queue migration_q;
+  struct myth_thread* search_root_thread;
+  myth_steal_range_t* parent_steal_range;
 #endif
+
+#if MYTH_FREELIST_RETURN_TO_OWNER
+  myth_freelist_t freelist_ds_g; // Freelist for receiving from other workers
+  myth_spinlock_t freelist_ds_g_lock;
+#endif
+
   struct myth_io_struct_perenv io_struct;//I/O-related data structure. See myth_io_struct.h
 #if MYTH_ECO_MODE
   int my_sem;
@@ -148,14 +177,11 @@ typedef struct myth_running_env {
   unsigned long * steal_prob;
   unsigned short steal_rg[3];
 #endif
-  
 } __attribute__((aligned(CACHE_LINE_SIZE))) myth_running_env;
 
 #if EXPERIMENTAL_SCHEDULER
 int myth_scheduler_global_init(int nw);
 #endif
-
-// myth_running_env, * myth_running_env_t;
 
 //typedef struct myth_thread* (*myth_steal_func_t)(int);
 extern myth_steal_func_t g_myth_steal_func;
@@ -166,7 +192,6 @@ extern int g_envs_sz;
 //Number of worker threads
 //Barrier for worker threads
 extern myth_internal_barrier_t g_worker_barrier;
-
 
 #if WENV_IMPL == WENV_IMPL_PTHREAD
 //TLS by pthread
@@ -179,7 +204,6 @@ extern __thread int g_worker_rank;
 #else
 #error "invalid WENV_IMPL"
 #endif
-
 
 static void myth_sched_loop(void);
 

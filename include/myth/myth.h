@@ -1,4 +1,4 @@
-/* 
+/*
  * myth.h --- toplevel include file of MassiveThreads
  */
 #pragma once
@@ -16,145 +16,14 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-  /* 
-     at this point we define myth_thread_t
-     to be an opaque pointer. struct myth_thread
-     is defined in myth_desc.h
-  */
 
-  typedef struct myth_thread * myth_thread_t;
+  /* -------------------------------------------------------
+     Group: Global Attributes and Initialization Functions
+     ------------------------------------------------------- */
 
-
-  /* ---------------------------------------
-     --- mutex ---
-     --------------------------------------- */
-
-  enum { 
-    MYTH_MUTEX_NORMAL = 0,
-    MYTH_MUTEX_ERRORCHECK = 1,
-    MYTH_MUTEX_RECURSIVE = 2,
-    MYTH_MUTEX_INVALID = 3,
-    MYTH_MUTEX_DEFAULT = MYTH_MUTEX_NORMAL
-  };
-  
-  typedef struct myth_mutexattr {
-    int type;			/* one of the above constants */
-  } myth_mutexattr_t;
-
-  typedef struct myth_mutex {
-    int magic;
-    myth_mutexattr_t attr;
-    myth_sleep_queue_t sleep_q[1];
-    volatile long state;		/* n_waiters|locked */
-  } myth_mutex_t;
-
-  enum { myth_mutex_magic_no = 123456789, 
-	 myth_mutex_magic_no_initializing = 987654321 };
-	 
-#define MYTH_MUTEX_INITIALIZER { myth_mutex_magic_no, { MYTH_MUTEX_DEFAULT }, { MYTH_SLEEP_QUEUE_INITIALIZER }, 0 }
-
-  /* ---------------------------------------
-     --- reader-writer lock  ---
-     --------------------------------------- */
-
-  enum {
-    MYTH_RWLOCK_PREFER_READER, 
-    MYTH_RWLOCK_PREFER_WRITER,
-    MYTH_RWLOCK_PREFER_WRITER_NONRECURSIVE,
-    MYTH_RWLOCK_PREFER_INVALID
-  };
-
-  typedef struct myth_rwlockattr {
-    int kind;
-  } myth_rwlockattr_t;
-
-  typedef struct myth_rwlock {
-    myth_sleep_queue_t sleep_q[1];
-    volatile long state;
-    myth_rwlockattr_t attr;
-  } myth_rwlock_t;
-
-#define MYTH_RWLOCK_INITIALIZER { { MYTH_SLEEP_QUEUE_INITIALIZER }, 0, { MYTH_RWLOCK_DEFAULT }  }
-
-  /* ---------------------------------------
-     --- condition variable ---
-     --------------------------------------- */
-
-  typedef struct myth_condattr {
-    void * unused;		/* just to suppress warning against empty struct */
-  } myth_condattr_t;
-
-  //Conditional variable data structure
-  typedef struct myth_cond {
-    myth_sleep_queue_t sleep_q[1];
-    myth_condattr_t attr;
-  } myth_cond_t;
-
-#define MYTH_COND_INITIALIZER { { MYTH_SLEEP_QUEUE_INITIALIZER }, { } }
-
-  /* ---------------------------------------
-     --- barrier ---
-     --------------------------------------- */
-
-  typedef struct myth_barrierattr {
-    void * unused;		/* just to suppress warning against empty struct */
-  } myth_barrierattr_t;
-  typedef struct myth_barrier {
-    long n_threads;
-    volatile long state;
-    //myth_sleep_queue_t sleep_q[1];
-    myth_sleep_stack_t sleep_s[1];
-    myth_barrierattr_t attr;
-  } myth_barrier_t;
-
-#define MYTH_BARRIER_SERIAL_THREAD 1
-
-  /* ---------------------------------------
-     --- join counter ---
-     --------------------------------------- */
-
-  //Join counter data structure
-  typedef struct myth_join_counterattr {
-    void * unused;		/* just to suppress warning against empty struct */
-  } myth_join_counterattr_t;
-  typedef struct myth_join_counter {
-    /* TODO: conserve space? */
-    long n_threads;		/* const : number of decrements to see */
-    int n_threads_bits;		/* number of bits to represent n_threads */
-    long state_mask;		/* (1 << n_threads_bits) - 1 */
-    volatile long state;
-    myth_sleep_queue_t sleep_q[1];
-    myth_join_counterattr_t attr;
-  } myth_join_counter_t;
-
-  /* ---------------------------------------
-     --- full empty lock ---
-     --------------------------------------- */
-
-  //Full/empty lock data structure
-  typedef struct myth_felockattr {
-    void * unused;		/* just to suppress warning against empty struct */
-  } myth_felockattr_t;
-
-  typedef struct myth_felock {
-    myth_mutex_t mutex[1];
-    myth_cond_t cond[2];
-    int status;
-    myth_felockattr_t attr;
-  } myth_felock_t;
-
-  /* ---------------------------------------
-     --- uncondition variable ---
-     --------------------------------------- */
-
-  typedef struct {
-    volatile myth_thread_t th; /* the thread sleeping on it */
-  } myth_uncond_t;
-
-  /* ---------------------------------------
-     --- global attributes and initialization functions ---
-     --------------------------------------- */
-  
+  /*
+     Type: myth_globalattr_t
+   */
   typedef struct {
     size_t stacksize;
     size_t guardsize;
@@ -182,7 +51,7 @@ extern "C" {
     zero if the library has been successfully initialized.
     non-zero otherwise.
 
-    See Also: 
+    See Also:
     <myth_init_ex>
   */
   int myth_init(void);
@@ -200,14 +69,14 @@ extern "C" {
 
     Parameters:
 
-    attr - the pointer to global attribute 
+    attr - the pointer to global attribute
 
     Returns:
 
     zero if the library has been successfully initialized.
     non-zero otherwise.
 
-    See Also: 
+    See Also:
     <myth_init>, <myth_create>, <myth_create_ex>
   */
   int myth_init_ex(myth_globalattr_t * attr);
@@ -222,7 +91,7 @@ extern "C" {
   */
   void myth_fini(void);
 
-  /* 
+  /*
      Function: myth_globalattr_init
 
      Parameters:
@@ -230,18 +99,18 @@ extern "C" {
      attr - global attribute to initialize
 
      initialize global attributes of MassiveThreads to default values.
-     you can then set various attributes using one of 
+     you can then set various attributes using one of
      myth_globalattr_set_ATTRIBUTE functions.
 
-     See Also: <myth_init_ex>, 
-     <myth_globalattr_destroy>, 
-     <myth_globalattr_get_stacksize>, <myth_globalattr_set_stacksize>, 
+     See Also: <myth_init_ex>,
+     <myth_globalattr_destroy>,
+     <myth_globalattr_get_stacksize>, <myth_globalattr_set_stacksize>,
      <myth_globalattr_get_n_workers>, <myth_globalattr_set_n_workers>,
      <myth_globalattr_get_bind_workers>, <myth_globalattr_set_bind_workers>
   */
   int myth_globalattr_init(myth_globalattr_t * attr);
 
-  /* 
+  /*
      Function: myth_globalattr_destroy
 
      Parameters:
@@ -254,7 +123,7 @@ extern "C" {
   */
   int myth_globalattr_destroy(myth_globalattr_t * attr);
 
-  /* 
+  /*
      Function: myth_globalattr_get_stacksize
 
      Parameters:
@@ -265,13 +134,13 @@ extern "C" {
      get the stack size attribute in attr, set either by
      myth_globalattr_init or myth_globalattr_set_stacksize
 
-     See Also: 
+     See Also:
      <myth_globalattr_init>, <myth_globalattr_set_stacksize>
   */
   int myth_globalattr_get_stacksize(myth_globalattr_t * attr,
 				    size_t *stacksize);
 
-  /* 
+  /*
      Function: myth_globalattr_set_stacksize
 
      Parameters:
@@ -281,14 +150,14 @@ extern "C" {
 
      set the stack size attribute in attr to the specified stacksize.
 
-     See Also: 
+     See Also:
      <myth_globalattr_init>, <myth_globalattr_get_stacksize>
   */
   int myth_globalattr_set_stacksize(myth_globalattr_t * attr,
 				    size_t stacksize);
 
 
-  /* 
+  /*
      Function: myth_globalattr_get_n_workers
 
      Parameters:
@@ -299,13 +168,13 @@ extern "C" {
      get the number of workers attribute in attr, set either
      by myth_globalattr_init or myth_globalattr_set_n_workers
 
-     See Also: 
+     See Also:
      <myth_globalattr_init>, <myth_globalattr_set_n_workers>
   */
   int myth_globalattr_get_n_workers(myth_globalattr_t * attr,
 				    size_t *n_workers);
 
-  /* 
+  /*
      Function: myth_globalattr_set_n_workers
 
      Parameters:
@@ -315,14 +184,13 @@ extern "C" {
 
      set the number of workers attribute of attr
 
-     See Also: 
+     See Also:
      <myth_globalattr_init>, <myth_globalattr_get_n_workers>
   */
   int myth_globalattr_set_n_workers(myth_globalattr_t * attr,
 				    size_t n_workers);
-  
-  
-  /* 
+
+  /*
      Function: myth_globalattr_get_bind_workers
 
      Parameters:
@@ -333,30 +201,47 @@ extern "C" {
      get the bind_workers attribute in attr, set either
      by myth_globalattr_init or myth_globalattr_set_bind_workers
 
-     See Also: 
+     See Also:
      <myth_globalattr_init>, <myth_globalattr_set_bind_workers>
   */
   int myth_globalattr_get_bind_workers(myth_globalattr_t * attr,
 				       int *bind_workers);
-  
-  /* 
+
+  /*
      Function: myth_globalattr_set_bind_workers
 
      Parameters:
 
      attr - global attribute to set the bind_workers attribute of
-     bind_workers - 1 or 0. 1 specified each worker should be bound to 
+     bind_workers - 1 or 0. 1 specified each worker should be bound to
      a core.
 
      set the bind_workers attribute of attr
 
-     See Also: 
+     See Also:
      <myth_globalattr_init>, <myth_globalattr_get_bind_workers>
   */
   int myth_globalattr_set_bind_workers(myth_globalattr_t * attr,
 				       int bind_workers);
 
+  /* -------------------------------------------------------
+     Group: Basic Thread Functions
+     ------------------------------------------------------- */
 
+  /*
+     at this point we define myth_thread_t
+     to be an opaque pointer. struct myth_thread
+     is defined in myth_desc.h
+  */
+
+  /*
+     Type: myth_thread_t
+   */
+  typedef struct myth_thread* myth_thread_t;
+
+  /*
+     Type: myth_thread_attr_t
+   */
   typedef struct myth_thread_attr {
     void * stackaddr;
     size_t stacksize;
@@ -367,9 +252,12 @@ extern "C" {
     size_t custom_data_size;
     void *custom_data;
   } myth_thread_attr_t;
-  
+
+  /*
+     Type: myth_func_t
+   */
   typedef void*(*myth_func_t)(void*);
-  
+
   /*
     Function: myth_create
 
@@ -395,7 +283,7 @@ extern "C" {
     See Also:
     <myth_create_ex>, <myth_join>
   */
-  myth_thread_t myth_create(myth_func_t func, void *arg);
+  myth_thread_t myth_create(myth_func_t func, void* arg);
 
   /*
     Function: myth_create_ex
@@ -426,26 +314,10 @@ extern "C" {
     See Also:
     <myth_create>, <myth_join>, <myth_thread_option>
   */
-  int myth_create_ex(myth_thread_t * id, myth_thread_attr_t * attr,
-		     myth_func_t func, void * arg);
-  myth_thread_t myth_create_nosched(myth_func_t func, void * arg,
-				    myth_thread_attr_t * attr);
-
-  /*
-    Function: myth_exit
-
-    Terminate the calling user-level thread.
-
-    Parameters:
-
-    ret - exit value of the thread, which can
-    be retrieved by calling <myth_join> on
-    this thread.
-
-    See Also:
-    <myth_join>
-  */
-  void myth_exit(void *ret);
+  int myth_create_ex(myth_thread_t*      id,
+                     myth_thread_attr_t* attr,
+                     myth_func_t         func,
+                     void*               arg);
 
   /*
     Function: myth_join
@@ -454,23 +326,20 @@ extern "C" {
 
     Parameters:
 
-    th - the identifier of the thread to wait for 
+    th - the identifier of the thread to wait for
     result - a pointer to a data structure receiving
     the exit value of the thread, as determined by
     <myth_exit> or the return value of the thread's
     main function.
-   
+
     See Also:
     <myth_create>, <myth_create_ex>
-   
   */
-  int myth_join(myth_thread_t th, void **result);
+  int myth_join(myth_thread_t th, void** result);
 
-  int myth_tryjoin(myth_thread_t th,void **result);
+  int myth_tryjoin(myth_thread_t th, void** result);
 
-  int myth_timedjoin(myth_thread_t th, void **result,
-		     const struct timespec *abstime);
-
+  int myth_timedjoin(myth_thread_t th, void** result, const struct timespec *abstime);
 
   /*
     Function: myth_create_join_many_ex
@@ -497,28 +366,28 @@ extern "C" {
 
     in its simplest form,
 
-        myth_create_join_many_ex(0, 0, f, X, 0, 
+        myth_create_join_many_ex(0, 0, f, X, 0,
                                  0, 0,    s, 0, n);
 
     will execute f(args), f(args+s), f(args+2*s), ..., and f(args+(n-1)*s),
-    each by a separate thread and discard their return values. 
+    each by a separate thread and discard their return values.
     if you want to get return values, give results and result_stride. e.g.,
 
-        myth_create_join_many_ex(0, 0, f, X,  Y, 
+        myth_create_join_many_ex(0, 0, f, X,  Y,
                                  0, 0,    xs, t, n);
 
-    is equivalent to:			     
+    is equivalent to:
 
     for all i = 0, ..., n - 1
         ((void **)(Y + i * t))[0] = f(args + i * s);
 
     note that all stride arguments must be given in bytes.
-    this is to allow you to receive results in a field of 
+    this is to allow you to receive results in a field of
     an enclosing structure. e.g.,
 
      struct { char stuff[100]; void * result } args[nthreads];
 
-    in this case you want to call this function with 
+    in this case you want to call this function with
     results = &args[0].result and result_stride = sizeof(args[0]);
 
     consistent with this policy, results is a void pointer,
@@ -551,7 +420,7 @@ extern "C" {
 			       size_t arg_stride,
 			       size_t result_stride,
 			       long nthreads);
-  
+
   /*
     Function: myth_create_join_various_ex
 
@@ -583,29 +452,29 @@ extern "C" {
 
     in its simplest form,
 
-        myth_create_join_many_ex(0, 0, F,  X,  0, 
+        myth_create_join_many_ex(0, 0, F,  X,  0,
                                  0, 0, fs, xs, 0, n);
 
-    will execute f_0(args), f_1(args+xs), f_2(args+2*xs), ..., 
+    will execute f_0(args), f_1(args+xs), f_2(args+2*xs), ...,
     where f_i = *((myth_func_t *)(F + fs * i)),
     each by a separate thread and discard their return values.
     if you want to get return values, give results and result_stride. e.g.,
 
-        myth_create_join_many_ex(0, 0, f, X, Y, 
+        myth_create_join_many_ex(0, 0, f, X, Y,
                                  0, 0,    s, t, n);
 
-    is equivalent to:			     
+    is equivalent to:
 
     for all i = 0, ..., n - 1
         ((void **)(Y + i * t))[0] = f(args + i * s);
 
     note that all stride arguments must be given in bytes.
-    this is to allow you to receive results in a field of 
+    this is to allow you to receive results in a field of
     an enclosing structure. e.g.,
 
      struct { char stuff[100]; void * result } args[nthreads];
 
-    in this case you want to call this function with 
+    in this case you want to call this function with
     results = &args[0].result and result_stride = sizeof(args[0]);
 
     consistent with this policy, results is a void pointer,
@@ -641,9 +510,58 @@ extern "C" {
 				  long nthreads);
 
   /*
+    Function: myth_exit
+
+    Terminate the calling user-level thread.
+
+    Parameters:
+
+    ret - exit value of the thread, which can
+    be retrieved by calling <myth_join> on
+    this thread.
+
+    See Also:
+    <myth_join>
+  */
+  void myth_exit(void *ret);
+
+  /*
     Function: myth_detach
   */
   int myth_detach(myth_thread_t th);
+
+  /*
+    Function: myth_cleanup_thread
+  */
+  void myth_cleanup_thread(myth_thread_t th);
+
+  /* -------------------------------------------------------
+     Group: Worker Functions
+     ------------------------------------------------------- */
+
+  /*
+    Function: myth_get_worker_num
+
+    Returns:
+    The index of the calling thread, an
+    integer x satisfying
+    0 <= x < myth_get_num_workers().
+
+    See Also:
+    <myth_get_num_workers>
+  */
+  int myth_get_worker_num(void);
+
+  /*
+    Function: myth_get_num_workers
+
+    Returns:
+    The number of underlying workers.
+
+    See Also:
+    <myth_get_worker_num>
+  */
+  int myth_get_num_workers(void);
 
   /*
     Function: myth_is_myth_worker
@@ -654,89 +572,80 @@ extern "C" {
 
   */
   int myth_is_myth_worker(void);
-  
+
+  /* -------------------------------------------------------
+     Group: Thread Attributes
+     ------------------------------------------------------- */
+
   /*
-    Function: myth_self
-
-    Returns:
-    The identifier of the calling thread.
-
-    See Also:
-    <myth_get_worker_num>, <myth_get_num_workers>
-  */
-  myth_thread_t myth_self(void);
-
-  /* 
-     Function: myth_equal
-   */
-  int myth_equal(myth_thread_t t1, myth_thread_t t2);
-
-  /* 
      Function: myth_thread_attr_init
    */
   int myth_thread_attr_init(myth_thread_attr_t * attr);
 
-
-  /* 
+  /*
      Function: myth_thread_attr_getdetachstate
    */
   int myth_thread_attr_getdetachstate(const myth_thread_attr_t *attr,
 				      int *detachstate);
 
-  /* 
+  /*
      Function: myth_thread_attr_setdetachstate
    */
   int myth_thread_attr_setdetachstate(myth_thread_attr_t *attr,
 				      int detachstate);
 
-  /* 
+  /*
      Function: myth_thread_attr_getguardsize
    */
   int myth_thread_attr_getguardsize(const myth_thread_attr_t *attr,
 				    size_t *guardsize);
 
-  /* 
+  /*
      Function: myth_thread_attr_setguardsize
    */
   int myth_thread_attr_setguardsize(myth_thread_attr_t *attr, size_t guardsize);
 
-  /* 
+  /*
      Function: myth_thread_attr_getstacksize
    */
   int myth_thread_attr_getstacksize(const myth_thread_attr_t *attr,
 				    size_t *stacksize);
 
-  /* 
+  /*
      Function: myth_thread_attr_setstacksize
    */
   int myth_thread_attr_setstacksize(myth_thread_attr_t *attr, size_t stacksize);
 
-  /* 
+  /*
      Function: myth_thread_attr_getstack
    */
   int myth_thread_attr_getstack(const myth_thread_attr_t *attr,
 				void **stackaddr, size_t *stacksize);
 
-  /* 
+  /*
      Function: myth_thread_attr_setstack
    */
   int myth_thread_attr_setstack(myth_thread_attr_t *attr,
 				void *stackaddr, size_t stacksize);
 
-  /* 
+  /*
      Function: myth_getattr_default_np
    */
   int myth_getattr_default_np(myth_thread_attr_t *attr);
 
-  /* 
+  /*
      Function: myth_getattr_np
    */
   int myth_getattr_np(myth_thread_t thread, myth_thread_attr_t *attr);
 
-  /* 
+  /*
      Function: myth_getconcurrency
    */
   int myth_getconcurrency(void);
+
+  /* -------------------------------------------------------
+     Group: Yield
+     ------------------------------------------------------- */
 
   enum {
     myth_yield_option_half_half = 0,
@@ -753,25 +662,25 @@ extern "C" {
 
     Parameters:
     yield_opt - take one of the following values and change
-    the behavior. 
+    the behavior.
 
-      myth_yield_option_half_half : 
+      myth_yield_option_half_half :
         behave like myth_yield_option_local_first with probability 1/2
 	and like myth_yield_option_steal_first with probability 1/2
-      myth_yield_option_local_only : 
+      myth_yield_option_local_only :
         try to yield to another thread in the local run queue.
 	if none exist, the caller keeps running.
       myth_yield_option_local_first :
         try to yield to another thread in the local run queue.
-	if none exist, an attempt is made to steal another thread 
+	if none exist, an attempt is made to steal another thread
 	in a remote run queue; if it succeeds, yields to it. otherwise
         keep running.
       myth_yield_option_steal_only :
-        an attempt is made to steal another thread 
+        an attempt is made to steal another thread
 	in a remote run queue; if it succeeds, yield to it. otherwise
         keep running.
       myth_yield_option_steal_first :
-        an attempt is made to steal another thread 
+        an attempt is made to steal another thread
 	in a remote run queue; if it succeeds, yield to it. otherwise
         try to yield to another thread in the local run queue.
 	if none exist, the caller keeps running.
@@ -789,7 +698,7 @@ extern "C" {
     Function: myth_yield
 
     it is equivalent to myth_yield_ex(myth_yield_option_half_half);
-    with probability 1/2, try to yield to a thread in the local 
+    with probability 1/2, try to yield to a thread in the local
     queue and if none is found try to steal a thread from a remote
     queue. do the opposite with probability 1/2.
 
@@ -801,31 +710,41 @@ extern "C" {
     which may change in future.  You should not rely
     on its exact behavior (other than it switches
     to another user-level thread).
-   
   */
   void myth_yield(void);
 
+  /*
+     Function: myth_sched_yield
+   */
+  int myth_sched_yield(void);
 
-  /* 
+  /* -------------------------------------------------------
+     Group: Cancel
+     ------------------------------------------------------- */
+
+  /*
      Function: myth_setcancelstate
    */
   int myth_setcancelstate(int state, int *oldstate);
 
-  /* 
+  /*
      Function: myth_setcanceltype
    */
   int myth_setcanceltype(int type, int *oldtype);
 
-  /* 
+  /*
      Function: myth_cancel
    */
   int myth_cancel(myth_thread_t th);
 
-  /* 
+  /*
      Function: myth_testcancel
    */
   void myth_testcancel(void);
 
+  /* -------------------------------------------------------
+     Group: Once
+     ------------------------------------------------------- */
 
   enum {
     myth_once_state_init = 0,
@@ -833,18 +752,51 @@ extern "C" {
     myth_once_state_completed = 2
   };
 
-  /* 
+  /*
      Type: myth_once_t
    */
   typedef struct {
     volatile int state;
   } myth_once_t;
-  
-  /* 
+
+  /*
      Function: myth_once
    */
   int myth_once(myth_once_t * once_control, void (*init_routine)(void));
 
+  /* -------------------------------------------------------
+     Group: Mutex
+     ------------------------------------------------------- */
+
+  enum {
+    MYTH_MUTEX_NORMAL = 0,
+    MYTH_MUTEX_ERRORCHECK = 1,
+    MYTH_MUTEX_RECURSIVE = 2,
+    MYTH_MUTEX_INVALID = 3,
+    MYTH_MUTEX_DEFAULT = MYTH_MUTEX_NORMAL
+  };
+
+  /*
+     Type: myth_mutexattr_t
+   */
+  typedef struct myth_mutexattr {
+    int type;			/* one of the above constants */
+  } myth_mutexattr_t;
+
+  /*
+     Type: myth_mutex_t
+   */
+  typedef struct myth_mutex {
+    int magic;
+    myth_mutexattr_t attr;
+    myth_sleep_queue_t sleep_q[1];
+    volatile long state;		/* n_waiters|locked */
+  } myth_mutex_t;
+
+  enum { myth_mutex_magic_no = 123456789,
+         myth_mutex_magic_no_initializing = 987654321 };
+
+#define MYTH_MUTEX_INITIALIZER { myth_mutex_magic_no, { MYTH_MUTEX_DEFAULT }, { MYTH_SLEEP_QUEUE_INITIALIZER }, 0 }
 
   /*
     Function: myth_mutex_init
@@ -901,9 +853,8 @@ extern "C" {
     an errno otherwise.
 
     See Also:
-   
+
     <myth_mutex_init>, <myth_mutex_destroy>, <myth_mutex_lock>, <myth_mutex_unlock>
-   
   */
   int myth_mutex_trylock(myth_mutex_t * mtx);
 
@@ -921,9 +872,8 @@ extern "C" {
     zero if suceeds or an errno when an error occurred.
 
     See Also:
-   
-    <myth_mutex_init>, <myth_mutex_destroy>, <myth_mutex_trylock>, <myth_mutex_unlock>
 
+    <myth_mutex_init>, <myth_mutex_destroy>, <myth_mutex_trylock>, <myth_mutex_unlock>
   */
   int myth_mutex_lock(myth_mutex_t * mtx);
 
@@ -942,9 +892,8 @@ extern "C" {
     zero if suceeds or an errno when an error occurred.
 
     See Also:
-   
-    <myth_mutex_init>, <myth_mutex_destroy>, <myth_mutex_trylock>, <myth_mutex_unlock>
 
+    <myth_mutex_init>, <myth_mutex_destroy>, <myth_mutex_trylock>, <myth_mutex_unlock>
   */
   int myth_mutex_timedlock(myth_mutex_t * mtx, const struct timespec * abstime); // const struct timespec *restrict abstime
 
@@ -967,95 +916,146 @@ extern "C" {
   */
   int myth_mutex_unlock(myth_mutex_t * mtx);
 
-  /* 
+  /*
      Function: myth_mutexattr_init
    */
   int myth_mutexattr_init(myth_mutexattr_t *attr);
 
-  /* 
+  /*
      Function: myth_mutexattr_destroy
    */
   int myth_mutexattr_destroy(myth_mutexattr_t *attr);
 
-  /* 
+  /*
      Function: myth_mutexattr_gettype
    */
   int myth_mutexattr_gettype(const myth_mutexattr_t * attr,
 			     int * type);
 
-  /* 
+  /*
      Function: myth_mutexattr_settype
    */
   int myth_mutexattr_settype(myth_mutexattr_t *attr, int type);
 
-  /* 
+  /* -------------------------------------------------------
+     Group: Reader-Writer Lock
+     ------------------------------------------------------- */
+
+  enum {
+    MYTH_RWLOCK_PREFER_READER,
+    MYTH_RWLOCK_PREFER_WRITER,
+    MYTH_RWLOCK_PREFER_WRITER_NONRECURSIVE,
+    MYTH_RWLOCK_PREFER_INVALID
+  };
+
+  /*
+     Type: myth_rwlockattr_t
+   */
+  typedef struct myth_rwlockattr {
+    int kind;
+  } myth_rwlockattr_t;
+
+  /*
+     Type: myth_rwlock_t
+   */
+  typedef struct myth_rwlock {
+    myth_sleep_queue_t sleep_q[1];
+    volatile long state;
+    myth_rwlockattr_t attr;
+  } myth_rwlock_t;
+
+#define MYTH_RWLOCK_INITIALIZER { { MYTH_SLEEP_QUEUE_INITIALIZER }, 0, { MYTH_RWLOCK_DEFAULT } }
+
+  /*
      Function: myth_rwlock_init
   */
   int myth_rwlock_init(myth_rwlock_t * rwlock,
 		       const myth_rwlockattr_t * attr);
 
-  /* 
+  /*
      Function: myth_rwlock_destroy
   */
   int myth_rwlock_destroy(myth_rwlock_t *rwlock);
 
-  /* 
+  /*
      Function: myth_rwlock_rdlock
   */
   int myth_rwlock_rdlock(myth_rwlock_t *rwlock);
 
-  /* 
+  /*
      Function: myth_rwlock_tryrdlock
   */
   int myth_rwlock_tryrdlock(myth_rwlock_t *rwlock);
 
-  /* 
+  /*
      Function: myth_rwlock_timedrdlock
   */
   int myth_rwlock_timedrdlock(myth_rwlock_t * rwlock,
 			      const struct timespec * abstime);
 
-  /* 
+  /*
      Function: myth_rwlock_wrlock
   */
   int myth_rwlock_wrlock(myth_rwlock_t *rwlock);
 
-  /* 
+  /*
      Function: myth_rwlock_trywrlock
   */
   int myth_rwlock_trywrlock(myth_rwlock_t *rwlock);
 
-  /* 
+  /*
      Function: myth_rwlock_timedwrlock
   */
   int myth_rwlock_timedwrlock(myth_rwlock_t * rwlock,
 			      const struct timespec * abstime);
 
-  /* 
+  /*
      Function: myth_rwlock_unlock
   */
   int myth_rwlock_unlock(myth_rwlock_t *rwlock);
 
-  /* 
+  /*
      Function: myth_rwlockattr_init
   */
   int myth_rwlockattr_init(myth_rwlockattr_t *attr);
 
-  /* 
+  /*
      Function: myth_rwlockattr_destroy
   */
   int myth_rwlockattr_destroy(myth_rwlockattr_t *attr);
 
-  /* 
+  /*
      Function: myth_rwlockattr_getkind
   */
   int myth_rwlockattr_getkind(const myth_rwlockattr_t *attr, int *pref);
 
-  /* 
+  /*
      Function: myth_rwlockattr_setkind
   */
   int myth_rwlockattr_setkind(myth_rwlockattr_t *attr, int pref);
-  
+
+  /* -------------------------------------------------------
+     Group: Condition Variable
+     ------------------------------------------------------- */
+
+  /*
+     Type: myth_condattr_t
+   */
+  typedef struct myth_condattr {
+    void * unused;		/* just to suppress warning against empty struct */
+  } myth_condattr_t;
+
+  /*
+     Type: myth_cond_t
+
+     Conditional variable data structure
+   */
+  typedef struct myth_cond {
+    myth_sleep_queue_t sleep_q[1];
+    myth_condattr_t attr;
+  } myth_cond_t;
+
+#define MYTH_COND_INITIALIZER { { MYTH_SLEEP_QUEUE_INITIALIZER }, { } }
 
   /*
     Function: myth_cond_init
@@ -1094,7 +1094,6 @@ extern "C" {
     See Also:
 
     <myth_cond_init>, <myth_cond_wait>, <myth_cond_signal>, <myth_cond_broadcast>
-   
   */
   int myth_cond_destroy(myth_cond_t * cond);
 
@@ -1157,25 +1156,48 @@ extern "C" {
   */
   int myth_cond_wait(myth_cond_t * cond, myth_mutex_t * mutex);
 
-
-  /* 
+  /*
      Function: myth_cond_timedwait
   */
   int myth_cond_timedwait(myth_cond_t * cond,
 			  myth_mutex_t * mutex,
 			  const struct timespec * abstime);
 
-  /* 
+  /*
      Function: myth_condattr_init
   */
   int myth_condattr_init(myth_condattr_t *attr);
 
-  /* 
+  /*
      Function: myth_condattr_destroy
   */
   int myth_condattr_destroy(myth_condattr_t *attr);
 
-  /* 
+  /* -------------------------------------------------------
+     Group: Barrier
+     ------------------------------------------------------- */
+
+  /*
+     Type: myth_barrierattr_t
+   */
+  typedef struct myth_barrierattr {
+    void * unused;		/* just to suppress warning against empty struct */
+  } myth_barrierattr_t;
+
+  /*
+     Type: myth_barrier_t
+   */
+  typedef struct myth_barrier {
+    long n_threads;
+    volatile long state;
+    //myth_sleep_queue_t sleep_q[1];
+    myth_sleep_stack_t sleep_s[1];
+    myth_barrierattr_t attr;
+  } myth_barrier_t;
+
+#define MYTH_BARRIER_SERIAL_THREAD 1
+
+  /*
      Function: myth_barrier_init
 
      Initialize a barrier.
@@ -1189,23 +1211,22 @@ extern "C" {
      Zero if succeeded.  An errno if failed.
   */
   int myth_barrier_init(myth_barrier_t * barrier,
-			const myth_barrierattr_t * attr, 
+			const myth_barrierattr_t * attr,
 			unsigned int count);
 
-  /* 
+  /*
      Function: myth_barrier_destroy
-   
+
      Destroy a barrier.
 
      Parameters:
      barrier - a pointer to a barrier data structure to destroy.
-   
   */
   int myth_barrier_destroy(myth_barrier_t *barrier);
 
-  /* 
+  /*
      Function: myth_barrier_wait
-   
+
      Wait on a barrier.
 
      Parameters:
@@ -1219,102 +1240,153 @@ extern "C" {
      a single thread whereas zeros to other
      threads.  When a barrier fails,
      an errno.
-   
   */
   int myth_barrier_wait(myth_barrier_t *barrier);
 
-  /* 
+  /*
      Function: myth_barrierattr_init
   */
   int myth_barrierattr_init(myth_barrierattr_t *attr);
 
-  /* 
+  /*
      Function: myth_barrierattr_destroy
   */
   int myth_barrierattr_destroy(myth_barrierattr_t *attr);
 
+  /* -------------------------------------------------------
+     Group: Join Counter
+     ------------------------------------------------------- */
 
-  /* 
+  /*
+     Type: myth_join_counterattr_t
+   */
+  typedef struct myth_join_counterattr {
+    void * unused;		/* just to suppress warning against empty struct */
+  } myth_join_counterattr_t;
+
+  /*
+     Type: myth_join_counter_t
+   */
+  typedef struct myth_join_counter {
+    /* TODO: conserve space? */
+    long n_threads;		/* const : number of decrements to see */
+    int n_threads_bits;		/* number of bits to represent n_threads */
+    long state_mask;		/* (1 << n_threads_bits) - 1 */
+    volatile long state;
+    myth_sleep_queue_t sleep_q[1];
+    myth_join_counterattr_t attr;
+  } myth_join_counter_t;
+
+  /*
      Function: myth_join_counter_init
   */
-  int myth_join_counter_init(myth_join_counter_t * jc, 
+  int myth_join_counter_init(myth_join_counter_t * jc,
 			     const myth_join_counterattr_t * attr, int val);
 
-  /* 
+  /*
      Function: myth_join_counter_wait
   */
   int myth_join_counter_wait(myth_join_counter_t * jc);
 
-  /* 
+  /*
      Function: myth_join_counter_dec
   */
   int myth_join_counter_dec(myth_join_counter_t * jc);
 
-  /* 
+  /*
      Function: myth_join_counterattr_init
   */
   int myth_join_counterattr_init(myth_join_counterattr_t * attr);
 
-  /* 
+  /*
      Function: myth_join_counterattr_destroy
   */
   int myth_join_counterattr_destroy(myth_join_counterattr_t * attr);
 
-  /* felock */
+  /* -------------------------------------------------------
+     Group: Full Empty Lock
+     ------------------------------------------------------- */
 
-  /* 
+  /*
+     Type: myth_felockattr_t
+   */
+  typedef struct myth_felockattr {
+    void * unused;		/* just to suppress warning against empty struct */
+  } myth_felockattr_t;
+
+  /*
+     Type: myth_felock_t
+   */
+  typedef struct myth_felock {
+    myth_mutex_t mutex[1];
+    myth_cond_t cond[2];
+    int status;
+    myth_felockattr_t attr;
+  } myth_felock_t;
+
+  /*
      Function: myth_felock_init
    */
   int myth_felock_init(myth_felock_t * fe, const myth_felockattr_t * attr);
 
-  /* 
+  /*
      Function: myth_felock_destroy
    */
   int myth_felock_destroy(myth_felock_t * fe);
 
-  /* 
+  /*
      Function: myth_felock_lock
    */
   int myth_felock_lock(myth_felock_t * fe);
 
-  /* 
+  /*
      Function: myth_felock_unlock
    */
   int myth_felock_unlock(myth_felock_t * fe);
 
-  /* 
+  /*
      Function: myth_felock_wait_and_lock
    */
   int myth_felock_wait_and_lock(myth_felock_t * fe, int status_to_wait);
 
-  /* 
+  /*
      Function: myth_felock_mark_and_signal
    */
   int myth_felock_mark_and_signal(myth_felock_t * fe,int status_to_signal);
 
-  /* 
+  /*
      Function: myth_felock_status
    */
   int myth_felock_status(myth_felock_t * fe);
 
-  /* 
+  /*
      Function: myth_felockattr_init
    */
   int myth_felockattr_init(myth_felockattr_t * attr);
 
-  /* 
+  /*
      Function: myth_felockattr_destroy
    */
   int myth_felockattr_destroy(myth_felockattr_t * attr);
 
+  /* -------------------------------------------------------
+     Group: Uncondition Variable
+     ------------------------------------------------------- */
 
-  /* 
+  /*
+     Type: myth_uncond_t
+   */
+  typedef struct {
+    volatile myth_thread_t th; /* the thread sleeping on it */
+  } myth_uncond_t;
+
+  /*
      Function: myth_uncond_init
 
      initialize an uncondition variable.
 
      Parameters:
-     uncond - a pointer to an unconditional variable data structure 
+     uncond - a pointer to an unconditional variable data structure
      to initialize
 
      Returns:
@@ -1322,7 +1394,7 @@ extern "C" {
    */
   int myth_uncond_init(myth_uncond_t * uncond);
 
-  /* 
+  /*
      Function: myth_uncond_destroy
 
      destroy an uncondition variable.
@@ -1336,26 +1408,26 @@ extern "C" {
    */
   int myth_uncond_destroy(myth_uncond_t * u);
 
-  /* 
+  /*
      Function: myth_uncond_wait
 
      block on an uncondition variable, to be waken up later
      by myth_uncond_signal.  there can be only one thread
      blocking on a single myth_uncond_t variable at the same time.
-     
+
      this function is typically called after
      the caller checked a data structure and learned that
-     it cannot proceed (e.g., a caller thread trying to 
+     it cannot proceed (e.g., a caller thread trying to
      get an element from a queue learned the queue is empty).
      unlike cond_wait, however, it does not take an extra mutex variable
-     that is assumed to be held by the caller.  
-     thus, it is the user's responsibility to implement a means 
+     that is assumed to be held by the caller.
+     thus, it is the user's responsibility to implement a means
      to resolve the race condition between the caller (P) and another
      thread (Q) that might be changing the data structure concurrently.
      unless correctly done, it might cause a deadlock bug;
-     if Q changes the data structure a moment 
-     after P learned it cannot proceed but before 
-     P enters myth_uncond_wait, Q might miss the opportunity 
+     if Q changes the data structure a moment
+     after P learned it cannot proceed but before
+     P enters myth_uncond_wait, Q might miss the opportunity
      to wake up P.  myth_uncond_signal waits until a thread blocks
      on myth_uncond_t and wakes it up.
 
@@ -1387,7 +1459,7 @@ extern "C" {
    */
   int myth_uncond_wait(myth_uncond_t * uncond);
 
-  /* 
+  /*
      Function: myth_uncond_signal
 
      unblock the thread blocking on uncond.
@@ -1395,12 +1467,12 @@ extern "C" {
      of the call to this function, the caller _waits_ for
      a thread to block on it, and then wakes it up.
      in other words, this function _always_ wakes up a thread.
-     
+
      this function is typically called after
      the caller checked a data structure and learned that
      a thread should be blocked waiting for a condition to be met.
      unlike cond_signal, this function does not assume there is a common
-     mutex protecting the data structure. therefore it is 
+     mutex protecting the data structure. therefore it is
      the user's responsibility to implement a means for the
      caller to be able to "learn that a thread should be blocked."
 
@@ -1416,8 +1488,14 @@ extern "C" {
 
    */
   int myth_uncond_signal(myth_uncond_t * uncond);
-  
 
+  /* -------------------------------------------------------
+     Group: Thread Local Storage
+     ------------------------------------------------------- */
+
+  /*
+     Type: myth_key_t
+   */
   typedef int myth_key_t;
 
   /*
@@ -1444,7 +1522,6 @@ extern "C" {
     <myth_key_delete>, <myth_setspecific>, <myth_getspecific>
   */
   int myth_key_create(myth_key_t *key, void (*destr_function)(void *));
-
 
   /*
     Function: myth_key_delete
@@ -1507,29 +1584,9 @@ extern "C" {
   */
   void *myth_getspecific(myth_key_t key);
 
-  /*
-    Function: myth_get_worker_num
-
-    Returns:
-    The index of the calling thread, an 
-    integer x satisfying
-    0 <= x < myth_get_num_workers().
-
-    See Also:
-    <myth_get_num_workers>
-  */
-  int myth_get_worker_num(void);
-
-  /*
-    Function: myth_get_num_workers
-
-    Returns:
-    The number of underlying workers.
-
-    See Also:
-    <myth_get_worker_num>
-  */
-  int myth_get_num_workers(void);
+  /* -------------------------------------------------------
+     Group: Worker Local Storage
+     ------------------------------------------------------- */
 
   typedef pthread_key_t myth_wls_key_t;
 
@@ -1621,30 +1678,294 @@ extern "C" {
   */
   void *myth_wls_getspecific(myth_wls_key_t key);
 
-  /* 
-     Function: myth_sched_yield
-   */
-  int myth_sched_yield(void);
+  /* -------------------------------------------------------
+     Group: Thread-related Functions
+     ------------------------------------------------------- */
 
-  /* 
+  /*
+    Function: myth_self
+
+    Returns:
+    The identifier of the calling thread.
+
+    See Also:
+    <myth_get_worker_num>, <myth_get_num_workers>
+  */
+  myth_thread_t myth_self(void);
+
+  /*
+     Function: myth_equal
+   */
+  int myth_equal(myth_thread_t t1, myth_thread_t t2);
+
+  /*
      Function: myth_sleep
    */
   unsigned int myth_sleep(unsigned int s);
 
-  /* 
+  /*
      Function: myth_usleep
    */
   int myth_usleep(useconds_t usec);
 
-  /* 
+  /*
      Function: myth_nanosleep
    */
   int myth_nanosleep(const struct timespec *req, struct timespec *rem);
 
-  
+  /* -------------------------------------------------------
+     Group: Almost Deterministic Work Stealing
 
-  
-  /* 
+     Low-level APIs for Almost Deterministic Work Stealing (ADWS).
+     You can schedule threads "almost" deterministically to improve data
+     locality. If you enable stealing in ADWS, you can expect the scheduler
+     balances the load dynamically in a locality-aware way.
+     In ADWS, threads must be created in a form of a task group (i.e., nested
+     fork-join model).
+
+     An example usage is here:
+     --- Code
+     myth_workers_range_t workers_range;
+     // fork
+     myth_thread_t th1 = myth_adws_create_first(func1, arg1, w1, w_total, &workers_range);
+     myth_thread_t th2 = myth_adws_create(func2, arg2, w2);
+     myth_thread_t th3 = myth_adws_create(func3, arg3, w3);
+     myth_thread_t th4 = myth_adws_create(func4, arg4, w4);
+     // join
+     myth_adws_join(th1, NULL);
+     myth_adws_join(th2, NULL);
+     myth_adws_join(th3, NULL);
+     myth_adws_join_last(th4, NULL, workers_range);
+     // free thread objects
+     myth_cleanup_thread(th1);
+     myth_cleanup_thread(th2);
+     myth_cleanup_thread(th3);
+     myth_cleanup_thread(th4);
+     ---
+     In this case, a task group is comprised of th1, th2, th3 and th4. A task
+     group begins with <myth_adws_create_first> and ends with <myth_adws_join_last>.
+     We assume w_total == w1 + w2 + w3 + w4 (a few rounding errors are allowed).
+
+     A range of workers is given by calling <myth_adws_create_first>, and you
+     must pass it to the scheduler at the end of the task group (i.e., when
+     calling <myth_adws_join_last>).
+
+     Threads created by <myth_adws_create> or <myth_adws_create_first> are
+     *not* automatically freed in <myth_adws_join> or <myth_adws_join_last>.
+     You *must* call <myth_cleanup_thread> immediately after they are joined.
+     This is because of a performance issue. In most cases, th1, th2, th3 and
+     th4 are created by the worker who calls <myth_adws_create_first>. When
+     <myth_adws_join_last> is completed, the current thread is usually (not
+     always) returned to the same worker who calls <myth_adws_create_first>.
+     Then workers can collect all threads created by them and reuse them later
+     if no steal happens.
+
+     You can hide these boring things by using some useful wrappers for ADWS.
+     For exapmle, You can use mtbb, a C++ interface for MassiveThreads, which
+     resembles Intel Threading Building Blocks (TBB).
+     ------------------------------------------------------- */
+
+  /*
+     Type: myth_workers_range_t
+
+     Fields:
+
+     left         - (double) a left boundary in number line of workers.
+     right        - (double) a right boundary in number line of workers.
+     left_worker  - (int) a worker at the left boundary of the range. equals to (int)left.
+     right_worker - (int) a worker at the right boundary of the range. equals to (int)right.
+
+     See Also:
+     <myth_adws_create_first>, <myth_adws_join>, <myth_adws_join_last>
+   */
+  typedef struct myth_workers_range {
+    double left;
+    double right;
+    int left_worker;
+    int right_worker;
+  } myth_workers_range_t;
+
+  /*
+    Function: myth_adws_create_first
+
+    Create a new user-level thread executing func(arg) with default options.
+    The newly created thread is scheduled by Almost Deterministic Work Stealing
+    (ADWS). This function must be called at the begenning of task groups only
+    once. Following task creations in the same task group must be done by
+    <myth_adws_create>.
+
+    Parameters:
+
+    func          - a pointer to a function.
+    arg           - a pointer given to func.
+    work          - an amount of work in the created thread and its descendants.
+    w_total       - a total amount of work in the entire task group.
+    workers_range - (output) a pointer to a range of workers.
+                    A range of workers is given to the task group. It should be
+                    passed to <myth_adws_join_last> at the end of the task group.
+
+    Returns:
+
+    The identifier of the newly created user-level thread.
+
+    See Also:
+    <myth_create>, <myth_adws_create>, <myth_adws_join>, <myth_adws_join_last>
+  */
+  myth_thread_t myth_adws_create_first(myth_func_t           func,
+                                       void*                 arg,
+                                       double                work,
+                                       double                w_total,
+                                       myth_workers_range_t* workers_range);
+
+  /*
+    Function: myth_adws_create
+
+    Create a new user-level thread executing func(arg) with default options.
+    The newly created thread is scheduled by Almost Deterministic Work Stealing
+    (ADWS). The created thread cannot be the first thread in task groups.
+
+    Parameters:
+
+    func - a pointer to a function.
+    arg  - a pointer given to func.
+    work - an amount of work in the created thread and its descendants.
+
+    Returns:
+
+    The identifier of the newly created user-level thread.
+
+    See Also:
+    <myth_create>, <myth_adws_create_first>, <myth_join>
+  */
+  myth_thread_t myth_adws_create(myth_func_t func,
+                                 void*       arg,
+                                 double      work);
+
+  /*
+    Function: myth_adws_create_ex_first
+
+    Create a new user-level thread executing func(arg) with specified options.
+    See <myth_adws_create_first>.
+
+    Parameters:
+
+    id            - a pointer, if not NULL, to which id of the created thread will be stored.
+    attr          - a pointer to a data structure
+    func          - a pointer to a function.
+    arg           - a pointer given to func.
+    work          - an amount of work in the created thread and its descendants.
+    w_total       - a total amount of work in the entire task group.
+    workers_range - (output) a pointer to a range of workers.
+                    A range of workers is given to the task group. It should be
+                    passed to <myth_adws_join_last> at the end of the task group.
+
+    Returns:
+
+    0 if succeed.
+
+    See Also:
+    <myth_create_ex>, <myth_adws_create_first>
+  */
+  int myth_adws_create_ex_first(myth_thread_t*        id,
+                                myth_thread_attr_t*   attr,
+                                myth_func_t           func,
+                                void*                 arg,
+                                double                work,
+                                double                w_total,
+                                myth_workers_range_t* workers_range);
+
+  /*
+    Function: myth_adws_create_ex
+
+    Create a new user-level thread executing func(arg) with specified options.
+    See <myth_adws_create>
+
+    Parameters:
+
+    id   - a pointer, if not NULL, to which id of the created thread will be stored.
+    attr - a pointer to a data structure
+    func - a pointer to a function.
+    arg  - a pointer given to func.
+    work - an amount of work in the created thread and its descendants.
+
+    Returns:
+
+    0 if succeed.
+
+    See Also:
+    <myth_create_ex>, <myth_adws_create>
+  */
+  int myth_adws_create_ex(myth_thread_t*      id,
+                          myth_thread_attr_t* attr,
+                          myth_func_t         func,
+                          void*               arg,
+                          double              work);
+
+  /*
+    Function: myth_adws_join
+
+    Wait for the specified thread th to finish.
+    Threads created by using <myth_adws_create> or <myth_adws_create_first> must be
+    joined by <myth_adws_join> or <myth_adws_join_last> instead of <myth_join>.
+
+    Parameters:
+
+    th     - the identifier of the thread to wait for
+    result - a pointer to a data structure receiving the exit value of
+             the thread, as determined by <myth_exit> or the return value
+             of the thread's main function.
+
+    See Also:
+    <myth_join>, <myth_adws_create_first>, <myth_adws_create>, <myth_adws_join_last>
+  */
+  int myth_adws_join(myth_thread_t th, void** result);
+
+  /*
+    Function: myth_adws_join_last
+
+    Wait for the specified thread th to finish.
+    The last join of task groups must be <myth_adws_join_last>. In ADWS,
+    threads can be joined by <myth_adws_join> in an arbitrary order, but the
+    last join call must be <myth_adws_join_last>.
+
+    Parameters:
+
+    th            - the identifier of the thread to wait for
+    result        - a pointer to a data structure receiving the exit value of
+                    the thread, as determined by <myth_exit> or the return value
+                    of the thread's main function.
+    workers_range - a range of workers given by <myth_adws_create_first>.
+
+    See Also:
+    <myth_join>, <myth_adws_create_first>, <myth_adws_create>, <myth_adws_join>
+  */
+  int myth_adws_join_last(myth_thread_t th, void** result, myth_workers_range_t workers_range);
+
+  /*
+    Function: myth_adws_get_stealable
+
+    Returns:
+    1 if steal is enabled in ADWS, otherwise 0.
+
+    See Also:
+    <myth_adws_set_stealable>
+  */
+  int myth_adws_get_stealable();
+
+  /*
+    Function: myth_adws_set_stealable
+
+    Parameters:
+
+    flag - set 1 to enable steals, 0 to disable steals
+
+    See Also:
+    <myth_adws_get_stealable>
+  */
+  void myth_adws_set_stealable(int flag);
+
+
+  /*
      declare myth_pickle_t to be an opaque structure
    */
   typedef struct myth_pickle myth_pickle_t;
@@ -1670,25 +1991,9 @@ extern "C" {
   void myth_sched_prof_start(void);
   void myth_sched_prof_pause(void);
 
-  typedef int (*myth_wsapi_decidefn_t)(myth_thread_t th,void *udata);
-
-  myth_thread_t myth_wsapi_runqueue_peek(int victim,void *ptr,size_t *psize);
-  size_t myth_wsapi_get_hint_size(myth_thread_t th);
-  void *myth_wsapi_get_hint_ptr(myth_thread_t th);
-  void myth_wsapi_set_hint(myth_thread_t th,void **data,size_t *size);
-  int myth_wsapi_rand(void);
-  void myth_wsapi_randarr(int *ret,int n);
-  myth_thread_t myth_wsapi_runqueue_take(int victim,myth_wsapi_decidefn_t decidefn,void *udata);
-  int myth_wsapi_runqueue_pass(int target,myth_thread_t th);
-  void myth_wsapi_runqueue_push(myth_thread_t th);
-  myth_thread_t myth_wsapi_runqueue_pop(void);
-  int myth_wsapi_rand(void);
-  int myth_wsapi_rand2(int min,int max);
-
   /* TODO: a duplicated definition is in myth_worker.h */
   typedef struct myth_thread* (*myth_steal_func_t)(int);
   myth_steal_func_t myth_wsapi_set_stealfunc(myth_steal_func_t fn);
-
 
 #ifdef __cplusplus
 } //extern "C"

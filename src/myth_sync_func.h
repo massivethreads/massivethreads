@@ -1,4 +1,4 @@
-/* 
+/*
  * myth_sync_func.h
  */
 #pragma once
@@ -24,8 +24,8 @@
 /* ----------- common procedure for handling blocking/wake up ----------- */
 
 /* put this thread in the q of waiting threads */
-static inline long myth_sleep_queue_enq_th(myth_sleep_queue_t * q, 
-					   myth_thread_t t) {
+static inline long myth_sleep_queue_enq_th(myth_sleep_queue_t * q,
+                                           myth_thread_t t) {
   return myth_sleep_queue_enq(q, (myth_sleep_queue_item_t)t);
 }
 
@@ -36,8 +36,8 @@ static inline myth_thread_t myth_sleep_queue_deq_th(myth_sleep_queue_t * q) {
 }
 
 /* put this thread in the q of waiting threads */
-static inline long myth_sleep_stack_push_th(myth_sleep_stack_t * s, 
-					    myth_thread_t t) {
+static inline long myth_sleep_stack_push_th(myth_sleep_stack_t * s,
+                                            myth_thread_t t) {
   return myth_sleep_stack_push(s, (myth_sleep_queue_item_t)t);
 }
 
@@ -49,7 +49,7 @@ static inline myth_thread_t myth_sleep_stack_pop_th(myth_sleep_stack_t * s) {
 
 /* called back right before switching context
    from the caller who is going to block to
-   the next context to run. see the call to 
+   the next context to run. see the call to
    myth_swap_context_withcall in myth_block_on_queue.
    myth_swap_context_withcall saves the context
    of the current thread, call myth_mutex_lock_1
@@ -58,10 +58,10 @@ static inline myth_thread_t myth_sleep_stack_pop_th(myth_sleep_stack_t * s) {
 
 static inline int myth_mutex_unlock_body(myth_mutex_t * mutex);
 
-MYTH_CTX_CALLBACK void myth_block_on_queue_cb(void *arg1,void *arg2,void *arg3) {
-  myth_sleep_queue_t * q = arg1;
-  myth_thread_t cur = arg2;
-  myth_mutex_t * m = arg3;
+MYTH_CTX_CALLBACK void myth_block_on_queue_cb(void *arg1, void *arg2, void *arg3) {
+  myth_sleep_queue_t* q   = (myth_sleep_queue_t*)arg1;
+  myth_thread_t       cur = (myth_thread_t)arg2;
+  myth_mutex_t*       m   = (myth_mutex_t*)arg3;
   /* put the current thread to the sleep
      queue here.  it is important not to have
      done this until this point (i.e., after
@@ -81,7 +81,7 @@ MYTH_CTX_CALLBACK void myth_block_on_queue_cb(void *arg1,void *arg2,void *arg3) 
 
 /* block the current thread on sleep_queue q */
 static inline void myth_block_on_queue(myth_sleep_queue_t * q,
-				       myth_mutex_t * m) {
+                                       myth_mutex_t * m) {
   myth_running_env_t env = myth_get_current_env();
   myth_thread_t cur = env->this_thread;
   /* pop next thread to run */
@@ -105,10 +105,10 @@ static inline void myth_block_on_queue(myth_sleep_queue_t * q,
 }
 
 
-MYTH_CTX_CALLBACK void myth_block_on_stack_cb(void *arg1,void *arg2,void *arg3) {
-  myth_sleep_stack_t * s = arg1;
-  myth_thread_t cur = arg2;
-  myth_mutex_t * m = arg3;
+MYTH_CTX_CALLBACK void myth_block_on_stack_cb(void *arg1, void *arg2, void *arg3) {
+  myth_sleep_stack_t* s   = (myth_sleep_stack_t*)arg1;
+  myth_thread_t       cur = (myth_thread_t)arg2;
+  myth_mutex_t*       m   = (myth_mutex_t*)arg3;
   /* put the current thread to the sleep
      queue here.  it is important not to have
      done this until this point (i.e., after
@@ -129,7 +129,7 @@ MYTH_CTX_CALLBACK void myth_block_on_stack_cb(void *arg1,void *arg2,void *arg3) 
 
 /* block the current thread on sleep_queue q */
 static inline void myth_block_on_stack(myth_sleep_stack_t * s,
-				       myth_mutex_t * m) {
+                                       myth_mutex_t * m) {
   myth_running_env_t env = myth_get_current_env();
   myth_thread_t cur = env->this_thread;
   /* pop next thread to run */
@@ -170,18 +170,18 @@ static inline void empty_loop(uint64_t dt) {
    non-empty. */
 
 static inline int myth_wake_one_from_queue(myth_sleep_queue_t * q,
-					   callback_on_wakeup_t callback,
-					   void * arg) {
+                                           callback_on_wakeup_t callback,
+                                           void * arg) {
   myth_running_env_t env = myth_get_current_env();
   /* wait until the queue becomes non-empty.
      necessary for example when lock/unlock
-     are called almost at the same time on 
+     are called almost at the same time on
      a mutex. if unlocker was slightly ahead, the
      unlocker may observe the queue before
      the locker enters the queue */
-  /* the empty_loop below is important for 
+  /* the empty_loop below is important for
      the locker to enqueue a thread to the queue.
-     without this, this unlocked thread seems to 
+     without this, this unlocked thread seems to
      keep winning the spin lock in myth_sleep_queue_deq_th,
      repeating the following loop many times.
      this happened on an AMD processor.
@@ -219,13 +219,13 @@ static inline int myth_wake_one_from_queue(myth_sleep_queue_t * q,
    that enters the barrier last knows how many
    threads should wake up */
 static inline int myth_wake_many_from_queue(myth_sleep_queue_t * q,
-					    callback_on_wakeup_t callback,
-					    void * arg,
-					    long n) {
-  /* the following works only when some measures are taken to 
+                                            callback_on_wakeup_t callback,
+					                                  void * arg,
+					                                  long n) {
+  /* the following works only when some measures are taken to
      guarantee that thread to wake up do not reenter the queue.
      currently, this procedure is called from barrier wait,
-     when the caller finds it is the last guy so needs to 
+     when the caller finds it is the last guy so needs to
      wake up others. a race would arise if those waking threads
      call barrier_wait again on the same barrier and reenter
      the queue, possibly BEFORE threads that should wake up now.
@@ -251,7 +251,7 @@ static inline int myth_wake_many_from_queue(myth_sleep_queue_t * q,
   myth_running_env_t env = myth_get_current_env();
   /* wait until the queue becomes non-empty.
      necessary for example when lock/unlock
-     are called almost at the same time on 
+     are called almost at the same time on
      a mutex. if lock was slightly ahead, the
      unlocker may observe the queue before
      the locker enters the queue */
@@ -297,11 +297,11 @@ static inline int myth_wake_many_from_queue(myth_sleep_queue_t * q,
 }
 
 /* wake up if any thread in the queue.
-   used e.g., by a cond_signal which wakes up 
+   used e.g., by a cond_signal which wakes up
    if any thread is waiting.  */
 static inline int myth_wake_if_any_from_queue(myth_sleep_queue_t * q,
-					      callback_on_wakeup_t callback,
-					      void * arg) {
+                                              callback_on_wakeup_t callback,
+                                              void * arg) {
   myth_running_env_t env = myth_get_current_env();
   myth_thread_t to_wake = myth_sleep_queue_deq_th(q);
   /* no threads sleeping, done */
@@ -319,8 +319,8 @@ static inline int myth_wake_if_any_from_queue(myth_sleep_queue_t * q,
 /* wake up all threads waiting on q.
    return the number of threads that it has waken  */
 static inline int myth_wake_all_from_queue(myth_sleep_queue_t * q,
-					   callback_on_wakeup_t callback,
-					   void * arg) {
+                                           callback_on_wakeup_t callback,
+                                           void * arg) {
   int n = 0;
   while (1) {
     if (myth_wake_if_any_from_queue(q, callback, arg) == 0) {
@@ -328,18 +328,18 @@ static inline int myth_wake_all_from_queue(myth_sleep_queue_t * q,
     }
     n++;
   }
-  return n;			
+  return n;
 }
 
 
 static inline int myth_wake_many_from_stack(myth_sleep_stack_t * s,
-					    callback_on_wakeup_t callback,
-					    void * arg,
-					    long n) {
-  /* the following works only when some measures are taken to 
+                                            callback_on_wakeup_t callback,
+                                            void * arg,
+                                            long n) {
+  /* the following works only when some measures are taken to
      guarantee that thread to wake up do not reenter the queue.
      currently, this procedure is called from barrier wait,
-     when the caller finds it is the last guy so needs to 
+     when the caller finds it is the last guy so needs to
      wake up others. a race would arise if those waking threads
      call barrier_wait again on the same barrier and reenter
      the queue, possibly BEFORE threads that should wake up now.
@@ -365,7 +365,7 @@ static inline int myth_wake_many_from_stack(myth_sleep_stack_t * s,
   myth_running_env_t env = myth_get_current_env();
   /* wait until the queue becomes non-empty.
      necessary for example when lock/unlock
-     are called almost at the same time on 
+     are called almost at the same time on
      a mutex. if lock was slightly ahead, the
      unlocker may observe the queue before
      the locker enters the queue */
@@ -413,8 +413,9 @@ static inline int myth_wake_many_from_stack(myth_sleep_stack_t * s,
 /* ----------- once ----------- */
 
 static inline int myth_once_try_set(myth_once_t * once_control,
-				    int old, int new) {
-  return __sync_bool_compare_and_swap(&once_control->state, old, new);
+                                    int old_val,
+                                    int new_val) {
+  return __sync_bool_compare_and_swap(&once_control->state, old_val, new_val);
 }
 
 static inline int myth_once_wait_until(myth_once_t * once_control,
@@ -448,7 +449,7 @@ myth_once_body(myth_once_t * once_control, void (*init_routine)(void)) {
 static inline int
 myth_mutexattr_init_body(myth_mutexattr_t *attr);
 
-static inline int myth_mutex_init_body(myth_mutex_t * mutex, 
+static inline int myth_mutex_init_body(myth_mutex_t * mutex,
 				       const myth_mutexattr_t * attr) {
   myth_sleep_queue_init(mutex->sleep_q);
   mutex->state = 0;
@@ -511,7 +512,7 @@ static inline int myth_mutex_trylock_body(myth_mutex_t * mutex) {
  */
 
 
-/* 
+/*
    0 : lock is free; no one in the queue
    1 : lock is held; no one in the queue
    2 : lock is free; some in the queue
@@ -527,7 +528,7 @@ static inline int myth_mutex_lock_body(myth_mutex_t * mutex) {
     if ((s & 1) == 0) {
       /* lock bit clear -> try to become the one who set it */
       if (__sync_bool_compare_and_swap(&mutex->state, s, s + 1)) {
-	break;
+        break;
       } else {
         //struct timespec req[1] = { { ns / 1000000000, ns % 1000000000 } };
         //nanosleep(req, 0);
@@ -536,20 +537,20 @@ static inline int myth_mutex_lock_body(myth_mutex_t * mutex) {
       }
     } else {
       /* lock bit set. indicate I am going to block on it.
-	 I am competing with a thread who is trying to unlock it */
+         I am competing with a thread who is trying to unlock it */
       if (__sync_bool_compare_and_swap(&mutex->state, s, s + 2)) {
-	/* OK, I reserved a seat in the queue. even if the mutex is
-	   unlocked by another thread right after the above cas, 
-	   he will learn I am going to be in the queue soon, so should
-	   wake me up */
-	myth_block_on_queue(mutex->sleep_q, 0);
+        /* OK, I reserved a seat in the queue. even if the mutex is
+           unlocked by another thread right after the above cas,
+           he will learn I am going to be in the queue soon, so should
+           wake me up */
+        myth_block_on_queue(mutex->sleep_q, 0);
       }
       failed++;
     }
   }
   return 0;
 }
-  
+
 /* timedlock
    the current implementation repeats trylock and then yield,
    until it succeds trylock.
@@ -558,7 +559,7 @@ static inline int myth_mutex_lock_body(myth_mutex_t * mutex) {
 */
 static inline int
 myth_mutex_timedlock_body(myth_mutex_t * mutex,
-			  const struct timespec *restrict abstime) {
+                          const struct timespec *restrict abstime) {
   if (myth_mutex_trylock_body(mutex) == 0) {
     return 0;
   } else {
@@ -568,9 +569,9 @@ myth_mutex_timedlock_body(myth_mutex_t * mutex,
       assert(err == 0);
       if (myth_timespec_gt(tp, abstime)) return ETIMEDOUT;
       if (myth_mutex_trylock_body(mutex) == 0) {
-	return 0;
+        return 0;
       } else {
-	myth_yield_ex_body(myth_yield_option_local_first);
+        myth_yield_ex_body(myth_yield_option_local_first);
       }
     }
   }
@@ -580,7 +581,7 @@ myth_mutex_timedlock_body(myth_mutex_t * mutex,
    a thread to wake up from the sleep queue and
    before putting it in the run queue */
 static void * myth_mutex_clear_lock_bit(void * mutex_) {
-  myth_mutex_t * mutex = mutex_;
+  myth_mutex_t* mutex = (myth_mutex_t*)mutex_;
   assert(mutex->state & 1);
   __sync_fetch_and_sub(&mutex->state, 1);
   return 0;
@@ -591,24 +592,24 @@ static inline int myth_mutex_unlock_body(myth_mutex_t * mutex) {
   int failed = 0;
   while (1) {
     long s = mutex->state;
-    /* the mutex must be locked now (by me). 
+    /* the mutex must be locked now (by me).
        TODO: a better diagnosis message */
     if (!(s & 1)) {
       /* lock bit clear. the programmer must have called this
-	 on a mutex that is not locked */
+         on a mutex that is not locked */
       fprintf(stderr, "myth_mutex_unlock : called on unlocked mutex, abort.\n");
       /* TODO: call myth_abort() rather than directly calling exit
-	 show more useful info */
+         show more useful info */
       exit(1);
     }
     if (s > 1) {
-      /* some threads are blocked (or just have decided to block) 
-	 on the queue. decrement it (while still keeping the lock bit)
-	 wake up one, and then clear the lock bit */
+      /* some threads are blocked (or just have decided to block)
+         on the queue. decrement it (while still keeping the lock bit)
+         wake up one, and then clear the lock bit */
       if (__sync_bool_compare_and_swap(&mutex->state, s, s - 2)) {
-	failed += myth_wake_one_from_queue(mutex->sleep_q, 
-                                           myth_mutex_clear_lock_bit, mutex);
-	break;
+        failed += myth_wake_one_from_queue(mutex->sleep_q, 
+            myth_mutex_clear_lock_bit, mutex);
+        break;
       } else {
         failed++;
       }
@@ -616,7 +617,7 @@ static inline int myth_mutex_unlock_body(myth_mutex_t * mutex) {
       /* nobody waiting. clear the lock bit and done */
       assert(s == 1);
       if (__sync_bool_compare_and_swap(&mutex->state, 1, 0)) {
-	break;
+        break;
       } else {
         failed++;
       }
@@ -768,8 +769,8 @@ myth_rwlockattr_setkind_body(myth_rwlockattr_t *attr, int pref) {
 static inline int
 myth_condattr_init_body(myth_condattr_t *attr);
 
-  static inline int myth_cond_init_body(myth_cond_t * cond, 
-				      const myth_condattr_t * attr) {
+static inline int myth_cond_init_body(myth_cond_t * cond,
+                                      const myth_condattr_t * attr) {
   myth_sleep_queue_init(cond->sleep_q);
   if (attr) {
     cond->attr = *attr;
@@ -801,7 +802,7 @@ static inline int myth_cond_wait_body(myth_cond_t * cond, myth_mutex_t * mutex) 
 
 static inline int
 myth_cond_timedwait_body(myth_cond_t * cond, myth_mutex_t * mutex,
-			 const struct timespec *restrict abstime) {
+                         const struct timespec *restrict abstime) {
   (void)cond;
   (void)mutex;
   (void)abstime;
@@ -826,9 +827,9 @@ myth_condattr_destroy_body(myth_condattr_t *attr) {
 
 static inline int myth_barrierattr_init_body(myth_barrierattr_t *attr);
 
-  static inline int myth_barrier_init_body(myth_barrier_t * barrier, 
-					 const myth_barrierattr_t * attr, 
-					 long n_threads) {
+static inline int myth_barrier_init_body(myth_barrier_t * barrier,
+                                         const myth_barrierattr_t * attr,
+                                         long n_threads) {
   //myth_sleep_queue_init(barrier->sleep_q);
   myth_sleep_stack_init(barrier->sleep_s);
   /* 2 *(number of threads that reached) + invalid */
@@ -854,7 +855,7 @@ static inline int myth_barrier_wait_body(myth_barrier_t * barrier) {
     long c = barrier->state;
     if (c >= barrier->n_threads) {
       /* TODO: set errno and return */
-      fprintf(stderr, 
+      fprintf(stderr,
 	      "myth_barrier_wait : excess threads (> %ld) enter barrier_wait\n",
 	      barrier->n_threads);
       exit(1);
@@ -904,9 +905,9 @@ static inline int calc_bits(long x) {
 static inline int myth_join_counterattr_init_body(myth_join_counterattr_t * attr);
 
 static inline int
-myth_join_counter_init_body(myth_join_counter_t * jc, 
-			    const myth_join_counterattr_t * attr, 
-			    long n_threads) {
+myth_join_counter_init_body(myth_join_counter_t * jc,
+                            const myth_join_counterattr_t * attr,
+                            long n_threads) {
   //Create a join counter with initial value val
   //val must be positive
   int b = calc_bits(n_threads);
@@ -936,7 +937,7 @@ static inline int myth_join_counter_wait_body(myth_join_counter_t * jc) {
     long new_s = s + (1L << jc->n_threads_bits);
     if (! __sync_bool_compare_and_swap(&jc->state, s, new_s)) {
       /* another thread may have just decrement it, so I may
-	 have to keep going */
+         have to keep going */
       continue;
     }
     myth_block_on_queue(jc->sleep_q, 0);
@@ -950,7 +951,7 @@ static inline int myth_join_counter_dec_body(myth_join_counter_t * jc) {
     long n_decs = s & jc->state_mask;
     if (n_decs >= jc->n_threads) {
       /* TODO: set errno and return */
-      fprintf(stderr, 
+      fprintf(stderr,
 	      "myth_join_counter_dec : excess threads (> %ld) enter join_counter_dec\n",
 	      jc->n_threads);
       exit(1);
@@ -961,7 +962,7 @@ static inline int myth_join_counter_dec_body(myth_join_counter_t * jc) {
     }
     if (n_decs == jc->n_threads - 1) {
       /* I am the last one. wake up all guys.
-	 TODO: spin block */
+         TODO: spin block */
       long n_threads_to_wake = (s >> jc->n_threads_bits);
       myth_wake_many_from_queue(jc->sleep_q, 0, 0, n_threads_to_wake);
     }
@@ -983,7 +984,7 @@ static inline int myth_join_counterattr_destroy_body(myth_join_counterattr_t * a
 
 /* ----------- felock----------- */
 static inline int myth_felock_init_body(myth_felock_t * fe,
-					const myth_felockattr_t * attr) {
+                                        const myth_felockattr_t * attr) {
   myth_mutex_init_body(fe->mutex, 0);
   myth_cond_init_body(&fe->cond[0], 0);
   myth_cond_init_body(&fe->cond[1], 0);
@@ -1011,8 +1012,8 @@ static inline int myth_felock_unlock_body(myth_felock_t * fe) {
   return myth_mutex_unlock_body(fe->mutex);
 }
 
-static inline int myth_felock_wait_and_lock_body(myth_felock_t * fe, 
-						 int status_to_wait) {
+static inline int myth_felock_wait_and_lock_body(myth_felock_t * fe,
+                                                 int status_to_wait) {
   myth_mutex_lock_body(fe->mutex);
   while (fe->status != status_to_wait) {
     myth_cond_wait(&fe->cond[status_to_wait], fe->mutex);
@@ -1021,7 +1022,7 @@ static inline int myth_felock_wait_and_lock_body(myth_felock_t * fe,
 }
 
 static inline int myth_felock_mark_and_signal_body(myth_felock_t * fe,
-						   int status_to_signal) {
+                                                   int status_to_signal) {
   fe->status = status_to_signal;
   myth_cond_signal(&fe->cond[status_to_signal]);
   return myth_mutex_unlock_body(fe->mutex);
@@ -1053,11 +1054,12 @@ static inline int myth_uncond_destroy_body(myth_uncond_t * u) {
   return 0;
 }
 
-// __attribute__((used,noinline,sysv_abi)) 
+// __attribute__((used,noinline,sysv_abi))
 MYTH_CTX_CALLBACK
-void myth_uncond_wait_cb(void *arg1,void *arg2,void *arg3) {
-  myth_uncond_t * u = arg1;
-  myth_thread_t cur = arg2;
+void myth_uncond_wait_cb(void *arg1, void *arg2, void *arg3) {
+  myth_uncond_t* u   = (myth_uncond_t*)arg1;
+  myth_thread_t  cur = (myth_thread_t)arg2;
+  (void)arg3;
   u->th = cur;
 }
 

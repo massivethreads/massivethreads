@@ -61,6 +61,23 @@
 
 #pragma once
 
+#if !defined(MTHREAD_DISABLE_ADWS)
+#define MTHREAD_DISABLE_ADWS 0
+#endif
+
+#if !MTHREAD_DISABLE_ADWS
+#include <mtbb/task_group.h>
+#define mk_task_group_w(W)           mtbb::task_group __tg__(W)
+#define create_task0_w(statement, W) __tg__.run([=] { statement; }, W)
+#define create_taskA_w(statement, W) __tg__.run([&] { statement; }, W)
+#define create_taskc_w(callable, W)  __tg__.run(callable, W)
+#else
+#define mk_task_group_w(W)           mk_task_group
+#define create_task0_w(statement, W) create_task0(statement)
+#define create_taskA_w(statement, W) create_taskA(statement)
+#define create_taskc_w(callable, W)  create_taskc(callable)
+#endif
+
 /* OpenMP */
 #if TO_OMP
 

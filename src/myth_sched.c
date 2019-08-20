@@ -1,4 +1,4 @@
-/* 
+/*
  * myth_sched.c
  */
 
@@ -32,7 +32,7 @@ pthread_key_t g_worker_key;
 pthread_key_t g_env_key;
 #elif WENV_IMPL == WENV_IMPL_ELF
 //TLS by GCC extension
-__thread int g_worker_rank = -1;
+__thread int g_worker_rank __attribute__((tls_model("initial-exec"))) = -1;
 #elif WENV_IMPL == WENV_IMPL_NONE
 //Simple global variable. Works only on single worker thread
 #else

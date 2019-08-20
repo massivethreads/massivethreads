@@ -36,13 +36,6 @@ myth_thread_t myth_default_steal_func(int rank) {
   env = &g_envs[rank];
   busy_env = myth_env_get_first_busy(env);
   if (busy_env){
-    //int ws_victim;
-#if 0
-#if MYTH_SCHED_LOOP_DEBUG
-    myth_dprintf("env %p is trying to steal thread from %p...\n",env,busy_env);
-#endif
-#endif
-    //ws_victim=busy_env->rank;
     //Try to steal thread
     next_run = myth_queue_take(&busy_env->runnable_q);
     if (next_run){
@@ -50,7 +43,6 @@ myth_thread_t myth_default_steal_func(int rank) {
       myth_dprintf("env %p is stealing thread %p from %p...\n",env,steal_th,busy_env);
 #endif
       myth_assert(next_run->status==MYTH_STATUS_READY);
-      //Change worker thread descriptor
     }
   }
 #if MYTH_WS_PROF_DETAIL

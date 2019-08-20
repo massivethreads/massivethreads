@@ -1,4 +1,4 @@
-/* 
+/*
  * myth_config.h
  */
 
@@ -9,7 +9,7 @@
 #include "config.h"
 
 //Enable debug
-//#define MYTH_DEBUG 1
+#define MYTH_DEBUG 0
 
 /* debug join with fcc */
 //#define MYTH_DEBUG_JOIN_FCC 1
@@ -19,8 +19,6 @@
 #define MYTH_ECO_CIRCLE_STEAL 0
 
 #define MYTH_PAUSE 0
-
-//Enable debug for eco-mode
 
 //Cache line size
 #define CACHE_LINE_SIZE 64
@@ -34,15 +32,27 @@
 #define USE_STACK_GUARDPAGE 0
 
 //How many stack blocks allocated at stack allocation
-//#define STACK_ALLOC_UNIT 128
-#define STACK_ALLOC_UNIT 1
-#define INITIAL_STACK_ALLOC_UNIT 0
+#define STACK_ALLOC_UNIT         1
+#define INITIAL_STACK_ALLOC_UNIT 16
 
 //Use malloc+freelist instead of mmap+freelist
 #define ALLOCATE_STACK_BY_MALLOC 0
 
 //Split desc and stack allocation
 #define MYTH_SPLIT_STACK_DESC 1
+
+// Thread pool policy for managing used threads and stacks
+#define MYTH_THREAD_POOL_RETURN_ALWAYS    2
+#define MYTH_THREAD_POOL_RETURN_ONLY_ADWS 3
+#define MYTH_THREAD_POOL_LOCAL_CACHE      4
+
+#define MYTH_THREAD_POOL_POLICY MYTH_THREAD_POOL_RETURN_ONLY_ADWS
+
+// When the number of buffered threads reaches it, return them all
+#define MYTH_THREAD_POOL_RETURN_THRESHOLD 16
+
+// Disallow new allocation of threads for measuring performance
+#define MYTH_DISALLOW_ALLOC_NEW_THREADS 0
 
 //Runqueue length
 #define INITIAL_QUEUE_SIZE (65536*2)
@@ -60,7 +70,7 @@
 #define SELECT_ALWAYS_RETURN_IMMEDIATELY 1
 
 //Replace myth_assert() with assert(): used for debugging
-#define MYTH_SANITY_CHECK 1
+#define MYTH_SANITY_CHECK MYTH_DEBUG
 
 //Insert special instruction into unreachable code: used for debugging
 #define USE_MYTH_UNREACHABLE 1
@@ -148,7 +158,7 @@
 #define MYTH_BARRIER MYTH_BARRIER_CILK
 
 /* --------------------
-   WENV implementation choices 
+   WENV implementation choices
    -------------------- */
 #define WENV_IMPL_PTHREAD 2
 #define WENV_IMPL_ELF     3
@@ -161,14 +171,9 @@
 
 //Switch to new thread immediately after it is created
 #define SWITCH_AFTER_CREATE 1
-//When a thread is finished, switch to the thread that waits for it.
-#define SWITCH_AFTER_EXIT 1
-
-//Scheduling policy of runqueue
-#define MYTH_QUEUE_LIFO 1
 
 //Confirm if a thread descriptor is used in two threads at the same time.
-#define MYTH_DESC_REUSE_CHECK 0
+#define MYTH_DESC_REUSE_CHECK MYTH_DEBUG
 
 #define PAD_MYTH_THREAD_QUEUE_TOP_BASE 1
 
@@ -176,13 +181,10 @@
 //turned out very important; never turn off
 #define QUICK_CHECK_ON_POP 1
 
-//Check the number of threads in the victim's runqueue before 
-//seriously trying to steal work 
+//Check the number of threads in the victim's runqueue before
+//seriously trying to steal work
 //turned out very important; never turn off
 #define QUICK_CHECK_ON_STEAL 1
-
-//Check whether the thread is sure to be ready for release before acquiring the lock
-#define QUICK_CHECK_ON_JOIN 0
 
 //Do trylock before work stealing
 //#define TRY_LOCK_BEFORE_STEAL 1
@@ -222,7 +224,7 @@
 
 #define MYTH_ARCH_UNIVERSAL 2
 #define MYTH_ARCH_i386      3
-#define MYTH_ARCH_amd64     4 
+#define MYTH_ARCH_amd64     4
 #define MYTH_ARCH_amd64_knc 5
 #define MYTH_ARCH_sparc_v9  6
 #define MYTH_ARCH_sparc_v8  7
@@ -255,7 +257,7 @@
 
 #endif
 
-/* choose whether you use inline-assembly version of 
+/* choose whether you use inline-assembly version of
    context swithing (MYTH_INLINE_CONTEXT == 1)
    or assembly version (MYTH_INLINE_CONTEXT == 1).
    not all platforms support both; sparc platforms
@@ -273,13 +275,13 @@
 #endif
 
 /* I don't know what it is for.
-   on amd64 platforms, when this is set, myth_contxt_func.h 
-   defines two macros PUSH_FPCSR() and POP_FPCSR() so that 
-   they save/restore mxcsr register and fpu control register 
+   on amd64 platforms, when this is set, myth_contxt_func.h
+   defines two macros PUSH_FPCSR() and POP_FPCSR() so that
+   they save/restore mxcsr register and fpu control register
    upon context switches.
    it's been a while since they are not used and it seems fine.
    I don't know if there is any point in maintaining this
-   (and the two macros). but until we are absolutely sure, 
+   (and the two macros). but until we are absolutely sure,
    leave these two macros (and do not use them) */
 #define MYTH_SAVE_FPCSR 0
 
@@ -287,7 +289,7 @@
    MYTH_CONTEXT choices
    ------------------ */
 
-#define MYTH_CONTEXT_UCONTEXT  2 
+#define MYTH_CONTEXT_UCONTEXT  2
 #define MYTH_CONTEXT_i386      3
 #define MYTH_CONTEXT_amd64     4
 #define MYTH_CONTEXT_amd64_knc 5
@@ -305,5 +307,10 @@
    experimental locality-aware(?) scheduler
    ------------------ */
 #define EXPERIMENTAL_SCHEDULER 0
+
+/* ------------------
+   Almost Deterministic Work Stealing
+   ------------------ */
+#define MYTH_ENABLE_ADWS 1
 
 #endif /* MYTH_CONFIG_H_ */

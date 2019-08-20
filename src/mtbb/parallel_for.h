@@ -52,6 +52,10 @@ include the following files.
 #pragma once
 #include <mtbb/task_group.h>
 
+#if !defined(MYTH_ENABLE_ADWS)
+#define MYTH_ENABLE_ADWS 1
+#endif
+
 namespace mtbb {
 
   /* Range-class-based parallel for: BEGIN */
@@ -168,13 +172,19 @@ namespace mtbb {
     if (b - a == 1) {
       f(first + a * step);
     } else {
-      mtbb::task_group tg;
       const Index c = a + (b - a) / 2;
       //tg.run(parallel_for_aux_callable<Index,Func>(first, a, c, step, f));
-      tg.run_(parallel_for_aux_callable<Index,Func>(first, a, c, step, f), __FILE__, __LINE__);
+#if MYTH_ENABLE_ADWS
+      mtbb::task_group tg(2);
+      tg.run(parallel_for_aux_callable<Index,Func>(first, a, c, step, f), 1);
       parallel_for_aux(first, c, b, step, f);
-      //tg.wait();
+      tg.wait();
+#else
+      mtbb::task_group tg;
+      tg.run(parallel_for_aux_callable<Index,Func>(first, a, c, step, f), __FILE__, __LINE__);
+      parallel_for_aux(first, c, b, step, f);
       tg.wait_(__FILE__, __LINE__);
+#endif
     }
     return f;
   }
@@ -223,11 +233,18 @@ namespace mtbb {
     if (b - a <= grainsize) {
       f(first + a * step, first + b * step);
     } else {
-      mtbb::task_group tg;
       const Index c = a + (b - a) / 2;
+#if MYTH_ENABLE_ADWS
+      mtbb::task_group tg(2);
+      tg.run(parallel_for_grainsize_aux_callable<Index,Func>(first, a, c, step, grainsize, f), 1);
+      parallel_for_grainsize_aux(first, c, b, step, grainsize, f);
+      tg.wait();
+#else
+      mtbb::task_group tg;
       tg.run_(parallel_for_grainsize_aux_callable<Index,Func>(first, a, c, step, grainsize, f), __FILE__, __LINE__);
       parallel_for_grainsize_aux(first, c, b, step, grainsize, f);
       tg.wait_(__FILE__, __LINE__);
+#endif
     }
     return f;
   }

@@ -45,7 +45,7 @@ void myth_swap_context_withcall_s(myth_context_t switch_from,
 				  void(*func)(void*,void*,void*),
 				  void *arg1, void *arg2, void *arg3);
 void myth_set_context_s(myth_context_t ctx);
-void myth_set_context_withcall_s(myth_context_t switch_to, 
+void myth_set_context_withcall_s(myth_context_t switch_to,
 				 void(*func)(void*,void*,void*),
 				 void *arg1, void *arg2, void *arg3);
 
@@ -60,7 +60,7 @@ void myth_set_context_withcall_s(myth_context_t switch_to,
 #else
 #define PRESERVE_TLSREG(ctx) do { } while(0)
 
-#endif 
+#endif
 
 static inline void myth_swap_context_uc(myth_context_t switch_from,
 					myth_context_t switch_to) {

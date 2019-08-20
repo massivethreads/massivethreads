@@ -1,4 +1,4 @@
-/* 
+/*
  * myth_init.h
  */
 #pragma once

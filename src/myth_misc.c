@@ -1,4 +1,4 @@
-/* 
+/*
  * myth_misc.c
  */
 #include <ctype.h>
@@ -21,5 +21,3 @@ __thread unsigned int g_myth_random_temp = 0;
 
 __thread uint64_t g_myth_flmalloc_cycles = 0, g_myth_flmalloc_cnt = 0;
 __thread uint64_t g_myth_flfree_cycles = 0, g_myth_flfree_cnt = 0;
-
-

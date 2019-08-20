@@ -7,6 +7,7 @@ SUBDIRS = . profiler
 COMMON_SRCS = \
 	myth_log.c \
 	myth_sched.c \
+	myth_adws_sched.c \
 	myth_internal_barrier.c \
 	myth_bind_worker.c \
 	myth_worker.c \
@@ -18,7 +19,8 @@ COMMON_SRCS = \
 	myth_context.c \
 	myth_if_native.c \
 	myth_real.c \
-	myth_eco.c
+	myth_eco.c \
+	myth_context_switch.S
 
 # sources for wrapping system functions (used only for -dl and -ld versions)
 WRAP_SRCS = \

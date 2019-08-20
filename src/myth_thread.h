@@ -1,4 +1,4 @@
-/* 
+/*
  * myth_thraed.h ---
  *  data structure related to thread and
  *  must be included by the user
@@ -65,6 +65,10 @@ struct myth_thread {
 
   myth_tls_tree_t tls[1];
 
+#if MYTH_THREAD_POOL_POLICY != MYTH_THREAD_POOL_LOCAL_CACHE
+  int owner_worker;
+#endif
+
 #if MYTH_DEBUG_JOIN_FCC
   uint64_t join_called_at;
   char * child_status_when_join_was_called;
@@ -72,7 +76,10 @@ struct myth_thread {
   struct myth_thread * waiter;
   char * when_I_finished;
 #endif
-  
+
+#if MYTH_ENABLE_ADWS
+  myth_workers_range_t workers_range;
+#endif
 } ;
 
 // __attribute__((aligned(CACHE_LINE_SIZE))) myth_thread, *myth_thread_t;

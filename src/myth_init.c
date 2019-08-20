@@ -1,4 +1,4 @@
-/* 
+/*
  * myth_init.c
  */
 
@@ -13,6 +13,7 @@
 
 #include "myth_init_func.h"
 #include "myth_log_func.h"
+#include "myth_worker_func.h"
 
 myth_globalattr_t g_attr;
 
