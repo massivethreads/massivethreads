@@ -34,6 +34,10 @@ static inline uint64_t myth_get_rdtsc() {
   uint64_t tick;
   asm volatile("rd %%tick, %0" : "=r" (tick));
   return tick;
+#elif MYTH_ARCH == MYTH_ARCH_aarch64
+  uint64_t tick;
+  asm volatile("mrs %0, cntvct_el0" : "=r" (tick));
+  return tick;
 #else
 #warning "myth_get_rdtsc() not implemented" 
   return 0;

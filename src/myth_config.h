@@ -226,6 +226,7 @@
 #define MYTH_ARCH_amd64_knc 5
 #define MYTH_ARCH_sparc_v9  6
 #define MYTH_ARCH_sparc_v8  7
+#define MYTH_ARCH_aarch64   8
 
 // set to 1 to force the universal version
 #define MYTH_FORCE_ARCH_UNIVERSAL 0
@@ -249,6 +250,9 @@
 #else
 #define MYTH_ARCH MYTH_ARCH_sparc_v8
 #endif
+
+#elif defined(__aarch64__)
+#define MYTH_ARCH MYTH_ARCH_aarch64
 
 #else
 #define MYTH_ARCH MYTH_ARCH_UNIVERSAL
@@ -293,6 +297,7 @@
 #define MYTH_CONTEXT_amd64_knc 5
 #define MYTH_CONTEXT_sparc_v9  6
 #define MYTH_CONTEXT_sparc_v8  7
+#define MYTH_CONTEXT_aarch64   8
 
 /* ------------------
    MYTH_WRAP choices

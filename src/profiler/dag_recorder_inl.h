@@ -497,6 +497,14 @@ extern "C" {
     return u;
   }
 
+#elif defined(__aarch64__)
+
+  static unsigned long long dr_rdtsc(void) {
+    unsigned long long u;
+    asm volatile("mrs %0, cntvct_el0" : "=r" (u));
+    return u;
+  }
+
 #else
   
   static unsigned long long dr_rdtsc() {
