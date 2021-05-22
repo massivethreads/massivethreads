@@ -8,6 +8,13 @@
 #include "myth_worker.h"
 #include "myth_worker_func.h"
 
+#if !MYTH_GET_CURRENT_ENV_INLINE
+__attribute__((noinline)) myth_running_env_t myth_get_current_env()
+{
+  return myth_get_current_env_inline();
+}
+#endif
+
 #if EXPERIMENTAL_SCHEDULER
 static myth_thread_t myth_steal_func_with_prob(int rank);
 myth_steal_func_t g_myth_steal_func = myth_steal_func_with_prob;

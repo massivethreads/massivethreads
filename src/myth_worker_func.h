@@ -51,6 +51,10 @@ static int myth_is_myth_worker_body(void) {
   return (myth_get_worker_key() ? 1 : 0);
 }
 
+#if !MYTH_GET_CURRENT_ENV_INLINE
+#define myth_get_current_env myth_get_current_env_inline
+#endif
+
 //TLS implementations
 #if WENV_IMPL == WENV_IMPL_PTHREAD
 //TLS by pthread_key_XXX
@@ -106,6 +110,10 @@ static inline myth_running_env_t myth_get_current_env(void) {
 }
 #else
 #error "invalide WENV_IMPL"
+#endif
+
+#if !MYTH_GET_CURRENT_ENV_INLINE
+#undef myth_get_current_env
 #endif
 
 #if WS_TARGET_RANDOM
