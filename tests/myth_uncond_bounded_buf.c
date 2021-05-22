@@ -147,6 +147,7 @@ bb_item bb_get(bounded_buffer_t * bb, long n_tries) {
 	if (x.payload != -1 && x.producer != -1) {
 	  bb->a[h % sz].producer = -1;
 	  bb->a[h % sz].payload = -1;
+	  __sync_synchronize();
 	  bb->h = h + 1;	/* advance head pointer */
 	  if (dbg>=2) {
 	    printf(" get [%ld]: -> %ld\n", i, x.payload);
