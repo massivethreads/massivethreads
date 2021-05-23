@@ -636,6 +636,8 @@ ac_subst_vars='am__EXEEXT_FALSE
 am__EXEEXT_TRUE
 LTLIBOBJS
 LIBOBJS
+BUILD_MYTH_DL_FALSE
+BUILD_MYTH_DL_TRUE
 CXXCPP
 LT_SYS_LIBRARY_PATH
 OTOOL64
@@ -688,8 +690,6 @@ HAVE_MALLOC_H_FALSE
 HAVE_MALLOC_H_TRUE
 BUILD_DAG_RECORDER_WITH_PAPI_FALSE
 BUILD_DAG_RECORDER_WITH_PAPI_TRUE
-BUILD_MYTH_DL_FALSE
-BUILD_MYTH_DL_TRUE
 BUILD_MYTH_LD_FALSE
 BUILD_MYTH_LD_TRUE
 EGREP
@@ -5697,15 +5697,6 @@ if test "x$ac_cv_have_decl_RTLD_NEXT" = xyes; then :
   have_rtld_next="yes"
 else
   have_rtld_next="no"
-fi
-
-
- if test x"$enable_myth_dl" = "xyes" -a x"$have_rtld_next" = "xyes" ; then
-  BUILD_MYTH_DL_TRUE=
-  BUILD_MYTH_DL_FALSE='#'
-else
-  BUILD_MYTH_DL_TRUE='#'
-  BUILD_MYTH_DL_FALSE=
 fi
 
 
@@ -18001,6 +17992,18 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 # Only expand once:
 
 
+
+ if test x"$enable_myth_dl" = "xyes" && \
+	 test x"$have_rtld_next" = "xyes" && \
+	 test x"$enable_shared" = "xyes"; then
+  BUILD_MYTH_DL_TRUE=
+  BUILD_MYTH_DL_FALSE='#'
+else
+  BUILD_MYTH_DL_TRUE='#'
+  BUILD_MYTH_DL_FALSE=
+fi
+
+
 ac_config_files="$ac_config_files Makefile include/Makefile src/Makefile src/profiler/Makefile src/profiler/dag2any/Makefile src/profiler/drview/Makefile tests/Makefile"
 
 
@@ -18151,10 +18154,6 @@ if test -z "${BUILD_MYTH_LD_TRUE}" && test -z "${BUILD_MYTH_LD_FALSE}"; then
   as_fn_error $? "conditional \"BUILD_MYTH_LD\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
-if test -z "${BUILD_MYTH_DL_TRUE}" && test -z "${BUILD_MYTH_DL_FALSE}"; then
-  as_fn_error $? "conditional \"BUILD_MYTH_DL\" was never defined.
-Usually this means the macro was only invoked conditionally." "$LINENO" 5
-fi
 if test -z "${BUILD_DAG_RECORDER_WITH_PAPI_TRUE}" && test -z "${BUILD_DAG_RECORDER_WITH_PAPI_FALSE}"; then
   as_fn_error $? "conditional \"BUILD_DAG_RECORDER_WITH_PAPI\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
@@ -18197,6 +18196,10 @@ Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${CXX_LAMBDA_AVAILABLE_TRUE}" && test -z "${CXX_LAMBDA_AVAILABLE_FALSE}"; then
   as_fn_error $? "conditional \"CXX_LAMBDA_AVAILABLE\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
+if test -z "${BUILD_MYTH_DL_TRUE}" && test -z "${BUILD_MYTH_DL_FALSE}"; then
+  as_fn_error $? "conditional \"BUILD_MYTH_DL\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 

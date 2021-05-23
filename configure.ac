@@ -254,9 +254,6 @@ AC_CHECK_DECL(RTLD_NEXT,
 #endif
 ])
 
-AM_CONDITIONAL([BUILD_MYTH_DL],
-	[test x"$enable_myth_dl" = "xyes" -a x"$have_rtld_next" = "xyes" ])
-
 
 # -------------
 # -lrt clock_gettime
@@ -567,6 +564,12 @@ AC_CHECK_HEADERS([sqlite3.h], [AC_SUBST(LIBSQLITE3, [-lsqlite3])])
 
 # initialize libtool
 LT_INIT
+
+AM_CONDITIONAL([BUILD_MYTH_DL],
+	[test x"$enable_myth_dl" = "xyes" && \
+	 test x"$have_rtld_next" = "xyes" && \
+	 test x"$enable_shared" = "xyes"])
+
 AC_CONFIG_FILES([
 	Makefile 
 	include/Makefile
