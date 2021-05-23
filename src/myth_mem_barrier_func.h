@@ -152,6 +152,65 @@ static inline void myth_rwbarrier() {
 /* end of branch
    MYTH_ARCH == MYTH_ARCH_sparc_v9 || MYTH_ARCH == MYTH_ARCH_sparc_v8 */
 
+#elif MYTH_ARCH == MYTH_ARCH_aarch64
+
+#if MYTH_BARRIER == MYTH_BARRIER_FENCES
+//Guarantees successive reads to be executed after this
+static inline void myth_rbarrier() {
+  asm volatile("dmb ishld" ::: "memory");
+}
+//Guarantees former writes to be executed before this
+static inline void myth_wbarrier() {
+  asm volatile("dmb ishst" ::: "memory");
+}
+//rbarrier+wbarrier
+static inline void myth_rwbarrier() {
+  asm volatile("dmb ish" ::: "memory");
+}
+
+#elif MYTH_BARRIER == MYTH_BARRIER_CILK
+//Memory barriers used by Cilk
+//Guarantees successive reads to be executed after this
+static inline void myth_rbarrier() {
+  asm volatile("dmb ishld":::"memory");
+}
+//Guarantees former writes to be executed before this
+static inline void myth_wbarrier() {
+  asm volatile("dmb ishst":::"memory");
+}
+//rbarrier+wbarrier
+static inline void myth_rwbarrier() {
+  asm volatile("dmb ish":::"memory");
+}
+
+#elif MYTH_BARRIER == MYTH_BARRIER_CILK_WEAK
+static inline void myth_rbarrier() {
+  asm volatile("dmb ishld":::"memory");
+}
+static inline void myth_wbarrier() {
+  asm volatile("dmb ishst":::"memory");
+}
+static inline void myth_rwbarrier() {
+  asm volatile("dmb ish":::"memory");
+}
+#elif MYTH_BARRIER == MYTH_BARRIER_INTRINSIC
+
+static inline void myth_rbarrier() {
+  __sync_synchronize();
+}
+static inline void myth_wbarrier() {
+  __sync_synchronize();
+}
+static inline void myth_rwbarrier() {
+  __sync_synchronize();
+}
+
+#else
+#error "invalid MYTH_BARRIER"
+#endif
+/* end of branch
+   MYTH_ARCH == MYTH_ARCH_aarch64 */
+
 #else  /* other archs */
 
 #warning "Architecture-dependent memory barrier is not defined, substituted by GCC extension"

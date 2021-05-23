@@ -37,7 +37,8 @@ static inline void myth_make_context_voidcall(myth_context_t ctx, void_func_t fu
   || MYTH_CONTEXT == MYTH_CONTEXT_amd64 \
   || MYTH_CONTEXT == MYTH_CONTEXT_amd64_knc \
   || MYTH_CONTEXT == MYTH_CONTEXT_sparc_v9 \
-  || MYTH_CONTEXT == MYTH_CONTEXT_sparc_v8
+  || MYTH_CONTEXT == MYTH_CONTEXT_sparc_v8 \
+  || MYTH_CONTEXT == MYTH_CONTEXT_aarch64
 
 void myth_swap_context_s(myth_context_t switch_from, myth_context_t switch_to);
 void myth_swap_context_withcall_s(myth_context_t switch_from,
@@ -272,6 +273,18 @@ static inline void myth_make_context_voidcall(myth_context_t ctx,
   *fp = (uint32_t) (stack_tail - FRAMESIZE);
   dest_addr = (uint32_t *) (ctx->sp + SAVE_I7); /* %i7 */
   *dest_addr = (uint32_t) func - 8;
+#elif MYTH_CONTEXT == MYTH_CONTEXT_aarch64
+  //Get stack tail
+  uint64_t stack_tail = (uint64_t) stack;
+  stack_tail -= 16;
+  //Align
+  stack_tail &= 0xFFFFFFFFFFFFFFF0;
+  uint64_t *dest_addr = (uint64_t*) stack_tail;
+  //Set stack pointer
+  ctx->sp = stack_tail;
+  //Set dummy frame pointer & return address
+  dest_addr[0] = 0;
+  dest_addr[1] = (uint64_t) func;
 #elif MYTH_CONTEXT == MYTH_CONTEXT_UCONTEXT
   uintptr_t stack_start = ((uintptr_t) stack) - (stacksize - sizeof(void*));
   getcontext(&ctx->uc);
@@ -323,6 +336,13 @@ static inline void myth_make_context_empty(myth_context_t ctx, void *stack,
   ctx->sp = stack_tail - FRAMESIZE * 2;
   fp = (uint32_t *) (stack_tail - FRAMESIZE * 2 + SAVE_FP); /* %fp */
   *fp = (uint32_t) (stack_tail - FRAMESIZE);
+#elif MYTH_CONTEXT == MYTH_CONTEXT_aarch64
+  //Get stack tail
+  uint64_t stack_tail = (uint64_t) stack;
+  //Align
+  stack_tail &= 0xFFFFFFFFFFFFFFF0;
+  //Set stack pointer
+  ctx->sp = stack_tail;
 #elif MYTH_CONTEXT == MYTH_CONTEXT_UCONTEXT
   myth_make_context_voidcall(ctx, empty_context_ep, stack, stacksize);
 #else
@@ -651,6 +671,127 @@ static inline void myth_make_context_empty(myth_context_t ctx, void *stack,
 #elif MYTH_ARCH == MYTH_ARCH_sparc_v9
 
 #elif MYTH_ARCH == MYTH_ARCH_sparc_v8
+
+#elif MYTH_ARCH == MYTH_ARCH_aarch64
+
+#if USE_JUMP_INSN_A
+#define MY_RET_A "br x30\n"
+#else
+#define MY_RET_A "ret\n"
+#endif
+#if USE_JUMP_INSN_B
+#define MY_RET_B "br x30\n"
+#else
+#define MY_RET_B "ret\n"
+#endif
+
+#ifdef __APPLE__
+#define X18
+#else
+#define X18 "x18",
+#endif
+
+#define myth_swap_context_i(switch_from,switch_to) \
+	{register void *x8_ asm("x8") = (void*)(switch_from); \
+	 register void *x9_ asm("x9") = (void*)(switch_to); \
+	 asm volatile( \
+		"adr x30, 1f\n" \
+		"stp x29, x30, [sp, #-16]!\n" \
+		"mov x29, sp\n" \
+		"str x29, [%0]\n" \
+		"ldr x29, [%1]\n" \
+		"mov sp, x29\n" \
+		"ldp x29, x30, [sp], #16\n" \
+		MY_RET_A \
+		"1:\n" \
+		: "+r" (x8_), "+r" (x9_) \
+		: \
+		: "v0", "v1", "v2", "v3", "v4", "v5", "v6", "v7", \
+		  "v8", "v9", "v10", "v11", "v12", "v13", "v14", "v15", \
+		  "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", \
+		  "v24", "v25", "v26", "v27", "v28", "v29", "v30", "v31", \
+		  "x0", "x1", "x2", "x3", "x4", "x5", "x6", "x7", \
+		  "x10", "x11", "x12", "x13", "x14", "x15", \
+		  "x16", "x17", X18 "x19", "x20", "x21", "x22", "x23", \
+		  "x24", "x25", "x26", "x27", "x28", "x30", \
+		  "cc", "memory"); \
+	}
+
+#define myth_swap_context_withcall_i(switch_from,switch_to,f,arg1,arg2,arg3) \
+	{register void *x0_ asm("x0") = (void*)(arg1); \
+	 register void *x1_ asm("x1") = (void*)(arg2); \
+	 register void *x2_ asm("x2") = (void*)(arg3); \
+	 register void *x8_ asm("x8") = (void*)(switch_from); \
+	 register void *x9_ asm("x9") = (void*)(switch_to); \
+	 asm volatile( \
+		"adr x30, 1f\n" \
+		"stp x29, x30, [sp, #-16]!\n" \
+		"mov x29, sp\n" \
+		"str x29, [%3]\n" \
+		"ldr x29, [%4]\n" \
+		"mov sp, x29\n" \
+		"bl %5\n" \
+		"ldp x29, x30, [sp], #16\n" \
+		MY_RET_A \
+		"1:\n" \
+		: "+r" (x0_), "+r" (x1_), "+r" (x2_), "+r" (x8_), "+r" (x9_) \
+		: "S" ((void*)(f)) \
+		: "v0", "v1", "v2", "v3", "v4", "v5", "v6", "v7", \
+		  "v8", "v9", "v10", "v11", "v12", "v13", "v14", "v15", \
+		  "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", \
+		  "v24", "v25", "v26", "v27", "v28", "v29", "v30", "v31", \
+		  "x3", "x4", "x5", "x6", "x7", \
+		  "x10", "x11", "x12", "x13", "x14", "x15", \
+		  "x16", "x17", X18 "x19", "x20", "x21", "x22", "x23", \
+		  "x24", "x25", "x26", "x27", "x28", "x30", \
+		  "cc", "memory"); \
+	 }
+
+#define myth_set_context_i(switch_to) \
+	{register void *x8_ asm("x8") = (void*)(switch_to); \
+	 asm volatile( \
+		"ldr x29, [%0]\n" \
+		"mov sp, x29\n" \
+		"ldp x29, x30, [sp], #16\n" \
+		MY_RET_B \
+		: "+r" (x8_) \
+		: \
+		: "v0", "v1", "v2", "v3", "v4", "v5", "v6", "v7", \
+		  "v8", "v9", "v10", "v11", "v12", "v13", "v14", "v15", \
+		  "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", \
+		  "v24", "v25", "v26", "v27", "v28", "v29", "v30", "v31", \
+		  "x0", "x1", "x2", "x3", "x4", "x5", "x6", "x7", \
+		  "x9", "x10", "x11", "x12", "x13", "x14", "x15", \
+		  "x16", "x17", X18 "x19", "x20", "x21", "x22", "x23", \
+		  "x24", "x25", "x26", "x27", "x28", "x30", \
+		  "cc", "memory"); \
+	 myth_unreachable(); \
+	}
+
+#define myth_set_context_withcall_i(switch_to,f,arg1,arg2,arg3) \
+	{register void *x0_ asm("x0") = (void*)(arg1); \
+	 register void *x1_ asm("x1") = (void*)(arg2); \
+	 register void *x2_ asm("x2") = (void*)(arg3); \
+	 register void *x8_ asm("x8") = (void*)(switch_to); \
+	 asm volatile( \
+		"ldr x29, [%3]\n" \
+		"mov sp, x29\n" \
+		"bl %4\n" \
+		"ldp x29, x30, [sp], #16\n" \
+		MY_RET_B \
+		: "+r" (x0_), "+r" (x1_), "+r" (x2_), "+r" (x8_) \
+		: "S" ((void*)(f)) \
+		: "v0", "v1", "v2", "v3", "v4", "v5", "v6", "v7", \
+		  "v8", "v9", "v10", "v11", "v12", "v13", "v14", "v15", \
+		  "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", \
+		  "v24", "v25", "v26", "v27", "v28", "v29", "v30", "v31", \
+		  "x3", "x4", "x5", "x6", "x7", \
+		  "x9", "x10", "x11", "x12", "x13", "x14", "x15", \
+		  "x16", "x17", X18 "x19", "x20", "x21", "x22", "x23", \
+		  "x24", "x25", "x26", "x27", "x28", "x30", \
+		  "cc", "memory"); \
+	 myth_unreachable(); \
+	}
 
 #elif MYTH_ARCH == MYTH_ARCH_UCONTEXT
 

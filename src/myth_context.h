@@ -38,6 +38,9 @@
 #define SAVE_FP   68
 #define SAVE_I7   72
 
+#elif MYTH_ARCH == MYTH_ARCH_aarch64
+#define MYTH_CONTEXT MYTH_CONTEXT_aarch64
+
 #else
 #error "invalid MYTH_ARCH"
 #endif
@@ -52,6 +55,8 @@ typedef struct myth_context {
   uint64_t sp;
 #elif MYTH_CONTEXT == MYTH_CONTEXT_sparc_v8
   uint32_t sp;
+#elif MYTH_CONTEXT == MYTH_CONTEXT_aarch64
+  uint64_t sp;
 #elif MYTH_CONTEXT == MYTH_CONTEXT_UCONTEXT
   ucontext_t uc;
 #else
@@ -87,6 +92,9 @@ extern volatile __thread myth_ctx_withcall_param g_ctx_withcall_params;
 #elif MYTH_CONTEXT == MYTH_CONTEXT_sparc_v9 || MYTH_CONTEXT == MYTH_CONTEXT_sparc_v8
 #include <string.h>
 
+#define MYTH_CTX_CALLBACK static __attribute__((used,noinline))
+
+#elif MYTH_CONTEXT == MYTH_CONTEXT_aarch64
 #define MYTH_CTX_CALLBACK static __attribute__((used,noinline))
 
 #elif MYTH_CONTEXT == MYTH_CONTEXT_UCONTEXT

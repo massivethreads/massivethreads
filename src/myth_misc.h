@@ -43,8 +43,11 @@
 #elif MYTH_ARCH == MYTH_ARCH_i386 || MYTH_ARCH == MYTH_ARCH_amd64 || MYTH_ARCH == MYTH_ARCH_amd64_knc
 #define myth_unreachable() asm volatile("ud2\n")
 
-#elif GCC_VERSION >= 40500
+#elif GCC_VERSION >= 40500 || defined(__clang__)
 #define myth_unreachable() __builtin_unreachable()
+
+#elif MYTH_ARCH == MYTH_ARCH_aarch64
+#define myth_unreachable() asm volatile("udf #0\n")
 
 #else
 #define myth_unreachable()

@@ -186,7 +186,11 @@ static void myth_sched_loop(void);
 static inline void myth_env_init(void);
 static inline void myth_env_fini(void);
 static inline void myth_set_current_env(myth_running_env_t e);
+#if MYTH_GET_CURRENT_ENV_INLINE
 static inline myth_running_env_t myth_get_current_env(void);
+#else
+__attribute__((noinline)) myth_running_env_t myth_get_current_env(void);
+#endif
 static inline myth_running_env_t myth_env_get_first_busy(myth_running_env_t e);
 
 static inline void myth_worker_start_ex_body(int rank);
