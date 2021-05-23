@@ -112,12 +112,10 @@ static inline myth_running_env_t myth_get_current_env(void) {
 //Search a worker thread that seems to be busy
 static inline myth_running_env_t myth_env_get_first_busy(myth_running_env_t e) {
   //If number of worker threads == 1 , always fails
-  if (g_attr.n_workers == 1) return NULL;
+  if (g_attr.n_workers <= 1) return NULL;
   //Choose randomly
-  int idx;
-  do {
-    idx = myth_random(0,g_attr.n_workers);
-  } while (idx == e->rank);
+  int idx = myth_random(0, g_attr.n_workers - 1);
+  idx += (idx >= e->rank);
   return &g_envs[idx];
 }
 #else
