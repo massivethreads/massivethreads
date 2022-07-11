@@ -567,7 +567,12 @@ int __wrap(pthread_setconcurrency)(int new_level) {
 
 #if defined(HAVE_PTHREAD_YIELD)
 /* pthread_yield (3)    - yield the processor */
+#if MYTH_WRAP == MYTH_WRAP_DL
+extern int pthread_yield_foo (void) __asm__ ("" "pthread_yield");
+int __wrap(pthread_yield_foo)(void) {
+#else
 int __wrap(pthread_yield)(void) {
+#endif
   int _ = enter_wrapped_func(0);
   int ret;
   (void)_;
