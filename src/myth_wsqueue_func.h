@@ -296,6 +296,7 @@ static inline myth_thread_t myth_queue_take(myth_thread_queue_t q)
   myth_wsqueue_rwbarrier();
   top = q->top;
   if (b < top){
+    myth_wsqueue_rbarrier();
     ret = q->ptr[b];
     //q->ptr[b]=NULL;
     myth_wsqueue_lock_unlock(&q->lock);
@@ -329,6 +330,7 @@ static inline myth_thread_t myth_queue_peek(myth_thread_queue_t q)
   b = q->base;
   top = q->top;
   if (b < top){
+    myth_wsqueue_rbarrier();
     ret = q->ptr[b];
     //myth_wsqueue_lock_unlock(&q->lock);
     return ret;
