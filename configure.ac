@@ -466,6 +466,17 @@ AC_LINK_IFELSE([AC_LANG_PROGRAM([[
 	[[ pthread_yield(); ]])],
 	[have_pthread_yield="yes"],
 	[have_pthread_yield="no"])
+if test x"$have_pthread_yield" = "xyes" ; then
+  AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+#define _GNU_SOURCE
+#include <pthread.h>
+int sched_yield(void) {}
+int pthread_yield(void) {}
+]],
+	[[]])],
+	[],
+	[have_pthread_yield="no"])
+fi
 AC_MSG_RESULT([$have_pthread_yield])
 if test x"$have_pthread_yield" = "xyes" ; then
    AC_DEFINE_UNQUOTED([HAVE_PTHREAD_YIELD],[1],
