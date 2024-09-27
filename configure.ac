@@ -269,7 +269,7 @@ AC_CHECK_LIB(papi, PAPI_library_init,
 		   [have_papi="yes"],
 		   [have_papi="no"])
 AS_IF([test x"$with_papi" = "xyes" -a x"$have_papi" = "xno"],
-      AC_MSG_ERROR([--with-papi was given, but test for PAPI failed.]))
+      AC_MSG_ERROR([[--with-papi was given, but test for PAPI failed.]]))
 AM_CONDITIONAL([BUILD_DAG_RECORDER_WITH_PAPI],
 	[test x"$with_papi" = "xyes" -a x"$have_papi" = "xyes" ])
 
