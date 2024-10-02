@@ -269,7 +269,7 @@ AC_CHECK_LIB(papi, PAPI_library_init,
 		   [have_papi="yes"],
 		   [have_papi="no"])
 AS_IF([test x"$with_papi" = "xyes" -a x"$have_papi" = "xno"],
-      AC_MSG_ERROR([--with-papi was given, but test for PAPI failed.]))
+      AC_MSG_ERROR([[--with-papi was given, but test for PAPI failed.]]))
 AM_CONDITIONAL([BUILD_DAG_RECORDER_WITH_PAPI],
 	[test x"$with_papi" = "xyes" -a x"$have_papi" = "xyes" ])
 
@@ -466,6 +466,17 @@ AC_LINK_IFELSE([AC_LANG_PROGRAM([[
 	[[ pthread_yield(); ]])],
 	[have_pthread_yield="yes"],
 	[have_pthread_yield="no"])
+if test x"$have_pthread_yield" = "xyes" ; then
+  AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+#define _GNU_SOURCE
+#include <pthread.h>
+int sched_yield(void) {}
+int pthread_yield(void) {}
+]],
+	[[]])],
+	[],
+	[have_pthread_yield="no"])
+fi
 AC_MSG_RESULT([$have_pthread_yield])
 if test x"$have_pthread_yield" = "xyes" ; then
    AC_DEFINE_UNQUOTED([HAVE_PTHREAD_YIELD],[1],

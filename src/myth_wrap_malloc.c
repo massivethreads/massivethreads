@@ -63,6 +63,7 @@ void * __wrap(valloc)(size_t size) {
   return x;
 }
 
+#if HAVE_MEMALIGN
 void * __wrap(memalign)(size_t alignment, size_t size) {
   int _ = enter_wrapped_func("%lu, %lu", alignment, size);
   void * x = real_memalign(alignment, size);
@@ -70,7 +71,9 @@ void * __wrap(memalign)(size_t alignment, size_t size) {
   leave_wrapped_func("%p", x);
   return x;
 }
+#endif
 
+#if HAVE_PVALLOC
 void * __wrap(pvalloc)(size_t size) {
   int _ = enter_wrapped_func("%lu", size);
   void * x = real_pvalloc(size);
@@ -78,3 +81,4 @@ void * __wrap(pvalloc)(size_t size) {
   leave_wrapped_func("%p", x);
   return x;
 }
+#endif
