@@ -664,7 +664,9 @@ static inline int myth_join_body(myth_thread_t th,void **result) {
   myth_spin_unlock_body(&th->lock);
 #endif
   while (th->status != MYTH_STATUS_FREE_READY2) { }
-  myth_join_1(myth_get_current_env(),th,result);
+  // use myth_get_current_env_noinline here to prevent compiler from sharing
+  // the same g_worker_rank before and after context switching
+  myth_join_1(myth_get_current_env_noinline(),th,result);
 #if MYTH_JOIN_PROF
   t3 = myth_get_rdtsc();
   env->prof_data.join_cycles += (t1 - t0) + (t3 - t2);

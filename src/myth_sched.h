@@ -34,11 +34,7 @@ extern int g_sched_prof;
 static inline void myth_env_init(void);
 static inline void myth_env_fini(void);
 static inline void myth_set_current_env(myth_running_env_t e);
-#if MYTH_GET_CURRENT_ENV_INLINE
 static inline myth_running_env_t myth_get_current_env(void);
-#else
-__attribute__((noinline)) myth_running_env_t myth_get_current_env(void);
-#endif
 static inline void init_myth_thread_struct(myth_running_env_t env,myth_thread_t th);
 static inline myth_running_env_t myth_env_get_first_busy(myth_running_env_t e);
 MYTH_CTX_CALLBACK void myth_create_1(void *arg1,void *arg2,void *arg3);
