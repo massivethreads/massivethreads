@@ -8,10 +8,9 @@
 #include "myth_worker.h"
 #include "myth_worker_func.h"
 
-#if !MYTH_GET_CURRENT_ENV_INLINE
-__attribute__((noinline)) myth_running_env_t myth_get_current_env()
-{
-  return myth_get_current_env_inline();
+#if WENV_IMPL == WENV_IMPL_ELF
+myth_running_env_t myth_get_current_env_noinline(void) {
+  return myth_get_current_env();
 }
 #endif
 

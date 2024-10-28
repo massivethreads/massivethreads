@@ -186,12 +186,14 @@ static void myth_sched_loop(void);
 static inline void myth_env_init(void);
 static inline void myth_env_fini(void);
 static inline void myth_set_current_env(myth_running_env_t e);
-#if MYTH_GET_CURRENT_ENV_INLINE
 static inline myth_running_env_t myth_get_current_env(void);
-#else
-__attribute__((noinline)) myth_running_env_t myth_get_current_env(void);
-#endif
 static inline myth_running_env_t myth_env_get_first_busy(myth_running_env_t e);
+
+#if WENV_IMPL == WENV_IMPL_ELF
+myth_running_env_t myth_get_current_env_noinline(void);
+#else
+#define myth_get_current_env_noinline() myth_get_current_env()
+#endif
 
 static inline void myth_worker_start_ex_body(int rank);
 static inline void myth_startpoint_init_ex_body(int rank);

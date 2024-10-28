@@ -156,16 +156,6 @@
 
 #define WENV_IMPL WENV_IMPL_ELF
 
-#if WENV_IMPL != WENV_IMPL_ELF
-#define MYTH_GET_CURRENT_ENV_INLINE 1
-#elif defined(__aarch64__) && defined(__APPLE__)
-#define MYTH_GET_CURRENT_ENV_INLINE 1
-#elif defined(__aarch64__)
-#define MYTH_GET_CURRENT_ENV_INLINE 0
-#else
-#define MYTH_GET_CURRENT_ENV_INLINE 1
-#endif
-
 //Choose work stealing target at random
 #define WS_TARGET_RANDOM 1
 
